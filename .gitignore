@@ -1,0 +1,59 @@
+## ==========================================
+## .NET / Visual Studio Build & Intermediate
+## ==========================================
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio Cache & benutzerspezifische Daten
+.vs/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+# Test-Ergebnisse & Coverage
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+*.coverage
+*.coveragexml
+
+## ==========================================
+## Photino.NET & Web / Browser Cache
+## ==========================================
+# WebView2-Benutzerdaten (Browser-Cache, Cookies aus Photino)
+*.WebView2/
+EBWebView/
+
+## ==========================================
+## JetBrains Rider / VS Code (falls Teamkollegen diese nutzen)
+## ==========================================
+.idea/
+*.DotSettings.user
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+## ==========================================
+## StudyScope: Lokale Daten & Exporte ausschließen
+## ==========================================
+# Generierte Protokoll- und Exportdateien
+ChatProtokoll_*.txt
+Karteikarten_*.md
+
+# Lokale Datenablage (Profil- und Speicherdaten, falls im Repo abgelegt)
+*.local.json
+/appdata/
+/data/storage/
+
+## ==========================================
+## Betriebssystem-Dateien
+## ==========================================
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.DS_Store

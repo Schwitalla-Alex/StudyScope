@@ -1,0 +1,542 @@
+﻿@using Microsoft.JSInterop
+@using StudyScope.Core.Models
+@using StudyScope.ViewModels
+@using StudyScope.UI.Services
+@inject FlashcardViewModel FlashVm
+@inject DocumentListViewModel DocVm
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<!-- Hauptcontainer mit aktivem Tastatur-Fokus -->
+<div @ref="cardContainerRef"
+     tabindex="0"
+     @onkeydown="HandleKeyDownAsync"
+     style="flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; box-sizing: border-box; outline: none;">
+
+    <!-- Obere Steuerleiste: Profil, Fortschritt und zentrale Aktionsbuttons -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h3 style="margin: 0; font-size: 16px; color: #212529;">Lernkarteikarten: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: #6c757d;">
+                @FlashVm.Flashcards.Count Karte(n) vorhanden | Karte @FlashVm.ProgressText
+            </span>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <label style="font-size: 13px; color: #495057;">Anzahl:</label>
+            <input type="number"
+                   min="1"
+                   max="50"
+                   disabled="@FlashVm.IsGenerating"
+                   style="width: 55px; padding: 5px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; text-align: center;"
+                   @bind="selectedCardCount" />
+
+            <!-- Neue Karten erstellen -->
+            <button type="button"
+                    style="padding: 7px 14px; background: @(FlashVm.IsGenerating ? "#6c757d" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px; display: flex; align-items: center; gap: 8px;"
+                    disabled="@FlashVm.IsGenerating"
+                    @onclick="GenerateCardsAsync">
+                @if (FlashVm.IsGenerating)
+                {
+                    <span class="loading-spinner"></span>
+                    <span>Generiere...</span>
+                }
+                else
+                {
+                    <span>✨ Neue Karten erstellen</span>
+                }
+            </button>
+
+            <!-- Druck- und Export-Aktionen -->
+            @if (FlashVm.Flashcards.Any())
+            {
+                <button type="button"
+                        style="padding: 7px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
+                        disabled="@FlashVm.IsGenerating"
+                        title="Drucken oder als PDF speichern"
+                        @onclick="PrintCardsAsync">
+                    🖨️ Drucken / PDF
+                </button>
+                <button type="button"
+                        style="padding: 7px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
+                        disabled="@FlashVm.IsGenerating"
+                        title="Als Markdown exportieren"
+                        @onclick="ExportMarkdownAsync">
+                    📄 Export (.md)
+                </button>
+            }
+        </div>
+    </div>
+
+    <!-- Visuelles Feedback während der KI-Generierung inkl. animiertem Fortschrittsbalken -->
+    @if (FlashVm.IsGenerating)
+    {
+        <div style="margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085;">
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">
+                🧠 KI analysiert Textstellen und formuliert Lernkarten...
+            </div>
+
+            <!-- Animierter Fortschrittsbalken -->
+            <div class="progress-bar-container">
+                <div class="progress-bar-indeterminate"></div>
+            </div>
+
+            <div style="font-size: 11px; margin-top: 6px; color: #6c757d;">
+                Dies kann je nach Hardware und Kontextgröße einige Sekunden dauern.
+            </div>
+        </div>
+    }
+
+    <!-- Statusmeldung bei Export oder Hinweisen -->
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div style="margin-top: 12px; padding: 8px 12px; background: @(isErrorMessage ? "#f8d7da" : "#d4edda"); border: 1px solid @(isErrorMessage ? "#f5c6cb" : "#c3e6cb"); color: @(isErrorMessage ? "#721c24" : "#155724"); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span>@statusMessage</span>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px;" @onclick="() => statusMessage = null">✕</button>
+        </div>
+    }
+
+    <!-- Filterleiste -->
+    <div style="display: flex; gap: 8px; margin: 18px 0 16px 0; flex-wrap: wrap;">
+        <button type="button"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #ced4da; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "#212529" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "#fff" : "#212529"); font-weight: bold;"
+                @onclick="() => SetFilter(FlashcardStatusFilter.All)">
+            Alle (@FlashVm.TotalCount)
+        </button>
+
+        <button type="button"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #dc3545; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "#dc3545" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "#fff" : "#dc3545"); font-weight: bold;"
+                @onclick="() => SetFilter(FlashcardStatusFilter.DifficultOnly)">
+            🔴 Wiederholen (@FlashVm.DifficultCount)
+        </button>
+
+        <button type="button"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #6c757d; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "#6c757d" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "#fff" : "#6c757d"); font-weight: bold;"
+                @onclick="() => SetFilter(FlashcardStatusFilter.NewOnly)">
+            ⚪ Neu (@FlashVm.NewCount)
+        </button>
+
+        <button type="button"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #28a745; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "#28a745" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "#fff" : "#28a745"); font-weight: bold;"
+                @onclick="() => SetFilter(FlashcardStatusFilter.KnownOnly)">
+            🟢 Gelernt (@FlashVm.KnownCount)
+        </button>
+    </div>
+
+    <!-- Hauptbereich: Karteikarte -->
+    <div style="flex: 1; display: flex; justify-content: center; align-items: center; min-height: 280px;">
+        @if (FlashVm.CurrentCard == null && !FlashVm.IsGenerating)
+        {
+            <div style="text-align: center; color: #6c757d; max-width: 420px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da;">
+                <div style="font-size: 34px; margin-bottom: 10px;">🎴</div>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Keine passenden Karteikarten vorhanden.</p>
+                <span style="font-size: 12px; color: #6c757d; line-height: 1.4; display: block;">
+                    Aktivieren Sie links mindestens ein PDF-Dokument und klicken Sie oben auf „✨ Neue Karten erstellen“.
+                </span>
+            </div>
+        }
+        else if (FlashVm.CurrentCard != null)
+        {
+            <!-- Interaktive Karteikarte -->
+            <div style="width: 100%; max-width: 600px; min-height: 280px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 2px solid @(FlashVm.IsAnswerRevealed ? "#28a745" : "#007bff"); display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;"
+                 @onclick="FlipCardAsync">
+
+                <!-- Karten-Kopfzeile -->
+                <div style="padding: 12px 18px; border-bottom: 1px solid #f1f3f5; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #6c757d; background: #fafafa; border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                    <span style="font-weight: bold; letter-spacing: 0.5px; color: @(FlashVm.IsAnswerRevealed ? "#28a745" : "#007bff");">
+                        @(FlashVm.IsAnswerRevealed ? "ANTWORT" : "FRAGE")
+                    </span>
+                    <span>Status: @GetStatusLabel(FlashVm.CurrentCard.Status)</span>
+                </div>
+
+                <!-- Karten-Inhalt -->
+                <div style="flex: 1; padding: 28px 24px; display: flex; justify-content: center; align-items: center; text-align: center;">
+                    <p style="font-size: 17px; line-height: 1.6; color: #212529; margin: 0; white-space: pre-wrap;">
+                        @(FlashVm.IsAnswerRevealed ? FlashVm.CurrentCard.Answer : FlashVm.CurrentCard.Question)
+                    </p>
+                </div>
+
+                <!-- Interaktiver Hinweis unten -->
+                <div style="padding: 10px; text-align: center; font-size: 11px; color: #adb5bd; border-top: 1px solid #f8f9fa;">
+                    Klicken oder [Leertaste] zum Umdrehen
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Untere Aktionsleiste: Bewertung, Blättern & Navigation -->
+    @if (FlashVm.CurrentCard != null && !FlashVm.IsGenerating)
+    {
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              
+                <!-- Button: Zurück (Modernes Outline-Design mit Status) -->
+                <button type="button"
+                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: #495057; background: #ffffff; border: 1px solid #ced4da; border-radius: 6px; cursor: @(!FlashVm.HasPreviousCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasPreviousCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
+                        disabled="@(!FlashVm.HasPreviousCard)"
+                        @onclick="PreviousCardAsync">
+                    <span>◀</span>
+                    <span>Zurück</span>
+                    <span style="font-size: 11px; color: #6c757d; font-weight: normal;">[←]</span>
+                </button>
+
+                <!-- Bewertungstasten / Hauptaktion -->
+                <div style="display: flex; gap: 12px;">
+                    @if (FlashVm.IsAnswerRevealed)
+                    {
+                        <button type="button"
+                                style="padding: 9px 18px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(220,53,69,0.25);"
+                                @onclick="() => RateAsync(FlashcardStatus.Difficult)">
+                            ✕ Nicht gewusst [1]
+                        </button>
+                        <button type="button"
+                                style="padding: 9px 18px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(40,167,69,0.25);"
+                                @onclick="() => RateAsync(FlashcardStatus.Known)">
+                            ✓ Gewusst [2]
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button"
+                                style="padding: 9px 24px; background: #17a2b8; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(23,162,184,0.25);"
+                                @onclick="FlipCardAsync">
+                            Aufdecken [Leertaste]
+                        </button>
+                    }
+                </div>
+
+                <!-- Button: Weiter (Modernes Outline-Design mit Status) -->
+                <button type="button"
+                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: #495057; background: #ffffff; border: 1px solid #ced4da; border-radius: 6px; cursor: @(!FlashVm.HasNextCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasNextCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
+                        disabled="@(!FlashVm.HasNextCard)"
+                        @onclick="NextCardAsync">
+                    <span>Weiter</span>
+                    <span style="font-size: 11px; color: #6c757d; font-weight: normal;">[→]</span>
+                    <span>▶</span>
+                </button>
+            </div>
+
+            <div style="text-align: center; font-size: 11px; color: #868e96;">
+                Tastaturnavigation aktiv: <b>Leertaste</b>: Drehen | <b>← / →</b>: Vor/Zurück | <b>1</b>: Nicht gewusst | <b>2</b>: Gewusst
+            </div>
+        </div>
+    }
+
+    <!-- Versteckter Druckbereich für DIN-A4 -->
+    <div class="print-only-container">
+        <h2 style="margin-bottom: 20px;">Lernkarteikarten: @DocVm.CurrentProfile</h2>
+        <div class="print-grid">
+            @foreach (var card in FlashVm.FilteredFlashcards)
+            {
+                <div class="print-card">
+                    <div class="print-question">
+                        <strong>Frage:</strong><br />
+                        @card.Question
+                    </div>
+                    <div class="print-answer">
+                        <strong>Antwort:</strong><br />
+                        @card.Answer
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+            /* Drehender Ladekreis im Button */
+            .loading-spinner {
+                display: inline-block;
+                width: 14px;
+                height: 14px;
+                border: 2px solid rgba(255, 255, 255, 0.35);
+                border-radius: 50%;
+                border-top-color: #ffffff;
+                animation: spin 0.8s linear infinite;
+            }
+
+            @@keyframes spin {
+                0% {
+                    transform: rotate(0deg);
+                }
+
+                100% {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Animierter Fortschrittsbalken */
+            .progress-bar-container {
+                width: 100%;
+                max-width: 480px;
+                height: 6px;
+                background-color: #cce5ff;
+                border-radius: 4px;
+                margin: 10px auto 4px auto;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .progress-bar-indeterminate {
+                width: 40%;
+                height: 100%;
+                background: linear-gradient(90deg, #007bff, #0056b3);
+                border-radius: 4px;
+                position: absolute;
+                animation: progress-slide 1.4s ease-in-out infinite;
+            }
+
+            @@keyframes progress-slide {
+                0% {
+                    left: -40%;
+                }
+
+                50% {
+                    left: 40%;
+                    width: 50%;
+                }
+
+                100% {
+                    left: 100%;
+                    width: 40%;
+                }
+            }
+
+            /* Druckbereich für DIN-A4 */
+            .print-only-container {
+                display: none;
+            }
+
+            @@media print {
+                body * {
+                    visibility: hidden;
+                }
+
+                .print-only-container, .print-only-container * {
+                    visibility: visible;
+                }
+
+                .print-only-container {
+                    display: block !important;
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                }
+
+                .print-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 15px;
+                }
+
+                .print-card {
+                    border: 1px dashed #666;
+                    border-radius: 6px;
+                    padding: 12px;
+                    page-break-inside: avoid;
+                    background: #fff;
+                    font-size: 13px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .print-question {
+                    border-bottom: 1px solid #ddd;
+                    padding-bottom: 6px;
+                }
+            }
+    </style>
+</div>
+
+@code {
+    private ElementReference cardContainerRef;
+    private int selectedCardCount = 5;
+    private string? statusMessage;
+    private bool isErrorMessage = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        FlashVm.PropertyChanged += OnFlashVmChanged;
+        DocVm.PropertyChanged += OnDocVmChanged;
+
+        await FlashVm.LoadCardsForProfileAsync(DocVm.CurrentProfile);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await EnsureFocusAsync();
+        }
+    }
+
+    private async Task EnsureFocusAsync()
+    {
+        try
+        {
+            await cardContainerRef.FocusAsync();
+        }
+        catch
+        {
+            // Ignorieren falls Element zu diesem Zeitpunkt noch nicht gerendert ist
+        }
+    }
+
+    private void OnFlashVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocVm.CurrentProfile))
+        {
+            await FlashVm.LoadCardsForProfileAsync(DocVm.CurrentProfile);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void SetFilter(FlashcardStatusFilter filter)
+    {
+        FlashVm.SelectedFilter = filter;
+        _ = EnsureFocusAsync();
+    }
+
+    private async Task FlipCardAsync()
+    {
+        FlashVm.FlipCard();
+        await EnsureFocusAsync();
+    }
+
+    private async Task NextCardAsync()
+    {
+        FlashVm.NextCard();
+        await EnsureFocusAsync();
+    }
+
+    private async Task PreviousCardAsync()
+    {
+        FlashVm.PreviousCard();
+        await EnsureFocusAsync();
+    }
+
+    private async Task GenerateCardsAsync()
+    {
+        // 1. Vorprüfung: Wurde mindestens ein Dokument ausgewählt?
+        var hasActiveDocs = DocVm.Documents.Any(d => d.IsSelected && !d.IsMissing);
+        if (!hasActiveDocs)
+        {
+            isErrorMessage = true;
+            statusMessage = "⚠️ Bitte wählen Sie links in der Liste mindestens ein PDF-Dokument aus, um Lernkarten zu erstellen.";
+            StateHasChanged();
+            return;
+        }
+
+        if (selectedCardCount < 1)
+        {
+            selectedCardCount = 1;
+        }
+
+        isErrorMessage = false;
+        statusMessage = null;
+
+        var oldCount = FlashVm.Flashcards.Count;
+        await FlashVm.GenerateCardsFromDocumentsAsync(
+            DocVm.CurrentProfile,
+            DocVm.Documents,
+            selectedCardCount);
+
+        var addedCount = FlashVm.Flashcards.Count - oldCount;
+        if (addedCount > 0)
+        {
+            statusMessage = $"✓ Es wurden {addedCount} neue Lernkarteikarten erfolgreich erstellt!";
+        }
+
+        await EnsureFocusAsync();
+    }
+
+    private async Task RateAsync(FlashcardStatus status)
+    {
+        await FlashVm.RateCurrentCardAsync(DocVm.CurrentProfile, status);
+        await EnsureFocusAsync();
+    }
+
+    private async Task HandleKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (FlashVm.CurrentCard == null || FlashVm.IsGenerating)
+            return;
+
+        switch (e.Key)
+        {
+            case " ":
+                FlashVm.FlipCard();
+                break;
+            case "ArrowRight":
+                FlashVm.NextCard();
+                break;
+            case "ArrowLeft":
+                FlashVm.PreviousCard();
+                break;
+            case "1":
+                if (FlashVm.IsAnswerRevealed)
+                    await RateAsync(FlashcardStatus.Difficult);
+                break;
+            case "2":
+                if (FlashVm.IsAnswerRevealed)
+                    await RateAsync(FlashcardStatus.Known);
+                break;
+        }
+    }
+
+    private string GetStatusLabel(FlashcardStatus status) => status switch
+    {
+        FlashcardStatus.Known => "🟢 Gelernt",
+        FlashcardStatus.Difficult => "🔴 Wiederholen",
+        _ => "⚪ Neu"
+    };
+
+    private async Task PrintCardsAsync()
+    {
+        await JSRuntime.InvokeVoidAsync("window.print");
+    }
+
+    private async Task ExportMarkdownAsync()
+    {
+        try
+        {
+            var defaultName = $"Karteikarten_{DocVm.CurrentProfile}_{DateTime.Now:yyyyMMdd_HHmm}.md";
+
+            var selectedPath = await DesktopDialogs.SaveFileAsync(
+                defaultName,
+                filterExtension: "md",
+                filterDescription: "Markdown-Dateien (*.md)",
+                title: "Karteikarten exportieren als...");
+
+            if (string.IsNullOrWhiteSpace(selectedPath))
+            {
+                return;
+            }
+
+            var mdContent = FlashVm.GetMarkdownExport(DocVm.CurrentProfile);
+            await File.WriteAllTextAsync(selectedPath, mdContent);
+
+            isErrorMessage = false;
+            statusMessage = $"✓ Erfolgreich exportiert nach: {Path.GetFileName(selectedPath)}";
+        }
+        catch (Exception ex)
+        {
+            isErrorMessage = true;
+            statusMessage = $"⚠️ Fehler beim Exportieren: {ex.Message}";
+        }
+
+        await InvokeAsync(StateHasChanged);
+        await EnsureFocusAsync();
+    }
+
+    public void Dispose()
+    {
+        FlashVm.PropertyChanged -= OnFlashVmChanged;
+        DocVm.PropertyChanged -= OnDocVmChanged;
+    }
+}

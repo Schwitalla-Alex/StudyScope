@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Photino.Blazor" Version="3.1.*" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
+		<ProjectReference Include="..\StudyScope.Infrastructure\StudyScope.Infrastructure.csproj" />
+		<ProjectReference Include="..\StudyScope.ViewModels\StudyScope.ViewModels.csproj" />
+	</ItemGroup>
+
+	<!-- Sorgt dafür, dass wwwroot und index.html ins Ausgabeverzeichnis kopiert werden -->
+	<ItemGroup>
+		<Content Update="wwwroot\**">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+
+</Project>

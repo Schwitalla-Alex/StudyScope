@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Projektmappenelemente/">
+    <File Path=".gitignore" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="StudyScope.Core/StudyScope.Core.csproj" Id="90deddf5-f130-4281-9698-e3763a31f2ba" />
+  <Project Path="StudyScope.Infrastructure/StudyScope.Infrastructure.csproj" Id="29cdf693-d308-4a23-8e33-1de8872d8919" />
+  <Project Path="StudyScope.Tests/StudyScope.Tests.csproj" Id="b1fc0cf4-2f0b-42c4-aa61-0ff864eac278" />
+  <Project Path="StudyScope.UI/StudyScope.UI.csproj" Id="81e96109-ea3c-405d-9252-3646967310d2" />
+  <Project Path="StudyScope.ViewModels/StudyScope.ViewModels.csproj" Id="d26a5928-ab19-4caa-b00b-5c86845d772e" />
+</Solution>

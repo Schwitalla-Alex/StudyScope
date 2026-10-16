@@ -1,0 +1,76 @@
+﻿<!-- Hintergrund-Overlay -->
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: flex; justify-content: center; align-items: center; z-index: 1050;"
+     @onclick="Close">
+
+    <!-- Dialogfenster -->
+    <div style="background: #ffffff; border-radius: 8px; width: 470px; max-width: 90vw; box-shadow: 0 10px 25px rgba(0,0,0,0.2); overflow: hidden; display: flex; flex-direction: column;"
+         @onclick:stopPropagation="true">
+
+        <!-- Kopfzeile -->
+        <div style="padding: 14px 18px; border-bottom: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 18px;">ℹ️</span>
+                <h4 style="margin: 0; font-size: 15px; color: #212529;">Über StudyScope</h4>
+            </div>
+            <button style="background: none; border: none; font-size: 16px; cursor: pointer; color: #6c757d; font-weight: bold;"
+                    @onclick="Close">
+                ✕
+            </button>
+        </div>
+
+        <!-- Inhalt -->
+        <div style="padding: 20px; font-size: 13px; color: #495057; display: flex; flex-direction: column; gap: 12px; line-height: 1.5;">
+            <div>
+                <strong style="font-size: 16px; color: #212529;">StudyScope v1.0</strong><br />
+                <span>Desktop-Lernsoftware mit lokaler LLM-Unterstützung.</span>
+            </div>
+
+            <div style="background: #e9ecef; padding: 10px 12px; border-radius: 6px; font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
+                <div><b>Entwickler:</b> Alexander Schwitalla (Forchheim, Oberfranken)</div>
+                <div><b>Unterstützte Formate:</b> PDF, TXT, CSV</div>
+                <div><b>Architektur:</b> Photino.NET, Blazor, RAG-Pipeline</div>
+            </div>
+
+            <div style="font-size: 12px; color: #6c757d;">
+                Entwickelt zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Unterlagen.
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #e9ecef; margin: 2px 0;" />
+
+            <!-- Lizenz & Kontaktbereich -->
+            <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px; color: #495057;">
+                <div>
+                    <b>Lizenz:</b> Lizenziert unter der <span style="color: #007bff; font-weight: 500;">Apache License 2.0</span>
+                </div>
+                <div>
+                    <b>Kontakt / Feedback:</b>
+                    <a href="mailto:info.schwitalla@gmail.com" style="color: #007bff; text-decoration: none;">
+                        info.schwitalla@gmail.com
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fußzeile -->
+        <div style="padding: 10px 18px; border-top: 1px solid #dee2e6; display: flex; justify-content: flex-end; background: #f8f9fa;">
+            <button type="button"
+                    style="padding: 6px 18px; background: #007bff; color: white; border: none; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;"
+                    @onclick="Close">
+                Schließen
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    private async Task Close()
+    {
+        if (OnClose.HasDelegate)
+        {
+            await OnClose.InvokeAsync();
+        }
+    }
+}

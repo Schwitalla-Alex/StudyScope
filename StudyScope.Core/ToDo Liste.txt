@@ -1,0 +1,9 @@
+Gemäß unserem Ablaufplan und dem Lastenheft haben wir damit das Chat-Protokoll abgehakt. 
+Als nächstes bieten sich folgende Bausteine an:
+	1.Echtes Hinzufügen von PDFs via Dateidialog: 
+		Den Button „+ PDF hinzufügen“ (und den Menüpunkt Datei -> PDF laden) ebenfalls mit DesktopDialogs.OpenPdfAsync() verknüpfen,
+		sodass echte PDF-Dateien ausgewählt, via PdfPig eingelesen und in der Liste angezeigt werden. 
+	2.Doppelklick-Aktion auf ein Dokument: Öffnen der ausgewählten PDF in einem separaten Ansichtsfenster/System-Browser.
+	3.Profil-Verwaltung erweitern:
+		Ein Dropdown/Auswahldialog auf der Oberfläche, um Profile anzulegen, zu wechseln oder zu löschen.
+	4.Karteikarten-Feature: Das Generieren von Lernkarteikarten für Bildschirm und Druck/Export. 
