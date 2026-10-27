@@ -51,7 +51,7 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ## 🛠️ Für Entwickler
 
 ### Voraussetzungen
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
 
 ### Quellcode ausführen
