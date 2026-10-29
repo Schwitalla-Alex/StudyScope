@@ -7,6 +7,7 @@ namespace StudyScope.Infrastructure.Services;
 public class JsonStorageService : IStorageService
 {
     private readonly string _baseDirectory;
+    private readonly IEncryptionService _encryptionService;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -14,21 +15,29 @@ public class JsonStorageService : IStorageService
         PropertyNameCaseInsensitive = true
     };
 
-    // Standard-Konstruktor für die laufende Anwendung (nutzt AppData)
-    public JsonStorageService()
-        : this(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudyScope"))
+    // Standard-Konstruktor für die laufende Anwendung (nutzt AppData und Standard-AesEncryptionService)
+    public JsonStorageService(): this(null, null)
     {
     }
 
-    // Konstruktor mit 1 Argument für Unit-Tests (nutzt isolierten Temp-Ordner)
-    public JsonStorageService(string baseDirectory)
+    // Konstruktor für Unit-Tests & Dependency Injection
+    // Unterstützt sowohl new JsonStorageService(tempDir) als auch die Übergabe eines IEncryptionService
+    public JsonStorageService(string? baseDirectory, IEncryptionService? encryptionService = null)
     {
+        _encryptionService = encryptionService ?? new AesEncryptionService();
+
         _baseDirectory = string.IsNullOrWhiteSpace(baseDirectory)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudyScope")
             : baseDirectory;
 
         Directory.CreateDirectory(_baseDirectory);
         Directory.CreateDirectory(GetProfilesDirectory());
+    }
+
+    // Optionaler Bequemlichkeits-Überladungs-Konstruktor, falls Tests nur den Service übergeben wollen
+    public JsonStorageService(IEncryptionService encryptionService)
+        : this(null, encryptionService)
+    {
     }
 
     private string GetProfilesDirectory()
@@ -57,38 +66,121 @@ public class JsonStorageService : IStorageService
         return Path.Combine(_baseDirectory, "last_profile.txt");
     }
 
-    public async Task<List<DocumentItem>> LoadDocumentsAsync(string profileName)
+    // Hilfsmethode: Liest das komplette UserProfile-Objekt aus der Profil-JSON
+    private async Task<UserProfile> ReadProfileFileAsync(string profileName)
     {
         var filePath = GetProfileFilePath(profileName);
         if (!File.Exists(filePath))
         {
-            return new List<DocumentItem>();
+            return new UserProfile { Name = profileName };
         }
 
         try
         {
             var json = await File.ReadAllTextAsync(filePath);
-            var docs = JsonSerializer.Deserialize<List<DocumentItem>>(json, JsonOptions) ?? new List<DocumentItem>();
-
-            foreach (var doc in docs)
+            if (string.IsNullOrWhiteSpace(json))
             {
-                doc.IsMissing = !File.Exists(doc.FilePath);
+                return new UserProfile { Name = profileName };
             }
 
-            return docs;
+            // Falls die Datei als reines Array vorliegt, in ein UserProfile überführen:
+            if (json.TrimStart().StartsWith("["))
+            {
+                var oldDocs = JsonSerializer.Deserialize<List<DocumentItem>>(json, JsonOptions);
+                return new UserProfile
+                {
+                    Name = profileName,
+                    Documents = oldDocs ?? new List<DocumentItem>()
+                };
+            }
+
+            var profile = JsonSerializer.Deserialize<UserProfile>(json, JsonOptions);
+            if (profile != null)
+            {
+                profile.Name = profileName;
+                profile.Documents ??= new List<DocumentItem>();
+                return profile;
+            }
+
+            // Direkt nach dem Deserialisieren des UserProfile-Objekts:
+            if (profile?.AiSettings != null && !string.IsNullOrWhiteSpace(profile.AiSettings.ApiKey))
+            {
+                // ApiKey für die UI/ViewModels wieder transparent entschlüsseln
+                profile.AiSettings.ApiKey = _encryptionService.Decrypt(profile.AiSettings.ApiKey);
+            }
         }
         catch
         {
-            return new List<DocumentItem>();
+            // Fallback bei Lesefehlern
         }
+
+        return new UserProfile { Name = profileName };
+    }
+   
+
+    public async Task<List<DocumentItem>> LoadDocumentsAsync(string profileName)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+
+        // Physische Existenz für alle Dateitypen (.pdf, .txt, .csv) prüfen
+        foreach (var doc in profile.Documents)
+        {
+            doc.IsMissing = string.IsNullOrWhiteSpace(doc.FilePath) || !File.Exists(doc.FilePath);
+        }
+
+        return profile.Documents;
     }
 
     public async Task SaveDocumentsAsync(string profileName, IEnumerable<DocumentItem> documents)
     {
+        // 1. Das bestehende Profil einlesen (damit Name, CreatedAt und AiSettings erhalten bleiben!)
+        var profile = await ReadProfileFileAsync(profileName);
+
+        // 2. Nur die Dokumente aktualisieren
+        profile.Documents = documents?.ToList() ?? new List<DocumentItem>();
+
+        // 3. Das VOLLSTÄNDIGE Profil-Objekt speichern (NICHT nur die Dokumentenliste!)
         var filePath = GetProfileFilePath(profileName);
-        var json = JsonSerializer.Serialize(documents, JsonOptions);
+        var json = JsonSerializer.Serialize(profile, JsonOptions);
         await File.WriteAllTextAsync(filePath, json);
     }
+
+
+    public async Task<AiConfig?> LoadAiConfigForProfileAsync(string profileName)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+
+        // Wenn keine Einstellungen da sind oder kein Modell/Provider gewählt wurde -> null zurückgeben
+        if (profile.AiSettings == null ||
+            (string.IsNullOrWhiteSpace(profile.AiSettings.SelectedModelName) && string.IsNullOrWhiteSpace(profile.AiSettings.ModelName)))
+        {
+            return null;
+        }
+
+        return profile.AiSettings;
+    }
+
+    public async Task SaveAiConfigForProfileAsync(string profileName, AiConfig config)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+
+        // Kopie erstellen, damit das Original im UI-Speicher unberührt bleibt
+        var encryptedConfig = new AiConfig
+        {
+            SelectedProvider = config.SelectedProvider,
+            ApiKey = _encryptionService.Encrypt(config.ApiKey), // Hier verschlüsseln!
+            ModelName = config.ModelName,
+            LocalEndpointUrl = config.LocalEndpointUrl,
+            SelectedModelName = config.SelectedModelName
+        };
+
+        profile.AiSettings = encryptedConfig;
+
+        var filePath = GetProfileFilePath(profileName);
+        var json = JsonSerializer.Serialize(profile, JsonOptions);
+        await File.WriteAllTextAsync(filePath, json);
+    }
+
 
     public async Task<string> GetLastActiveProfileNameAsync()
     {
@@ -159,7 +251,8 @@ public class JsonStorageService : IStorageService
             var filePath = GetProfileFilePath(profile.Name);
             if (!File.Exists(filePath))
             {
-                var json = JsonSerializer.Serialize(new List<DocumentItem>(), JsonOptions);
+                var newProfile = new UserProfile { Name = profile.Name };
+                var json = JsonSerializer.Serialize(newProfile, JsonOptions);
                 await File.WriteAllTextAsync(filePath, json);
             }
         }

@@ -22,6 +22,34 @@ public class DocumentListViewModelTests
     {
         _storageServiceMock = new Mock<IStorageService>();
         _pdfServiceMock = new Mock<IDocumentService>();
+
+        // WICHTIG: Standard-Fallback für profilbezogene KI bereitstellen
+        _storageServiceMock.Setup(s => s.LoadAiConfigForProfileAsync(It.IsAny<string>()))
+                           .ReturnsAsync(new AiConfig { SelectedModelName = "llama3.2:latest" });
+
+        _storageServiceMock.Setup(s => s.GetLastActiveProfileNameAsync())
+                           .ReturnsAsync("Standard");
+
+        _storageServiceMock.Setup(s => s.GetAllProfileNamesAsync())
+                           .ReturnsAsync(new List<string> { "Standard" });
+    }
+
+    [Test]
+    public async Task SwitchProfileAsync_ShouldUpdateCurrentAiModelDisplayName()
+    {
+        // Arrange
+        var profileName = "Jura";
+        _storageServiceMock.Setup(s => s.LoadAiConfigForProfileAsync(profileName))
+                           .ReturnsAsync(new AiConfig { SelectedModelName = "gemini-2.5-flash" });
+
+        var viewModel = new DocumentListViewModel(_storageServiceMock.Object, _pdfServiceMock.Object);
+
+        // Act
+        await viewModel.SwitchProfileAsync(profileName);
+
+        // Assert
+        Assert.That(viewModel.CurrentProfile, Is.EqualTo("Jura"));
+        Assert.That(viewModel.CurrentAiModelDisplayName, Is.EqualTo("gemini-2.5-flash"));
     }
 
     [Test]
@@ -190,8 +218,12 @@ public class DocumentListViewModelTests
         storageMock.Setup(s => s.LoadDocumentsAsync(It.IsAny<string>()))
                    .ReturnsAsync(new List<DocumentItem>());
 
-        var pdfMock = new Mock<IDocumentService>();
-        var viewModel = new DocumentListViewModel(storageMock.Object, pdfMock.Object);
+        // DIESE ZEILE ERGÄNZEN:
+        storageMock.Setup(s => s.LoadAiConfigForProfileAsync(It.IsAny<string>()))
+                   .ReturnsAsync(new AiConfig { SelectedModelName = "Test-KI" });
+
+        var docServiceMock = new Mock<IDocumentService>();
+        var viewModel = new DocumentListViewModel(storageMock.Object, docServiceMock.Object);
         await viewModel.InitializeAsync();
 
         // Act

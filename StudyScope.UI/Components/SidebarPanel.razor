@@ -2,73 +2,51 @@
 @using StudyScope.Core.Interfaces
 @using StudyScope.Core.Models
 @using StudyScope.UI.Services
+@using StudyScope.ViewModels
 
 @* Dependency Injection: Bereitstellung der ViewModel-Logik und des nativen Dateiöffners *@
 @inject DocumentListViewModel DocVm
+@inject SettingsViewModel SettingsVm
 @inject IFileOpenerService FileOpenerService
 @implements IDisposable
 
 <!-- Linke Seitenleiste: Verwaltung von Profilen, Suchfilter und Dokumentenliste -->
-<div style="width: 320px; border-right: 1px solid #dee2e6; background: #fafafa; display: flex; flex-direction: column; padding: 10px; gap: 10px;">
+<div style="width: 320px; border-right: 1px solid #dee2e6; background: #fafafa; display: flex; flex-direction: column; padding: 10px; gap: 10px; height: 100%; box-sizing: border-box;">
 
     <!-- 1. Profil-Kopfbereich -->
-    <div style="margin-bottom: 15px;">
+    <div style="margin-bottom: 5px;">
         <label style="font-weight: bold; font-size: 13px; color: #495057;">Profil / Thema:</label>
 
-        @if (!isCreatingProfile)
-        {
-            <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
-                <!-- Profil-Dropdown -->
-                <select value="@DocVm.CurrentProfile"
-                        @onchange="OnProfileChangedAsync"
-                        style="flex: 1; padding: 6px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px;">
-                    @foreach (var profile in DocVm.AvailableProfiles)
-                    {
-                        <option value="@profile">@profile</option>
-                    }
-                </select>
-
-                <!-- Button: Neues Profil anzeigen (Grün, weißes großes Plus, quadratisch zentriert) -->
-                <button style="width: 32px; height: 32px; padding: 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 19px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; line-height: 1;"
-                        title="Neues Profil erstellen"
-                        @onclick="() => isCreatingProfile = true">
-                    +
-                </button>
-
-                <!-- Button: Aktuelles Profil löschen (Gleiche Größe 32x32px) -->
-                @if (!DocVm.CurrentProfile.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+        <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
+            <!-- Profil-Dropdown -->
+            <select value="@DocVm.CurrentProfile"
+                    @onchange="OnProfileChangedAsync"
+                    style="flex: 1; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; font-weight: bold; background: white; outline: none; box-sizing: border-box;">
+                @foreach (var profile in DocVm.AvailableProfiles)
                 {
-                    <button style="width: 32px; height: 32px; padding: 0; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1;"
-                            title="Aktuelles Profil löschen"
-                            @onclick="DeleteCurrentProfileAsync">
-                        🗑️
-                    </button>
+                    <option value="@profile">@profile</option>
                 }
-            </div>
-        }
-        else
-        {
-            <!-- Inline-Eingabe für neues Profil -->
-            <div style="display: flex; gap: 4px; margin-top: 6px; align-items: center;">
-                <input type="text"
-                       placeholder="Profilname..."
-                       style="flex: 1; padding: 5px; font-size: 12px; border: 1px solid #007bff; border-radius: 4px; outline: none;"
-                       @bind="newProfileName"
-                       @onkeydown="HandleNewProfileKeyDownAsync" />
+            </select>
 
-                <button style="padding: 5px 8px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
-                        title="Erstellen"
-                        @onclick="CreateNewProfileAsync">
-                    ✓
-                </button>
+            <!-- Button: Neues Profil erstellen (öffnet den modalen Dialog) -->
+            <button type="button"
+                    style="width: 32px; height: 32px; padding: 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 19px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
+                    title="Neues Profil erstellen"
+                    @onclick="OpenCreateProfileModal">
+                +
+            </button>
 
-                <button style="padding: 5px 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
-                        title="Abbrechen"
-                        @onclick="CancelCreateProfile">
-                    ✕
+            <!-- Button: Aktuelles Profil löschen (deaktiviert bei 'Standard') -->
+            @if (!DocVm.CurrentProfile.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+            {
+                <button type="button"
+                        style="width: 32px; height: 32px; padding: 0; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
+                        title="Aktuelles Profil löschen"
+                        @onclick="DeleteCurrentProfileAsync">
+                    🗑️
                 </button>
-            </div>
-        }
+            }
+        </div>
     </div>
 
     <!-- 2. Bereich: Volltextsuche / Filter -->
@@ -81,14 +59,16 @@
                @bind:event="oninput" />
     </div>
 
-    <!-- 3. Bereich: Steuerbuttons (Variante A: Modernes Blau & Outline) -->
+    <!-- 3. Bereich: Steuerbuttons (Alle an / Alle aus) -->
     <div style="display: flex; gap: 6px;">
-        <button style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #ffffff; background: #007bff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.2s;"
+        <button type="button"
+                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #ffffff; background: #007bff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente für Abfragen aktivieren"
                 @onclick="DocVm.SelectAll">
             ✓ Alle an
         </button>
-        <button style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #007bff; background: #ffffff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; transition: all 0.2s;"
+        <button type="button"
+                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #007bff; background: #ffffff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente deaktivieren"
                 @onclick="DocVm.DeselectAll">
             ✕ Alle aus
@@ -120,7 +100,8 @@
                         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@doc.FileName</span>
                     </span>
 
-                    <button style="background: none; border: none; cursor: pointer; color: #dc3545; font-size: 13px; padding: 0 4px;"
+                    <button type="button"
+                            style="background: none; border: none; cursor: pointer; color: #dc3545; font-size: 13px; padding: 0 4px;"
                             @onclick="() => DocVm.RemoveDocumentAsync(doc)"
                             title="Entfernen">
                         ✕
@@ -131,14 +112,51 @@
     </div>
 
     <!-- 5. Bereich: Hinzufügen-Aktion -->
-    <button style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;"
+    <button type="button"
+            style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;"
             @onclick="AddDocumentFromDialogAsync">
         + Dokument hinzufügen
     </button>
 </div>
 
+<!-- Modal-Dialog: Neues Profil anlegen -->
+@if (showCreateModal)
+{
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+        <div style="background: white; border-radius: 8px; width: 340px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; font-family: Segoe UI, sans-serif;">
+
+            <h4 style="margin: 0; font-size: 15px; color: #212529;">Neues Profil anlegen</h4>
+            <span style="font-size: 12px; color: #6c757d;">Geben Sie einen Namen für das neue Themengebiet ein:</span>
+
+            <input type="text"
+                   placeholder="z. B. BGB, Steuerrecht, Projekt..."
+                   style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #007bff; border-radius: 4px; outline: none; box-sizing: border-box;"
+                   @bind="newProfileName"
+                   @bind:event="oninput"
+                   @onkeydown="HandleKeyDownAsync"
+                   autofocus />
+
+            <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+                <button type="button"
+                        style="padding: 6px 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                        @onclick="CancelCreateProfile">
+                    Abbrechen
+                </button>
+                <button type="button"
+                        style="padding: 6px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(string.IsNullOrWhiteSpace(newProfileName) ? "not-allowed" : "pointer"); font-size: 12px;"
+                        disabled="@string.IsNullOrWhiteSpace(newProfileName)"
+                        @onclick="ConfirmCreateProfileAsync">
+                    Erstellen & Konfigurieren
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
-    private bool isCreatingProfile = false;
+    [Parameter] public EventCallback OnOpenSettings { get; set; }
+
+    private bool showCreateModal = false;
     private string newProfileName = string.Empty;
 
     private string GetFileIcon(string filePath) => Path.GetExtension(filePath)?.ToLowerInvariant() switch
@@ -149,33 +167,46 @@
         _ => "📁"
     };
 
-    private async Task CreateNewProfileAsync()
+    private void OpenCreateProfileModal()
     {
-        var trimmed = newProfileName?.Trim();
-        if (!string.IsNullOrWhiteSpace(trimmed))
-        {
-            if (!DocVm.AvailableProfiles.Contains(trimmed, StringComparer.OrdinalIgnoreCase))
-            {
-                DocVm.AvailableProfiles.Add(trimmed);
-            }
-
-            await DocVm.SwitchProfileAsync(trimmed);
-        }
-
-        CancelCreateProfile();
+        newProfileName = string.Empty;
+        showCreateModal = true;
     }
 
     private void CancelCreateProfile()
     {
         newProfileName = string.Empty;
-        isCreatingProfile = false;
+        showCreateModal = false;
     }
 
-    private async Task HandleNewProfileKeyDownAsync(KeyboardEventArgs e)
+    private async Task ConfirmCreateProfileAsync()
     {
-        if (e.Key == "Enter")
+        var trimmed = newProfileName?.Trim();
+        if (string.IsNullOrWhiteSpace(trimmed))
+            return;
+
+        // 1. ZUERST das neue Profil sofort im ViewModel erstellen und aktivieren
+        await DocVm.CreateNewProfileAsync(trimmed);
+
+        // 2. SettingsViewModel für das neue Profil frisch zurücksetzen
+        SettingsVm.ResetForm();
+
+        // 3. Modal schließen
+        showCreateModal = false;
+        newProfileName = string.Empty;
+
+        // 4. Direkt die KI-Konfigurationsmaske für das neue Profil öffnen
+        if (OnOpenSettings.HasDelegate)
         {
-            await CreateNewProfileAsync();
+            await OnOpenSettings.InvokeAsync();
+        }
+    }
+
+    private async Task HandleKeyDownAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newProfileName))
+        {
+            await ConfirmCreateProfileAsync();
         }
         else if (e.Key == "Escape")
         {
@@ -183,19 +214,24 @@
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    private async Task OnProfileChangedAsync(ChangeEventArgs e)
     {
-        DocVm.PropertyChanged += OnDocVmPropertyChanged;
-
-        if (!DocVm.AvailableProfiles.Any())
+        var newProfile = e.Value?.ToString();
+        if (!string.IsNullOrWhiteSpace(newProfile))
         {
-            await DocVm.InitializeAsync();
+            await DocVm.SwitchProfileAsync(newProfile);
+            await SettingsVm.InitializeAsync();
         }
     }
 
-    private void OnDocVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private async Task DeleteCurrentProfileAsync()
     {
-        InvokeAsync(StateHasChanged);
+        var profileToDelete = DocVm.CurrentProfile;
+        if (profileToDelete.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        await DocVm.DeleteProfileAsync(profileToDelete);
+        await SettingsVm.InitializeAsync();
     }
 
     private void HandleDocumentDoubleClick(DocumentItem doc)
@@ -212,22 +248,19 @@
         }
     }
 
-    private async Task DeleteCurrentProfileAsync()
+    protected override async Task OnInitializedAsync()
     {
-        var profileToDelete = DocVm.CurrentProfile;
-        if (profileToDelete.Equals("Standard", StringComparison.OrdinalIgnoreCase))
-            return;
+        DocVm.PropertyChanged += OnDocVmPropertyChanged;
 
-        await DocVm.DeleteProfileAsync(profileToDelete);
+        if (!DocVm.AvailableProfiles.Any())
+        {
+            await DocVm.InitializeAsync();
+        }
     }
 
-    private async Task OnProfileChangedAsync(ChangeEventArgs e)
+    private void OnDocVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        var newProfile = e.Value?.ToString();
-        if (!string.IsNullOrWhiteSpace(newProfile))
-        {
-            await DocVm.SwitchProfileAsync(newProfile);
-        }
+        InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()

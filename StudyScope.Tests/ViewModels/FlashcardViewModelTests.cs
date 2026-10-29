@@ -191,4 +191,31 @@ public class FlashcardViewModelTests
         Assert.That(cards[1].Answer, Is.EqualTo("Am 13.01."));
     }
 
+    [Test]
+    public async Task ClearFlashcardsAsync_ShouldEmptyCollections_SaveToStorage_AndNotifyChanges()
+    {
+        // 1. Arrange: Testkarten vorbereiten
+        var testProfile = "TestProfil";
+        _viewModel.Flashcards.Add(new Flashcard { Question = "Frage 1", Answer = "Antwort 1" });
+        _viewModel.Flashcards.Add(new Flashcard { Question = "Frage 2", Answer = "Antwort 2" });
+        _viewModel.FilteredFlashcards.Add(new Flashcard { Question = "Frage 1", Answer = "Antwort 1" });
+
+        // Prüfen, ob vor dem Löschen Karten existieren
+        Assert.That(_viewModel.Flashcards, Has.Count.EqualTo(2));
+
+        // 2. Act: Löschmethode aufrufen
+        await _viewModel.ClearFlashcardsAsync(testProfile);
+
+        // 3. Assert: Prüfungen
+        // a) Listen müssen komplett leer sein
+        Assert.That(_viewModel.Flashcards, Is.Empty);
+        Assert.That(_viewModel.FilteredFlashcards, Is.Empty);
+
+        // b) CurrentCard muss null sein
+        Assert.That(_viewModel.CurrentCard, Is.Null);
+
+        // c) Es muss sichergestellt sein, dass eine leere Liste im Storage gespeichert wurde
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(testProfile, It.Is<IEnumerable<Flashcard>>(cards => !cards.Any())), Times.Once);
+    }
+
 }

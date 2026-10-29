@@ -29,7 +29,7 @@
 Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich:
 
 1. Wechseln Sie rechts auf der Repository-Seite in den Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
-2. Laden Sie die aktuellste Datei `StudyScope-v1.0-win-x64.zip` herunter.
+2. Laden Sie die aktuellste Datei `StudyScope-v1.0.2-win-x64.zip` herunter.
 3. Entpacken Sie das ZIP-Archiv an einem beliebigen Ort auf Ihrem PC.
 4. Starten Sie die Anwendung per Doppelklick auf **`StudyScope.exe`**.
 
@@ -51,7 +51,7 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ## 🛠️ Für Entwickler
 
 ### Voraussetzungen
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
+- [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
 
 ### Quellcode ausführen

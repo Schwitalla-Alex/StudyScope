@@ -13,7 +13,8 @@
         <div style="display: flex; gap: 8px;">
             @if (ChatVm.Messages.Any())
             {
-                <button style="padding: 4px 8px; font-size: 11px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;"
+                <button type="button"
+                        style="padding: 4px 8px; font-size: 11px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer;"
                         disabled="@ChatVm.IsBusy"
                         @onclick="ChatVm.ClearConversation">
                     Verlauf leeren
@@ -33,7 +34,8 @@
     {
         <div style="margin: 8px 15px; padding: 8px 12px; background-color: #e2e3e5; border-left: 4px solid #383d41; border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
             <span style="white-space: pre-wrap;">@ChatVm.ExportStatusMessage</span>
-            <button style="background: none; border: none; cursor: pointer; font-size: 14px; color: #383d41;"
+            <button type="button"
+                    style="background: none; border: none; cursor: pointer; font-size: 14px; color: #383d41;"
                     @onclick="() => ChatVm.ExportStatusMessage = string.Empty">
                 ✕
             </button>
@@ -45,7 +47,7 @@
         @if (!ChatVm.Messages.Any())
         {
             <div style="color: #adb5bd; font-size: 13px; text-align: center; margin-top: 40px;">
-                Stelle eine Frage zu den aktivierten Dokumenten...
+                Stelle eine Frage zu den aktivierten PDF-Dokumenten...
             </div>
         }
         else
@@ -60,41 +62,38 @@
                     <div style="font-weight: bold; font-size: 11px; margin-bottom: 3px; opacity: 0.8;">@msg.Role:</div>
                     <div style="white-space: pre-wrap;">@msg.Content</div>
 
-                    <!-- Aktionsleiste für Assistenten-Nachrichten -->
+                    <!-- Aktionsleiste bei Assistenten-Nachrichten (Kopieren, Bewerten, Neu generieren) -->
                     @if (msg.Role == MessageRole.Assistant)
                     {
-                        <div style="display: flex; gap: 10px; margin-top: 8px; align-items: center; border-top: 1px solid #dee2e6; padding-top: 6px; font-size: 12px;">
-                            <!-- In Zwischenablage kopieren -->
-                            <button style="background: none; border: none; cursor: pointer; color: #6c757d; padding: 2px 4px; display: flex; align-items: center; gap: 3px;"
+                        <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(0,0,0,0.06); display: flex; gap: 12px; align-items: center; font-size: 12px;">
+                            <button type="button"
+                                    style="border: none; background: transparent; cursor: pointer; padding: 0; color: #495057;"
                                     title="In Zwischenablage kopieren"
                                     @onclick="() => CopyToClipboardAsync(msg.Id, msg.Content)">
-                                <span>📋</span>
-                                <span>@(_copiedMessageId == msg.Id ? "Kopiert!" : "Kopieren")</span>
+                                @(_copiedMessageId == msg.Id ? "✓ Kopiert!" : "📋 Kopieren")
                             </button>
 
-                            <!-- Daumen hoch -->
-                            <button style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 13px; opacity: @(msg.IsLiked == true ? "1" : "0.5");"
-                                    title="Gute Antwort"
+                            <button type="button"
+                                    style="border: none; background: transparent; cursor: pointer; padding: 0;"
+                                    title="Hilfreich"
                                     @onclick="() => ChatVm.RateMessage(msg, true)">
-                                👍
+                                @(msg.IsLiked == true ? "👍" : "👍🏻")
                             </button>
 
-                            <!-- Daumen runter -->
-                            <button style="background: none; border: none; cursor: pointer; padding: 2px 4px; font-size: 13px; opacity: @(msg.IsLiked == false ? "1" : "0.5");"
-                                    title="Schlechte Antwort"
+                            <button type="button"
+                                    style="border: none; background: transparent; cursor: pointer; padding: 0;"
+                                    title="Nicht hilfreich"
                                     @onclick="() => ChatVm.RateMessage(msg, false)">
-                                👎
+                                @(msg.IsLiked == false ? "👎" : "👎🏻")
                             </button>
 
-                            <!-- Neu generieren (nur bei der letzten Antwort) -->
-                            @if (msg == ChatVm.Messages.LastOrDefault(m => m.Role == MessageRole.Assistant))
+                            @if (msg == ChatVm.Messages.LastOrDefault(m => m.Role == MessageRole.Assistant) && !ChatVm.IsBusy)
                             {
-                                <button style="margin-left: auto; background: none; border: none; cursor: pointer; color: #007bff; padding: 2px 4px; display: flex; align-items: center; gap: 4px;"
-                                        title="Antwort neu generieren"
-                                        disabled="@ChatVm.IsBusy"
+                                <button type="button"
+                                        style="border: none; background: transparent; cursor: pointer; padding: 0; color: #007bff;"
+                                        title="Neu generieren"
                                         @onclick="ChatVm.RegenerateLastResponseAsync">
-                                    <span>↻</span>
-                                    <span>Neu generieren</span>
+                                    ↻ Neu generieren
                                 </button>
                             }
                         </div>
@@ -103,22 +102,28 @@
             }
         }
 
-        <!-- Animierter Lade-Indikator, wenn KI rechnet -->
+        <!-- Lade-Indikator mit Abbruch-Schaltfläche -->
         @if (ChatVm.IsBusy)
         {
-            <div style="align-self: flex-start; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 10px; width: 300px; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
-                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #495057; font-weight: 500;">
-                    <span class="loading-spinner-dark"></span>
-                    <span>StudyScope denkt nach</span>
-                    <span class="typing-dots">
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
-                        <span class="typing-dot"></span>
-                    </span>
+            <div style="align-self: flex-start; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; min-width: 280px; max-width: 360px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: #495057;">
+                        <span class="loading-spinner-dark"></span>
+                        <span>StudyScope denkt nach...</span>
+                    </div>
+
+                    <!-- Abbruch-Button -->
+                    <button type="button"
+                            style="padding: 2px 8px; font-size: 11px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
+                            title="Aktuelle Anfrage abbrechen"
+                            @onclick="ChatVm.CancelPrompt">
+                        ✕ Abbrechen
+                    </button>
                 </div>
-                <!-- Animierter Indeterminate-Laufbalken -->
-                <div class="chat-progress-container">
-                    <div class="chat-progress-indeterminate"></div>
+
+                <!-- Animierte Indeterminate-Laufleiste -->
+                <div class="progress-bar-indeterminate" style="width: 100%;">
+                    <div class="progress-bar-value"></div>
                 </div>
             </div>
         }
@@ -126,14 +131,16 @@
 
     <!-- Eingabezeile -->
     <div style="padding: 12px; border-top: 1px solid #dee2e6; display: flex; gap: 10px; background: #fafafa;">
-        <input type="text" placeholder="@(ChatVm.IsBusy ? "Bitte warten, Antwort wird generiert..." : "Geben Sie hier Ihre Frage an den KI-Chatbot ein...")"
+        <input type="text"
+               placeholder="@(ChatVm.IsBusy ? "Bitte warten, Antwort wird generiert..." : "Geben Sie hier Ihre Frage an den KI-Chatbot ein...")"
                disabled="@ChatVm.IsBusy"
                style="flex: 1; padding: 8px 12px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; outline: none; cursor: @(ChatVm.IsBusy ? "wait" : "text"); background: @(ChatVm.IsBusy ? "#f1f3f5" : "#fff");"
                @bind="ChatVm.CurrentInputPrompt"
                @bind:event="oninput"
                @onkeyup="@(async (e) => { if (e.Key == "Enter" && !ChatVm.IsBusy) await ChatVm.SendPromptAsync(); })" />
 
-        <button style="padding: 8px 20px; background: @(ChatVm.IsBusy ? "#6c757d" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(ChatVm.IsBusy ? "wait" : "pointer"); display: flex; align-items: center; gap: 6px;"
+        <button type="button"
+                style="padding: 8px 20px; background: @(ChatVm.IsBusy ? "#6c757d" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(ChatVm.IsBusy ? "wait" : "pointer"); display: flex; align-items: center; gap: 6px;"
                 disabled="@ChatVm.IsBusy"
                 @onclick="ChatVm.SendPromptAsync">
             @if (ChatVm.IsBusy)
@@ -147,112 +154,6 @@
             }
         </button>
     </div>
-
-    <style>
-            /* Dunkler Ladekreis für die Denk-Box */
-            .loading-spinner-dark {
-                display: inline-block;
-                width: 13px;
-                height: 13px;
-                border: 2px solid rgba(0, 123, 255, 0.25);
-                border-radius: 50%;
-                border-top-color: #007bff;
-                animation: spin 0.8s linear infinite;
-            }
-
-            /* Weißer Ladekreis für den Senden-Button */
-            .loading-spinner {
-                display: inline-block;
-                width: 13px;
-                height: 13px;
-                border: 2px solid rgba(255, 255, 255, 0.35);
-                border-radius: 50%;
-                border-top-color: #ffffff;
-                animation: spin 0.8s linear infinite;
-            }
-
-            @@keyframes spin {
-                0% {
-                    transform: rotate(0deg);
-                }
-
-                100% {
-                    transform: rotate(360deg);
-                }
-            }
-
-            /* Hüpfende Typing-Dots */
-            .typing-dots {
-                display: inline-flex;
-                align-items: center;
-                gap: 3px;
-                margin-left: 2px;
-            }
-
-            .typing-dot {
-                width: 4px;
-                height: 4px;
-                background-color: #007bff;
-                border-radius: 50%;
-                display: inline-block;
-                animation: typingBounce 1.4s infinite ease-in-out both;
-            }
-
-                .typing-dot:nth-child(1) {
-                    animation-delay: -0.32s;
-                }
-
-                .typing-dot:nth-child(2) {
-                    animation-delay: -0.16s;
-                }
-
-            @@keyframes typingBounce {
-                0%, 80%, 100% {
-                    transform: scale(0.6);
-                    opacity: 0.3;
-                }
-
-                40% {
-                    transform: scale(1.15);
-                    opacity: 1;
-                }
-            }
-
-            /* Animierter Fortschrittsbalken im Chat */
-            .chat-progress-container {
-                width: 100%;
-                height: 4px;
-                background-color: #e9ecef;
-                border-radius: 3px;
-                overflow: hidden;
-                position: relative;
-            }
-
-            .chat-progress-indeterminate {
-                width: 35%;
-                height: 100%;
-                background: linear-gradient(90deg, #007bff, #0056b3);
-                border-radius: 3px;
-                position: absolute;
-                animation: chatSlide 1.3s ease-in-out infinite;
-            }
-
-            @@keyframes chatSlide {
-                0% {
-                    left: -35%;
-                }
-
-                50% {
-                    left: 45%;
-                    width: 45%;
-                }
-
-                100% {
-                    left: 100%;
-                    width: 35%;
-                }
-            }
-    </style>
 </div>
 
 @code {
@@ -300,16 +201,7 @@
             return;
         }
 
-        var defaultName = $"ChatProtokoll_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
-        var selectedPath = await DesktopDialogs.SaveFileAsync(defaultName, "txt");
-
-        if (string.IsNullOrWhiteSpace(selectedPath))
-        {
-            return;
-        }
-
-        await ChatVm.ExportConversationToCustomFileAsync(selectedPath);
-        StateHasChanged();
+        await ChatVm.ExportConversationToFileAsync();
     }
 
     public void Dispose()

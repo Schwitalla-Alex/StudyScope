@@ -7,8 +7,7 @@ using StudyScope.Core.Models;
 namespace StudyScope.ViewModels;
 
 /// <summary>
-/// StudyScope.ViewModels mit der Logik für die Dokumentenliste, Filterung/Suche, 
-/// das Auswählen/Abwählen und die Statusbar-Statistiken, das Suche und Zählung von Dokumenten und Textstellen, Markieren aller Dokumente, Löschen fehlender Dateien.
+/// Logik für Dokumentenverwaltung, Profilsteuerung, Zählung und Filterung.
 /// </summary>
 public class DocumentListViewModel : INotifyPropertyChanged
 {
@@ -16,6 +15,8 @@ public class DocumentListViewModel : INotifyPropertyChanged
     private readonly IDocumentService _pdfService;
     private string _searchText = string.Empty;
     private string _currentProfile = "Standard";
+    private string _currentAiModelDisplayName = "Lade Modell...";
+    private ObservableCollection<string> _availableProfiles = new();
 
     public DocumentListViewModel(IStorageService storageService, IDocumentService pdfService)
     {
@@ -64,11 +65,19 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
     }
 
-    public int TotalDocumentCount => Documents.Count;
+    public string CurrentAiModelDisplayName
+    {
+        get => _currentAiModelDisplayName;
+        private set
+        {
+            if (_currentAiModelDisplayName != value)
+            {
+                _currentAiModelDisplayName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
 
-    public int TotalChunkCount => Documents.Sum(d => d.ExtractedChunkCount);
-
-    private ObservableCollection<string> _availableProfiles = new();
     public ObservableCollection<string> AvailableProfiles
     {
         get => _availableProfiles;
@@ -79,37 +88,69 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
     }
 
+    public int TotalDocumentCount => Documents.Count;
+
+    public int TotalChunkCount => Documents.Sum(d => d.ExtractedChunkCount);
+
+    public async Task RefreshCurrentAiModelAsync()
+    {
+        var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
+
+        if (aiConfig != null && !string.IsNullOrWhiteSpace(aiConfig.SelectedModelName))
+        {
+            CurrentAiModelDisplayName = aiConfig.SelectedModelName;
+        }
+        else if (aiConfig != null && !string.IsNullOrWhiteSpace(aiConfig.ModelName))
+        {
+            CurrentAiModelDisplayName = aiConfig.ModelName;
+        }
+        else
+        {
+            CurrentAiModelDisplayName = "Keine KI konfiguriert";
+        }
+
+        OnPropertyChanged(nameof(CurrentAiModelDisplayName));
+        OnPropertyChanged(nameof(CurrentProfile));
+    }
+
     public async Task InitializeAsync()
     {
-        // 1. Alle vorhandenen Profile aus dem Ordner laden
+        // 1. Alle vorhandenen Profile aus dem Speicher laden
         var profiles = await _storageService.GetAllProfileNamesAsync();
         AvailableProfiles = new ObservableCollection<string>(profiles);
 
-        // 2. Zuletzt aktives Profil laden
+        // 2. Zuletzt aktives Profil ermitteln
         var lastProfile = await _storageService.GetLastActiveProfileNameAsync();
 
-        // 3. Wenn das zuletzt aktive Profil existiert, dieses nehmen, sonst das allererste aus der Liste
-        if (!string.IsNullOrWhiteSpace(lastProfile) && AvailableProfiles.Contains(lastProfile))
+        // 3. Gültiges Profil setzen
+        if (!string.IsNullOrWhiteSpace(lastProfile) && AvailableProfiles.Any(p => p.Equals(lastProfile, StringComparison.OrdinalIgnoreCase)))
         {
             CurrentProfile = lastProfile;
         }
         else
         {
             CurrentProfile = AvailableProfiles.FirstOrDefault() ?? "Standard";
+            await _storageService.SetLastActiveProfileNameAsync(CurrentProfile);
         }
 
-        // 4. Dokumente für das gewählte Profil laden
+        // 4. Dokumente und KI des aktiven Profils laden
         await LoadDocumentsAsync();
+        await RefreshCurrentAiModelAsync();
     }
 
     public async Task SwitchProfileAsync(string newProfile)
     {
-        if (string.IsNullOrWhiteSpace(newProfile) || newProfile == CurrentProfile)
+        if (string.IsNullOrWhiteSpace(newProfile))
             return;
 
         CurrentProfile = newProfile;
+
+        // Sofort als aktives Profil sichern
         await _storageService.SetLastActiveProfileNameAsync(newProfile);
+
+        // Daten des Zielprofils laden
         await LoadDocumentsAsync();
+        await RefreshCurrentAiModelAsync();
     }
 
     public async Task CreateNewProfileAsync(string newProfileName)
@@ -118,24 +159,22 @@ public class DocumentListViewModel : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(trimmed))
             return;
 
-        // 1. Zur Liste der verfügbaren Profile hinzufügen, falls noch nicht vorhanden
+        // 1. In Liste der verfügbaren Profile aufnehmen
         if (!AvailableProfiles.Any(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
         {
             AvailableProfiles.Add(trimmed);
             OnPropertyChanged(nameof(AvailableProfiles));
         }
 
-        // 2. Aktuelles Profil setzen
         CurrentProfile = trimmed;
 
-        // 3. Leere Dokumentenliste für das neue Profil sofort als JSON auf die Festplatte schreiben
+        // 2. Initiales Profil ausschließlich über den Storage-Service anlegen (kein harter File-Zugriff)
         await _storageService.SaveDocumentsAsync(trimmed, new List<DocumentItem>());
-
-        // 4. Als zuletzt aktives Profil in den Einstellungen sichern
         await _storageService.SetLastActiveProfileNameAsync(trimmed);
 
-        // 5. Ansicht aktualisieren (leert die Dokumentenliste für das neue Profil)
+        // 3. Ansicht aktualisieren
         await LoadDocumentsAsync();
+        await RefreshCurrentAiModelAsync();
     }
 
     public async Task DeleteProfileAsync(string profileName)
@@ -152,7 +191,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
         // 2. Aus der Liste entfernen
         AvailableProfiles.Remove(profileName);
 
-        // 3. Falls das aktuell ausgewählte Profil gelöscht wurde, auf "Standard" zurücksetzen
+        // 3. Falls das aktuell ausgewählte Profil gelöscht wurde, auf "Standard" zurückfallen
         if (CurrentProfile.Equals(profileName, StringComparison.OrdinalIgnoreCase))
         {
             await SwitchProfileAsync("Standard");
@@ -176,7 +215,6 @@ public class DocumentListViewModel : INotifyPropertyChanged
         if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             return;
 
-        // Prüfen, ob das Dokument bereits in der Liste existiert
         if (Documents.Any(d => d.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
             return;
 

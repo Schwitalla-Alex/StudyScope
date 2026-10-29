@@ -9,7 +9,7 @@ public class FakeLlmService : ILlmService
         return Task.FromResult(true);
     }
 
-    public Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks)
+    public Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 

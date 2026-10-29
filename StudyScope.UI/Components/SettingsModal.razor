@@ -1,21 +1,32 @@
 ﻿@using StudyScope.Core.Models
 @using StudyScope.ViewModels
 @inject SettingsViewModel SettingsVm
+@inject DocumentListViewModel DocVm
+@implements IDisposable
 
 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
     <div style="background: white; border-radius: 8px; width: 500px; padding: 22px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); display: flex; flex-direction: column; font-family: Segoe UI, sans-serif;">
 
-        <!-- Header -->
+        <!-- Header mit Anzeige des Zielprofils -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dee2e6; padding-bottom: 10px; margin-bottom: 15px;">
-            <h3 style="margin: 0; font-size: 17px; color: #212529;">⚙️ KI-Konfiguration</h3>
-            <button style="border: none; background: transparent; font-size: 16px; cursor: pointer; color: #6c757d;" @onclick="() => OnClose.InvokeAsync()">✕</button>
+            <div>
+                <h3 style="margin: 0; font-size: 17px; color: #212529;">⚙️ KI-Konfiguration</h3>
+                <span style="font-size: 11px; color: #6c757d;">Profil: <strong>@DocVm.CurrentProfile</strong></span>
+            </div>
+            <button type="button"
+                    style="border: none; background: transparent; font-size: 16px; cursor: pointer; color: #6c757d;"
+                    @onclick="() => OnClose.InvokeAsync()">
+                ✕
+            </button>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px;">
 
-            <!-- KI-Provider Auswahl -->
+            <!-- 1. KI-Provider Auswahl -->
             <div>
-                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">KI-Modell / Provider:</label>
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">
+                    1. KI-Modell / Provider:
+                </label>
                 <select style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; font-size: 13px;"
                         @bind="SettingsVm.SelectedProvider">
                     <option value="@AiProviderType.FakeAi">Fake-KI (Testmodus)</option>
@@ -23,93 +34,172 @@
                     <option value="@AiProviderType.LmStudioLocal">LM Studio (Lokal)</option>
                     <option value="@AiProviderType.GoogleGemini">Google Gemini</option>
                     <option value="@AiProviderType.OpenAiGpt4">OpenAI (GPT-4)</option>
+                    <option value="@AiProviderType.MistralAi">Mistral AI (Cloud)</option>
                     <option value="@AiProviderType.CustomOpenAi">Benutzerdefiniert (OpenAI-kompatibel)</option>
                 </select>
             </div>
 
-            <!-- Server-URL & Modellwahl (Ollama, LM Studio & Custom) -->
+            <!-- 2. Server-Endpunkt (nur für lokale Provider und Custom) -->
             @if (SettingsVm.IsLocalProvider)
             {
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">
-                        @(SettingsVm.IsCustomProvider ? "API-Endpunkt (Base-URL):" : "Server-Endpunkt:")
+                        @(SettingsVm.IsCustomProvider ? "API-Schlüssel (optional bei lokaler KI):" : "2. API-Schlüssel (OpenAI / Gemini / Mistral):")
                     </label>
                     <div style="display: flex; gap: 6px;">
                         <input type="text"
-                               placeholder="@(SettingsVm.IsCustomProvider ? "z. B. https://api.groq.com/openai/v1 oder http://localhost:1234/v1" : "http://localhost:...")"
-                               style="flex: 1; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px;"
-                               @bind="SettingsVm.LocalEndpointUrl" />
-                        <button style="padding: 7px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;"
-                                disabled="@SettingsVm.IsTestingConnection"
+                               placeholder="@(SettingsVm.IsCustomProvider ? "z. B. https://api.groq.com/openai/v1" : "http://localhost:11434")"
+                               style="flex: 1; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; box-sizing: border-box;"
+                               @bind="SettingsVm.LocalEndpointUrl"
+                               @bind:event="oninput" />
+
+                        <button type="button"
+                                style="padding: 7px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;"
+                                disabled="@(string.IsNullOrWhiteSpace(SettingsVm.LocalEndpointUrl) || SettingsVm.IsTestingConnection)"
                                 @onclick="SettingsVm.TestConnectionAndFetchModelsAsync">
-                            @(SettingsVm.IsTestingConnection ? "Suche..." : "Modelle suchen")
+                            @(SettingsVm.IsTestingConnection ? "Prüfe..." : "🔍 Modelle suchen")
                         </button>
                     </div>
                 </div>
+            }
 
-                <!-- Modell-Eingabe / Auswahl -->
+            <!-- 3. API-Schlüssel (für Cloud-Dienste oder optional bei Custom) -->
+            @if (SettingsVm.IsApiKeyRequired || SettingsVm.IsCustomProvider)
+            {
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #212529;">
+                        @(SettingsVm.IsCustomProvider ? "API-Schlüssel (optional bei lokaler KI):" : "2. API-Schlüssel (OpenAI / Gemini):")
+                    </label>
+                    <div style="display: flex; gap: 6px;">
+                        <input type="password"
+                               placeholder="API-Schlüssel hier eingeben..."
+                               style="flex: 1; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; background-color: #fff; font-size: 13px;"
+                               @bind="SettingsVm.ApiKey"
+                               @bind:event="oninput" />
+
+                        @if (SettingsVm.SelectedProvider == AiProviderType.GoogleGemini || SettingsVm.SelectedProvider == AiProviderType.OpenAiGpt4 || SettingsVm.SelectedProvider == AiProviderType.MistralAi)
+                        {
+                            <button type="button"
+                                    style="padding: 7px 12px; background: @(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) ? "#6c757d" : "#17a2b8"); color: white; border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: @(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) ? "not-allowed" : "pointer"); white-space: nowrap;"
+                                    disabled="@(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) || SettingsVm.IsTestingConnection)"
+                                    @onclick="SettingsVm.TestConnectionAndFetchModelsAsync">
+                                @(SettingsVm.IsTestingConnection ? "Prüfe..." : "🔄 Modelle online abrufen")
+                            </button>
+                        }
+                    </div>
+                </div>
+            }
+
+            <!-- 4. Modell-Auswahl -->
+            <div>
+                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">
+                    3. Modell auswählen:
+                </label>
+
                 @if (SettingsVm.AvailableModels.Any())
                 {
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">Installiertes Modell wählen:</label>
-                        <select style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; background: #fff; font-size: 13px;"
-                                @bind="SettingsVm.SelectedModelName">
-                            @foreach (var model in SettingsVm.AvailableModels)
-                            {
-                                <option value="@model">@model</option>
-                            }
-                        </select>
-                    </div>
+                    <select style="width: 100%; padding: 7px; border: 1px solid #28a745; border-radius: 4px; background: #fff; font-size: 13px; font-weight: bold; color: #155724;"
+                            @bind="SettingsVm.SelectedModelName">
+                        @foreach (var model in SettingsVm.AvailableModels)
+                        {
+                            <option value="@model">@model</option>
+                        }
+                    </select>
+                }
+                else if (SettingsVm.SelectedProvider == AiProviderType.FakeAi)
+                {
+                    <input type="text" disabled value="Fake-KI (Testmodus)" style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; background: #e9ecef; box-sizing: border-box;" />
                 }
                 else if (SettingsVm.IsCustomProvider)
                 {
-                    <!-- Manuelles Modell-Eingabefeld bei benutzerdefinierten Anbietern (falls API /models nicht unterstützt) -->
-                    <div>
-                        <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: #495057;">Modellname (ID):</label>
-                        <input type="text"
-                               placeholder="z. B. llama-3.1-8b-instant, mistral-large-latest, deepseek-chat..."
-                               style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; box-sizing: border-box;"
-                               @bind="SettingsVm.SelectedModelName" />
+                    <input type="text"
+                           placeholder="z. B. llama-3.3-70b-versatile, deepseek-chat..."
+                           style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; box-sizing: border-box;"
+                           @bind="SettingsVm.SelectedModelName"
+                           @bind:event="oninput" />
+                }
+                else if (SettingsVm.IsLocalProvider)
+                {
+                    <div style="padding: 8px 12px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; font-size: 12px; color: #856404;">
+                        ℹ️ Bitte stellen Sie sicher, dass @SettingsVm.SelectedModelDisplayName läuft, und klicken Sie oben auf <strong>„Modelle suchen“</strong>.
                     </div>
                 }
-            }
-
-            <!-- API-Schlüssel -->
-            <div>
-                <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: @(SettingsVm.IsApiKeyRequired ? "#212529" : "#6c757d");">
-                    API-Schlüssel @(SettingsVm.IsCustomProvider ? "(für Cloud-Dienste nötig / bei lokaler KI leer lassen):" : "(OpenAI / Gemini):")
-                </label>
-                <input type="password"
-                       disabled="@(!SettingsVm.IsApiKeyRequired)"
-                       placeholder="@(SettingsVm.IsApiKeyRequired ? "sk-... oder Bearer Token" : "Kein API-Schlüssel für lokales Modell erforderlich")"
-                       style="width: 100%; padding: 7px; border: 1px solid #ced4da; border-radius: 4px; box-sizing: border-box; background-color: @(SettingsVm.IsApiKeyRequired ? "#fff" : "#e9ecef"); cursor: @(SettingsVm.IsApiKeyRequired ? "text" : "not-allowed"); font-size: 13px;"
-                       @bind="SettingsVm.ApiKey" />
+                else
+                {
+                    <div style="padding: 8px 12px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; font-size: 12px; color: #856404;">
+                        ⚠️ Bitte zuerst den API-Schlüssel eingeben und oben auf <strong>„Modelle online abrufen“</strong> klicken.
+                    </div>
+                }
             </div>
 
             <!-- Statusmeldung -->
             @if (!string.IsNullOrEmpty(SettingsVm.ConnectionStatusMessage))
             {
-                <div style="font-size: 12px; padding: 7px 10px; border-radius: 4px; background: @(SettingsVm.ConnectionSuccess ? "#d4edda" : "#f8f9fa"); color: @(SettingsVm.ConnectionSuccess ? "#155724" : "#721c24"); border: 1px solid @(SettingsVm.ConnectionSuccess ? "#c3e6cb" : "#f5c6cb");">
+                <div style="font-size: 12px; padding: 7px 10px; border-radius: 4px; background: @(SettingsVm.ConnectionSuccess ? "#d4edda" : "#f8d7da"); color: @(SettingsVm.ConnectionSuccess ? "#155724" : "#721c24"); border: 1px solid @(SettingsVm.ConnectionSuccess ? "#c3e6cb" : "#f5c6cb");">
                     @SettingsVm.ConnectionStatusMessage
                 </div>
             }
         </div>
 
         <!-- Aktionen -->
-        <div style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
-            <button style="padding: 7px 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;"
-                    @onclick="() => OnClose.InvokeAsync()">
-                Schließen
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <button type="button"
+                    style="padding: 7px 12px; background: #fff; color: #dc3545; border: 1px solid #dc3545; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;"
+                    title="Alle Felder zurücksetzen"
+                    @onclick="SettingsVm.ResetForm">
+                🗑 Maske leeren
             </button>
-            <button style="padding: 7px 16px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
-                    disabled="@SettingsVm.IsSaving"
-                    @onclick="SettingsVm.SaveAndConnectAsync">
-                @(SettingsVm.IsSaving ? "Verbinde..." : "Speichern & Verbinden")
-            </button>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button"
+                        style="padding: 7px 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px;"
+                        @onclick="() => OnClose.InvokeAsync()">
+                    Schließen
+                </button>
+                <button type="button"
+                        style="padding: 7px 16px; background: @(SettingsVm.CanSaveAndConnect ? "#007bff" : "#6c757d"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(SettingsVm.CanSaveAndConnect ? "pointer" : "not-allowed"); font-size: 13px;"
+                        disabled="@(!SettingsVm.CanSaveAndConnect)"
+                        @onclick="HandleSaveAndCloseAsync">
+                    @(SettingsVm.IsSaving ? "Verbinde..." : "Speichern & Verbinden")
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
 @code {
     [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SettingsVm.PropertyChanged += OnSettingsPropertyChanged;
+    }
+
+    // WICHTIG: Feuert zuverlässig jedes Mal, wenn das Fenster sichtbar geschaltet wird
+    protected override async Task OnParametersSetAsync()
+    {
+        await SettingsVm.InitializeAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnSettingsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task HandleSaveAndCloseAsync()
+    {
+        var success = await SettingsVm.SaveAndConnectAsync();
+        if (success)
+        {
+            // Statusleiste sofort live mit dem neuen Modellnamen des aktiven Profils aktualisieren
+            await DocVm.RefreshCurrentAiModelAsync();
+            await OnClose.InvokeAsync();
+        }
+    }
+
+    public void Dispose()
+    {
+        SettingsVm.PropertyChanged -= OnSettingsPropertyChanged;
+    }
 }

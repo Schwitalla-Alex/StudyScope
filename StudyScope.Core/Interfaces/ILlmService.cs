@@ -11,6 +11,7 @@ namespace StudyScope.Core.Interfaces;
 /// </summary>
 public interface ILlmService
 {
-    Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks);
+    Task<string> AskQuestionAsync(string prompt,IEnumerable<string> contextChunks,CancellationToken cancellationToken = default);
     Task<bool> ValidateConnectionAsync();
+    
 }

@@ -1,9 +1,10 @@
-﻿using System.Collections.ObjectModel;
+﻿using StudyScope.Core.Interfaces;
+using StudyScope.Core.Models;
+using System.Collections;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
-using StudyScope.Core.Interfaces;
-using StudyScope.Core.Models;
 
 namespace StudyScope.ViewModels;
 
@@ -15,6 +16,8 @@ public class ChatViewModel : INotifyPropertyChanged
     private string _currentInputPrompt = string.Empty;
     private bool _isBusy = false;
     private string _exportStatusMessage = string.Empty;
+    // Token-Quelle für den aktuellen Abbruch
+    private CancellationTokenSource? _cancellationTokenSource;
 
     public ChatViewModel(ILlmService llmService, IDocumentService pdfService, DocumentListViewModel documentListViewModel)
     {
@@ -174,6 +177,17 @@ public class ChatViewModel : INotifyPropertyChanged
         return relevantHits;
     }
 
+    /// <summary>
+    /// Bricht die aktuell laufende KI-Anfrage ab.
+    /// </summary>
+    public void CancelPrompt()
+    {
+        if (IsBusy && _cancellationTokenSource != null)
+        {
+            _cancellationTokenSource.Cancel();
+        }
+    }
+
     public async Task SendPromptAsync()
     {
         if (string.IsNullOrWhiteSpace(CurrentInputPrompt) || IsBusy)
@@ -190,6 +204,7 @@ public class ChatViewModel : INotifyPropertyChanged
         });
 
         IsBusy = true;
+        _cancellationTokenSource = new CancellationTokenSource();
 
         try
         {
@@ -208,6 +223,9 @@ public class ChatViewModel : INotifyPropertyChanged
 
             foreach (var doc in activeDocs)
             {
+                // Prüfen, ob vor/während des Dokument-Einlesens abgebrochen wurde
+                _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
                 var docChunks = await _pdfService.ExtractChunksAsync(doc.FilePath);
                 if (docChunks != null)
                 {
@@ -218,19 +236,27 @@ public class ChatViewModel : INotifyPropertyChanged
             // Treffsicherste Passagen ermitteln
             var relevantChunks = GetMostRelevantChunks(promptText, contextChunks, maxChunks: 8);
 
-            // 3. Antwort vom Sprachmodell anfordern
-            var response = await _llmService.AskQuestionAsync(promptText, relevantChunks);
+            // 3. Antwort vom KI-Service abrufen
+            var response = await _llmService.AskQuestionAsync(promptText, relevantChunks, _cancellationTokenSource.Token);
 
             if (string.IsNullOrWhiteSpace(response))
             {
                 response = "Keine Antwort vom Sprachmodell erhalten.";
             }
 
-            // 4. KI-Antwort anfügen
+            // 4. KI-Antwort genau einmal anfügen
             Messages.Add(new ChatMessage
             {
                 Role = MessageRole.Assistant,
                 Content = response
+            });
+        }
+        catch (OperationCanceledException)
+        {
+            Messages.Add(new ChatMessage
+            {
+                Role = MessageRole.System,
+                Content = "Anfrage wurde durch den Benutzer abgebrochen."
             });
         }
         catch (Exception ex)
@@ -238,11 +264,13 @@ public class ChatViewModel : INotifyPropertyChanged
             Messages.Add(new ChatMessage
             {
                 Role = MessageRole.System,
-                Content = $"Fehler bei der Anfrage: {ex.Message}\nStacktrace: {ex.StackTrace}"
+                Content = $"Fehler bei der Anfrage: {ex.Message}"
             });
         }
         finally
         {
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
             IsBusy = false;
         }
     }

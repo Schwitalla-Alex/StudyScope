@@ -65,6 +65,17 @@
                     📄 Export (.md)
                 </button>
             }
+
+            @if (FlashVm.Flashcards.Any())
+            {
+                <button type="button"
+                        style="padding: 7px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
+                        title="Alle Karten dieses Profils löschen"
+                        @onclick="ClearCardsAsync">
+                    🗑️ Alle löschen
+                </button>
+            }
+
         </div>
     </div>
 
@@ -532,6 +543,13 @@
 
         await InvokeAsync(StateHasChanged);
         await EnsureFocusAsync();
+    }
+
+    private async Task ClearCardsAsync()
+    {
+        await FlashVm.ClearFlashcardsAsync(DocVm.CurrentProfile);
+        statusMessage = "✓ Alle Karteikarten für dieses Profil wurden gelöscht.";
+        await InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()

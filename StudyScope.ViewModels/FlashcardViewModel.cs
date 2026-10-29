@@ -105,6 +105,20 @@ public class FlashcardViewModel : INotifyPropertyChanged
         }
     }
 
+    private string _currentAiModelDisplayName = "Fake-KI (Testmodus)";
+    public string CurrentAiModelDisplayName
+    {
+        get => _currentAiModelDisplayName;
+        private set
+        {
+            if (_currentAiModelDisplayName != value)
+            {
+                _currentAiModelDisplayName = value;
+                OnPropertyChanged();
+            }
+        }
+    }
+
     public bool HasPreviousCard => CurrentIndex > 0;
     public bool HasNextCard => CurrentIndex < FilteredFlashcards.Count - 1;
     public string ProgressText => FilteredFlashcards.Any() ? $"{CurrentIndex + 1} / {FilteredFlashcards.Count}" : "0 / 0";
@@ -124,6 +138,80 @@ public class FlashcardViewModel : INotifyPropertyChanged
         _pdfService = pdfService;
         _storageService = storageService;
     }
+
+    //public async Task SwitchProfileAsync(string newProfile)
+    //{
+    //    if (string.IsNullOrWhiteSpace(newProfile) || newProfile == CurrentProfile)
+    //        return;
+
+    //    CurrentProfile = newProfile;
+    //    await _storageService.SetLastActiveProfileNameAsync(newProfile);
+
+    //    // 1. Dokumente laden
+    //    await LoadDocumentsAsync();
+
+    //    // 2. Profilbezogenes KI-Modell laden und Anzeigenamen aktualisieren
+    //    await RefreshCurrentAiModelAsync();
+    //}
+
+    //public async Task RefreshCurrentAiModelAsync()
+    //{
+    //    var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
+
+    //    CurrentAiModelDisplayName = !string.IsNullOrWhiteSpace(aiConfig.SelectedModelName)
+    //        ? aiConfig.SelectedModelName
+    //        : (!string.IsNullOrWhiteSpace(aiConfig.ModelName) ? aiConfig.ModelName : "Nicht konfiguriert");
+
+    //    OnPropertyChanged(nameof(CurrentAiModelDisplayName));
+    //}
+
+    //public async Task<bool> SaveAndConnectAsync()
+    //{
+    //    IsSaving = true;
+    //    ConnectionStatusMessage = "Speichern & Prüfen...";
+
+    //    try
+    //    {
+    //        var config = new AiConfig
+    //        {
+    //            ApiKey = ApiKey.Trim(),
+    //            SelectedProvider = SelectedProvider,
+    //            LocalEndpointUrl = LocalEndpointUrl.Trim(),
+    //            SelectedModelName = SelectedModelName,
+    //            ModelName = SelectedModelName
+    //        };
+
+    //        // 1. Aktives Profil ermitteln
+    //        var activeProfile = await _storageService.GetLastActiveProfileNameAsync();
+
+    //        // 2. Profilspezifisch speichern (und als globale Fallback-Config)
+    //        await _storageService.SaveAiConfigForProfileAsync(activeProfile, config);
+    //        await _storageService.SaveAiConfigAsync(config);
+
+    //        // 3. Verbindung testen
+    //        var isConnected = await _llmService.ValidateConnectionAsync();
+    //        if (!isConnected)
+    //        {
+    //            ConnectionSuccess = false;
+    //            ConnectionStatusMessage = "Gespeichert, aber Verbindung zum Provider konnte nicht verifiziert werden.";
+    //            return false;
+    //        }
+
+    //        ConnectionSuccess = true;
+    //        ConnectionStatusMessage = "Erfolgreich verbunden und im Profil gespeichert!";
+    //        return true;
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        ConnectionSuccess = false;
+    //        ConnectionStatusMessage = $"Verbindungsfehler: {ex.Message}";
+    //        return false;
+    //    }
+    //    finally
+    //    {
+    //        IsSaving = false;
+    //    }
+    //}
 
     public async Task LoadCardsForProfileAsync(string profileName)
     {
@@ -262,6 +350,19 @@ public class FlashcardViewModel : INotifyPropertyChanged
 
         IsAnswerRevealed = false;
         NotifyFilterChanged();
+    }
+
+    public async Task ClearFlashcardsAsync(string profileName)
+    {
+        Flashcards.Clear();
+        FilteredFlashcards.Clear();
+
+        // Persistierung: Leere Liste in der JSON-Datei speichern
+        await _flashcardService.SaveFlashcardsAsync(profileName, Flashcards);
+
+        // UI-Zähler und Bindings aktualisieren
+        NotifyFilterChanged();
+        OnPropertyChanged(nameof(CurrentCard));
     }
 
     private void NotifyFilterChanged()

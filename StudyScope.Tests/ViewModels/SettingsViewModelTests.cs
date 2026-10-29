@@ -22,6 +22,16 @@ public class SettingsViewModelTests
         _storageServiceMock = new Mock<IStorageService>();
         _llmServiceMock = new Mock<ILlmService>();
         _discoveryServiceMock = new Mock<ILocalLlmDiscoveryService>();
+
+        // Standard-Rückgaben für Profil & Config im StorageMock definieren:
+        _storageServiceMock.Setup(s => s.GetLastActiveProfileNameAsync())
+                           .ReturnsAsync("Standard");
+
+        _storageServiceMock.Setup(s => s.LoadAiConfigForProfileAsync(It.IsAny<string>()))
+                           .ReturnsAsync(new AiConfig());
+
+        _storageServiceMock.Setup(s => s.LoadAiConfigAsync())
+                           .ReturnsAsync(new AiConfig());
     }
 
     [Test]
@@ -33,10 +43,13 @@ public class SettingsViewModelTests
             SelectedProvider = AiProviderType.GoogleGemini,
             ApiKey = "my-secret-key",
             LocalEndpointUrl = "http://localhost:11434",
-            SelectedModelName = "gemini-1.5-flash"
+            SelectedModelName = "gemini-2.5-flash" // Hier auf das neue Standard-Modell setzen
         };
 
+        // Beide Methoden auf das existingConfig mappen:
         _storageServiceMock.Setup(s => s.LoadAiConfigAsync())
+                           .ReturnsAsync(existingConfig);
+        _storageServiceMock.Setup(s => s.LoadAiConfigForProfileAsync(It.IsAny<string>()))
                            .ReturnsAsync(existingConfig);
 
         var viewModel = new SettingsViewModel(
@@ -50,6 +63,7 @@ public class SettingsViewModelTests
         // Assert
         Assert.That(viewModel.SelectedProvider, Is.EqualTo(AiProviderType.GoogleGemini));
         Assert.That(viewModel.ApiKey, Is.EqualTo("my-secret-key"));
+        Assert.That(viewModel.SelectedModelName, Is.EqualTo("gemini-2.5-flash"));
     }
 
     [Test]
@@ -62,11 +76,14 @@ public class SettingsViewModelTests
         var viewModel = new SettingsViewModel(
             _storageServiceMock.Object,
             _llmServiceMock.Object,
-            _discoveryServiceMock.Object)
-        {
-            ApiKey = "valid-api-key",
-            SelectedProvider = AiProviderType.OpenAiGpt4
-        };
+            _discoveryServiceMock.Object);
+
+        viewModel.SelectedProvider = AiProviderType.OpenAiGpt4;
+        viewModel.ApiKey = "valid-api-key";
+
+        // Modellname setzen und in AvailableModels registrieren:
+        viewModel.AvailableModels.Add("gpt-4o-mini");
+        viewModel.SelectedModelName = "gpt-4o-mini";
 
         // Act
         var result = await viewModel.SaveAndConnectAsync();
@@ -74,6 +91,8 @@ public class SettingsViewModelTests
         // Assert
         Assert.That(result, Is.True);
         Assert.That(viewModel.ConnectionStatusMessage, Does.Contain("Erfolgreich verbunden"));
+
+        // Prüfen auf SaveAiConfigForProfileAsync oder SaveAiConfigAsync:
         _storageServiceMock.Verify(s => s.SaveAiConfigAsync(It.Is<AiConfig>(c =>
             c.ApiKey == "valid-api-key" && c.SelectedProvider == AiProviderType.OpenAiGpt4)), Times.Once);
     }
@@ -127,4 +146,70 @@ public class SettingsViewModelTests
         viewModel.SelectedProvider = AiProviderType.OpenAiGpt4;
         Assert.That(viewModel.IsApiKeyRequired, Is.True);
     }
+
+    [Test]
+    public void SelectedProvider_WhenSetToGoogleGemini_ShouldSelectDefaultModelIfEmpty()
+    {
+        // Arrange
+        var viewModel = new SettingsViewModel(
+            _storageServiceMock.Object,
+            _llmServiceMock.Object,
+            _discoveryServiceMock.Object);
+
+        // Act
+        viewModel.SelectedProvider = AiProviderType.GoogleGemini;
+
+        // Assert
+        Assert.That(viewModel.IsGeminiProvider, Is.True);
+        Assert.That(viewModel.SelectedModelName, Is.EqualTo("gemini-2.5-flash"));
+    }
+
+    [Test]
+    public void ResetForm_ShouldClearAllFieldsAndModels()
+    {
+        // Arrange
+        var viewModel = new SettingsViewModel(
+            _storageServiceMock.Object,
+            _llmServiceMock.Object,
+            _discoveryServiceMock.Object)
+        {
+            ApiKey = "some-key",
+            LocalEndpointUrl = "http://localhost:1234",
+            SelectedModelName = "my-model"
+        };
+        viewModel.AvailableModels.Add("my-model");
+
+        // Act
+        viewModel.ResetForm();
+
+        // Assert
+        Assert.That(viewModel.ApiKey, Is.Empty);
+        Assert.That(viewModel.LocalEndpointUrl, Is.Empty);
+        Assert.That(viewModel.SelectedModelName, Is.Empty);
+        Assert.That(viewModel.AvailableModels, Is.Empty);
+        Assert.That(viewModel.ConnectionStatusMessage, Is.Empty);
+        Assert.That(viewModel.ConnectionSuccess, Is.False);
+    }
+
+    [Test]
+    public void CanSaveAndConnect_ForLocalProvider_DoesNotRequireApiKey()
+    {
+        // Arrange
+        var viewModel = new SettingsViewModel(
+            _storageServiceMock.Object,
+            _llmServiceMock.Object,
+            _discoveryServiceMock.Object);
+
+        // Act: LM Studio ohne API-Key einrichten
+        viewModel.SelectedProvider = AiProviderType.LmStudioLocal;
+        viewModel.LocalEndpointUrl = "http://localhost:1234";
+        viewModel.AvailableModels.Add("local-model");
+        viewModel.SelectedModelName = "local-model";
+        viewModel.ApiKey = string.Empty; // Bewusst leer
+
+        // Assert
+        Assert.That(viewModel.IsApiKeyRequired, Is.False);
+        Assert.That(viewModel.CanSaveAndConnect, Is.True);
+    }
+
 }

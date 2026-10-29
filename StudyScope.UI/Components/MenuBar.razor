@@ -2,6 +2,7 @@
 @using Photino.NET
 @using StudyScope.UI.Services
 @inject DocumentListViewModel DocVm
+@inject SettingsViewModel SettingsVm
 @inject IJSRuntime Js
 
 <div style="background: #e9ecef; border-bottom: 1px solid #ced4da; padding: 2px 10px; display: flex; gap: 15px; font-size: 13px; user-select: none; position: relative;">
@@ -40,10 +41,13 @@
     </div>
 
     <!-- Menüpunkt Einstellungen -->
-    <span style="cursor: pointer; padding: 4px 8px;" @onclick="() => OnOpenSettings.InvokeAsync()">
+   @*  <span style="cursor: pointer; padding: 4px 8px;" @onclick="() => OnOpenSettings.InvokeAsync()">
+        Einstellungen
+    </span> *@
+    <!-- Menüpunkt Einstellungen -->
+    <span style="cursor: pointer; padding: 4px 8px;" @onclick="HandleOpenSettingsAsync">
         Einstellungen
     </span>
-
     <!-- Menüpunkt Hilfe -->
    <span style="cursor: pointer; padding: 4px 8px;" @onclick="ShowAboutAsync">
         Hilfe
@@ -101,7 +105,7 @@
 @code {
     [Parameter] public EventCallback OnOpenSettings { get; set; }
     [Parameter] public EventCallback OnShowAboutAsync { get; set; }
-
+    
     private bool isFileMenuOpen = false;
     private bool showProfileModal = false;
     private string newProfileInput = string.Empty;
@@ -131,6 +135,7 @@
         if (!string.IsNullOrWhiteSpace(newProfileInput))
         {
             await DocVm.CreateNewProfileAsync(newProfileInput.Trim());
+            SettingsVm.ResetForm(); // Maske leeren
             showProfileModal = false;
             newProfileInput = string.Empty;
             StateHasChanged(); // UI sofort neu rendern
@@ -149,6 +154,13 @@
         {
             await OnShowAboutAsync.InvokeAsync();
         }
+    }
+
+    private async Task HandleOpenSettingsAsync()
+    {
+        // Lädt die KI-Daten des aktuell gewählten Profils in die Maske
+        await SettingsVm.InitializeAsync();
+        await OnOpenSettings.InvokeAsync();
     }
 }
 

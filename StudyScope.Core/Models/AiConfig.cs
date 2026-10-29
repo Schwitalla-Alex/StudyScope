@@ -10,7 +10,8 @@ public enum AiProviderType
     LmStudioLocal, // Lokale KI (LM Studio)
     GoogleGemini,  // Öffentliche KI
     OpenAiGpt4,    // Öffentliche KI
-    CustomOpenAi   // Benutzerdefiniert (OpenAI-kompatibel: Groq, DeepSeek, Mistral, vLLM, OpenRouter etc.)
+    CustomOpenAi,   // Benutzerdefiniert (OpenAI-kompatibel: Groq, DeepSeek, Mistral, vLLM, OpenRouter etc.)
+    MistralAi       // Öffentliche KI (Mistral AI)
 }
 
 public class AiConfig

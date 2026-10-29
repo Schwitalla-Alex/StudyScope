@@ -89,15 +89,15 @@ public class JsonStorageServiceTests
         var profileDev = "Programmierung";
 
         var lawDocs = new List<DocumentItem>
-    {
-        new() { FileName = "BGB_Skript.pdf", FilePath = Path.Combine(_tempDirectory, "BGB_Skript.pdf") }
-    };
+        {
+            new() { FileName = "BGB_Skript.pdf", FilePath = Path.Combine(_tempDirectory, "BGB_Skript.pdf") }
+        };
 
-        var devDocs = new List<DocumentItem>
-    {
-        new() { FileName = "CSharp_Guide.pdf", FilePath = Path.Combine(_tempDirectory, "CSharp_Guide.pdf") },
-        new() { FileName = "DesignPatterns.pdf", FilePath = Path.Combine(_tempDirectory, "DesignPatterns.pdf") }
-    };
+            var devDocs = new List<DocumentItem>
+        {
+            new() { FileName = "CSharp_Guide.pdf", FilePath = Path.Combine(_tempDirectory, "CSharp_Guide.pdf") },
+            new() { FileName = "DesignPatterns.pdf", FilePath = Path.Combine(_tempDirectory, "DesignPatterns.pdf") }
+        };
 
         // Act
         await _storageService.SaveDocumentsAsync(profileLaw, lawDocs);
@@ -112,6 +112,28 @@ public class JsonStorageServiceTests
 
         Assert.That(loadedDev.Count, Is.EqualTo(2));
         Assert.That(loadedDev.Any(d => d.FileName == "CSharp_Guide.pdf"), Is.True);
+    }
+
+    [Test]
+    public async Task SaveAndLoadAiConfigForProfile_ShouldPersistDistinctModelPerProfile()
+    {
+        // Arrange
+        var profileA = "Mathe";
+        var profileB = "Informatik";
+
+        var configA = new AiConfig { SelectedModelName = "gpt-4o-mini", SelectedProvider = AiProviderType.OpenAiGpt4 };
+        var configB = new AiConfig { SelectedModelName = "llama3.2:latest", SelectedProvider = AiProviderType.OllamaLocal };
+
+        // Act
+        await _storageService.SaveAiConfigForProfileAsync(profileA, configA);
+        await _storageService.SaveAiConfigForProfileAsync(profileB, configB);
+
+        var loadedA = await _storageService.LoadAiConfigForProfileAsync(profileA);
+        var loadedB = await _storageService.LoadAiConfigForProfileAsync(profileB);
+
+        // Assert
+        Assert.That(loadedA.SelectedModelName, Is.EqualTo("gpt-4o-mini"));
+        Assert.That(loadedB.SelectedModelName, Is.EqualTo("llama3.2:latest"));
     }
 
     [Test]

@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -19,13 +17,15 @@ public interface IStorageService
     Task<List<string>> GetAllProfileNamesAsync();
     Task DeleteProfileAsync(string profileName);
 
-
     // Dokumente für ein bestimmtes Profil laden / speichern
     Task<List<DocumentItem>> LoadDocumentsAsync(string profileName);
     Task SaveDocumentsAsync(string profileName, IEnumerable<DocumentItem> documents);
 
-    // Globale KI-Konfiguration
+    // Globale KI-Konfiguration (Fallback / Standard)
     Task<AiConfig> LoadAiConfigAsync();
     Task SaveAiConfigAsync(AiConfig config);
-   
+
+    // NEU: Profilspezifische KI-Konfiguration laden / speichern
+    Task<AiConfig> LoadAiConfigForProfileAsync(string profileName);
+    Task SaveAiConfigForProfileAsync(string profileName, AiConfig config);
 }

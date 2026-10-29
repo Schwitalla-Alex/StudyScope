@@ -2,34 +2,33 @@
 @inject DocumentListViewModel DocVm
 @implements IDisposable
 
-<div style="height: 28px; background: #f8f9fa; border-top: 1px solid #dee2e6; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; font-size: 11px; color: #6c757d; user-select: none;">
-    <div style="display: flex; gap: 16px;">
-        <span>Dokumente: <strong>@DocVm.Documents.Count</strong> (@DocVm.Documents.Count(d => d.IsSelected && !d.IsMissing) aktiv)</span>
-        <span>Geladene Textstellen: <strong>@TotalChunkCount</strong></span>
+<div style="background: #e9ecef; border-top: 1px solid #ced4da; padding: 4px 15px; font-size: 12px; color: #495057; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+    <!-- Linker Bereich: Dokumente & Textstellen -->
+    <div style="display: flex; gap: 20px;">
+        <span>Dokumente: <b>@DocVm.TotalDocumentCount</b> (@DocVm.FilteredDocuments.Count(d => d.IsSelected && !d.IsMissing) aktiv)</span>
+        <span>Geladene Textstellen: <b>@DocVm.TotalChunkCount</b></span>
     </div>
 
-    <div>
-        <span>Profil: <strong>@DocVm.CurrentProfile</strong></span>
+    <!-- Rechter Bereich: Aktives KI-Modell & Profil -->
+    <div style="display: flex; gap: 20px;">
+        <span>KI: <b>@DocVm.CurrentAiModelDisplayName</b></span>
+        <span>Profil: <b>@DocVm.CurrentProfile</b></span>
     </div>
 </div>
 
 @code {
-    private int TotalChunkCount => DocVm.Documents
-        .Where(d => d.IsSelected && !d.IsMissing)
-        .Sum(d => d.ExtractedChunkCount);
-
     protected override void OnInitialized()
     {
-        DocVm.PropertyChanged += OnDocVmChanged;
+        DocVm.PropertyChanged += OnDocVmPropertyChanged;
     }
 
-    private void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnDocVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         InvokeAsync(StateHasChanged);
     }
 
     public void Dispose()
     {
-        DocVm.PropertyChanged -= OnDocVmChanged;
+        DocVm.PropertyChanged -= OnDocVmPropertyChanged;
     }
 }

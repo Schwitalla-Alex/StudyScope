@@ -8,8 +8,10 @@ namespace StudyScope.Core.Models;
 
 public class UserProfile
 {
-    public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; } = "Standard";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public List<DocumentItem> Documents { get; set; } = new();
+
+    // Die profilbezogene KI-Einstellung:
+    public AiConfig AiSettings { get; set; } = new();
 }

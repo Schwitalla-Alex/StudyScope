@@ -47,8 +47,12 @@ public class ChatViewModelTests
         var question = "Was besagt § 12?";
         var answer = "§ 12 regelt die Frist.";
 
-        _llmServiceMock.Setup(x => x.AskQuestionAsync(question, It.IsAny<IEnumerable<string>>()))
-                       .ReturnsAsync(answer);
+        //CancellationToken als 3. Parameter im Setup matchen:
+        _llmServiceMock.Setup(x => x.AskQuestionAsync(
+                question,
+                It.IsAny<IEnumerable<string>>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(answer);
 
         var chatVm = new ChatViewModel(_llmServiceMock.Object, _pdfServiceMock.Object, _documentListViewModel);
         chatVm.CurrentInputPrompt = question;
