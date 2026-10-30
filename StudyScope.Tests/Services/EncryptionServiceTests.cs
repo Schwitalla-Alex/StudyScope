@@ -18,7 +18,7 @@ public class EncryptionServiceTests
     public void Encrypt_WhenGivenPlainText_ShouldReturnEncryptedBase64String()
     {
         // Arrange
-        var rawApiKey = "AIzaSyB9CgV9HcnC4IDkNi4fTQrotj1dPyZzudA";
+        var rawApiKey = "DUMMY_TEST_KEY_12345_ABCDE";
 
         // Act
         var encrypted = _service.Encrypt(rawApiKey);
@@ -32,7 +32,7 @@ public class EncryptionServiceTests
     public void Decrypt_WhenGivenEncryptedString_ShouldRestoreOriginalPlainText()
     {
         // Arrange
-        var rawApiKey = "AIzaSyB9CgV9HcnC4IDkNi4fTQrotj1dPyZzudA";
+        var rawApiKey = "DUMMY_TEST_KEY_12345_ABCDE";
         var encrypted = _service.Encrypt(rawApiKey);
 
         // Act
@@ -59,7 +59,7 @@ public class EncryptionServiceTests
     public void Encrypt_WhenCalledTwiceWithSamePlainText_ShouldProduceDifferentCiphertexts()
     {
         // Arrange: Gleicher Key soll wegen zufälliger Nonce/IV niemals denselben Chiffretext ergeben
-        var rawApiKey = "AIzaSyB9CgV9HcnC4IDkNi4fTQrotj1dPyZzudA";
+        var rawApiKey = "DUMMY_TEST_KEY_12345_ABCDE";
 
         // Act
         var encryptedFirst = _service.Encrypt(rawApiKey);
