@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projekt
 
-StudyScope ist eine Desktop-Lernsoftware für Windows und Linux (Photino.Blazor) für Dokumenten-Chat (RAG) und automatische Karteikarten-Generierung aus eigenen Unterlagen (`.pdf`, `.txt`, `.csv`). KI-Anbindung wahlweise lokal (Ollama, LM Studio) oder über Cloud-Dienste (Gemini, OpenAI, Mistral, beliebige OpenAI-kompatible Endpunkte). Code, Kommentare und UI-Texte sind auf Deutsch.
+StudyScope ist eine Desktop-Lernsoftware für Windows und Linux (Photino.Blazor 4) für Dokumenten-Chat (RAG) und automatische Karteikarten-Generierung aus eigenen Unterlagen (`.pdf`, `.txt`, `.csv`). KI-Anbindung wahlweise lokal (Ollama, LM Studio) oder über Cloud-Dienste (Gemini, OpenAI, Mistral, beliebige OpenAI-kompatible Endpunkte). Code, Kommentare und UI-Texte sind auf Deutsch.
 
 ## Befehle
 
-Alle Projekte zielen auf `net10.0`. Solution-Datei ist `StudyScope.slnx`. Unter Linux braucht Photino zusätzlich WebKitGTK.
+Alle Projekte zielen auf `net10.0`. Solution-Datei ist `StudyScope.slnx`. Unter Linux braucht Photino 4 zusätzlich WebKitGTK **4.1** (`libwebkit2gtk-4.1.so.0`), GTK 3 und libnotify. Photino 3.x war gegen WebKitGTK 4.0 gelinkt, das ab Ubuntu 24.04 fehlt – nicht auf 3.x zurückgehen. Alle Photino-Projekte (UI und Setup) müssen dieselbe Photino.Blazor-Version nutzen.
 
 ```bash
 dotnet build StudyScope.slnx

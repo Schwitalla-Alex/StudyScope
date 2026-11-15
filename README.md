@@ -53,7 +53,10 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ### Voraussetzungen
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
-- Unter Linux zusätzlich WebKitGTK (wird von Photino für die Oberfläche benötigt)
+- Unter Linux zusätzlich WebKitGTK 4.1, GTK 3 und libnotify (benötigt von Photino 4 für die Oberfläche), z. B. unter Ubuntu 24.04:
+  ```bash
+  sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0 libnotify4
+  ```
 
 ### Quellcode ausführen
 ```bash
