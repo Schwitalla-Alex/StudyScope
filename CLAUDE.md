@@ -30,6 +30,12 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 - **StudyScope.ViewModels** – ViewModels mit handgeschriebenem `INotifyPropertyChanged` (CommunityToolkit.Mvvm ist referenziert, wird aber nicht genutzt).
 - **StudyScope.UI** – Photino.Blazor-Host. `Program.cs` ist der DI-Composition-Root (alles als Singleton). Razor-Komponenten in `Components/` injizieren ViewModels per `@inject`, abonnieren `PropertyChanged` und rufen `StateHasChanged` auf (Abmeldung in `Dispose`). Native Dateidialoge laufen über die statische Klasse `DesktopDialogs` (`MainWindow` wird in `Program.cs` gesetzt). Dateipfade zu Programmdateien immer über `AppContext.BaseDirectory` bilden, nie relativ zum Arbeitsverzeichnis.
 
+### Installationsprogramm
+
+- **StudyScope.Setup.Core** – plattformunabhängige Setup-Logik ohne Photino (vollständig in `StudyScope.Tests/Setup` getestet): Interfaces (`IInstallService`, `IPathProvider`, `IShortcutService`, `IPayloadProvider`, …), `InstallServiceBase` (Entpacken, Update, Manifest `install.json`, Deinstallation) mit `Services/Windows` und `Services/Linux` (je mit `[SupportedOSPlatform]`), ViewModels auf Basis von `ViewModelBase`.
+- **StudyScope.Setup** – Photino-Host des Assistenten; `wwwroot` ist eingebettet (`ManifestEmbeddedFileProvider`), damit die setup.exe eine einzelne Datei ist.
+- Regeln: Benutzerdaten (`AppPaths.UserDataDirectory`) bei Installation/Update nie anfassen; Deinstallation löscht nur Dateien aus dem Manifest. `%LOCALAPPDATA%\Photino` teilen sich alle Photino-Apps – nicht löschen. Linux-Tests (`[Platform("Linux")]`) laufen nur unter Linux.
+
 ### Photino-Eigenheiten (gelten für jedes Photino-Projekt, auch das Setup)
 
 - Dateifilter für `ShowOpenFile`/`ShowSaveFile` immer über `FileDialogFilters.ForPhotino(filters, OperatingSystem.IsLinux())` übergeben: Photino.Native unter Linux zerlegt Filter mit mehreren Endungen falsch und zeigt sonst keine Dateien an.

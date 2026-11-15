@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
     <ProjectReference Include="..\StudyScope.Infrastructure\StudyScope.Infrastructure.csproj" />
+    <ProjectReference Include="..\StudyScope.Setup.Core\StudyScope.Setup.Core.csproj" />
     <ProjectReference Include="..\StudyScope.ViewModels\StudyScope.ViewModels.csproj" />
   </ItemGroup>
 
