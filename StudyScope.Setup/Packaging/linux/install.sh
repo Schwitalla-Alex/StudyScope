@@ -88,6 +88,31 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
   exit 1
 fi
 
+# ------------------------------------------------------------------ Optionale Empfehlung: Farb-Emoji-Schrift
+# StudyScope nutzt Emoji als Symbole (z. B. in den Reitern). Ohne Emoji-Schrift erscheinen dort Kästchen.
+has_emoji_font() {
+  if command -v fc-list >/dev/null 2>&1; then
+    fc-list 2>/dev/null | grep -qi 'emoji'
+  else
+    find /usr/share/fonts /usr/local/share/fonts "$HOME/.local/share/fonts" "$HOME/.fonts" \
+      -iname '*emoji*' -print -quit 2>/dev/null | grep -q .
+  fi
+}
+
+if ! has_emoji_font; then
+  EMOJI_CMD=""
+  if command -v apt-get >/dev/null 2>&1; then EMOJI_CMD="sudo apt install fonts-noto-color-emoji"
+  elif command -v dnf >/dev/null 2>&1; then EMOJI_CMD="sudo dnf install google-noto-color-emoji-fonts"
+  elif command -v pacman >/dev/null 2>&1; then EMOJI_CMD="sudo pacman -S noto-fonts-emoji"
+  elif command -v zypper >/dev/null 2>&1; then EMOJI_CMD="sudo zypper install noto-coloremoji-fonts"
+  fi
+  echo
+  echo "Empfehlung (optional): Es wurde keine Farb-Emoji-Schrift gefunden. StudyScope funktioniert auch ohne,"
+  echo "zeigt dann aber einige Symbole (z. B. in den Reitern) als Kästchen an."
+  [ -n "$EMOJI_CMD" ] && echo "Zum Nachinstallieren:  $EMOJI_CMD"
+  echo
+fi
+
 if [ "${1:-}" = "--check" ]; then
   echo "Alle Voraussetzungen für StudyScope sind erfüllt."
   exit 0
