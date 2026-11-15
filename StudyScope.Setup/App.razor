@@ -1,0 +1,11 @@
+@inject SetupContext Context
+
+<!-- Root-Komponente: Installationsassistent oder Deinstallation (Argument --uninstall) -->
+@if (Context.Mode == SetupMode.Uninstall)
+{
+    <UninstallWizard />
+}
+else
+{
+    <SetupWizard />
+}

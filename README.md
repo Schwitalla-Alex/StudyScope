@@ -3,10 +3,10 @@
 > **Intelligente Desktop-Lernsoftware mit lokaler LLM-Unterstützung und Dokumenten-RAG.**
 
 ![Lizenz](https://img.shields.io/badge/Lizenz-Apache%202.0-blue.svg)
-![.NET](https://img.shields.io/badge/.NET-8.0%2B-purple.svg)
-![Plattform](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)
+![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
+![Plattform](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux-lightgrey.svg)
 
-**StudyScope** ist eine schlanke, plattformübergreifend konzipierte Desktop-Anwendung zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Lernunterlagen. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
+**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Lernunterlagen. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
 
 ---
 
@@ -26,12 +26,30 @@
 
 ## 🚀 Download & Installation
 
-Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich:
+Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich. Die Installationsprogramme finden Sie im Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
 
-1. Wechseln Sie rechts auf der Repository-Seite in den Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
-2. Laden Sie die aktuellste Datei `StudyScope-v1.0.2-win-x64.zip` herunter.
-3. Entpacken Sie das ZIP-Archiv an einem beliebigen Ort auf Ihrem PC.
-4. Starten Sie die Anwendung per Doppelklick auf **`StudyScope.exe`**.
+### Windows
+1. Laden Sie `StudyScope-<Version>-Setup.exe` herunter und starten Sie die Datei.
+2. Folgen Sie dem Assistenten. Installiert wird nur für Ihr Benutzerkonto (Standard: `%LOCALAPPDATA%\Programs\StudyScope`), Administratorrechte sind nicht nötig.
+3. Deinstallation über **Einstellungen ➔ Apps ➔ Installierte Apps ➔ StudyScope**.
+
+Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinstalliert). Fehlt sie, weist das Setup darauf hin.
+
+> **Hinweis zur SmartScreen-Warnung:** Die `setup.exe` ist (noch) nicht digital signiert. Windows zeigt deshalb beim ersten Start „Der Computer wurde durch Windows geschützt“ an. Klicken Sie auf **Weitere Informationen** und dann auf **Trotzdem ausführen**. Wer sichergehen will, vergleicht vorher die SHA256-Prüfsumme aus den Release-Notes, z. B. in PowerShell mit `Get-FileHash .\StudyScope-<Version>-Setup.exe`.
+
+### Linux
+1. `StudyScope-<Version>-linux-x64.tar.gz` herunterladen.
+2. Im Terminal entpacken und das Installationsskript starten:
+   ```bash
+   tar -xzf StudyScope-<Version>-linux-x64.tar.gz
+   cd StudyScope-<Version>-linux-x64
+   bash install.sh
+   ```
+3. Fehlen Systembibliotheken, nennt das Skript den passenden Befehl (z. B. `sudo apt install …`). Diesen ausführen und danach erneut `bash install.sh` starten.
+
+`install.sh` prüft die benötigten Systembibliotheken (WebKitGTK 4.1, GTK 3, libnotify, ICU), nennt bei Bedarf den passenden Installationsbefehl Ihrer Distribution und startet dann den Setup-Assistenten. Installiert wird nach `~/.local/share/StudyScope`, mit Eintrag im Anwendungsmenü. Deinstallation über den Menüeintrag (Rechtsklick ➔ „StudyScope deinstallieren“) oder mit `bash install.sh --uninstall`.
+
+Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.config/StudyScope`) bleiben bei Updates erhalten und werden bei der Deinstallation nur auf ausdrücklichen Wunsch gelöscht.
 
 ---
 
@@ -53,11 +71,16 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ### Voraussetzungen
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
+- Unter Linux zusätzlich WebKitGTK 4.1, GTK 3 und libnotify (benötigt von Photino 4 für die Oberfläche) sowie ICU (benötigt von .NET), z. B. unter Ubuntu 26.04:
+  ```bash
+  sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libnotify4 libicu78
+  ```
+  Das ICU-Paket trägt die Versionsnummer im Namen und unterscheidet sich je nach Ubuntu-Version (Ubuntu 24.04: `libicu74`, Ubuntu 26.04: `libicu78`). Den passenden Namen zeigt `apt-cache search --names-only '^libicu[0-9]+$'`.
 
 ### Quellcode ausführen
 ```bash
 # Repository klonen
-git clone [https://github.com/Schwitalla-Alex/StudyScope.git](https://github.com/Schwitalla-Alex/StudyScope.git)
+git clone https://github.com/Schwitalla-Alex/StudyScope.git
 cd StudyScope
 
 # Abhängigkeiten wiederherstellen
@@ -65,3 +88,13 @@ dotnet restore
 
 # Anwendung starten
 dotnet run --project StudyScope.UI
+```
+
+### Installationsprogramm bauen
+```bash
+# Windows (PowerShell) – setup.exe und/oder Linux-Paket nach artifacts/
+.\build\build-setup.ps1 -Runtime all
+
+# Linux
+./build/build-setup.sh all
+```

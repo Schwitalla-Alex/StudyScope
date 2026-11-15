@@ -57,3 +57,17 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 .DS_Store
+# Ausgabe der Build-Skripte (build/build-setup.*)
+/artifacts/
+
+# Benutzerdaten und Dokumente (Sicherheitsnetz: StudyScope speichert sie unter %APPDATA%\StudyScope
+# bzw. ~/.config/StudyScope, sie dürfen aber auch als Kopie nie ins Repository gelangen)
+Profiles/
+config.json
+last_profile.txt
+*.pdf
+*.csv
+*.txt
+.env
+# Alte Release-Ausgabe (Builds landen in artifacts/)
+/publish/

@@ -1,0 +1,34 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+
+<h2>@(Vm.IsUpdate ? "StudyScope wird aktualisiert" : "StudyScope wird installiert")</h2>
+<p class="lead">@(Install.IsRunning ? "Bitte warten Sie, bis alle Dateien kopiert sind." : Install.StatusMessage)</p>
+
+<div class="progress" role="progressbar" aria-valuenow="@Install.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
+    <div class="progress-bar @(Install.HasError ? "failed" : "")" style="width: @(Install.ProgressPercent)%"></div>
+</div>
+<div class="progress-text">
+    <span id="progress-status">@Install.StatusMessage</span>
+    <span>@Install.ProgressPercent %</span>
+</div>
+
+@if (Install.HasError)
+{
+    <div class="box box-error" id="install-error">
+        <strong>Die Installation konnte nicht abgeschlossen werden.</strong><br />
+        @Install.ErrorMessage
+    </div>
+}
+
+<div class="log">
+    @foreach (var line in Install.RecentLog)
+    {
+        <div>@line</div>
+    }
+</div>
+
+@code {
+    private InstallViewModel Install => Vm.Install;
+
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm, Vm.Install };
+}

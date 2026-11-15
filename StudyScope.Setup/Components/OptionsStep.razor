@@ -1,0 +1,29 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+
+<h2>Optionen</h2>
+<p class="lead">Wählen Sie, welche Verknüpfungen angelegt werden sollen.</p>
+
+<label class="check">
+    <input type="checkbox" id="opt-menu" checked="@Vm.CreateMenuShortcut" disabled="@(!Vm.IsMenuShortcutOptional)"
+           @onchange="e => Vm.CreateMenuShortcut = (bool)(e.Value ?? false)" />
+    <span>@Vm.MenuShortcutLabel</span>
+</label>
+<label class="check">
+    <input type="checkbox" id="opt-desktop" checked="@Vm.CreateDesktopShortcut"
+           @onchange="e => Vm.CreateDesktopShortcut = (bool)(e.Value ?? false)" />
+    <span>Verknüpfung auf dem Desktop</span>
+</label>
+
+<h3>Zusammenfassung</h3>
+<table class="summary">
+    <tr><th>Aktion</th><td>@(Vm.IsUpdate ? $"Update von {Vm.InstalledVersion} auf {Vm.Version}" : $"Neuinstallation von Version {Vm.Version}")</td></tr>
+    <tr><th>Zielordner</th><td><code>@Vm.InstallDirectory</code></td></tr>
+    <tr><th>Benutzerdaten</th><td><code>@Vm.UserDataDirectory</code> (bleiben erhalten)</td></tr>
+</table>
+
+<p class="hint">Klicken Sie auf „@(Vm.IsUpdate ? "Aktualisieren" : "Installieren")“, um zu beginnen.</p>
+
+@code {
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
+}

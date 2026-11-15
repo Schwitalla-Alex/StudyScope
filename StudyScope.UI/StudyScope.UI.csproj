@@ -5,15 +5,13 @@
 		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-
-		<!-- Versionsnummer auf 1.0.2 anheben -->
-		<Version>1.0.2</Version>
-		<AssemblyVersion>1.0.2.0</AssemblyVersion>
-		<FileVersion>1.0.2.0</FileVersion>
+		<!-- Versionsnummer steht zentral in Directory.Build.props -->
+		<!-- Icon der exe (Startmenü, Desktop-Verknüpfung, „Apps & Features“) -->
+		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Photino.Blazor" Version="3.1.*" />
+		<PackageReference Include="Photino.Blazor" Version="4.0.13" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
 	</ItemGroup>
 

@@ -1,0 +1,27 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+
+<div class="done-icon">✓</div>
+<h2>@(Vm.IsUpdate ? "Update abgeschlossen" : "Installation abgeschlossen")</h2>
+<p class="lead">
+    StudyScope @Vm.Version wurde erfolgreich @(Vm.IsUpdate ? "aktualisiert" : "installiert").
+</p>
+
+<table class="summary">
+    <tr><th>Installiert in</th><td><code>@Vm.InstallDirectory</code></td></tr>
+    <tr><th>Deinstallation</th><td>@UninstallHint</td></tr>
+</table>
+
+<label class="check">
+    <input type="checkbox" id="opt-launch" checked="@Vm.LaunchAfterFinish"
+           @onchange="e => Vm.LaunchAfterFinish = (bool)(e.Value ?? false)" />
+    <span>StudyScope jetzt starten</span>
+</label>
+
+@code {
+    private static string UninstallHint => OperatingSystem.IsWindows()
+        ? "Über Einstellungen → Apps → Installierte Apps → StudyScope"
+        : "Über den Menüeintrag (Rechtsklick → „StudyScope deinstallieren“) oder „bash install.sh --uninstall“";
+
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
+}

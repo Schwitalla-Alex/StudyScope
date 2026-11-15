@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -153,11 +154,20 @@ public class DocumentListViewModel : INotifyPropertyChanged
         await RefreshCurrentAiModelAsync();
     }
 
-    public async Task CreateNewProfileAsync(string newProfileName)
+    /// <summary>
+    /// Prüft einen Profilnamen für die Oberfläche. Liefert eine verständliche Meldung oder <c>null</c>, wenn er gültig ist.
+    /// </summary>
+    public string? ValidateProfileName(string? profileName) => ProfileNameValidator.Validate(profileName);
+
+    /// <summary>
+    /// Legt ein Profil an und aktiviert es. Ungültige Namen werden abgelehnt (Rückgabe <c>false</c>, nichts wird gespeichert).
+    /// </summary>
+    public async Task<bool> CreateNewProfileAsync(string newProfileName)
     {
-        var trimmed = newProfileName?.Trim();
-        if (string.IsNullOrWhiteSpace(trimmed))
-            return;
+        if (ValidateProfileName(newProfileName) != null)
+            return false;
+
+        var trimmed = newProfileName.Trim();
 
         // 1. In Liste der verfügbaren Profile aufnehmen
         if (!AvailableProfiles.Any(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
@@ -175,6 +185,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
         // 3. Ansicht aktualisieren
         await LoadDocumentsAsync();
         await RefreshCurrentAiModelAsync();
+        return true;
     }
 
     public async Task DeleteProfileAsync(string profileName)

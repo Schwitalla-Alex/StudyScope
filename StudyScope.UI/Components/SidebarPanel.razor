@@ -130,11 +130,17 @@
 
             <input type="text"
                    placeholder="z. B. BGB, Steuerrecht, Projekt..."
-                   style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid #007bff; border-radius: 4px; outline: none; box-sizing: border-box;"
+                   style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid @(profileNameError == null ? "#007bff" : "#dc3545"); border-radius: 4px; outline: none; box-sizing: border-box;"
                    @bind="newProfileName"
                    @bind:event="oninput"
+                   @bind:after="UpdateProfileNameError"
                    @onkeydown="HandleKeyDownAsync"
                    autofocus />
+
+            @if (profileNameError != null)
+            {
+                <span id="profile-name-error" style="font-size: 12px; color: #dc3545; margin-top: -6px;">@profileNameError</span>
+            }
 
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
                 <button type="button"
@@ -143,8 +149,8 @@
                     Abbrechen
                 </button>
                 <button type="button"
-                        style="padding: 6px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(string.IsNullOrWhiteSpace(newProfileName) ? "not-allowed" : "pointer"); font-size: 12px;"
-                        disabled="@string.IsNullOrWhiteSpace(newProfileName)"
+                        style="padding: 6px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(CanCreateProfile ? "pointer" : "not-allowed"); opacity: @(CanCreateProfile ? "1" : "0.6"); font-size: 12px;"
+                        disabled="@(!CanCreateProfile)"
                         @onclick="ConfirmCreateProfileAsync">
                     Erstellen & Konfigurieren
                 </button>
@@ -158,6 +164,16 @@
 
     private bool showCreateModal = false;
     private string newProfileName = string.Empty;
+    private string? profileNameError;
+
+    // Prüfung liegt im ViewModel; die Komponente zeigt nur das Ergebnis an
+    private bool CanCreateProfile => DocVm.ValidateProfileName(newProfileName) == null;
+
+    private void UpdateProfileNameError()
+    {
+        // Leeres Feld nur sperren, nicht sofort als Fehler anzeigen
+        profileNameError = string.IsNullOrWhiteSpace(newProfileName) ? null : DocVm.ValidateProfileName(newProfileName);
+    }
 
     private string GetFileIcon(string filePath) => Path.GetExtension(filePath)?.ToLowerInvariant() switch
     {
@@ -170,23 +186,25 @@
     private void OpenCreateProfileModal()
     {
         newProfileName = string.Empty;
+        profileNameError = null;
         showCreateModal = true;
     }
 
     private void CancelCreateProfile()
     {
         newProfileName = string.Empty;
+        profileNameError = null;
         showCreateModal = false;
     }
 
     private async Task ConfirmCreateProfileAsync()
     {
-        var trimmed = newProfileName?.Trim();
-        if (string.IsNullOrWhiteSpace(trimmed))
+        // 1. ZUERST das neue Profil im ViewModel erstellen und aktivieren (ungültige Namen lehnt das ViewModel ab)
+        if (!await DocVm.CreateNewProfileAsync(newProfileName))
+        {
+            profileNameError = DocVm.ValidateProfileName(newProfileName);
             return;
-
-        // 1. ZUERST das neue Profil sofort im ViewModel erstellen und aktivieren
-        await DocVm.CreateNewProfileAsync(trimmed);
+        }
 
         // 2. SettingsViewModel für das neue Profil frisch zurücksetzen
         SettingsVm.ResetForm();
@@ -204,7 +222,7 @@
 
     private async Task HandleKeyDownAsync(KeyboardEventArgs e)
     {
-        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(newProfileName))
+        if (e.Key == "Enter" && CanCreateProfile)
         {
             await ConfirmCreateProfileAsync();
         }

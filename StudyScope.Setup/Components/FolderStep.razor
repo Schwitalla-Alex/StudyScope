@@ -1,0 +1,41 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+
+<h2>Installationsordner</h2>
+
+@if (Vm.IsUpdate)
+{
+    <p class="lead">Das Update wird in den Ordner der vorhandenen Installation geschrieben.</p>
+}
+else
+{
+    <p class="lead">Wählen Sie, wohin StudyScope installiert werden soll.</p>
+}
+
+<label class="field-label" for="install-dir">Zielordner</label>
+<div class="folder-row">
+    <input id="install-dir" type="text" class="@(Vm.FolderError == null ? "" : "invalid")"
+           value="@Vm.InstallDirectory"
+           disabled="@Vm.IsUpdate"
+           @oninput="e => Vm.InstallDirectory = e.Value?.ToString() ?? string.Empty" />
+    <button class="btn btn-secondary" id="btn-browse" disabled="@Vm.IsUpdate" @onclick="Vm.BrowseFolderAsync">Durchsuchen …</button>
+</div>
+
+@if (Vm.FolderError != null)
+{
+    <div class="field-error" id="folder-error">@Vm.FolderError</div>
+}
+@if (!Vm.IsUpdate && Vm.InstallDirectory != Vm.DefaultInstallDirectory)
+{
+    <button class="link" id="btn-default-folder" @onclick="Vm.ResetFolderToDefault">Standardordner verwenden (@Vm.DefaultInstallDirectory)</button>
+}
+
+<div class="box box-info">
+    <strong>Ihre Daten bleiben getrennt.</strong><br />
+    Profile, Dokumentlisten und KI-Einstellungen liegen unter <code>@Vm.UserDataDirectory</code>
+    und werden bei Installation und Update nicht verändert.
+</div>
+
+@code {
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
+}

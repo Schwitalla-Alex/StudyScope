@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AssemblyName>StudyScope.Setup</AssemblyName>
+		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
+
+		<!-- wwwroot wird in die Assembly eingebettet, damit setup.exe als einzelne Datei lauffähig ist -->
+		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+		<!-- Keine statischen Web-Assets veröffentlichen (wwwroot ist eingebettet) -->
+		<StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Gleiche Photino-Version wie StudyScope.UI (siehe CLAUDE.md) -->
+		<PackageReference Include="Photino.Blazor" Version="4.0.13" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.*" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
+		<ProjectReference Include="..\StudyScope.Setup.Core\StudyScope.Setup.Core.csproj" />
+	</ItemGroup>
+
+	<!-- wwwroot nicht als lose Dateien ausliefern, sondern einbetten (ManifestEmbeddedFileProvider in Program.cs) -->
+	<ItemGroup>
+		<Content Remove="wwwroot\**" />
+		<EmbeddedResource Include="wwwroot\**" />
+		<!-- Gemeinsames Stylesheet aus StudyScope.UI (keine Kopie) -->
+		<EmbeddedResource Include="..\StudyScope.UI\wwwroot\css\studyscope-base.css" Link="wwwroot\css\studyscope-base.css" />
+	</ItemGroup>
+
+	<!-- Installationspaket: vom Build-Skript per -p:PayloadZip=<Pfad zum ZIP> eingebunden -->
+	<ItemGroup Condition="'$(PayloadZip)' != ''">
+		<EmbeddedResource Include="$(PayloadZip)" LogicalName="payload.zip" WithCulture="false" />
+	</ItemGroup>
+
+</Project>
