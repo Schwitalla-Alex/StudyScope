@@ -53,8 +53,43 @@ public class JsonStorageService : IStorageService
 
     private string GetProfileFilePath(string profileName)
     {
-        var safeName = string.IsNullOrWhiteSpace(profileName) ? "Standard" : profileName.Trim();
-        return Path.Combine(GetProfilesDirectory(), $"{safeName}.json");
+        var profilesDir = Path.GetFullPath(GetProfilesDirectory());
+        var fullPath = Path.GetFullPath(Path.Combine(profilesDir, $"{ToSafeProfileFileName(profileName)}.json"));
+
+        // Letzte Absicherung: Die Datei muss direkt im Profiles-Ordner liegen (kein "..", kein absoluter Pfad)
+        var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+        var parent = Path.GetDirectoryName(fullPath);
+        if (!string.Equals(parent, Path.TrimEndingDirectorySeparator(profilesDir), comparison))
+            throw new ArgumentException($"Ungültiger Profilname: '{profileName}'", nameof(profileName));
+
+        return fullPath;
+    }
+
+    /// <summary>
+    /// Macht aus einem Profilnamen einen sicheren Dateinamen (ohne Endung): Pfadtrenner und auf dem
+    /// aktuellen System unzulässige Zeichen werden zu '_', reservierte Windows-Namen erhalten unter Windows ein '_' davor.
+    /// Bereits gültige Namen bleiben unverändert, damit bestehende Profildateien weiter gefunden werden.
+    /// </summary>
+    public static string ToSafeProfileFileName(string? profileName)
+    {
+        var name = string.IsNullOrWhiteSpace(profileName) ? "Standard" : profileName.Trim();
+
+        var invalid = new HashSet<char>(Path.GetInvalidFileNameChars()) { '/', '\\' };
+        var safe = new string(name.Select(c => invalid.Contains(c) || char.IsControl(c) ? '_' : c).ToArray());
+
+        if (OperatingSystem.IsWindows())
+        {
+            // Windows entfernt Punkte/Leerzeichen am Ende stillschweigend → vorher selbst kürzen
+            safe = safe.TrimEnd('.', ' ');
+            if (safe.Length == 0 || ProfileNameValidator.IsReservedName(safe))
+                safe = "_" + safe;
+        }
+
+        // "." und ".." allein wären Verzeichnisverweise
+        if (safe is "." or "..")
+            safe = safe.Replace('.', '_');
+
+        return safe;
     }
 
     private string GetConfigFilePath()
