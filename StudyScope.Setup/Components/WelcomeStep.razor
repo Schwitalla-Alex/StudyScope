@@ -1,0 +1,36 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+
+<h2>Willkommen</h2>
+<p class="lead">
+    Dieser Assistent installiert <strong>StudyScope @Vm.Version</strong> auf Ihrem Computer –
+    die Lernsoftware für Dokumenten-Chat und Lernkarteikarten mit KI-Unterstützung.
+</p>
+
+@if (!Vm.IsPayloadAvailable)
+{
+    <div class="box box-warning" id="welcome-no-payload">
+        <strong>Kein Installationspaket enthalten.</strong><br />
+        Dieses Setup wurde ohne StudyScope-Programmdateien gebaut (Entwickler-Build). Bitte verwenden Sie das
+        Setup aus dem Build-Skript.
+    </div>
+}
+else if (Vm.IsUpdate)
+{
+    <div class="box box-info" id="welcome-update">
+        <strong>StudyScope @Vm.InstalledVersion ist bereits installiert.</strong><br />
+        Das Setup aktualisiert die Installation in <code>@Vm.InstallDirectory</code> auf Version @Vm.Version.
+    </div>
+}
+
+<ul class="checklist">
+    <li>Installation nur für Ihr Benutzerkonto – keine Administratorrechte nötig</li>
+    <li>Ihre Profile und Einstellungen bleiben bei Updates erhalten</li>
+    <li>Deinstallation jederzeit über das Setup möglich</li>
+</ul>
+
+<p class="hint">Klicken Sie auf „Weiter“, um fortzufahren.</p>
+
+@code {
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
+}

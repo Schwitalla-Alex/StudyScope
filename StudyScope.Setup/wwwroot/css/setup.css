@@ -1,0 +1,72 @@
+/* Gestaltung des Installationsassistenten. Grundregeln und Farben: css/studyscope-base.css (aus StudyScope.UI). */
+body { background: #fff; color: var(--ss-text); font-size: 14px; }
+#app { height: 100vh; }
+
+.wizard { display: flex; flex-direction: column; height: 100vh; }
+
+.wizard-header { display: flex; align-items: center; gap: 14px; padding: 16px 24px; border-bottom: 1px solid var(--ss-border-light); background: var(--ss-panel-light); }
+.wizard-logo { width: 40px; height: 40px; }
+.wizard-title h1 { font-size: 18px; margin: 0; white-space: nowrap; }
+.wizard-title span { font-size: 12px; color: var(--ss-text-muted); }
+
+.wizard-steps { margin-left: auto; display: flex; gap: 6px; list-style: none; }
+.wizard-steps li { font-size: 11px; color: var(--ss-text-muted); padding: 4px 8px; border-radius: 12px; background: var(--ss-panel); white-space: nowrap; }
+.wizard-steps li.active { background: var(--ss-primary); color: #fff; font-weight: 600; }
+.wizard-steps li.done { background: #d4edda; color: #155724; }
+/* Schmale Fenster: nur den aktuellen Schritt anzeigen */
+@media (max-width: 700px) { .wizard-steps li:not(.active) { display: none; } }
+
+.wizard-content { flex: 1; overflow-y: auto; padding: 26px 32px; display: flex; flex-direction: column; gap: 14px; }
+.wizard-content h2 { font-size: 20px; }
+.wizard-content h3 { font-size: 14px; margin-top: 8px; }
+.lead { color: #495057; line-height: 1.5; }
+.hint { color: var(--ss-text-muted); font-size: 12px; }
+code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 12px; background: var(--ss-panel); padding: 1px 5px; border-radius: 3px; word-break: break-all; }
+
+.wizard-footer { display: flex; gap: 8px; padding: 12px 24px; border-top: 1px solid var(--ss-border-light); background: var(--ss-panel-light); }
+.spacer { flex: 1; }
+
+.btn { padding: 7px 18px; border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn-primary { background: var(--ss-primary); color: #fff; }
+.btn-success { background: var(--ss-success); color: #fff; }
+.btn-danger { background: var(--ss-danger); color: #fff; }
+.btn-secondary { background: var(--ss-text-muted); color: #fff; }
+.link { background: none; border: none; color: var(--ss-primary); cursor: pointer; font-size: 12px; text-align: left; padding: 0; }
+
+.box { padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5; }
+.box-info { background: #e7f1ff; color: #084298; }
+.box-warning { background: var(--ss-warning-bg); color: var(--ss-warning-text); }
+.box-error { background: #f8d7da; color: #842029; }
+
+.checklist { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.checklist li::before { content: "✓  "; color: var(--ss-success); font-weight: bold; }
+
+.field-label { font-weight: 600; font-size: 13px; }
+.folder-row { display: flex; gap: 8px; }
+.folder-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; }
+.folder-row input.invalid { border-color: var(--ss-danger); }
+.folder-row input:disabled { background: var(--ss-panel-light); color: var(--ss-text-muted); }
+.field-error { color: var(--ss-danger); font-size: 12px; margin-top: -6px; }
+
+.check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; cursor: pointer; }
+.check input { margin-top: 3px; width: 16px; height: 16px; }
+.check-danger { padding: 10px 12px; border: 1px solid #f5c2c7; border-radius: 6px; background: #fff5f5; }
+.check small { color: var(--ss-text-muted); }
+
+.summary { border-collapse: collapse; font-size: 13px; }
+.summary th { text-align: left; color: var(--ss-text-muted); font-weight: 600; padding: 4px 16px 4px 0; vertical-align: top; white-space: nowrap; }
+.summary td { padding: 4px 0; }
+
+.progress { height: 14px; background: var(--ss-panel); border-radius: 7px; overflow: hidden; }
+.progress-bar { height: 100%; background: var(--ss-primary); transition: width 0.2s; }
+.progress-bar.failed { background: var(--ss-danger); }
+.progress-text { display: flex; justify-content: space-between; font-size: 12px; color: var(--ss-text-muted); }
+.log { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; color: var(--ss-text-muted); background: var(--ss-panel-light); border: 1px solid var(--ss-border-light); border-radius: 4px; padding: 8px 10px; min-height: 110px; }
+
+.done-icon { width: 56px; height: 56px; border-radius: 50%; background: #d4edda; color: var(--ss-success); font-size: 32px; display: flex; align-items: center; justify-content: center; }
+
+.modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: flex; align-items: center; justify-content: center; }
+.modal { background: #fff; border-radius: 8px; width: 460px; max-width: 90vw; padding: 22px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25); font-size: 13px; line-height: 1.5; }
+.modal h3 { font-size: 16px; color: var(--ss-danger); }
+.modal-buttons { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }

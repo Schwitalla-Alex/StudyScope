@@ -1,0 +1,90 @@
+@inherits ViewModelComponent
+@inject SetupWizardViewModel Vm
+@inject SetupContext Context
+
+<div class="wizard">
+    <header class="wizard-header">
+        <img src="favicon.ico" alt="" class="wizard-logo" />
+        <div class="wizard-title">
+            <h1>StudyScope Setup</h1>
+            <span>Version @Vm.Version@(Context.IsSandbox ? " · Sandbox" : "")</span>
+        </div>
+        <ol class="wizard-steps">
+            @foreach (var (step, label) in Steps)
+            {
+                <li class="@StepClass(step)">@((int)step + 1). @label</li>
+            }
+        </ol>
+    </header>
+
+    <main class="wizard-content">
+        @switch (Vm.CurrentStep)
+        {
+            case WizardStep.Welcome:
+                <WelcomeStep />
+                break;
+            case WizardStep.Folder:
+                <FolderStep />
+                break;
+            case WizardStep.Options:
+                <OptionsStep />
+                break;
+            case WizardStep.Progress:
+                <ProgressStep />
+                break;
+            case WizardStep.Finished:
+                <FinishStep />
+                break;
+        }
+    </main>
+
+    <footer class="wizard-footer">
+        @if (Vm.CurrentStep != WizardStep.Finished)
+        {
+            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Cancel">Abbrechen</button>
+        }
+        <span class="spacer"></span>
+        @if (Vm.CanGoBack)
+        {
+            <button class="btn btn-secondary" id="btn-back" @onclick="Vm.GoBack">Zurück</button>
+        }
+        @switch (Vm.CurrentStep)
+        {
+            case WizardStep.Welcome:
+            case WizardStep.Folder:
+                <button class="btn btn-primary" id="btn-next" disabled="@(!Vm.CanGoNext)" @onclick="Vm.GoNextAsync">Weiter</button>
+                break;
+            case WizardStep.Options:
+                <button class="btn btn-success" id="btn-next" @onclick="Vm.GoNextAsync">@(Vm.IsUpdate ? "Aktualisieren" : "Installieren")</button>
+                break;
+            case WizardStep.Progress when Vm.Install.HasError:
+                <button class="btn btn-primary" id="btn-retry" @onclick="Vm.RetryAsync">Erneut versuchen</button>
+                break;
+            case WizardStep.Finished:
+                <button class="btn btn-primary" id="btn-finish" @onclick="Vm.Finish">Fertig stellen</button>
+                break;
+        }
+    </footer>
+</div>
+
+@code {
+    private static readonly (WizardStep Step, string Label)[] Steps =
+    {
+        (WizardStep.Welcome, "Willkommen"),
+        (WizardStep.Folder, "Ordner"),
+        (WizardStep.Options, "Optionen"),
+        (WizardStep.Progress, "Installation"),
+        (WizardStep.Finished, "Fertig")
+    };
+
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm, Vm.Install };
+
+    protected override void OnInitialized()
+    {
+        Vm.Initialize();
+        base.OnInitialized();
+    }
+
+    private string StepClass(WizardStep step) =>
+        step == Vm.CurrentStep ? "active" : step < Vm.CurrentStep ? "done" : "";
+}

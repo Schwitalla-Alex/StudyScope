@@ -29,6 +29,12 @@ public sealed class InstallViewModel : ViewModelBase
     /// <summary>Die letzten Schritte für die Detailanzeige.</summary>
     public ObservableCollection<string> Log { get; } = new();
 
+    /// <summary>Threadsichere Kopie der letzten Protokollzeilen (die Installation läuft im Hintergrund).</summary>
+    public IReadOnlyList<string> RecentLog
+    {
+        get { lock (Log) return Log.TakeLast(6).ToArray(); }
+    }
+
     /// <summary>Startet die Installation. Liefert true bei Erfolg; Fehler stehen danach in <see cref="ErrorMessage"/>.</summary>
     public async Task<bool> RunAsync(InstallOptions options)
     {

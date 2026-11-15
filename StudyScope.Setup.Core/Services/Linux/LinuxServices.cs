@@ -34,7 +34,7 @@ public sealed class LinuxPathProvider : IPathProvider
     public string? CurrentSetupExecutablePath => Environment.ProcessPath;
 
     public static string ApplicationsDirectory => Path.Combine(DataHome, "applications");
-    public static string IconsDirectory => Path.Combine(DataHome, "icons", "hicolor", "256x256", "apps");
+    public static string IconsDirectory => Path.Combine(DataHome, "icons", "hicolor", "128x128", "apps");
 }
 
 /// <summary>Installation unter Linux: Ausführungsrechte setzen, vorhandene Installation über die .desktop-Datei finden.</summary>

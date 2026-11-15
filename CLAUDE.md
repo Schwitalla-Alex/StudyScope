@@ -33,7 +33,9 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 ### Installationsprogramm
 
 - **StudyScope.Setup.Core** – plattformunabhängige Setup-Logik ohne Photino (vollständig in `StudyScope.Tests/Setup` getestet): Interfaces (`IInstallService`, `IPathProvider`, `IShortcutService`, `IPayloadProvider`, …), `InstallServiceBase` (Entpacken, Update, Manifest `install.json`, Deinstallation) mit `Services/Windows` und `Services/Linux` (je mit `[SupportedOSPlatform]`), ViewModels auf Basis von `ViewModelBase`.
-- **StudyScope.Setup** – Photino-Host des Assistenten; `wwwroot` ist eingebettet (`ManifestEmbeddedFileProvider`), damit die setup.exe eine einzelne Datei ist.
+- **StudyScope.Setup** – Photino-Host des Assistenten (`--uninstall` startet die Deinstallation); `wwwroot` ist eingebettet (`ManifestEmbeddedFileProvider`), damit die setup.exe eine einzelne Datei ist. Das Installationspaket kommt per `-p:PayloadZip=<zip>` als Ressource `payload.zip` hinein. `css/studyscope-base.css` stammt per `Link` aus StudyScope.UI. Razor-Komponenten erben von `ViewModelComponent` (PropertyChanged-Abo zentral).
+- Testen ohne Eingriff ins System: Debug-Build mit Umgebungsvariable `STUDYSCOPE_SETUP_SANDBOX=<ordner>` lenkt Installation, Verknüpfungen, Benutzerdaten und Registry (`HKCU\Software\StudyScope.Sandbox`) um. Mit `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333` lässt sich die Oberfläche per DevTools-Protokoll steuern.
+- Fenstergröße unter Windows: `WindowSizing` rechnet logische Pixel mit Monitor-DPI **und** Windows-Textgröße (`TextScaleFactor`) um; Photinos `ScreenDpi` allein liefert nur den System-Wert.
 - Regeln: Benutzerdaten (`AppPaths.UserDataDirectory`) bei Installation/Update nie anfassen; Deinstallation löscht nur Dateien aus dem Manifest. `%LOCALAPPDATA%\Photino` teilen sich alle Photino-Apps – nicht löschen. Linux-Tests (`[Platform("Linux")]`) laufen nur unter Linux.
 
 ### Photino-Eigenheiten (gelten für jedes Photino-Projekt, auch das Setup)

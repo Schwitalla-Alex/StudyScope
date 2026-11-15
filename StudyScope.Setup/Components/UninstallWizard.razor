@@ -1,0 +1,104 @@
+@inherits ViewModelComponent
+@inject UninstallViewModel Vm
+@inject SetupContext Context
+
+<div class="wizard">
+    <header class="wizard-header">
+        <img src="favicon.ico" alt="" class="wizard-logo" />
+        <div class="wizard-title">
+            <h1>StudyScope deinstallieren</h1>
+            <span>@(Vm.IsInstalled ? $"Installierte Version {Vm.InstalledVersion}" : "Keine Installation gefunden")@(Context.IsSandbox ? " · Sandbox" : "")</span>
+        </div>
+    </header>
+
+    <main class="wizard-content">
+        @if (!Vm.IsInstalled && Vm.CurrentStep != UninstallStep.Finished)
+        {
+            <h2>Keine Installation gefunden</h2>
+            <p class="lead">Auf diesem Computer wurde keine StudyScope-Installation für Ihr Benutzerkonto gefunden.</p>
+        }
+        else if (Vm.CurrentStep == UninstallStep.Confirm)
+        {
+            <h2>StudyScope entfernen?</h2>
+            <p class="lead">Die Programmdateien und Verknüpfungen von StudyScope werden entfernt.</p>
+
+            <table class="summary">
+                <tr><th>Version</th><td>@Vm.InstalledVersion</td></tr>
+                <tr><th>Installiert in</th><td><code>@Vm.InstallDirectory</code></td></tr>
+            </table>
+
+            <label class="check check-danger">
+                <input type="checkbox" id="opt-delete-userdata" checked="@Vm.DeleteUserData"
+                       @onchange="e => Vm.DeleteUserData = (bool)(e.Value ?? false)" />
+                <span>
+                    Auch meine Profile und Einstellungen löschen<br />
+                    <small><code>@Vm.UserDataDirectory</code></small>
+                </span>
+            </label>
+            <p class="hint">Ohne Haken bleiben Ihre Daten erhalten und stehen nach einer erneuten Installation wieder zur Verfügung.</p>
+
+            @if (Vm.HasError)
+            {
+                <div class="box box-error" id="uninstall-error">@Vm.ErrorMessage</div>
+            }
+        }
+        else if (Vm.CurrentStep == UninstallStep.Progress)
+        {
+            <h2>StudyScope wird entfernt</h2>
+            <div class="progress"><div class="progress-bar" style="width: @(Vm.ProgressPercent)%"></div></div>
+            <div class="progress-text"><span id="progress-status">@Vm.StatusMessage</span><span>@Vm.ProgressPercent %</span></div>
+        }
+        else
+        {
+            <div class="done-icon">✓</div>
+            <h2>StudyScope wurde entfernt</h2>
+            <p class="lead" id="uninstall-done">
+                @(Vm.UserDataDeleted
+                    ? "Programmdateien, Verknüpfungen sowie Ihre Profile und Einstellungen wurden gelöscht."
+                    : "Programmdateien und Verknüpfungen wurden entfernt. Ihre Profile und Einstellungen sind erhalten geblieben.")
+            </p>
+        }
+    </main>
+
+    <footer class="wizard-footer">
+        @if (Vm.CurrentStep == UninstallStep.Confirm && Vm.IsInstalled)
+        {
+            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Close">Abbrechen</button>
+            <span class="spacer"></span>
+            <button class="btn btn-danger" id="btn-uninstall" @onclick="Vm.RequestUninstallAsync">Deinstallieren</button>
+        }
+        else if (Vm.CurrentStep != UninstallStep.Progress)
+        {
+            <span class="spacer"></span>
+            <button class="btn btn-primary" id="btn-close" @onclick="Vm.Close">Schließen</button>
+        }
+    </footer>
+</div>
+
+@if (Vm.IsDeleteConfirmationVisible)
+{
+    <div class="modal-backdrop">
+        <div class="modal" role="alertdialog" aria-labelledby="confirm-title">
+            <h3 id="confirm-title">Profile und Einstellungen endgültig löschen?</h3>
+            <p>
+                Alle Profile, Dokumentlisten, KI-Einstellungen und gespeicherten API-Schlüssel unter
+                <code>@Vm.UserDataDirectory</code> werden unwiderruflich gelöscht.
+            </p>
+            <p>Ihre eigenen Dokumente (PDF, TXT, CSV) bleiben unberührt.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="btn-confirm-cancel" @onclick="Vm.CancelDeleteConfirmation">Abbrechen</button>
+                <button class="btn btn-danger" id="btn-confirm-delete" @onclick="Vm.ConfirmDeleteUserDataAsync">Endgültig löschen</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
+
+    protected override void OnInitialized()
+    {
+        Vm.Initialize();
+        base.OnInitialized();
+    }
+}
