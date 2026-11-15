@@ -26,12 +26,24 @@
 
 ## 🚀 Download & Installation
 
-Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich:
+Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich. Die Installationsprogramme finden Sie im Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
 
-1. Wechseln Sie rechts auf der Repository-Seite in den Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
-2. Laden Sie die ZIP-Datei der aktuellsten Version herunter (`StudyScope-v<Version>-win-x64.zip`).
-3. Entpacken Sie das ZIP-Archiv an einem beliebigen Ort auf Ihrem PC.
-4. Starten Sie die Anwendung per Doppelklick auf **`StudyScope.exe`**.
+### Windows
+1. Laden Sie `StudyScope-<Version>-Setup.exe` herunter und starten Sie die Datei.
+2. Folgen Sie dem Assistenten. Installiert wird nur für Ihr Benutzerkonto (Standard: `%LOCALAPPDATA%\Programs\StudyScope`), Administratorrechte sind nicht nötig.
+3. Deinstallation über **Einstellungen ➔ Apps ➔ Installierte Apps ➔ StudyScope**.
+
+Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinstalliert). Fehlt sie, weist das Setup darauf hin.
+
+### Linux
+```bash
+tar -xzf StudyScope-<Version>-linux-x64.tar.gz
+cd StudyScope-<Version>-linux-x64
+bash install.sh
+```
+`install.sh` prüft die benötigten Systembibliotheken (WebKitGTK 4.1, GTK 3, libnotify, ICU), nennt bei Bedarf den passenden Installationsbefehl Ihrer Distribution und startet dann den Setup-Assistenten. Installiert wird nach `~/.local/share/StudyScope`, mit Eintrag im Anwendungsmenü. Deinstallation über den Menüeintrag (Rechtsklick ➔ „StudyScope deinstallieren“) oder mit `bash install.sh --uninstall`.
+
+Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.config/StudyScope`) bleiben bei Updates erhalten und werden bei der Deinstallation nur auf ausdrücklichen Wunsch gelöscht.
 
 ---
 
@@ -70,3 +82,13 @@ dotnet restore
 
 # Anwendung starten
 dotnet run --project StudyScope.UI
+```
+
+### Installationsprogramm bauen
+```bash
+# Windows (PowerShell) – setup.exe und/oder Linux-Paket nach artifacts/
+.\build\build-setup.ps1 -Runtime all
+
+# Linux
+./build/build-setup.sh all
+```

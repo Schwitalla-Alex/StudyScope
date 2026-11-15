@@ -17,6 +17,8 @@ dotnet test StudyScope.Tests
 dotnet test StudyScope.Tests --filter "FullyQualifiedName~LlmServiceDispatcherTests"   # eine Testklasse
 dotnet test StudyScope.Tests --filter "Name=MethodenName"                              # ein einzelner Test
 dotnet publish StudyScope.UI -c Release -r win-x64                                     # Release-Build (siehe Properties/PublishProfiles)
+.\build\build-setup.ps1 -Runtime all          # Installationsprogramme nach artifacts/ (setup.exe, linux-x64.tar.gz)
+./build/build-setup.sh all                     # dasselbe unter Linux
 ```
 
 Tests: NUnit 4 + Moq. Die Versionsnummer steht zentral in `Directory.Build.props` (gilt für App und Setup).

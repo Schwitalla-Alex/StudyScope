@@ -1,0 +1,8 @@
+<!-- Packt einen Ordner plattformunabhängig als ZIP (genutzt von build-setup.ps1 und build-setup.sh).
+     Aufruf: dotnet msbuild build/Zip.proj -p:SourceDirectory=<ordner> -p:DestinationFile=<datei.zip> -->
+<Project>
+  <Target Name="Build">
+    <Error Condition="'$(SourceDirectory)' == '' Or '$(DestinationFile)' == ''" Text="SourceDirectory und DestinationFile angeben." />
+    <ZipDirectory SourceDirectory="$(SourceDirectory)" DestinationFile="$(DestinationFile)" Overwrite="true" />
+  </Target>
+</Project>
