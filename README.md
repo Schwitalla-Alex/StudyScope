@@ -53,10 +53,11 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ### Voraussetzungen
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
-- Unter Linux zusätzlich WebKitGTK 4.1, GTK 3 und libnotify (benötigt von Photino 4 für die Oberfläche), z. B. unter Ubuntu 24.04:
+- Unter Linux zusätzlich WebKitGTK 4.1, GTK 3 und libnotify (benötigt von Photino 4 für die Oberfläche) sowie ICU (benötigt von .NET), z. B. unter Ubuntu 26.04:
   ```bash
-  sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0 libnotify4
+  sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libnotify4 libicu78
   ```
+  Das ICU-Paket trägt die Versionsnummer im Namen und unterscheidet sich je nach Ubuntu-Version (Ubuntu 24.04: `libicu74`, Ubuntu 26.04: `libicu78`). Den passenden Namen zeigt `apt-cache search --names-only '^libicu[0-9]+$'`.
 
 ### Quellcode ausführen
 ```bash

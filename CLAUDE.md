@@ -30,6 +30,12 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 - **StudyScope.ViewModels** – ViewModels mit handgeschriebenem `INotifyPropertyChanged` (CommunityToolkit.Mvvm ist referenziert, wird aber nicht genutzt).
 - **StudyScope.UI** – Photino.Blazor-Host. `Program.cs` ist der DI-Composition-Root (alles als Singleton). Razor-Komponenten in `Components/` injizieren ViewModels per `@inject`, abonnieren `PropertyChanged` und rufen `StateHasChanged` auf (Abmeldung in `Dispose`). Native Dateidialoge laufen über die statische Klasse `DesktopDialogs` (`MainWindow` wird in `Program.cs` gesetzt). Dateipfade zu Programmdateien immer über `AppContext.BaseDirectory` bilden, nie relativ zum Arbeitsverzeichnis.
 
+### Photino-Eigenheiten (gelten für jedes Photino-Projekt, auch das Setup)
+
+- Dateifilter für `ShowOpenFile`/`ShowSaveFile` immer über `FileDialogFilters.ForPhotino(filters, OperatingSystem.IsLinux())` übergeben: Photino.Native unter Linux zerlegt Filter mit mehreren Endungen falsch und zeigt sonst keine Dateien an.
+- Nach `Build()` `app.MainWindow.SetLogVerbosity(0)` setzen, sonst flutet Photino unter Linux die Konsole.
+- Profilnamen werden zu Dateinamen: Prüfung über `ProfileNameValidator` (Core, im ViewModel), Absicherung des Pfads in `JsonStorageService.ToSafeProfileFileName`.
+
 ### KI-Anbindung
 
 `LlmServiceDispatcher` ist die einzige `ILlmService`-Implementierung im Betrieb: Bei jedem Aufruf lädt er die **globale** `AiConfig` (`LoadAiConfigAsync`) und verzweigt per `switch` auf `SelectedProvider` (Ollama nativ, Gemini nativ, Mistral, sonst OpenAI-kompatibler Pfad für LM Studio/OpenAI/Custom). Ein neuer Provider braucht: Enum-Wert in `AiConfig.cs`, Fälle in `AskQuestionAsync` **und** `ValidateConnectionAsync`, sowie UI in `SettingsModal.razor`/`SettingsViewModel`. `FakeAi` ist der Standard-/Testmodus und liefert für Karteikarten-Prompts (enthält „Lernkarteikarten“ oder „JSON“) ein festes JSON-Array.
