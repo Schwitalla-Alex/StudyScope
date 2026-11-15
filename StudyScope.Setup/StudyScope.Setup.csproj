@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<AssemblyName>StudyScope.Setup</AssemblyName>
+		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
+
+		<!-- wwwroot wird in die Assembly eingebettet, damit setup.exe als einzelne Datei lauffähig ist -->
+		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+		<!-- Keine statischen Web-Assets veröffentlichen (wwwroot ist eingebettet) -->
+		<StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Photino.Blazor" Version="3.1.*" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="10.0.*" />
+	</ItemGroup>
+
+	<!-- wwwroot nicht als lose Dateien ausliefern, sondern einbetten (ManifestEmbeddedFileProvider in Program.cs) -->
+	<ItemGroup>
+		<Content Remove="wwwroot\**" />
+		<EmbeddedResource Include="wwwroot\**" />
+	</ItemGroup>
+
+</Project>
