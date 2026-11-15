@@ -101,7 +101,7 @@ public class InstallServiceBaseTests
         Assert.That(File.Exists(Path.Combine(_env.InstallDirectory, "Alt.dll")), Is.False, "veraltete Datei nicht entfernt");
         Assert.That(Directory.Exists(Path.Combine(_env.InstallDirectory, "alt")), Is.False, "leerer alter Ordner nicht entfernt");
         Assert.That(File.Exists(fremd), Is.True, "fremde Datei wurde gelöscht");
-        Assert.That(File.ReadAllText(userFile), Is.EqualTo("{\"Name\":\"Datenschutz\"}"), "Benutzerdaten verändert");
+        Assert.That(File.ReadAllText(userFile), Is.EqualTo("{\"Name\":\"Testprofil\"}"), "Benutzerdaten verändert");
         Assert.That(manifest.Version, Is.EqualTo("1.0.3"));
         Assert.That(_shortcuts.Removed, Has.Count.EqualTo(2), "alte Verknüpfungen nicht ersetzt");
         Assert.That(reports.Last().Message, Is.EqualTo("Update abgeschlossen."));

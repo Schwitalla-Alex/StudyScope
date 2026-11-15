@@ -27,9 +27,9 @@ public sealed class SetupTestEnvironment : IDisposable
     /// <summary>Simuliert vorhandene Profile des Benutzers.</summary>
     public string CreateUserData()
     {
-        var file = Path.Combine(UserDataDirectory, "Profiles", "Datenschutz.json");
+        var file = Path.Combine(UserDataDirectory, "Profiles", "Testprofil.json");
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
-        File.WriteAllText(file, "{\"Name\":\"Datenschutz\"}");
+        File.WriteAllText(file, "{\"Name\":\"Testprofil\"}");
         return file;
     }
 }

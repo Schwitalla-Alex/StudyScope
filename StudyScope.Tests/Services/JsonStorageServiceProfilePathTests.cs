@@ -116,7 +116,7 @@ public class JsonStorageServiceProfilePathTests
     public void ToSafeProfileFileName_GueltigerNameBleibtUnveraendert()
     {
         // Bestehende Profildateien müssen nach dem Update weiter gefunden werden
-        foreach (var name in new[] { "Datenschutz", "Steuerrecht 2026", "Übung Ä Ö Ü", "Jura_Teil-1" })
+        foreach (var name in new[] { "Testprofil", "Steuerrecht 2026", "Übung Ä Ö Ü", "Jura_Teil-1" })
             Assert.That(JsonStorageService.ToSafeProfileFileName(name), Is.EqualTo(name));
     }
 
