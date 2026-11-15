@@ -135,14 +135,14 @@ public class JsonStorageService : IStorageService
             {
                 profile.Name = profileName;
                 profile.Documents ??= new List<DocumentItem>();
-                return profile;
-            }
 
-            // Direkt nach dem Deserialisieren des UserProfile-Objekts:
-            if (profile?.AiSettings != null && !string.IsNullOrWhiteSpace(profile.AiSettings.ApiKey))
-            {
-                // ApiKey für die UI/ViewModels wieder transparent entschlüsseln
-                profile.AiSettings.ApiKey = _encryptionService.Decrypt(profile.AiSettings.ApiKey);
+                // ApiKey für die UI/ViewModels transparent entschlüsseln (im Speicher immer Klartext)
+                if (profile.AiSettings != null)
+                {
+                    profile.AiSettings.ApiKey = DecryptApiKey(profile.AiSettings.ApiKey);
+                }
+
+                return profile;
             }
         }
         catch
@@ -152,7 +152,53 @@ public class JsonStorageService : IStorageService
 
         return new UserProfile { Name = profileName };
     }
-   
+
+    /// <summary>
+    /// Schreibt ein Profil auf die Platte. Der ApiKey wird dabei immer verschlüsselt;
+    /// das übergebene Objekt (im Speicher mit Klartext-Key) bleibt unverändert.
+    /// </summary>
+    private async Task WriteProfileFileAsync(string profileName, UserProfile profile)
+    {
+        var toWrite = new UserProfile
+        {
+            Name = profile.Name,
+            CreatedAt = profile.CreatedAt,
+            Documents = profile.Documents ?? new List<DocumentItem>(),
+            AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig())
+        };
+
+        var filePath = GetProfileFilePath(profileName);
+        var json = JsonSerializer.Serialize(toWrite, JsonOptions);
+        await File.WriteAllTextAsync(filePath, json);
+    }
+
+    /// <summary>Kopie der Konfiguration mit verschlüsseltem ApiKey (das Original bleibt Klartext).</summary>
+    private AiConfig EncryptedCopy(AiConfig config) => new()
+    {
+        SelectedProvider = config.SelectedProvider,
+        ApiKey = _encryptionService.Encrypt(DecryptApiKey(config.ApiKey)),
+        ModelName = config.ModelName,
+        LocalEndpointUrl = config.LocalEndpointUrl,
+        SelectedModelName = config.SelectedModelName
+    };
+
+    /// <summary>
+    /// Entschlüsselt einen gespeicherten ApiKey. Wird so lange wiederholt, bis sich der Wert nicht mehr ändert:
+    /// Frühere Versionen haben bereits verschlüsselte Keys beim erneuten Speichern noch einmal verschlüsselt.
+    /// Alter Klartext bleibt unverändert (Decrypt liefert ihn bei ungültigem Chiffrat zurück).
+    /// </summary>
+    private string DecryptApiKey(string? storedKey)
+    {
+        var value = storedKey ?? string.Empty;
+        for (var i = 0; i < 10 && !string.IsNullOrWhiteSpace(value); i++)
+        {
+            var decrypted = _encryptionService.Decrypt(value);
+            if (decrypted is null || decrypted == value)
+                break;
+            value = decrypted;
+        }
+        return value;
+    }
 
     public async Task<List<DocumentItem>> LoadDocumentsAsync(string profileName)
     {
@@ -175,10 +221,8 @@ public class JsonStorageService : IStorageService
         // 2. Nur die Dokumente aktualisieren
         profile.Documents = documents?.ToList() ?? new List<DocumentItem>();
 
-        // 3. Das VOLLSTÄNDIGE Profil-Objekt speichern (NICHT nur die Dokumentenliste!)
-        var filePath = GetProfileFilePath(profileName);
-        var json = JsonSerializer.Serialize(profile, JsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
+        // 3. Das VOLLSTÄNDIGE Profil-Objekt speichern (ApiKey wird dabei wieder verschlüsselt)
+        await WriteProfileFileAsync(profileName, profile);
     }
 
 
@@ -199,22 +243,10 @@ public class JsonStorageService : IStorageService
     public async Task SaveAiConfigForProfileAsync(string profileName, AiConfig config)
     {
         var profile = await ReadProfileFileAsync(profileName);
+        profile.AiSettings = config;
 
-        // Kopie erstellen, damit das Original im UI-Speicher unberührt bleibt
-        var encryptedConfig = new AiConfig
-        {
-            SelectedProvider = config.SelectedProvider,
-            ApiKey = _encryptionService.Encrypt(config.ApiKey), // Hier verschlüsseln!
-            ModelName = config.ModelName,
-            LocalEndpointUrl = config.LocalEndpointUrl,
-            SelectedModelName = config.SelectedModelName
-        };
-
-        profile.AiSettings = encryptedConfig;
-
-        var filePath = GetProfileFilePath(profileName);
-        var json = JsonSerializer.Serialize(profile, JsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
+        // Verschlüsselung übernimmt WriteProfileFileAsync (auf einer Kopie, config bleibt Klartext)
+        await WriteProfileFileAsync(profileName, profile);
     }
 
 
@@ -287,9 +319,7 @@ public class JsonStorageService : IStorageService
             var filePath = GetProfileFilePath(profile.Name);
             if (!File.Exists(filePath))
             {
-                var newProfile = new UserProfile { Name = profile.Name };
-                var json = JsonSerializer.Serialize(newProfile, JsonOptions);
-                await File.WriteAllTextAsync(filePath, json);
+                await WriteProfileFileAsync(profile.Name, new UserProfile { Name = profile.Name });
             }
         }
     }
@@ -303,7 +333,12 @@ public class JsonStorageService : IStorageService
         try
         {
             var json = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<AiConfig>(json, JsonOptions) ?? new AiConfig();
+            var config = JsonSerializer.Deserialize<AiConfig>(json, JsonOptions) ?? new AiConfig();
+
+            // Gespeichert wird verschlüsselt; ältere Versionen schrieben Klartext, der weiter funktioniert
+            // und beim nächsten Speichern verschlüsselt wird.
+            config.ApiKey = DecryptApiKey(config.ApiKey);
+            return config;
         }
         catch
         {
@@ -314,7 +349,7 @@ public class JsonStorageService : IStorageService
     public async Task SaveAiConfigAsync(AiConfig config)
     {
         var filePath = GetConfigFilePath();
-        var json = JsonSerializer.Serialize(config, JsonOptions);
+        var json = JsonSerializer.Serialize(EncryptedCopy(config), JsonOptions);
         await File.WriteAllTextAsync(filePath, json);
     }
 }

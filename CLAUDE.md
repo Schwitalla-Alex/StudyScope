@@ -50,7 +50,7 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 
 ### KI-Anbindung
 
-`LlmServiceDispatcher` ist die einzige `ILlmService`-Implementierung im Betrieb: Bei jedem Aufruf lädt er die **globale** `AiConfig` (`LoadAiConfigAsync`) und verzweigt per `switch` auf `SelectedProvider` (Ollama nativ, Gemini nativ, Mistral, sonst OpenAI-kompatibler Pfad für LM Studio/OpenAI/Custom). Ein neuer Provider braucht: Enum-Wert in `AiConfig.cs`, Fälle in `AskQuestionAsync` **und** `ValidateConnectionAsync`, sowie UI in `SettingsModal.razor`/`SettingsViewModel`. `FakeAi` ist der Standard-/Testmodus und liefert für Karteikarten-Prompts (enthält „Lernkarteikarten“ oder „JSON“) ein festes JSON-Array.
+`LlmServiceDispatcher` ist die einzige `ILlmService`-Implementierung im Betrieb: Bei jedem Aufruf lädt er die `AiConfig` des **aktiven Profils** (`last_profile.txt` → `LoadAiConfigForProfileAsync`, dieselbe Quelle wie die Statusleiste; nur wenn das Profil gar keine Einstellung hat, die globale `config.json`) und verzweigt per `switch` auf `SelectedProvider` (Ollama nativ, Gemini nativ, Mistral, sonst OpenAI-kompatibler Pfad für LM Studio/OpenAI/Custom). Ein neuer Provider braucht: Enum-Wert in `AiConfig.cs`, Fälle in `AskQuestionAsync` **und** `ValidateConnectionAsync`, sowie UI in `SettingsModal.razor`/`SettingsViewModel`. `FakeAi` ist der Standard-/Testmodus und liefert für Karteikarten-Prompts (enthält „Lernkarteikarten“ oder „JSON“) ein festes JSON-Array.
 
 ### RAG und Karteikarten
 
@@ -60,6 +60,6 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 
 ### Persistenz
 
-`JsonStorageService` speichert unter `AppPaths.UserDataDirectory` (Windows `%APPDATA%\StudyScope\`, Linux `~/.config/StudyScope/`): je Profil `Profiles/<name>.json` (Dokumente + profilspezifische `AiSettings`), dazu `config.json` (globale KI-Konfiguration) und `last_profile.txt`. API-Keys werden beim Schreiben per `AesEncryptionService` (AES-GCM, fest abgeleiteter Schlüssel) verschlüsselt und beim Lesen entschlüsselt. `SettingsViewModel` speichert die KI-Konfiguration sowohl profilspezifisch als auch global – der Dispatcher liest nur die globale.
+`JsonStorageService` speichert unter `AppPaths.UserDataDirectory` (Windows `%APPDATA%\StudyScope\`, Linux `~/.config/StudyScope/`): je Profil `Profiles/<name>.json` (Dokumente + profilspezifische `AiSettings`), dazu `config.json` (globale KI-Konfiguration) und `last_profile.txt`. API-Keys werden in Profilen **und** in `config.json` beim Schreiben per `AesEncryptionService` (AES-GCM, fest abgeleiteter Schlüssel) verschlüsselt und beim Lesen entschlüsselt; im Speicher sind sie immer Klartext. Profile daher nur über `WriteProfileFileAsync` schreiben (verschlüsselt eine Kopie), nie das gelesene Objekt direkt serialisieren. Alter Klartext und früher doppelt verschlüsselte Keys bleiben lesbar (`DecryptApiKey`). `SettingsViewModel` prüft die Formularwerte per `ValidateConnectionAsync(config)` und speichert sie danach profilspezifisch (maßgeblich) und global (Rückfall). Profile ohne eigene Einstellung stehen auf dem Standard „Fake-KI (Testmodus)“ und nutzen diese auch.
 
 Für Tests nimmt `JsonStorageService` ein Basisverzeichnis entgegen (`new JsonStorageService(tempDir)`); Tests nutzen ein temporäres Verzeichnis, nicht `%APPDATA%`.

@@ -17,9 +17,26 @@ public class LlmServiceDispatcher : ILlmService
         _httpClient = httpClient ?? new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
     }
 
-    public async Task<bool> ValidateConnectionAsync()
+    /// <summary>
+    /// Lädt die KI-Konfiguration des aktiven Profils (so wie sie auch die Statusleiste anzeigt).
+    /// Nur wenn das Profil gar keine Einstellung enthält, gilt die globale config.json als Rückfall.
+    /// </summary>
+    private async Task<AiConfig> LoadActiveConfigAsync()
     {
-        var config = await _storageService.LoadAiConfigAsync() ?? new AiConfig();
+        var activeProfile = await _storageService.GetLastActiveProfileNameAsync();
+        if (!string.IsNullOrWhiteSpace(activeProfile))
+        {
+            var profileConfig = await _storageService.LoadAiConfigForProfileAsync(activeProfile);
+            if (profileConfig != null)
+                return profileConfig;
+        }
+
+        return await _storageService.LoadAiConfigAsync() ?? new AiConfig();
+    }
+
+    public async Task<bool> ValidateConnectionAsync(AiConfig? config = null)
+    {
+        config ??= await LoadActiveConfigAsync();
 
         return config.SelectedProvider switch
         {
@@ -36,7 +53,7 @@ public class LlmServiceDispatcher : ILlmService
 
     public async Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
     {
-        var config = await _storageService.LoadAiConfigAsync() ?? new AiConfig();
+        var config = await LoadActiveConfigAsync();
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
         try

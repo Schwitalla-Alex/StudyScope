@@ -70,7 +70,7 @@ public class SettingsViewModelTests
     public async Task SaveAndConnectAsync_WhenConnectionSucceeds_ShouldSaveAndSetStatusSuccess()
     {
         // Arrange
-        _llmServiceMock.Setup(l => l.ValidateConnectionAsync())
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
                        .ReturnsAsync(true);
 
         var viewModel = new SettingsViewModel(
@@ -98,10 +98,39 @@ public class SettingsViewModelTests
     }
 
     [Test]
+    public async Task SaveAndConnectAsync_PrueftDieFormularwerte_UndSpeichertSieImAktivenProfil()
+    {
+        AiConfig? geprueft = null;
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
+                       .Callback<AiConfig?>(c => geprueft = c)
+                       .ReturnsAsync(true);
+
+        var viewModel = new SettingsViewModel(
+            _storageServiceMock.Object,
+            _llmServiceMock.Object,
+            _discoveryServiceMock.Object);
+
+        viewModel.SelectedProvider = AiProviderType.MistralAi;
+        viewModel.ApiKey = "DUMMY_TEST_KEY_FORMULAR_0001";
+        viewModel.AvailableModels.Add("mistral-small-latest");
+        viewModel.SelectedModelName = "mistral-small-latest";
+
+        var result = await viewModel.SaveAndConnectAsync();
+
+        Assert.That(result, Is.True);
+        Assert.That(geprueft, Is.Not.Null, "Es wurde nicht die Formular-Konfiguration geprüft");
+        Assert.That(geprueft!.SelectedProvider, Is.EqualTo(AiProviderType.MistralAi));
+        Assert.That(geprueft.ApiKey, Is.EqualTo("DUMMY_TEST_KEY_FORMULAR_0001"));
+        Assert.That(geprueft.SelectedModelName, Is.EqualTo("mistral-small-latest"));
+        _storageServiceMock.Verify(s => s.SaveAiConfigForProfileAsync("Standard", It.Is<AiConfig>(c =>
+            c.ApiKey == "DUMMY_TEST_KEY_FORMULAR_0001" && c.SelectedProvider == AiProviderType.MistralAi)), Times.Once);
+    }
+
+    [Test]
     public async Task SaveAndConnectAsync_WhenConnectionFails_ShouldSetStatusError()
     {
         // Arrange
-        _llmServiceMock.Setup(l => l.ValidateConnectionAsync())
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
                        .ReturnsAsync(false);
 
         var viewModel = new SettingsViewModel(

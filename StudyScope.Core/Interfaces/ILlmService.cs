@@ -12,6 +12,10 @@ namespace StudyScope.Core.Interfaces;
 public interface ILlmService
 {
     Task<string> AskQuestionAsync(string prompt,IEnumerable<string> contextChunks,CancellationToken cancellationToken = default);
-    Task<bool> ValidateConnectionAsync();
-    
+
+    /// <summary>
+    /// Prüft die Verbindung. Ohne Argument wird die Konfiguration des aktiven Profils geprüft,
+    /// mit Argument die übergebene (z. B. die noch nicht gespeicherten Werte aus den Einstellungen).
+    /// </summary>
+    Task<bool> ValidateConnectionAsync(AiConfig? config = null);
 }
