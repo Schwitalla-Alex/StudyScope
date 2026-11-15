@@ -1,10 +1,11 @@
 ﻿using StudyScope.Core.Interfaces;
+using StudyScope.Core.Models;
 
 namespace StudyScope.Infrastructure.AI;
 
 public class FakeLlmService : ILlmService
 {
-    public Task<bool> ValidateConnectionAsync()
+    public Task<bool> ValidateConnectionAsync(AiConfig? config = null)
     {
         return Task.FromResult(true);
     }

@@ -314,16 +314,7 @@ public class SettingsViewModel : INotifyPropertyChanged
 
         try
         {
-            // 1. ZUERST Verbindung prüfen:
-            var isConnected = await _llmService.ValidateConnectionAsync();
-            if (!isConnected)
-            {
-                ConnectionSuccess = false;
-                ConnectionStatusMessage = "Fehler: Verbindung fehlgeschlagen. Bitte Einstellungen prüfen.";
-                return false;
-            }
-
-            // 2. ERST BEI ERFOLG in Profil und Fallback speichern:
+            // 1. Konfiguration aus den Formularwerten bilden
             var config = new AiConfig
             {
                 ApiKey = ApiKey?.Trim() ?? string.Empty,
@@ -332,6 +323,17 @@ public class SettingsViewModel : INotifyPropertyChanged
                 SelectedModelName = SelectedModelName?.Trim() ?? string.Empty,
                 ModelName = SelectedModelName?.Trim() ?? string.Empty
             };
+
+            // 2. Genau diese (noch ungespeicherten) Werte prüfen – nicht die zuletzt gespeicherten
+            var isConnected = await _llmService.ValidateConnectionAsync(config);
+            if (!isConnected)
+            {
+                ConnectionSuccess = false;
+                ConnectionStatusMessage = "Fehler: Verbindung fehlgeschlagen. Bitte Einstellungen prüfen.";
+                return false;
+            }
+
+            // 3. ERST BEI ERFOLG im Profil (maßgeblich) und global (Rückfall) speichern:
 
             var activeProfile = await _storageService.GetLastActiveProfileNameAsync() ?? "Standard";
             await _storageService.SaveAiConfigForProfileAsync(activeProfile, config);

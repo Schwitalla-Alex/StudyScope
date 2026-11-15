@@ -70,7 +70,7 @@ public class SettingsViewModelTests
     public async Task SaveAndConnectAsync_WhenConnectionSucceeds_ShouldSaveAndSetStatusSuccess()
     {
         // Arrange
-        _llmServiceMock.Setup(l => l.ValidateConnectionAsync())
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
                        .ReturnsAsync(true);
 
         var viewModel = new SettingsViewModel(
@@ -101,7 +101,7 @@ public class SettingsViewModelTests
     public async Task SaveAndConnectAsync_WhenConnectionFails_ShouldSetStatusError()
     {
         // Arrange
-        _llmServiceMock.Setup(l => l.ValidateConnectionAsync())
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
                        .ReturnsAsync(false);
 
         var viewModel = new SettingsViewModel(
