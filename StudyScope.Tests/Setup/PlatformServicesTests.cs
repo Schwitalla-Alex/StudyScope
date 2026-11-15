@@ -216,6 +216,26 @@ public class LinuxServicesTests
         Assert.That(found?.InstallDirectory, Is.EqualTo(Path.GetFullPath(_env.InstallDirectory)));
     }
 
+    [Test]
+    public async Task LinuxInstallService_DeinstallationAusDemInstallationsordner_EntferntAuchDasLaufendeSetup()
+    {
+        var apps = Path.Combine(_env.Root, "applications");
+        var download = Path.Combine(_env.Root, "Download", "StudyScope.Setup");
+        Directory.CreateDirectory(Path.GetDirectoryName(download)!);
+        File.WriteAllText(download, "setup");
+        var paths = new FakePathProviderLinux(_env) { CurrentSetupExecutablePath = download };
+        var shortcuts = new LinuxShortcutService(apps, Path.Combine(_env.Root, "icons"), Path.Combine(_env.Root, "Desktop"));
+        var service = new LinuxInstallService(paths, FakePayloadProviderLinux(), shortcuts, new FakeProcessService(), apps);
+        await service.InstallAsync(new InstallOptions { InstallDirectory = _env.InstallDirectory });
+
+        // Deinstallation über die Menüaktion: das Setup läuft aus dem Installationsordner
+        paths.CurrentSetupExecutablePath = Path.Combine(_env.InstallDirectory, "StudyScope.Setup");
+        await service.UninstallAsync(new UninstallOptions { InstallDirectory = _env.InstallDirectory });
+
+        Assert.That(Directory.Exists(_env.InstallDirectory), Is.False, "Installationsordner blieb mit dem laufenden Setup zurück");
+        Assert.That(File.Exists(Path.Combine(apps, "studyscope.desktop")), Is.False);
+    }
+
     private static FakePayloadProvider FakePayloadProviderLinux() => new(new Dictionary<string, string>
     {
         ["StudyScope.UI"] = "elf",
@@ -231,6 +251,6 @@ public class LinuxServicesTests
         public IReadOnlyList<string> AppCacheDirectories => Array.Empty<string>();
         public string AppExecutableName => "StudyScope.UI";
         public string SetupExecutableName => "StudyScope.Setup";
-        public string? CurrentSetupExecutablePath => null;
+        public string? CurrentSetupExecutablePath { get; set; }
     }
 }

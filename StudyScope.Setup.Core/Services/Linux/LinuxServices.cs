@@ -59,6 +59,23 @@ public sealed class LinuxInstallService : InstallServiceBase
         catch (IOException) { return null; }
     }
 
+    /// <summary>
+    /// Unter Linux darf eine laufende Programmdatei gelöscht werden (der Prozess behält seinen Inode).
+    /// Das laufende Deinstallationsprogramm wird deshalb direkt entfernt, danach der leere Ordner.
+    /// </summary>
+    protected override void HandleLockedFiles(string installDirectory, IReadOnlyList<string> lockedFiles)
+    {
+        foreach (var file in lockedFiles)
+            TryDeleteFile(file);
+
+        try
+        {
+            if (Directory.Exists(installDirectory) && !Directory.EnumerateFileSystemEntries(installDirectory).Any())
+                Directory.Delete(installDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
+    }
+
     protected override void OnFilesInstalled(string installDirectory, InstallManifest manifest)
     {
         const UnixFileMode executable = UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute

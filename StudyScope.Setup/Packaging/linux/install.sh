@@ -65,9 +65,15 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
     CMD="sudo zypper install ${PKGS[*]}"
   fi
 
+  NAMES=()
+  for m in "${MISSING[@]}"; do
+    case "$m" in webkit) NAMES+=("WebKitGTK 4.1") ;; gtk) NAMES+=("GTK 3") ;; notify) NAMES+=("libnotify") ;; icu) NAMES+=("ICU") ;; esac
+  done
+  LIST="$(printf '%s, ' "${NAMES[@]}")"
+
   {
     echo
-    echo "Für StudyScope fehlen Systembibliotheken: ${MISSING[*]/webkit/WebKitGTK 4.1}"
+    echo "Für StudyScope fehlen Systembibliotheken: ${LIST%, }"
     if [ -n "$CMD" ]; then
       echo "Bitte installieren Sie sie mit:"
       echo

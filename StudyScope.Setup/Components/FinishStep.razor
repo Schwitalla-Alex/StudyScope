@@ -21,7 +21,7 @@
 @code {
     private static string UninstallHint => OperatingSystem.IsWindows()
         ? "Über Einstellungen → Apps → Installierte Apps → StudyScope"
-        : "Über den Menüeintrag (Rechtsklick → „StudyScope deinstallieren“) oder ./install.sh --uninstall";
+        : "Über den Menüeintrag (Rechtsklick → „StudyScope deinstallieren“) oder „bash install.sh --uninstall“";
 
     protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
 }
