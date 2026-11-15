@@ -52,6 +52,10 @@ class Program
         appBuilder.RootComponents.Add<App>("#app");
 
         var app = appBuilder.Build();
+
+        // Photino protokolliert sonst jeden Fensteraufruf und jede Oberflächen-Aktualisierung auf der Konsole
+        // (unter Linux im Terminal sichtbar). Die Meldungen während Build() erscheinen weiterhin.
+        app.MainWindow.SetLogVerbosity(0);
         DesktopDialogs.MainWindow = app.MainWindow;
 
         // 1. Fenstertitel korrekt auf StudyScope setzen
