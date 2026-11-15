@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -27,7 +28,7 @@ public class JsonStorageService : IStorageService
         _encryptionService = encryptionService ?? new AesEncryptionService();
 
         _baseDirectory = string.IsNullOrWhiteSpace(baseDirectory)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "StudyScope")
+            ? AppPaths.UserDataDirectory
             : baseDirectory;
 
         Directory.CreateDirectory(_baseDirectory);

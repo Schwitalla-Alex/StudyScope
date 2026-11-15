@@ -3,10 +3,10 @@
 > **Intelligente Desktop-Lernsoftware mit lokaler LLM-Unterstützung und Dokumenten-RAG.**
 
 ![Lizenz](https://img.shields.io/badge/Lizenz-Apache%202.0-blue.svg)
-![.NET](https://img.shields.io/badge/.NET-8.0%2B-purple.svg)
-![Plattform](https://img.shields.io/badge/Plattform-Windows-lightgrey.svg)
+![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
+![Plattform](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux-lightgrey.svg)
 
-**StudyScope** ist eine schlanke, plattformübergreifend konzipierte Desktop-Anwendung zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Lernunterlagen. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
+**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Lernunterlagen. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
 
 ---
 
@@ -53,6 +53,7 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 ### Voraussetzungen
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download) (oder neuer)
 - Visual Studio 2022 / VS Code / JetBrains Rider
+- Unter Linux zusätzlich WebKitGTK (wird von Photino für die Oberfläche benötigt)
 
 ### Quellcode ausführen
 ```bash

@@ -56,7 +56,8 @@ class Program
 
         // 1. Fenstertitel korrekt auf StudyScope setzen
         app.MainWindow.SetTitle("StudyScope");
-        app.MainWindow.SetIconFile("wwwroot/favicon.ico"); // <-- Pfad zu Ihrer Icon-Datei
+        // Icon-Pfad relativ zum Programmordner, unabhängig vom Arbeitsverzeichnis (z. B. Start über Verknüpfung)
+        app.MainWindow.SetIconFile(Path.Combine(AppContext.BaseDirectory, "wwwroot", "favicon.ico"));
         //app.MainWindow.SetSize(new System.Drawing.Size(1200, 800));
 
         // DevTools aktivieren (ermöglicht F12 und Rechtsklick -> Untersuchen)

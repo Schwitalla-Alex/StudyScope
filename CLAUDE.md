@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Projekt
 
-StudyScope ist eine Windows-Desktop-Lernsoftware (Photino.Blazor) für Dokumenten-Chat (RAG) und automatische Karteikarten-Generierung aus eigenen Unterlagen (`.pdf`, `.txt`, `.csv`). KI-Anbindung wahlweise lokal (Ollama, LM Studio) oder über Cloud-Dienste (Gemini, OpenAI, Mistral, beliebige OpenAI-kompatible Endpunkte). Code, Kommentare und UI-Texte sind auf Deutsch.
+StudyScope ist eine Desktop-Lernsoftware für Windows und Linux (Photino.Blazor) für Dokumenten-Chat (RAG) und automatische Karteikarten-Generierung aus eigenen Unterlagen (`.pdf`, `.txt`, `.csv`). KI-Anbindung wahlweise lokal (Ollama, LM Studio) oder über Cloud-Dienste (Gemini, OpenAI, Mistral, beliebige OpenAI-kompatible Endpunkte). Code, Kommentare und UI-Texte sind auf Deutsch.
 
 ## Befehle
 
-Alle Projekte zielen auf `net10.0` (die README nennt teils .NET 8 – maßgeblich sind die `.csproj`). Solution-Datei ist `StudyScope.slnx`.
+Alle Projekte zielen auf `net10.0`. Solution-Datei ist `StudyScope.slnx`. Unter Linux braucht Photino zusätzlich WebKitGTK.
 
 ```bash
 dotnet build StudyScope.slnx
@@ -19,16 +19,16 @@ dotnet test StudyScope.Tests --filter "Name=MethodenName"                       
 dotnet publish StudyScope.UI -c Release -r win-x64                                     # Release-Build (siehe Properties/PublishProfiles)
 ```
 
-Tests: NUnit 4 + Moq. Die Versionsnummer der App steht in `StudyScope.UI/StudyScope.UI.csproj` (`Version`, `AssemblyVersion`, `FileVersion`).
+Tests: NUnit 4 + Moq. Die Versionsnummer steht zentral in `Directory.Build.props` (gilt für App und Setup).
 
 ## Architektur
 
 Schichtenaufbau mit Abhängigkeiten nur nach innen:
 
-- **StudyScope.Core** – Interfaces (`ILlmService`, `IStorageService`, `IDocumentService`, `IEncryptionService`, …) und Modelle (`AiConfig` mit `AiProviderType`-Enum, `UserProfile`, `DocumentItem`, `Flashcard`, `ChatMessage`). Keine Abhängigkeiten.
+- **StudyScope.Core** – `Common/AppPaths` (gemeinsame Pfade, z. B. Benutzerdaten-Ordner), Interfaces (`ILlmService`, `IStorageService`, `IDocumentService`, `IEncryptionService`, …) und Modelle (`AiConfig` mit `AiProviderType`-Enum, `UserProfile`, `DocumentItem`, `Flashcard`, `ChatMessage`). Keine Abhängigkeiten.
 - **StudyScope.Infrastructure** – Implementierungen. Achtung: Ordner heißt `Service/`, der Namespace aber `StudyScope.Infrastructure.Services`.
 - **StudyScope.ViewModels** – ViewModels mit handgeschriebenem `INotifyPropertyChanged` (CommunityToolkit.Mvvm ist referenziert, wird aber nicht genutzt).
-- **StudyScope.UI** – Photino.Blazor-Host. `Program.cs` ist der DI-Composition-Root (alles als Singleton). Razor-Komponenten in `Components/` injizieren ViewModels per `@inject`, abonnieren `PropertyChanged` und rufen `StateHasChanged` auf (Abmeldung in `Dispose`). Native Dateidialoge laufen über die statische Klasse `DesktopDialogs` (`MainWindow` wird in `Program.cs` gesetzt).
+- **StudyScope.UI** – Photino.Blazor-Host. `Program.cs` ist der DI-Composition-Root (alles als Singleton). Razor-Komponenten in `Components/` injizieren ViewModels per `@inject`, abonnieren `PropertyChanged` und rufen `StateHasChanged` auf (Abmeldung in `Dispose`). Native Dateidialoge laufen über die statische Klasse `DesktopDialogs` (`MainWindow` wird in `Program.cs` gesetzt). Dateipfade zu Programmdateien immer über `AppContext.BaseDirectory` bilden, nie relativ zum Arbeitsverzeichnis.
 
 ### KI-Anbindung
 
@@ -42,6 +42,6 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 
 ### Persistenz
 
-`JsonStorageService` speichert unter `%APPDATA%\StudyScope\`: je Profil `Profiles/<name>.json` (Dokumente + profilspezifische `AiSettings`), dazu `config.json` (globale KI-Konfiguration) und `last_profile.txt`. API-Keys werden beim Schreiben per `AesEncryptionService` (AES-GCM, fest abgeleiteter Schlüssel) verschlüsselt und beim Lesen entschlüsselt. `SettingsViewModel` speichert die KI-Konfiguration sowohl profilspezifisch als auch global – der Dispatcher liest nur die globale.
+`JsonStorageService` speichert unter `AppPaths.UserDataDirectory` (Windows `%APPDATA%\StudyScope\`, Linux `~/.config/StudyScope/`): je Profil `Profiles/<name>.json` (Dokumente + profilspezifische `AiSettings`), dazu `config.json` (globale KI-Konfiguration) und `last_profile.txt`. API-Keys werden beim Schreiben per `AesEncryptionService` (AES-GCM, fest abgeleiteter Schlüssel) verschlüsselt und beim Lesen entschlüsselt. `SettingsViewModel` speichert die KI-Konfiguration sowohl profilspezifisch als auch global – der Dispatcher liest nur die globale.
 
 Für Tests nimmt `JsonStorageService` ein Basisverzeichnis entgegen (`new JsonStorageService(tempDir)`); Tests nutzen ein temporäres Verzeichnis, nicht `%APPDATA%`.
