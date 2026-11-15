@@ -23,6 +23,8 @@ dotnet publish StudyScope.UI -c Release -r win-x64                              
 
 Tests: NUnit 4 + Moq. Die Versionsnummer steht zentral in `Directory.Build.props` (gilt für App und Setup).
 
+Testdaten: In Tests nur eindeutig erfundene Werte verwenden, die nicht wie echte API-Keys aussehen (z. B. `"DUMMY_TEST_KEY_…"`, nie `AIza…`, `sk-…` o. Ä.), damit GitHubs Secret-Scanning nicht anschlägt. Ebenso neutrale Profilnamen wie „Testprofil“ statt Namen echter Profile; nie echte Dokumente oder Benutzerdaten ins Repository legen.
+
 ## Architektur
 
 Schichtenaufbau mit Abhängigkeiten nur nach innen:
