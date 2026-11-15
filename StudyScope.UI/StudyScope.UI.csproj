@@ -6,6 +6,8 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!-- Versionsnummer steht zentral in Directory.Build.props -->
+		<!-- Icon der exe (Startmenü, Desktop-Verknüpfung, „Apps & Features“) -->
+		<ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
 	</PropertyGroup>
 
 	<ItemGroup>
