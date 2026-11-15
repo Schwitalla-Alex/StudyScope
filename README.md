@@ -29,7 +29,7 @@
 Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich:
 
 1. Wechseln Sie rechts auf der Repository-Seite in den Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
-2. Laden Sie die aktuellste Datei `StudyScope-v1.0.2-win-x64.zip` herunter.
+2. Laden Sie die ZIP-Datei der aktuellsten Version herunter (`StudyScope-v<Version>-win-x64.zip`).
 3. Entpacken Sie das ZIP-Archiv an einem beliebigen Ort auf Ihrem PC.
 4. Starten Sie die Anwendung per Doppelklick auf **`StudyScope.exe`**.
 
