@@ -333,7 +333,12 @@ public class JsonStorageService : IStorageService
         try
         {
             var json = await File.ReadAllTextAsync(filePath);
-            return JsonSerializer.Deserialize<AiConfig>(json, JsonOptions) ?? new AiConfig();
+            var config = JsonSerializer.Deserialize<AiConfig>(json, JsonOptions) ?? new AiConfig();
+
+            // Gespeichert wird verschlüsselt; ältere Versionen schrieben Klartext, der weiter funktioniert
+            // und beim nächsten Speichern verschlüsselt wird.
+            config.ApiKey = DecryptApiKey(config.ApiKey);
+            return config;
         }
         catch
         {
@@ -344,7 +349,7 @@ public class JsonStorageService : IStorageService
     public async Task SaveAiConfigAsync(AiConfig config)
     {
         var filePath = GetConfigFilePath();
-        var json = JsonSerializer.Serialize(config, JsonOptions);
+        var json = JsonSerializer.Serialize(EncryptedCopy(config), JsonOptions);
         await File.WriteAllTextAsync(filePath, json);
     }
 }
