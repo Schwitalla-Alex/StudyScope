@@ -35,12 +35,18 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 
 Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinstalliert). Fehlt sie, weist das Setup darauf hin.
 
+> **Hinweis zur SmartScreen-Warnung:** Die `setup.exe` ist (noch) nicht digital signiert. Windows zeigt deshalb beim ersten Start „Der Computer wurde durch Windows geschützt“ an. Klicken Sie auf **Weitere Informationen** und dann auf **Trotzdem ausführen**. Wer sichergehen will, vergleicht vorher die SHA256-Prüfsumme aus den Release-Notes, z. B. in PowerShell mit `Get-FileHash .\StudyScope-<Version>-Setup.exe`.
+
 ### Linux
-```bash
-tar -xzf StudyScope-<Version>-linux-x64.tar.gz
-cd StudyScope-<Version>-linux-x64
-bash install.sh
-```
+1. `StudyScope-<Version>-linux-x64.tar.gz` herunterladen.
+2. Im Terminal entpacken und das Installationsskript starten:
+   ```bash
+   tar -xzf StudyScope-<Version>-linux-x64.tar.gz
+   cd StudyScope-<Version>-linux-x64
+   bash install.sh
+   ```
+3. Fehlen Systembibliotheken, nennt das Skript den passenden Befehl (z. B. `sudo apt install …`). Diesen ausführen und danach erneut `bash install.sh` starten.
+
 `install.sh` prüft die benötigten Systembibliotheken (WebKitGTK 4.1, GTK 3, libnotify, ICU), nennt bei Bedarf den passenden Installationsbefehl Ihrer Distribution und startet dann den Setup-Assistenten. Installiert wird nach `~/.local/share/StudyScope`, mit Eintrag im Anwendungsmenü. Deinstallation über den Menüeintrag (Rechtsklick ➔ „StudyScope deinstallieren“) oder mit `bash install.sh --uninstall`.
 
 Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.config/StudyScope`) bleiben bei Updates erhalten und werden bei der Deinstallation nur auf ausdrücklichen Wunsch gelöscht.
@@ -74,7 +80,7 @@ Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.conf
 ### Quellcode ausführen
 ```bash
 # Repository klonen
-git clone [https://github.com/Schwitalla-Alex/StudyScope.git](https://github.com/Schwitalla-Alex/StudyScope.git)
+git clone https://github.com/Schwitalla-Alex/StudyScope.git
 cd StudyScope
 
 # Abhängigkeiten wiederherstellen
