@@ -14,6 +14,26 @@ public enum FlashcardStatusFilter
     KnownOnly
 }
 
+/// <summary>Wie neu erzeugte Karteikarten übernommen werden.</summary>
+public enum FlashcardGenerationMode
+{
+    /// <summary>Zum vorhandenen Stapel hinzufügen (Standard); doppelte Fragen werden weggelassen.</summary>
+    Append,
+
+    /// <summary>Vorhandenen Stapel samt Lernstand ersetzen.</summary>
+    Replace
+}
+
+/// <summary>Ergebnis einer Karten-Erzeugung.</summary>
+/// <param name="Received">Verwertbare Karten in der KI-Antwort.</param>
+/// <param name="Added">Tatsächlich übernommene Karten.</param>
+/// <param name="SkippedDuplicates">Weggelassene Wiederholungen (schon im Stapel oder mehrfach in der Antwort).</param>
+/// <param name="Mode">Gewählter Modus.</param>
+public sealed record FlashcardGenerationResult(int Received, int Added, int SkippedDuplicates, FlashcardGenerationMode Mode)
+{
+    public static FlashcardGenerationResult Nothing(FlashcardGenerationMode mode) => new(0, 0, 0, mode);
+}
+
 /// <summary>
 ///     Karteikarten-Systems:
 ///     FlashcardViewModel & Dependency Injection.Das ViewModel steuert die Zustände für die spätere Blazor-Oberfläche:Extrahieren der Textauszüge aus den aktuell aktivierten PDFs via IPdfService 
@@ -261,11 +281,22 @@ public class FlashcardViewModel : INotifyPropertyChanged
         return cleaned;
     }
 
-    public async Task GenerateCardsFromDocumentsAsync(string profileName, IEnumerable<DocumentItem> documents, int cardCount = 5)
+    /// <summary>
+    /// Erzeugt neue Karten aus den aktivierten Dokumenten. Standard: zum vorhandenen Stapel hinzufügen,
+    /// wobei Fragen, die es schon gibt (ohne Groß-/Kleinschreibung, Leerzeichen und Satzzeichen am Ende), weggelassen werden.
+    /// <see cref="FlashcardGenerationMode.Replace"/> ersetzt den Stapel samt Lernstand (die Oberfläche warnt vorher).
+    /// Liefert die KI keine verwertbaren Karten oder nur Wiederholungen, bleibt der vorhandene Stapel unverändert.
+    /// Fehler des KI-Dienstes werden weitergereicht.
+    /// </summary>
+    public async Task<FlashcardGenerationResult> GenerateCardsFromDocumentsAsync(
+        string profileName,
+        IEnumerable<DocumentItem> documents,
+        int cardCount = 5,
+        FlashcardGenerationMode mode = FlashcardGenerationMode.Append)
     {
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (!selectedDocs.Any())
-            return;
+            return FlashcardGenerationResult.Nothing(mode);
 
         IsGenerating = true;
         try
@@ -279,22 +310,50 @@ public class FlashcardViewModel : INotifyPropertyChanged
 
             var generatedCards = await _flashcardService.GenerateFlashcardsAsync(allChunks, cardCount);
 
-            Flashcards.Clear();
-            foreach (var card in generatedCards)
+            // Keine verwertbare Antwort: vorhandene Karten (samt Lernstand) nicht durch einen leeren Stapel ersetzen
+            if (generatedCards == null || generatedCards.Count == 0)
+                return FlashcardGenerationResult.Nothing(mode);
+
+            // Beim Ersetzen zählen nur Wiederholungen innerhalb der neuen Karten, beim Hinzufügen auch der vorhandene Stapel
+            var known = new HashSet<string>(mode == FlashcardGenerationMode.Append
+                ? Flashcards.Select(c => NormalizeQuestion(c.Question))
+                : Enumerable.Empty<string>());
+            var newCards = generatedCards.Where(c => known.Add(NormalizeQuestion(c.Question))).ToList();
+            var skipped = generatedCards.Count - newCards.Count;
+
+            if (newCards.Count == 0)
+                return new FlashcardGenerationResult(generatedCards.Count, 0, skipped, mode);
+
+            var firstNewIndex = 0;
+            if (mode == FlashcardGenerationMode.Replace)
+                Flashcards.Clear();
+            else
+                firstNewIndex = Flashcards.Count;
+
+            foreach (var card in newCards)
             {
                 Flashcards.Add(card);
             }
 
             await _flashcardService.SaveFlashcardsAsync(profileName, Flashcards);
 
-            CurrentIndex = 0;
+            // In der Gesamtansicht direkt zur ersten neuen Karte springen
+            CurrentIndex = SelectedFilter == FlashcardStatusFilter.All ? firstNewIndex : 0;
             IsAnswerRevealed = false;
             NotifyFilterChanged();
+            return new FlashcardGenerationResult(generatedCards.Count, newCards.Count, skipped, mode);
         }
         finally
         {
             IsGenerating = false;
         }
+    }
+
+    /// <summary>Vergleichsform einer Frage: ohne Groß-/Kleinschreibung, mehrfache Leerzeichen und Satzzeichen am Ende.</summary>
+    public static string NormalizeQuestion(string? question)
+    {
+        var collapsed = string.Join(' ', (question ?? string.Empty).Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries));
+        return collapsed.TrimEnd('?', '!', '.', ':', ';', ' ').ToLowerInvariant();
     }
 
     public void FlipCard() => IsAnswerRevealed = !IsAnswerRevealed;

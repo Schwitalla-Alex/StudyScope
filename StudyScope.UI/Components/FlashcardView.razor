@@ -79,6 +79,60 @@
         </div>
     </div>
 
+    <!-- Auswahl beim Erstellen, wenn schon Karten vorhanden sind: hinzufügen (Standard) oder ersetzen -->
+    @if (showModeDialog)
+    {
+        <div class="flash-mode-backdrop" @onclick="CancelModeDialog">
+            <div class="flash-mode-dialog" role="dialog" aria-modal="true" aria-labelledby="flash-mode-title" @onclick:stopPropagation="true">
+                <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: #212529;">Neue Karten erstellen</h4>
+                <p style="margin: 0 0 14px 0; font-size: 13px; color: #495057;">
+                    Es sind bereits @FlashVm.Flashcards.Count Karte(n) vorhanden. Wie sollen die @selectedCardCount neuen Karten übernommen werden?
+                </p>
+
+                <label class="flash-mode-option @(generationMode == FlashcardGenerationMode.Append ? "selected" : "")">
+                    <input type="radio" name="flash-mode" id="flash-mode-append"
+                           checked="@(generationMode == FlashcardGenerationMode.Append)"
+                           @onchange="() => generationMode = FlashcardGenerationMode.Append" />
+                    <span>
+                        <strong>Zum Stapel hinzufügen</strong> (empfohlen)<br />
+                        <small>Vorhandene Karten und ihr Lernstand bleiben erhalten. Fragen, die es schon gibt, werden weggelassen.</small>
+                    </span>
+                </label>
+
+                <label class="flash-mode-option @(generationMode == FlashcardGenerationMode.Replace ? "selected danger" : "")">
+                    <input type="radio" name="flash-mode" id="flash-mode-replace"
+                           checked="@(generationMode == FlashcardGenerationMode.Replace)"
+                           @onchange="() => generationMode = FlashcardGenerationMode.Replace" />
+                    <span>
+                        <strong>Stapel ersetzen</strong><br />
+                        <small>Alle vorhandenen Karten werden durch die neuen ersetzt.</small>
+                    </span>
+                </label>
+
+                @if (generationMode == FlashcardGenerationMode.Replace)
+                {
+                    <div id="flash-mode-warning" role="alert" style="margin-top: 10px; padding: 8px 12px; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; border-radius: 4px; font-size: 12px;">
+                        ⚠️ Achtung: Die @FlashVm.Flashcards.Count vorhandenen Karten werden gelöscht – samt Lernstand
+                        (@FlashVm.KnownCount gelernt, @FlashVm.DifficultCount zum Wiederholen). Das lässt sich nicht rückgängig machen.
+                    </div>
+                }
+
+                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+                    <button type="button" id="flash-mode-cancel"
+                            style="padding: 7px 14px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; font-size: 13px;"
+                            @onclick="CancelModeDialog">
+                        Abbrechen
+                    </button>
+                    <button type="button" id="flash-mode-confirm"
+                            style="padding: 7px 14px; background: @(generationMode == FlashcardGenerationMode.Replace ? "#dc3545" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
+                            @onclick="ConfirmModeDialogAsync">
+                        @(generationMode == FlashcardGenerationMode.Replace ? "Stapel ersetzen" : "Karten hinzufügen")
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
     <!-- Visuelles Feedback während der KI-Generierung inkl. animiertem Fortschrittsbalken -->
     @if (FlashVm.IsGenerating)
     {
@@ -312,6 +366,52 @@
                 }
             }
 
+            /* Auswahl hinzufügen/ersetzen */
+            .flash-mode-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(33, 37, 41, 0.45);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+
+            .flash-mode-dialog {
+                background: #fff;
+                border-radius: 8px;
+                padding: 18px 20px;
+                width: min(460px, calc(100vw - 32px));
+                box-shadow: 0 8px 28px rgba(0, 0, 0, 0.2);
+            }
+
+            .flash-mode-option {
+                display: flex;
+                gap: 10px;
+                align-items: flex-start;
+                padding: 10px 12px;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                margin-bottom: 8px;
+                cursor: pointer;
+                font-size: 13px;
+                color: #212529;
+            }
+
+            .flash-mode-option small {
+                color: #6c757d;
+            }
+
+            .flash-mode-option.selected {
+                border-color: #007bff;
+                background: #f1f7ff;
+            }
+
+            .flash-mode-option.selected.danger {
+                border-color: #dc3545;
+                background: #fff5f5;
+            }
+
             /* Druckbereich für DIN-A4 */
             .print-only-container {
                 display: none;
@@ -365,6 +465,8 @@
     private int selectedCardCount = 5;
     private string? statusMessage;
     private bool isErrorMessage = false;
+    private bool showModeDialog;
+    private FlashcardGenerationMode generationMode = FlashcardGenerationMode.Append;
 
     protected override async Task OnInitializedAsync()
     {
@@ -452,16 +554,67 @@
         isErrorMessage = false;
         statusMessage = null;
 
-        var oldCount = FlashVm.Flashcards.Count;
-        await FlashVm.GenerateCardsFromDocumentsAsync(
-            DocVm.CurrentProfile,
-            DocVm.Documents,
-            selectedCardCount);
-
-        var addedCount = FlashVm.Flashcards.Count - oldCount;
-        if (addedCount > 0)
+        // Sind schon Karten da, zuerst fragen: hinzufügen (Standard) oder ersetzen
+        if (FlashVm.Flashcards.Count > 0)
         {
-            statusMessage = $"✓ Es wurden {addedCount} neue Lernkarteikarten erfolgreich erstellt!";
+            generationMode = FlashcardGenerationMode.Append;
+            showModeDialog = true;
+            return;
+        }
+
+        await RunGenerationAsync(FlashcardGenerationMode.Append);
+    }
+
+    private async Task CancelModeDialog()
+    {
+        showModeDialog = false;
+        await EnsureFocusAsync();
+    }
+
+    private async Task ConfirmModeDialogAsync()
+    {
+        showModeDialog = false;
+        await RunGenerationAsync(generationMode);
+    }
+
+    private async Task RunGenerationAsync(FlashcardGenerationMode mode)
+    {
+        var hadCards = FlashVm.Flashcards.Count > 0;
+        try
+        {
+            var result = await FlashVm.GenerateCardsFromDocumentsAsync(
+                DocVm.CurrentProfile,
+                DocVm.Documents,
+                selectedCardCount,
+                mode);
+
+            var skippedText = result.SkippedDuplicates > 0
+                ? $" {result.SkippedDuplicates} doppelte Frage(n) wurden weggelassen."
+                : string.Empty;
+
+            if (result.Added > 0)
+            {
+                statusMessage = mode == FlashcardGenerationMode.Replace && hadCards
+                    ? $"✓ Der Stapel wurde durch {result.Added} neue Lernkarteikarten ersetzt.{skippedText}"
+                    : $"✓ Es wurden {result.Added} neue Lernkarteikarten hinzugefügt.{skippedText}";
+            }
+            else if (result.Received > 0)
+            {
+                isErrorMessage = true;
+                statusMessage = "⚠️ Die KI hat nur Fragen geliefert, die es im Stapel schon gibt – es wurde nichts hinzugefügt. Bitte erneut versuchen oder andere Dokumente aktivieren.";
+            }
+            else
+            {
+                isErrorMessage = true;
+                statusMessage = "⚠️ Die KI hat keine verwertbaren Karteikarten geliefert. Bitte erneut auf „Neue Karten erstellen“ klicken."
+                    + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            isErrorMessage = true;
+            statusMessage = $"⚠️ Fehler beim Erstellen der Karteikarten: {ex.Message}"
+                + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
         }
 
         await EnsureFocusAsync();
@@ -475,6 +628,14 @@
 
     private async Task HandleKeyDownAsync(KeyboardEventArgs e)
     {
+        // Offener Auswahldialog: keine Lerntasten auf die Karte dahinter; Esc schließt
+        if (showModeDialog)
+        {
+            if (e.Key == "Escape")
+                await CancelModeDialog();
+            return;
+        }
+
         if (FlashVm.CurrentCard == null || FlashVm.IsGenerating)
             return;
 

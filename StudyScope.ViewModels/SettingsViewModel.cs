@@ -1,6 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -406,7 +407,7 @@ public class SettingsViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             ConnectionSuccess = false;
-            ConnectionStatusMessage = $"Fehler: {ex.Message}";
+            ConnectionStatusMessage = ex is LlmServiceException ? $"⚠️ {ex.Message}" : $"Fehler: {ex.Message}";
         }
         finally
         {

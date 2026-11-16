@@ -1,8 +1,10 @@
 ﻿using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.AI;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -43,12 +45,74 @@ public class LlmServiceDispatcher : ILlmService
             AiProviderType.FakeAi => true,
             AiProviderType.OllamaLocal => await CheckHttpReachableAsync($"{config.LocalEndpointUrl?.TrimEnd('/')}/api/tags"),
             AiProviderType.LmStudioLocal => await CheckHttpReachableAsync($"{config.LocalEndpointUrl?.TrimEnd('/')}/v1/models"),
-            AiProviderType.GoogleGemini => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.OpenAiGpt4 => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.MistralAi => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.CustomOpenAi => !string.IsNullOrWhiteSpace(config.LocalEndpointUrl),
+            AiProviderType.GoogleGemini => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("Google Gemini", "https://generativelanguage.googleapis.com/v1beta/models",
+                    request => request.Headers.Add("x-goog-api-key", config.ApiKey.Trim())),
+            AiProviderType.OpenAiGpt4 => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("OpenAI", "https://api.openai.com/v1/models", BearerAuth(config.ApiKey)),
+            AiProviderType.MistralAi => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("Mistral AI", "https://api.mistral.ai/v1/models", BearerAuth(config.ApiKey)),
+            AiProviderType.CustomOpenAi => !string.IsNullOrWhiteSpace(config.LocalEndpointUrl) &&
+                await CheckModelListAsync("Der benutzerdefinierte KI-Dienst", CustomModelsUrl(config.LocalEndpointUrl),
+                    BearerAuth(config.ApiKey), notFoundIsReachable: true),
             _ => false
         };
+    }
+
+    /// <summary>Zeitgrenze für „Speichern &amp; Verbinden“ (Abruf der Modellliste).</summary>
+    public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
+
+    private static Action<HttpRequestMessage> BearerAuth(string? apiKey) => request =>
+    {
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey.Trim());
+    };
+
+    /// <summary>…/v1/chat/completions bzw. …/v1 → …/v1/models</summary>
+    private static string CustomModelsUrl(string endpoint)
+    {
+        var baseUrl = endpoint.Trim().TrimEnd('/');
+        if (baseUrl.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+            baseUrl = baseUrl[..^"/chat/completions".Length];
+        return baseUrl.EndsWith("/models", StringComparison.OrdinalIgnoreCase) ? baseUrl : $"{baseUrl}/models";
+    }
+
+    /// <summary>
+    /// Prüft Schlüssel und Erreichbarkeit eines Cloud-Dienstes über die (kostenlose) Modellliste.
+    /// Abgelehnter Schlüssel, Störung, Netzwerkfehler oder Zeitüberschreitung werden als <see cref="LlmServiceException"/>
+    /// mit verständlicher Meldung geworfen. <paramref name="notFoundIsReachable"/>: Ein eigener Server ohne
+    /// Modellliste (HTTP 404) gilt trotzdem als erreichbar.
+    /// </summary>
+    private async Task<bool> CheckModelListAsync(string providerName, string url, Action<HttpRequestMessage> authorize, bool notFoundIsReachable = false)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        authorize(request);
+
+        using var cts = new CancellationTokenSource(ValidationTimeout);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cts.Token);
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new LlmServiceException(
+                $"{providerName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung). Bitte Internetverbindung prüfen und erneut versuchen.",
+                providerName, null, ex.Message, ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw LlmServiceException.FromNetworkError(providerName, ex);
+        }
+
+        using (response)
+        {
+            if (response.IsSuccessStatusCode || (notFoundIsReachable && (int)response.StatusCode == 404))
+                return true;
+
+            var body = await response.Content.ReadAsStringAsync();
+            throw LlmServiceException.FromHttpStatus(providerName, (int)response.StatusCode, body);
+        }
     }
 
     public async Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
@@ -62,22 +126,46 @@ public class LlmServiceDispatcher : ILlmService
             {
                 AiProviderType.FakeAi => AskFakeAi(prompt, chunks),
                 AiProviderType.OllamaLocal => await AskOllamaAsync(config, prompt, chunks, cancellationToken),
-                AiProviderType.LmStudioLocal => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: true, cancellationToken: cancellationToken),
-                AiProviderType.OpenAiGpt4 => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false, cancellationToken: cancellationToken),
+                AiProviderType.LmStudioLocal => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: true,
+                    providerName: "LM Studio", cancellationToken: cancellationToken),
+                AiProviderType.OpenAiGpt4 => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false,
+                    providerName: "OpenAI", useJsonMode: IsStructuredJsonPrompt(prompt), cancellationToken: cancellationToken),
                 AiProviderType.MistralAi => await AskMistralAsync(config, prompt, chunks, cancellationToken),
-                AiProviderType.CustomOpenAi => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false, cancellationToken: cancellationToken),
+                AiProviderType.CustomOpenAi => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false,
+                    providerName: "Der benutzerdefinierte KI-Dienst", cancellationToken: cancellationToken),
                 AiProviderType.GoogleGemini => await AskGeminiAsync(config, prompt, chunks, cancellationToken),
                 _ => "Kein gültiger KI-Provider konfiguriert."
             };
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return "[Anfrage durch Benutzer abgebrochen]";
+            // Nur ein echter Abbruch durch den Benutzer; Zeitüberschreitungen melden die Dienste als LlmServiceException
+            return CancelledResponse;
         }
     }
 
+    /// <summary>Antwort bei Abbruch durch den Benutzer (die Dienste werten sie nicht als Inhalt aus).</summary>
+    public const string CancelledResponse = "[Anfrage durch Benutzer abgebrochen]";
+
     private static string AskFakeAi(string prompt, List<string> chunks)
     {
+        // Bericht vor allem anderen: eine eigene Vorgabe des Benutzers kann "Mindmap" o. Ä. enthalten
+        if (FakeReportResponse.IsReportPrompt(prompt))
+            return FakeReportResponse.Create(prompt, chunks);
+
+        // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
+        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
+            return FakeMindmapResponse.Create(chunks);
+
+        if (FakePresentationResponse.IsPresentationPrompt(prompt))
+            return FakePresentationResponse.Create(chunks);
+
+        if (FakeQuizResponse.IsTopicPrompt(prompt))
+            return FakeQuizResponse.CreateTopics(chunks);
+
+        if (FakeQuizResponse.IsQuestionPrompt(prompt))
+            return FakeQuizResponse.CreateQuestions(prompt, chunks);
+
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
         {
             var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";
@@ -108,11 +196,7 @@ public class LlmServiceDispatcher : ILlmService
         var url = $"{config.LocalEndpointUrl.TrimEnd('/')}/api/chat";
         var contextText = chunks.Any() ? string.Join("\n\n---\n\n", chunks) : string.Empty;
 
-        var systemPrompt = "Du bist ein präziser Lern- und Studienassistent (StudyScope). Nutze die bereitgestellten Dokumentauszüge, um Fragen wahrheitsgemäß zu beantworten.";
-        if (prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
-        {
-            systemPrompt += " Antworte AUSSCHLIESSLICH mit einem validen JSON-Array ohne Begleittext.";
-        }
+        var systemPrompt = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPrompt;
 
         var fullUserMessage = string.IsNullOrWhiteSpace(contextText)
             ? prompt
@@ -129,15 +213,28 @@ public class LlmServiceDispatcher : ILlmService
             }
         };
 
-        var response = await _httpClient.PostAsync(
+        const string providerName = "Ollama";
+        using var response = await SendAsync(providerName, () => _httpClient.PostAsync(
             url,
             new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json"),
-            cancellationToken);
+            cancellationToken), cancellationToken);
 
-        response.EnsureSuccessStatusCode();
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
+        if (!response.IsSuccessStatusCode)
+            throw LlmServiceException.FromHttpStatus(providerName, (int)response.StatusCode, responseContent);
 
-        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync(cancellationToken));
-        return doc.RootElement.GetProperty("message").GetProperty("content").GetString() ?? string.Empty;
+        try
+        {
+            using var doc = JsonDocument.Parse(responseContent);
+            if (doc.RootElement.TryGetProperty("message", out var message) && message.TryGetProperty("content", out var content))
+                return content.GetString() ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            // unten als unerwartete Antwort melden
+        }
+
+        throw UnexpectedResponse(providerName, (int)response.StatusCode, responseContent);
     }
 
     private async Task<string> AskMistralAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken)
@@ -149,7 +246,74 @@ public class LlmServiceDispatcher : ILlmService
             SelectedModelName = string.IsNullOrWhiteSpace(config.SelectedModelName) ? "mistral-small-latest" : config.SelectedModelName
         };
 
-        return await AskOpenAiCompatibleAsync(mistralConfig, prompt, chunks, isLmStudio: false, explicitBaseUrl: "https://api.mistral.ai/v1", cancellationToken: cancellationToken);
+        return await AskOpenAiCompatibleAsync(mistralConfig, prompt, chunks, isLmStudio: false, explicitBaseUrl: "https://api.mistral.ai/v1",
+            providerName: "Mistral AI", useJsonMode: IsStructuredJsonPrompt(prompt), cancellationToken: cancellationToken);
+    }
+
+    /// <summary>
+    /// Systemanweisung für Chat-Antworten: nur aus den Dokumentauszügen antworten, nichts erfinden.
+    /// </summary>
+    public const string RagSystemPrompt =
+        "Du bist ein präziser Lern- und Studienassistent (StudyScope). Beantworte Fragen ausschließlich auf Grundlage der bereitgestellten Dokumentauszüge. " +
+        "Steht die Antwort nicht in den Auszügen, sage das ausdrücklich (z. B. „Dazu enthalten Ihre Unterlagen keine Angaben.“) und erfinde nichts – " +
+        "keine Schritte, Zahlen, Namen oder Adressen, die nicht in den Auszügen stehen. " +
+        "Ergänzendes Allgemeinwissen nur, wenn ausdrücklich danach gefragt wird, und dann deutlich als solches kennzeichnen. " +
+        "Antworte verständlich als Fließtext auf Deutsch.";
+
+    /// <summary>Systemanweisung für strukturierte Antworten (Karteikarten, Mindmap, Quiz, Präsentation, Bericht).</summary>
+    public const string JsonSystemPrompt =
+        "Du bist ein präziser Studienassistent. Antworte AUSSCHLIESSLICH mit einem validen JSON-Array ohne Begleittext oder Markdown. " +
+        "Verwende nur Inhalte aus den bereitgestellten Auszügen.";
+
+    /// <summary>Systemanweisung im JSON-Modus (Mistral/OpenAI): Der Dienst erzwingt ein JSON-Objekt, das Array steht in „items“.</summary>
+    public const string JsonModeSystemPrompt =
+        "Du bist ein präziser Studienassistent. Antworte AUSSCHLIESSLICH mit einem gültigen JSON-Objekt der Form {\"items\": [...]}. " +
+        "\"items\" enthält genau das JSON-Array, das in der Aufgabe verlangt wird. Verwende nur Inhalte aus den bereitgestellten Auszügen.";
+
+    /// <summary>Strukturierte Aufträge der Dienste verlangen „als gültiges JSON-Array“ – Chatfragen mit dem Wort „JSON“ nicht.</summary>
+    public static bool IsStructuredJsonPrompt(string prompt) =>
+        prompt.Contains("JSON-Array", StringComparison.OrdinalIgnoreCase);
+
+    private static bool WantsJson(string prompt) =>
+        prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase) || prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Holt im JSON-Modus das Array aus {"items": [...]} (bzw. aus der einzigen Array-Eigenschaft) heraus,
+    /// damit die Dienste wie gewohnt ein JSON-Array erhalten. Andere Antworten bleiben unverändert.
+    /// </summary>
+    public static string UnwrapJsonItems(string content)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(content);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                return content;
+
+            if (root.TryGetProperty("items", out var items))
+            {
+                if (items.ValueKind == JsonValueKind.Array)
+                    return items.GetRawText();
+                if (items.ValueKind == JsonValueKind.Object)
+                    return "[" + items.GetRawText() + "]";
+            }
+
+            // Einzige Eigenschaft als Hülle: {"karteikarten": [...]} bzw. {"mindmap": {...}}
+            var properties = root.EnumerateObject().ToList();
+            if (properties.Count == 1 && properties[0].Value.ValueKind == JsonValueKind.Array)
+                return properties[0].Value.GetRawText();
+            if (properties.Count == 1 && properties[0].Value.ValueKind == JsonValueKind.Object)
+                return "[" + properties[0].Value.GetRawText() + "]";
+
+            // Mehrere Eigenschaften (z. B. {"karteikarten": [...], "anzahl": 5}) packen die Dienste selbst aus
+
+            // Ein einzelnes Objekt (z. B. Mindmap-Wurzel) als Array mit einem Element weitergeben
+            return "[" + root.GetRawText() + "]";
+        }
+        catch (JsonException)
+        {
+            return content; // nachsichtige Auswertung (Reparatur) übernehmen die Dienste
+        }
     }
 
     private async Task<string> AskOpenAiCompatibleAsync(
@@ -158,6 +322,8 @@ public class LlmServiceDispatcher : ILlmService
         List<string> chunks,
         bool isLmStudio,
         string? explicitBaseUrl = null,
+        string providerName = "Der KI-Dienst",
+        bool useJsonMode = false,
         CancellationToken cancellationToken = default)
     {
         string endpoint;
@@ -192,21 +358,23 @@ public class LlmServiceDispatcher : ILlmService
             : (string.IsNullOrWhiteSpace(config?.SelectedModelName) ? "gpt-4o-mini" : config.SelectedModelName);
 
         // Dynamischer System-Prompt: JSON nur verlangen, wenn es explizit gefordert wurde!
-        var systemContent = "Du bist ein präziser Studien- und Lernassistent (StudyScope). Beantworte Fragen auf Basis des bereitgestellten Kontexts verständlich und als Fließtext.";
-        if (prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase) || prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase))
-        {
-            systemContent = "Du bist ein präziser Studienassistent. Antworte AUSSCHLIESSLICH mit einem validen JSON-Array ohne Begleittext oder Markdown.";
-        }
+        var systemContent = useJsonMode ? JsonModeSystemPrompt
+            : WantsJson(prompt) ? JsonSystemPrompt
+            : RagSystemPrompt;
 
-        var requestBody = new
+        var requestBody = new Dictionary<string, object>
         {
-            model = modelName,
-            messages = new object[]
+            ["model"] = modelName,
+            ["messages"] = new object[]
             {
-            new { role = "system", content = systemContent },
-            new { role = "user", content = fullUserMessage }
+                new { role = "system", content = systemContent },
+                new { role = "user", content = fullUserMessage }
             }
         };
+
+        // JSON-Modus (Mistral, OpenAI): Der Dienst liefert garantiert gültiges JSON – verhindert kaputte Strukturen mitten in der Antwort
+        if (useJsonMode)
+            requestBody["response_format"] = new { type = "json_object" };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
         {
@@ -218,26 +386,11 @@ public class LlmServiceDispatcher : ILlmService
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.ApiKey.Trim());
         }
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.SendAsync(request, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            return $"Verbindungsfehler: {ex.Message}";
-        }
-
+        using var response = await SendAsync(providerName, () => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
-        {
-            return $"API-Fehler ({response.StatusCode}): {responseContent}";
-        }
+            throw LlmServiceException.FromHttpStatus(providerName, (int)response.StatusCode, responseContent);
 
         try
         {
@@ -247,68 +400,91 @@ public class LlmServiceDispatcher : ILlmService
                 choices[0].TryGetProperty("message", out var msg) &&
                 msg.TryGetProperty("content", out var content))
             {
-                return content.GetString() ?? string.Empty;
+                var text = content.GetString() ?? string.Empty;
+                return useJsonMode ? UnwrapJsonItems(text) : text;
             }
-
-            return "Unerwartetes Antwortformat vom Modell erhalten.";
         }
         catch (JsonException)
         {
-            return $"Antwort konnte nicht als JSON geparst werden: {responseContent}";
+            // unten als unerwartete Antwort melden
+        }
+
+        throw UnexpectedResponse(providerName, (int)response.StatusCode, responseContent);
+    }
+
+    private static LlmServiceException UnexpectedResponse(string providerName, int statusCode, string responseContent) =>
+        new($"{providerName} hat eine unerwartete Antwort geliefert. Bitte Modell und Server-URL in den Einstellungen prüfen.",
+            providerName, statusCode, responseContent.Length > 500 ? responseContent[..500] + " …" : responseContent);
+
+    /// <summary>
+    /// Sendet eine Anfrage und übersetzt Netzwerkfehler und Zeitüberschreitung in eine <see cref="LlmServiceException"/>.
+    /// Ein Abbruch durch den Benutzer bleibt eine <see cref="OperationCanceledException"/>.
+    /// </summary>
+    private async Task<HttpResponseMessage> SendAsync(string providerName, Func<Task<HttpResponseMessage>> send, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await send();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new LlmServiceException(
+                $"{providerName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {_httpClient.Timeout.TotalSeconds:0} s). Bitte erneut versuchen oder weniger Dokumente aktivieren.",
+                providerName, null, ex.Message, ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw LlmServiceException.FromNetworkError(providerName, ex);
         }
     }
 
     private async Task<string> AskGeminiAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken = default)
     {
+        const string providerName = "Google Gemini";
         if (string.IsNullOrWhiteSpace(config.ApiKey))
         {
-            return "Gemini-Fehler: Es ist kein API-Schlüssel in den Einstellungen hinterlegt.";
+            throw new LlmServiceException("Für Google Gemini ist kein API-Schlüssel hinterlegt. Bitte in den Einstellungen eintragen.", providerName);
         }
 
         var model = string.IsNullOrWhiteSpace(config.SelectedModelName) || config.SelectedModelName.Equals("Google Gemini", StringComparison.OrdinalIgnoreCase)
             ? "gemini-2.0-flash"
             : config.SelectedModelName.Trim();
 
-        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={Uri.EscapeDataString(config.ApiKey.Trim())}";
+        // Schlüssel im Header statt in der URL (landet so nicht in Fehlermeldungen oder Protokollen)
+        var url = $"https://generativelanguage.googleapis.com/v1beta/models/{Uri.EscapeDataString(model)}:generateContent";
 
         var contextText = chunks.Any() ? string.Join("\n\n---\n\n", chunks) : string.Empty;
         var fullUserMessage = string.IsNullOrWhiteSpace(contextText)
             ? prompt
             : $"Kontext:\n{contextText}\n\nFrage: {prompt}";
 
+        var systemText = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPrompt;
         var requestBody = new
         {
+            system_instruction = new { parts = new[] { new { text = systemText } } },
             contents = new[]
             {
                 new { parts = new[] { new { text = fullUserMessage } } }
             }
         };
 
-        var content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
+        using var request = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json")
+        };
+        request.Headers.Add("x-goog-api-key", config.ApiKey.Trim());
 
-        HttpResponseMessage response;
-        try
-        {
-            response = await _httpClient.PostAsync(url, content, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            return $"Netzwerkfehler zu Google Gemini: {ex.Message}";
-        }
-
+        using var response = await SendAsync(providerName, () => _httpClient.SendAsync(request, cancellationToken), cancellationToken);
         var responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var detail = string.IsNullOrWhiteSpace(responseString)
-                ? $"Das Modell '{model}' wurde unter der angegebenen URL nicht gefunden (404)."
-                : responseString;
-
-            return $"Gemini-API-Fehler ({response.StatusCode}): {detail}";
+            throw LlmServiceException.FromHttpStatus(providerName, (int)response.StatusCode,
+                string.IsNullOrWhiteSpace(responseString) ? $"Modell '{model}' nicht gefunden." : responseString);
         }
 
         try
@@ -323,13 +499,13 @@ public class LlmServiceDispatcher : ILlmService
             {
                 return text.GetString() ?? string.Empty;
             }
-
-            return "Keine Textantwort von Gemini im Rückgabepaket enthalten.";
         }
         catch (JsonException)
         {
-            return $"Antwort konnte nicht als JSON verarbeitet werden: {responseString}";
+            // unten als unerwartete Antwort melden
         }
+
+        throw UnexpectedResponse(providerName, (int)response.StatusCode, responseString);
     }
 
     private async Task<bool> CheckHttpReachableAsync(string url)

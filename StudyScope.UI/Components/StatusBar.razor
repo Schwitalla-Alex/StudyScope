@@ -5,7 +5,7 @@
 <div style="background: #e9ecef; border-top: 1px solid #ced4da; padding: 4px 15px; font-size: 12px; color: #495057; display: flex; justify-content: space-between; align-items: center; user-select: none;">
     <!-- Linker Bereich: Dokumente & Textstellen -->
     <div style="display: flex; gap: 20px;">
-        <span>Dokumente: <b>@DocVm.TotalDocumentCount</b> (@DocVm.FilteredDocuments.Count(d => d.IsSelected && !d.IsMissing) aktiv)</span>
+        <span>Dokumente: <b>@DocVm.TotalDocumentCount</b> (@DocVm.ActiveDocumentCount aktiv)</span>
         <span>Geladene Textstellen: <b>@DocVm.TotalChunkCount</b></span>
     </div>
 

@@ -1,4 +1,5 @@
-﻿using StudyScope.Core.Interfaces;
+﻿using StudyScope.Core.Common;
+using StudyScope.Core.Interfaces;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
@@ -6,7 +7,20 @@ namespace StudyScope.Infrastructure.Services;
 
 public class LocalLlmDiscoveryService : ILocalLlmDiscoveryService
 {
-    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(3) };
+    private static readonly HttpClient SharedHttpClient = new() { Timeout = TimeSpan.FromSeconds(3) };
+    private readonly HttpClient _httpClient;
+
+    /// <param name="httpClient">Für Tests austauschbar; Standard ist ein gemeinsamer Client mit kurzer Zeitgrenze.</param>
+    public LocalLlmDiscoveryService(HttpClient? httpClient = null)
+    {
+        _httpClient = httpClient ?? SharedHttpClient;
+    }
+
+    /// <summary>Anzeigename des Cloud-Dienstes für Fehlermeldungen.</summary>
+    private static string ProviderNameFor(string? customEndpoint) =>
+        string.IsNullOrWhiteSpace(customEndpoint) ? "OpenAI"
+        : customEndpoint.Contains("mistral.ai", StringComparison.OrdinalIgnoreCase) ? "Mistral AI"
+        : "Der KI-Dienst";
 
     public async Task<List<string>> FetchOllamaModelsAsync(string endpoint)
     {
@@ -79,9 +93,11 @@ public class LocalLlmDiscoveryService : ILocalLlmDiscoveryService
 
         try
         {
-            var url = $"https://generativelanguage.googleapis.com/v1beta/models?key={Uri.EscapeDataString(apiKey.Trim())}";
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode) return models;
+            using var req = new HttpRequestMessage(HttpMethod.Get, "https://generativelanguage.googleapis.com/v1beta/models");
+            req.Headers.Add("x-goog-api-key", apiKey.Trim());
+            using var response = await _httpClient.SendAsync(req);
+            if (!response.IsSuccessStatusCode)
+                throw LlmServiceException.FromHttpStatus("Google Gemini", (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
             using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             if (doc.RootElement.TryGetProperty("models", out var modelsArray))
@@ -123,9 +139,9 @@ public class LocalLlmDiscoveryService : ILocalLlmDiscoveryService
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is not LlmServiceException)
         {
-            // Fehler/Offline abfangen
+            // Offline bzw. unlesbare Antwort: leere Liste („Keine Modelle gefunden“)
         }
 
         return models.OrderByDescending(m => m).ToList();
@@ -151,8 +167,9 @@ public class LocalLlmDiscoveryService : ILocalLlmDiscoveryService
                 req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey.Trim());
             }
 
-            var response = await _httpClient.SendAsync(req);
-            if (!response.IsSuccessStatusCode) return models;
+            using var response = await _httpClient.SendAsync(req);
+            if (!response.IsSuccessStatusCode)
+                throw LlmServiceException.FromHttpStatus(ProviderNameFor(customEndpoint), (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
             using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
             if (doc.RootElement.TryGetProperty("data", out var dataArray))
@@ -179,9 +196,9 @@ public class LocalLlmDiscoveryService : ILocalLlmDiscoveryService
                 }
             }
         }
-        catch
+        catch (Exception ex) when (ex is not LlmServiceException)
         {
-            // Fehler/Offline abfangen
+            // Offline bzw. unlesbare Antwort: leere Liste („Keine Modelle gefunden“)
         }
 
         return models.OrderBy(m => m).ToList();

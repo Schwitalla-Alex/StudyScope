@@ -47,6 +47,26 @@ public class DocumentListViewModelProfileNameTests
         _storageServiceMock.Verify(s => s.SaveDocumentsAsync("WSL Test", It.IsAny<IEnumerable<DocumentItem>>()), Times.Once);
     }
 
+    [TestCase("Testprofil")]
+    [TestCase("testprofil")]
+    [TestCase("  TESTPROFIL ")]
+    [TestCase("Standard")]
+    [TestCase("standard")]
+    public async Task CreateNewProfileAsync_VorhandenerName_WirdAbgelehntUndUeberschreibtKeineDokumente(string name)
+    {
+        Assert.That(await _viewModel.CreateNewProfileAsync("Testprofil"), Is.True);
+        await _viewModel.SwitchProfileAsync("Standard");
+        _storageServiceMock.Invocations.Clear();
+
+        var ergebnis = await _viewModel.CreateNewProfileAsync(name);
+
+        Assert.That(ergebnis, Is.False);
+        Assert.That(_viewModel.ValidateProfileName(name), Does.Contain("gibt es bereits"));
+        Assert.That(_viewModel.AvailableProfiles.Count(p => p.Equals("Testprofil", StringComparison.OrdinalIgnoreCase)), Is.EqualTo(1));
+        Assert.That(_viewModel.CurrentProfile, Is.EqualTo("Standard"));
+        _storageServiceMock.Verify(s => s.SaveDocumentsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<DocumentItem>>()), Times.Never);
+    }
+
     [Test]
     public void ValidateProfileName_LiefertMeldungFuerOberflaeche()
     {

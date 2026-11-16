@@ -1,4 +1,5 @@
 ﻿using Moq;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels;
@@ -149,6 +150,31 @@ public class SettingsViewModelTests
         Assert.That(result, Is.False);
         Assert.That(viewModel.ConnectionStatusMessage, Does.Contain("Verbindung fehlgeschlagen"));
         _storageServiceMock.Verify(s => s.SaveAiConfigAsync(It.IsAny<AiConfig>()), Times.Never);
+    }
+
+    [Test]
+    public async Task SaveAndConnectAsync_AbgelehnterSchluessel_ZeigtMeldungUndSpeichertNicht()
+    {
+        _llmServiceMock.Setup(l => l.ValidateConnectionAsync(It.IsAny<AiConfig?>()))
+                       .ThrowsAsync(LlmServiceException.FromHttpStatus("Mistral AI", 401, "{\"message\":\"Unauthorized\"}"));
+
+        var viewModel = new SettingsViewModel(
+            _storageServiceMock.Object,
+            _llmServiceMock.Object,
+            _discoveryServiceMock.Object)
+        {
+            SelectedProvider = AiProviderType.MistralAi,
+            ApiKey = "DUMMY_TEST_KEY_falsch"
+        };
+
+        var result = await viewModel.SaveAndConnectAsync();
+
+        Assert.That(result, Is.False);
+        Assert.That(viewModel.ConnectionSuccess, Is.False, "darf nicht als verbunden gelten");
+        Assert.That(viewModel.ConnectionStatusMessage, Does.Contain("HTTP 401").And.Contain("API-Schlüssel wurde abgelehnt"));
+        Assert.That(viewModel.ConnectionStatusMessage, Does.Not.Contain("Erfolgreich"));
+        _storageServiceMock.Verify(s => s.SaveAiConfigAsync(It.IsAny<AiConfig>()), Times.Never);
+        _storageServiceMock.Verify(s => s.SaveAiConfigForProfileAsync(It.IsAny<string>(), It.IsAny<AiConfig>()), Times.Never);
     }
 
     [Test]

@@ -1,0 +1,373 @@
+@using Microsoft.JSInterop
+@using StudyScope.UI.Services
+@inject ReportViewModel RepVm
+@inject DocumentListViewModel DocVm
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="rp-root">
+
+    <div class="rp-toolbar">
+        <div>
+            <h3 style="margin: 0; font-size: 16px; color: #212529;">Berichte: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: #6c757d;">
+                @(RepVm.Reports.Count == 0 ? "Noch keine Berichte" : RepVm.Reports.Count == 1 ? "1 Bericht" : $"{RepVm.Reports.Count} Berichte")
+                · Grundlage: @ActiveDocumentsText
+            </span>
+        </div>
+        @if (!RepVm.IsFormOpen && !RepVm.IsBusy)
+        {
+            <button type="button" class="rp-btn" style="background: #007bff;" @onclick="RepVm.OpenForm">➕ Neuer Bericht</button>
+        }
+    </div>
+
+    @if (RepVm.IsBusy)
+    {
+        <div class="rp-info">
+            <div style="font-weight: 600; font-size: 13px;">📑 KI liest die Dokumente und schreibt den Bericht (@ReportTemplates.DisplayName(RepVm.Template)) ...</div>
+            <div class="rp-progress"><div class="rp-progress-bar"></div></div>
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
+                <span style="font-size: 11px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
+                <button type="button" class="rp-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="RepVm.Cancel">Abbrechen</button>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(RepVm.StatusMessage))
+    {
+        var (statusBg, statusBorder, statusText) = RepVm.IsError
+            ? ("#f8d7da", "#f5c6cb", "#721c24")
+            : RepVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+
+        <div class="rp-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600;">@RepVm.StatusMessage</div>
+                @if (RepVm.StatusTips.Count > 0)
+                {
+                    <ul style="margin: 4px 0 0 18px; line-height: 1.5;">
+                        @foreach (var tip in RepVm.StatusTips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+                @if (!string.IsNullOrEmpty(RepVm.StatusDetails))
+                {
+                    <details style="margin-top: 6px;">
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <pre class="rp-details-raw">@RepVm.StatusDetails</pre>
+                    </details>
+                }
+            </div>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="RepVm.ClearStatus">✕</button>
+        </div>
+    }
+
+    <div class="rp-body">
+        <!-- Linke Spalte: neuer Bericht + Liste -->
+        <div class="rp-side">
+            @if (RepVm.IsFormOpen)
+            {
+                <div class="rp-card" style="border-color: #9ec5fe;">
+                    <h4>➕ Neuer Bericht</h4>
+
+                    <label class="rp-label">Vorlage</label>
+                    <div class="rp-templates">
+                        @foreach (var template in ReportTemplates.All)
+                        {
+                            var current = template;
+                            <button type="button" class="rp-template @(RepVm.Template == current ? "active" : "")" disabled="@RepVm.IsBusy" @onclick="() => RepVm.Template = current">
+                                <span style="font-size: 18px;">@ReportTemplates.Icon(current)</span>
+                                <span>
+                                    <b>@ReportTemplates.DisplayName(current)</b>
+                                    <span class="rp-desc">@ReportTemplates.Description(current)</span>
+                                </span>
+                            </button>
+                        }
+                    </div>
+
+                    @if (RepVm.Template == ReportTemplate.Custom)
+                    {
+                        <label class="rp-label">Ihre Vorgabe</label>
+                        <textarea class="rp-input" rows="3" placeholder="z. B. Vergleiche die Steuerarten in einer Übersicht mit Vor- und Nachteilen" @bind="RepVm.CustomInstruction" @bind:event="oninput"></textarea>
+                    }
+
+                    <label class="rp-label">Titel <span style="font-weight: normal; color: #6c757d;">(optional – sonst wählt die KI einen)</span></label>
+                    <input class="rp-input" @bind="RepVm.CustomTitle" @bind:event="oninput" />
+
+                    <label class="rp-label">Studio-Inhalte einbetten</label>
+                    @EmbedCheckbox("mindmap", "🧠 Mindmap", RepVm.NewEmbeds.Mindmap, RepVm.HasMindmap, RepVm.HasMindmap ? "vorhanden" : "noch keine", true)
+                    @EmbedCheckbox("flashcards", "🎴 Karteikarten", RepVm.NewEmbeds.Flashcards, RepVm.FlashcardCount > 0, $"{RepVm.FlashcardCount}", true)
+                    @EmbedCheckbox("quiz", "❓ Selbsttest (Quizfragen)", RepVm.NewEmbeds.Quiz, RepVm.QuizQuestionCount > 0, $"{RepVm.QuizQuestionCount}", true)
+                    @EmbedCheckbox("presentation", "📽️ Präsentation", RepVm.NewEmbeds.Presentation, RepVm.PresentationSlideCount > 0, $"{RepVm.PresentationSlideCount} Folien", true)
+                    <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz und Präsentation.</div>
+
+                    <button type="button" class="rp-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
+                            disabled="@(RepVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
+                        ✨ Bericht erstellen
+                    </button>
+                    @if (ActiveDocumentCount == 0)
+                    {
+                        <div class="rp-meta" style="color: #b02a37; margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                    }
+                    @if (RepVm.Reports.Count > 0 && !RepVm.IsBusy)
+                    {
+                        <button type="button" class="rp-link" style="margin-top: 8px;" @onclick="() => RepVm.IsFormOpen = false">Abbrechen</button>
+                    }
+                </div>
+            }
+
+            @if (RepVm.Reports.Count > 0)
+            {
+                <div class="rp-card">
+                    <h4>📑 Gespeicherte Berichte</h4>
+                    @foreach (var report in RepVm.Reports)
+                    {
+                        var r = report;
+                        var isSelected = RepVm.SelectedReport?.Id == r.Id && !RepVm.IsFormOpen;
+                        <div class="rp-item @(isSelected ? "active" : "")" @onclick="() => RepVm.SelectReport(r.Id)">
+                            <span style="font-size: 16px;">@ReportTemplates.Icon(r.Template)</span>
+                            <div style="flex: 1; min-width: 0;">
+                                @if (renameId == r.Id)
+                                {
+                                    <input class="rp-input" style="padding: 3px 6px;" @bind="renameText" @bind:event="oninput" @onclick:stopPropagation="true"
+                                           @onkeydown="e => RenameKeyAsync(e, r.Id)" />
+                                }
+                                else
+                                {
+                                    <div class="rp-item-title" title="@r.Title">@r.Title</div>
+                                }
+                                <div class="rp-meta">@ReportTemplates.DisplayName(r.Template) · @r.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                            </div>
+                            <div style="display: flex; gap: 2px; flex-shrink: 0;" @onclick:stopPropagation="true">
+                                @if (renameId == r.Id)
+                                {
+                                    <button class="rp-icon" title="Übernehmen" @onclick="() => RenameAsync(r.Id)">✔</button>
+                                    <button class="rp-icon" title="Abbrechen" @onclick="() => renameId = null">✕</button>
+                                }
+                                else if (confirmDeleteId == r.Id)
+                                {
+                                    <button class="rp-btn" style="background: #dc3545; padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(r.Id)">Löschen?</button>
+                                    <button class="rp-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
+                                }
+                                else
+                                {
+                                    <button class="rp-icon" title="Umbenennen" @onclick="() => StartRename(r)">✏️</button>
+                                    <button class="rp-icon" title="Bericht löschen" @onclick="() => confirmDeleteId = r.Id">🗑️</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Rechte Spalte: interaktiver Bericht -->
+        <div class="rp-main">
+            @if (RepVm.SelectedReport is { } selected && !string.IsNullOrEmpty(RepVm.CurrentHtml))
+            {
+                <div class="rp-card rp-viewer-head">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <div style="font-size: 12px; color: #495057; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                            <b>Eingebettet:</b>
+                            @EmbedCheckbox("mindmap", "Mindmap", selected.Embeds.Mindmap, RepVm.HasMindmap, null, false)
+                            @EmbedCheckbox("flashcards", "Karteikarten", selected.Embeds.Flashcards, RepVm.FlashcardCount > 0, null, false)
+                            @EmbedCheckbox("quiz", "Selbsttest", selected.Embeds.Quiz, RepVm.QuizQuestionCount > 0, null, false)
+                            @EmbedCheckbox("presentation", "Präsentation", selected.Embeds.Presentation, RepVm.PresentationSlideCount > 0, null, false)
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" class="rp-btn" style="background: #2b579a;" title="Als Word-Dokument speichern" @onclick="() => ExportAsync(ReportExportFormat.Word)">📝 Word</button>
+                            <button type="button" class="rp-btn" style="background: #6c757d;" title="Drucken oder als PDF speichern (alles aufgeklappt, mit Lösungen)" @onclick="PrintAsync">🖨️ PDF</button>
+                            <button type="button" class="rp-btn" style="background: #17a2b8;" title="Als Markdown-Datei speichern" @onclick="() => ExportAsync(ReportExportFormat.Markdown)">📄 Markdown</button>
+                            <button type="button" class="rp-btn" style="background: #495057;" title="Als reine Textdatei speichern" @onclick="() => ExportAsync(ReportExportFormat.Text)">🗒️ Text</button>
+                            <button type="button" class="rp-btn" style="background: #7048e8;" title="Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope" @onclick="() => ExportAsync(ReportExportFormat.Html)">🌐 HTML</button>
+                        </div>
+                    </div>
+                </div>
+                <iframe id="rp-frame" class="rp-frame" title="Bericht" srcdoc="@RepVm.CurrentHtml"></iframe>
+            }
+            else if (!RepVm.IsBusy)
+            {
+                <div class="rp-empty">
+                    <div style="font-size: 34px; margin-bottom: 10px;">📑</div>
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch kein Bericht ausgewählt.</p>
+                    <span style="font-size: 12px; line-height: 1.5; display: block;">
+                        Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Bericht erstellen“.
+                        Der Bericht wird interaktiv angezeigt – mit Mindmap, Karteikarten, Selbsttest und Folien – und lässt sich als
+                        Word, PDF, Markdown, Text oder HTML speichern.
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        .rp-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
+        .rp-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
+        .rp-btn { padding: 6px 11px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+        .rp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .rp-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
+        .rp-icon { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; padding: 2px 5px; }
+        .rp-icon:hover { background: #f1f3f5; border-color: #dee2e6; }
+        .rp-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .rp-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .rp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: rp-slide 1.4s ease-in-out infinite; }
+        @@keyframes rp-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        .rp-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .rp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .rp-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
+        .rp-side { width: 340px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .rp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
+        .rp-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
+        .rp-card h4 { margin: 0 0 8px 0; font-size: 14px; color: #212529; }
+        .rp-viewer-head { padding: 10px 14px; }
+        .rp-label { font-size: 12px; font-weight: 600; color: #495057; margin: 12px 0 4px 0; display: block; }
+        .rp-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .rp-templates { display: flex; flex-direction: column; gap: 6px; }
+        .rp-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid #dee2e6; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; color: #212529; font-family: inherit; }
+        .rp-template.active { border-color: #007bff; background: #f0f7ff; }
+        .rp-template b { display: block; }
+        .rp-desc { display: block; font-size: 11.5px; color: #6c757d; line-height: 1.35; }
+        .rp-check { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 2px 0; cursor: pointer; }
+        .rp-check.inline { display: inline-flex; font-size: 12px; gap: 4px; }
+        .rp-check.unavailable { opacity: 0.5; cursor: default; }
+        .rp-meta { font-size: 11px; color: #6c757d; }
+        .rp-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+        .rp-item:hover { background: #f8f9fa; }
+        .rp-item.active { background: #f0f7ff; border-color: #9ec5fe; }
+        .rp-item-title { font-size: 13px; font-weight: 600; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rp-frame { flex: 1; min-height: 300px; width: 100%; border: 1px solid #dee2e6; border-radius: 8px; background: #f1f3f5; }
+        .rp-empty { margin: auto; text-align: center; color: #6c757d; max-width: 480px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+    </style>
+</div>
+
+@code {
+    private string? renameId;
+    private string renameText = string.Empty;
+    private string? confirmDeleteId;
+
+    private int ActiveDocumentCount => DocVm.Documents.Count(d => d.IsSelected && !d.IsMissing);
+
+    private string ActiveDocumentsText => ActiveDocumentCount switch
+    {
+        0 => "kein Dokument aktiviert",
+        1 => "1 aktiviertes Dokument",
+        var n => $"{n} aktivierte Dokumente"
+    };
+
+    /// <summary>Kontrollkästchen für eine Einbettung – im Formular (neuer Bericht) oder für den gewählten Bericht.</summary>
+    private RenderFragment EmbedCheckbox(string part, string label, bool isChecked, bool available, string? info, bool forNewReport) => @<label class="rp-check @(forNewReport ? "" : "inline") @(available ? "" : "unavailable")"
+               title="@(available ? "" : "Noch nicht vorhanden – im entsprechenden Reiter erstellen")">
+        <input type="checkbox" checked="@(isChecked && available)" disabled="@(!available)" @onchange="() => ToggleEmbedAsync(part, forNewReport)" />
+        <span>@label</span>
+        @if (info != null)
+        {
+            <span class="rp-meta">(@info)</span>
+        }
+    </label>;
+
+    protected override async Task OnInitializedAsync()
+    {
+        RepVm.PropertyChanged += OnVmChanged;
+        DocVm.PropertyChanged += OnDocVmChanged;
+        DocVm.Documents.CollectionChanged += OnDocumentsChanged;
+        await RepVm.LoadForProfileAsync(DocVm.CurrentProfile);
+    }
+
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void OnDocumentsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private async void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocVm.CurrentProfile))
+        {
+            renameId = null;
+            confirmDeleteId = null;
+            await RepVm.LoadForProfileAsync(DocVm.CurrentProfile);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private Task GenerateAsync() => RepVm.GenerateAsync(DocVm.Documents);
+
+    private async Task ToggleEmbedAsync(string part, bool forNewReport)
+    {
+        if (forNewReport)
+            RepVm.ToggleNewEmbed(part);
+        else
+            await RepVm.ToggleEmbedAsync(part);
+    }
+
+    private void StartRename(Report report)
+    {
+        confirmDeleteId = null;
+        renameId = report.Id;
+        renameText = report.Title;
+    }
+
+    private async Task RenameAsync(string reportId)
+    {
+        if (await RepVm.RenameReportAsync(reportId, renameText))
+            renameId = null;
+    }
+
+    private async Task RenameKeyAsync(KeyboardEventArgs e, string reportId)
+    {
+        if (e.Key == "Enter") await RenameAsync(reportId);
+        else if (e.Key == "Escape") renameId = null;
+    }
+
+    private async Task DeleteAsync(string reportId)
+    {
+        confirmDeleteId = null;
+        await RepVm.DeleteReportAsync(reportId);
+    }
+
+    private async Task ExportAsync(ReportExportFormat format)
+    {
+        try
+        {
+            var extension = ReportViewModel.Extension(format);
+            var path = await DesktopDialogs.SaveFileAsync(
+                RepVm.SuggestFileName(format),
+                filterExtension: extension,
+                filterDescription: ReportViewModel.FormatDescription(format),
+                title: "Bericht speichern als...");
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            if (!path.EndsWith("." + extension, StringComparison.OrdinalIgnoreCase))
+                path += "." + extension;
+
+            await RepVm.ExportAsync(format, path);
+        }
+        catch (Exception ex)
+        {
+            RepVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+        }
+    }
+
+    /// <summary>Druckt den Bericht im Rahmen (eigene Druckansicht: alles aufgeklappt, mit Lösungen).</summary>
+    private async Task PrintAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('rp-frame').contentWindow.print()");
+        }
+        catch (Exception ex)
+        {
+            RepVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true,
+                new[] { "Alternative: Bericht als „🌐 HTML“ speichern, im Browser öffnen und dort drucken bzw. als PDF speichern." });
+        }
+    }
+
+    public void Dispose()
+    {
+        RepVm.PropertyChanged -= OnVmChanged;
+        DocVm.PropertyChanged -= OnDocVmChanged;
+        DocVm.Documents.CollectionChanged -= OnDocumentsChanged;
+    }
+}

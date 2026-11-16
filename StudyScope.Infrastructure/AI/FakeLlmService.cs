@@ -14,6 +14,35 @@ public class FakeLlmService : ILlmService
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
+        // Bericht zuerst: eine eigene Vorgabe des Benutzers kann Wörter wie "Mindmap" enthalten
+        if (FakeReportResponse.IsReportPrompt(prompt))
+        {
+            return Task.FromResult(FakeReportResponse.Create(prompt, chunks));
+        }
+
+        // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
+        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
+        {
+            return Task.FromResult(FakeMindmapResponse.Create(chunks));
+        }
+
+        // Präsentation angefordert (ebenfalls vor dem Karteikarten-Fall)
+        if (FakePresentationResponse.IsPresentationPrompt(prompt))
+        {
+            return Task.FromResult(FakePresentationResponse.Create(chunks));
+        }
+
+        // Quiz: Themenvorschläge bzw. Fragen (ebenfalls vor dem Karteikarten-Fall)
+        if (FakeQuizResponse.IsTopicPrompt(prompt))
+        {
+            return Task.FromResult(FakeQuizResponse.CreateTopics(chunks));
+        }
+
+        if (FakeQuizResponse.IsQuestionPrompt(prompt))
+        {
+            return Task.FromResult(FakeQuizResponse.CreateQuestions(prompt, chunks));
+        }
+
         // 1. Fall: Generierung von Karteikarten angefordert -> Valides JSON zurückgeben
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
             prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))

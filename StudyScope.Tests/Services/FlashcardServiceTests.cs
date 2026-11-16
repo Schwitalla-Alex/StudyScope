@@ -98,4 +98,20 @@ public class FlashcardServiceTests
         Assert.That(markdown, Does.Contain("**Antwort:** Test-Driven Development."));
         Assert.That(markdown, Does.Contain("### Frage 2: Was regelt das BGB?"));
     }
+
+    [Test]
+    public void ExportToMarkdown_ZeigtLernstandAufDeutsch()
+    {
+        var cards = new List<Flashcard>
+        {
+            new() { Question = "A?", Answer = "a", Status = FlashcardStatus.Known },
+            new() { Question = "B?", Answer = "b", Status = FlashcardStatus.Difficult },
+            new() { Question = "C?", Answer = "c", Status = FlashcardStatus.New }
+        };
+
+        var markdown = _service.ExportToMarkdown("Testprofil", cards);
+
+        Assert.That(markdown, Does.Contain("*Status:* Gelernt").And.Contain("*Status:* Wiederholen").And.Contain("*Status:* Neu"));
+        Assert.That(markdown, Does.Not.Contain("Known").And.Not.Contain("Difficult"));
+    }
 }
