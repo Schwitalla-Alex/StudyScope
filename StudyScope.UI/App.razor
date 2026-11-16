@@ -26,6 +26,10 @@
                         @onclick='() => activeTab = "cards"'>
                     🎴 Lernkarteikarten
                 </button>
+                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "mindmap" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "mindmap" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "mindmap" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                        @onclick='() => activeTab = "mindmap"'>
+                    🧠 Mindmap
+                </button>
             </div>
 
             <!-- Aktiver Arbeitsbereich -->
@@ -34,9 +38,13 @@
                 {
                     <ChatArea />
                 }
-                else
+                else if (activeTab == "cards")
                 {
                     <FlashcardView />
+                }
+                else
+                {
+                    <MindmapView OnAskQuestion="AskFromMindmapAsync" />
                 }
             </div>
         </div>
@@ -69,6 +77,24 @@
 
     private void OpenSettingsModal() => showSettings = true;
     private void CloseSettingsModal() => showSettings = false;
+
+    /// <summary>
+    /// Frage aus der Mindmap: zum Chat wechseln und die Frage dort mit den aktivierten Dokumenten stellen.
+    /// </summary>
+    private async Task AskFromMindmapAsync(string question)
+    {
+        activeTab = "chat";
+        if (ChatVm.IsBusy)
+        {
+            // Läuft gerade eine Antwort, die Frage nur ins Eingabefeld übernehmen
+            ChatVm.CurrentInputPrompt = question;
+            return;
+        }
+
+        ChatVm.CurrentInputPrompt = question;
+        StateHasChanged();
+        await ChatVm.SendPromptAsync();
+    }
 
     private void OpenAboutModal() => showAbout = true;
     private void CloseAboutModal() => showAbout = false;

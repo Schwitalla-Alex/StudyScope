@@ -33,6 +33,7 @@ class Program
 
         appBuilder.Services.AddSingleton<IFileOpenerService, FileOpenerService>();
         appBuilder.Services.AddSingleton<IFlashcardService, FlashcardService>();
+        appBuilder.Services.AddSingleton<IMindmapService>(sp => new MindmapService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
 
         // ViewModels registrieren
@@ -47,6 +48,7 @@ class Program
 
         appBuilder.Services.AddSingleton<SettingsViewModel>();
         appBuilder.Services.AddSingleton<FlashcardViewModel>();
+        appBuilder.Services.AddSingleton<MindmapViewModel>();
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

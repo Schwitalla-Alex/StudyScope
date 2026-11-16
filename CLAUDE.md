@@ -58,6 +58,13 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 - Retrieval ist **kein** Embedding-Verfahren: `ChatViewModel.GetMostRelevantChunks` bewertet Chunks per Stichwort-Treffer (mit deutscher Stoppwortliste) und gibt die Top 8 an das LLM.
 - `FlashcardService` lässt das LLM ein JSON-Array mit `question`/`answer` erzeugen und parst es; außerdem Markdown-Export und Druck.
 
+### Mindmap
+
+- `MindmapService` (Infrastructure) wählt bis zu 16 gleichmäßig über die Dokumente verteilte Chunks, verlangt vom LLM ein **JSON-Array mit genau einem Wurzelobjekt** (`title`/`summary`/`children`; Array, weil der Dispatcher bei „JSON“-Prompts für einige Provider ein JSON-Array vorgibt) und parst tolerant (Codeblöcke, Begleittext, deutsche Schlüssel, mehrere Wurzeln, Grenzen `MaxDepth`/`MaxNodes`). Speicherung je Profil unter `Mindmaps/<Profil>.json` im Benutzerdaten-Ordner; Markdown-Export.
+- Fake-KI: Mindmap-Prompts (enthalten „Mindmap“) werden **vor** dem Karteikarten-Fall erkannt (`FakeMindmapResponse`, genutzt von `FakeLlmService` und `LlmServiceDispatcher.AskFakeAi`).
+- `MindmapLayout` (ViewModels/Mindmap) berechnet das horizontale Baum-Layout rein rechnerisch (testbar); `MindmapViewModel` verwaltet Auf-/Zuklappen, Zoom, Auswahl und formuliert die Chat-Frage zu einem Knoten.
+- `MindmapView.razor` zeichnet reines SVG ohne JavaScript-Bibliothek. Zahlen in SVG-Attributen immer mit `CultureInfo.InvariantCulture` formatieren (deutsche Kultur schreibt Kommas). „Im Chat erklären lassen“ läuft über `OnAskQuestion` → `App.razor` wechselt zum Chat und ruft `ChatViewModel.SendPromptAsync` auf.
+
 ### Persistenz
 
 `JsonStorageService` speichert unter `AppPaths.UserDataDirectory` (Windows `%APPDATA%\StudyScope\`, Linux `~/.config/StudyScope/`): je Profil `Profiles/<name>.json` (Dokumente + profilspezifische `AiSettings`), dazu `config.json` (globale KI-Konfiguration) und `last_profile.txt`. API-Keys werden in Profilen **und** in `config.json` beim Schreiben per `AesEncryptionService` (AES-GCM, fest abgeleiteter Schlüssel) verschlüsselt und beim Lesen entschlüsselt; im Speicher sind sie immer Klartext. Profile daher nur über `WriteProfileFileAsync` schreiben (verschlüsselt eine Kopie), nie das gelesene Objekt direkt serialisieren. Alter Klartext und früher doppelt verschlüsselte Keys bleiben lesbar (`DecryptApiKey`). `SettingsViewModel` prüft die Formularwerte per `ValidateConnectionAsync(config)` und speichert sie danach profilspezifisch (maßgeblich) und global (Rückfall). Profile ohne eigene Einstellung stehen auf dem Standard „Fake-KI (Testmodus)“ und nutzen diese auch.

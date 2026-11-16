@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.AI;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -78,6 +79,10 @@ public class LlmServiceDispatcher : ILlmService
 
     private static string AskFakeAi(string prompt, List<string> chunks)
     {
+        // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
+        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
+            return FakeMindmapResponse.Create(chunks);
+
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
         {
             var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";

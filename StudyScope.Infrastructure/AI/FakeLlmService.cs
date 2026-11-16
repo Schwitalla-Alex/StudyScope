@@ -14,6 +14,12 @@ public class FakeLlmService : ILlmService
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
+        // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
+        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
+        {
+            return Task.FromResult(FakeMindmapResponse.Create(chunks));
+        }
+
         // 1. Fall: Generierung von Karteikarten angefordert -> Valides JSON zurückgeben
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
             prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
