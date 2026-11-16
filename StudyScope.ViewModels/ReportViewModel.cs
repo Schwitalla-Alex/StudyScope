@@ -197,7 +197,9 @@ public class ReportViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PresentationSlideCount));
     }
 
-    private static async Task<T?> TryLoad<T>(Func<Task<T?>> load, T? fallback)
+    // T übernimmt die NULL-Zulässigkeit der Ladefunktion (z. B. MindmapDocument? oder List<Flashcard>),
+    // sonst warnt der Compiler bei Diensten, die laut Signatur nie null liefern (CS8619).
+    private static async Task<T> TryLoad<T>(Func<Task<T>> load, T fallback)
     {
         try { return await load(); }
         catch { return fallback; }
