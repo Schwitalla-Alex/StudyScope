@@ -1,0 +1,783 @@
+﻿@using StudyScope.ViewModels.Quiz
+@inject QuizViewModel QuizVm
+@inject DocumentListViewModel DocVm
+@implements IDisposable
+
+<div class="qz-root" tabindex="0" @ref="rootRef" @onkeydown="HandleKey">
+
+    <!-- Kopfzeile -->
+    <div class="qz-toolbar">
+        <div>
+            <h3 style="margin: 0; font-size: 16px; color: #212529;">Quiz: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: #6c757d;">
+                @(QuizVm.Topics.Count == 0 ? "Noch keine Themen angelegt" : $"{Count(QuizVm.Topics.Count, "Thema", "Themen")} · {Count(QuizVm.Topics.Sum(t => t.Questions.Count), "Frage", "Fragen")} im Pool · {Count(QuizVm.History.Count, "Durchgang", "Durchgänge")} im Verlauf")
+            </span>
+        </div>
+        @if (QuizVm.Screen == QuizScreen.Library && !QuizVm.IsBusy)
+        {
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="qz-btn" style="background: #007bff;" title="Eigenes Thema mit Dokumenten anlegen" @onclick="OpenNewTopic">➕ Neues Thema</button>
+                <button type="button" class="qz-btn" style="background: #7048e8;" title="Die KI schlägt Themen aus den links aktivierten Dokumenten vor" @onclick="SuggestAsync">✨ Themen vorschlagen</button>
+            </div>
+        }
+    </div>
+
+    @if (QuizVm.IsBusy)
+    {
+        <div class="qz-info">
+            <div style="font-weight: 600; font-size: 13px;">@QuizVm.ProgressText</div>
+            <div class="qz-progress"><div class="qz-progress-fill" style="width: @Css(Math.Max(4, QuizVm.ProgressPercent))%;"></div></div>
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
+                <span style="font-size: 11px; color: #6c757d;">Einmal erzeugte Fragen werden gespeichert und in späteren Quizrunden wiederverwendet.</span>
+                <button type="button" class="qz-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="QuizVm.Cancel">Abbrechen</button>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(QuizVm.StatusMessage))
+    {
+        var (statusBg, statusBorder, statusText) = QuizVm.IsError
+            ? ("#f8d7da", "#f5c6cb", "#721c24")
+            : QuizVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+
+        <div class="qz-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600;">@QuizVm.StatusMessage</div>
+                @if (QuizVm.StatusTips.Count > 0)
+                {
+                    <ul style="margin: 4px 0 0 18px; line-height: 1.5;">
+                        @foreach (var tip in QuizVm.StatusTips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+                @if (!string.IsNullOrEmpty(QuizVm.StatusDetails))
+                {
+                    <details style="margin-top: 6px;">
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <pre class="qz-details-raw">@QuizVm.StatusDetails</pre>
+                    </details>
+                }
+            </div>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="QuizVm.ClearStatus">✕</button>
+        </div>
+    }
+
+    <div class="qz-body">
+        @if (QuizVm.Screen == QuizScreen.Running)
+        {
+            @RenderRunning()
+        }
+        else if (QuizVm.Screen == QuizScreen.Result)
+        {
+            @RenderResult()
+        }
+        else
+        {
+            @RenderLibrary()
+        }
+    </div>
+
+    <style>
+        .qz-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
+        .qz-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
+        .qz-btn { padding: 7px 12px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .qz-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .qz-btn-outline { padding: 6px 12px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .qz-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
+        .qz-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+        .qz-icon-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+        .qz-icon-btn:hover { background: #f1f3f5; border-color: #dee2e6; }
+        .qz-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
+        .qz-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .qz-progress { width: 100%; max-width: 520px; height: 8px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; }
+        .qz-progress-fill { height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; transition: width 0.3s; }
+        .qz-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .qz-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .qz-body { flex: 1; min-height: 0; margin-top: 16px; display: flex; flex-direction: column; overflow-y: auto; }
+
+        .qz-grid { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+        .qz-col-main { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+        .qz-col-side { flex: 0 1 380px; min-width: 300px; display: flex; flex-direction: column; gap: 12px; }
+        .qz-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
+        .qz-card h4 { margin: 0 0 10px 0; font-size: 14px; color: #212529; }
+        .qz-label { font-size: 12px; font-weight: 600; color: #495057; margin: 10px 0 4px 0; display: block; }
+        .qz-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .qz-check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; padding: 3px 0; cursor: pointer; }
+        .qz-topic { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #f1f3f5; align-items: flex-start; }
+        .qz-topic:first-of-type { border-top: none; }
+        .qz-topic input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; cursor: pointer; }
+        .qz-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
+        .qz-meta { font-size: 11px; color: #6c757d; margin-top: 3px; }
+        .qz-empty { text-align: center; color: #6c757d; padding: 26px 10px; font-size: 13px; line-height: 1.5; }
+        .qz-mode { display: flex; gap: 8px; }
+        .qz-mode-option { flex: 1; border: 2px solid #dee2e6; border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 12px; color: #495057; background: #fff; text-align: left; }
+        .qz-mode-option.active { border-color: #007bff; background: #f0f7ff; }
+        .qz-mode-option b { display: block; font-size: 13px; color: #212529; margin-bottom: 2px; }
+        .qz-history-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid #f1f3f5; font-size: 12px; }
+        .qz-bar { height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; }
+        .qz-bar > div { height: 100%; border-radius: 3px; }
+
+        .qz-run { max-width: 860px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+        .qz-run-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .qz-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e9ecef; color: #495057; margin-right: 6px; }
+        .qz-nav-dots { display: flex; flex-wrap: wrap; gap: 4px; }
+        .qz-dot { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ced4da; background: #fff; font-size: 11px; cursor: pointer; color: #495057; }
+        .qz-dot.answered { background: #cfe2ff; border-color: #9ec5fe; }
+        .qz-dot.current { border: 2px solid #007bff; font-weight: 700; }
+        .qz-dot.correct { background: #d1e7dd; border-color: #a3cfbb; }
+        .qz-dot.wrong { background: #f8d7da; border-color: #f1aeb5; }
+        .qz-question { font-size: 17px; font-weight: 600; color: #212529; line-height: 1.45; margin: 4px 0 2px 0; }
+        .qz-hint { font-size: 12px; color: #6c757d; }
+        .qz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .qz-option { display: flex; gap: 12px; align-items: center; text-align: left; padding: 11px 14px; border: 2px solid #dee2e6; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; color: #212529; font-family: inherit; }
+        .qz-option:hover:not(:disabled) { border-color: #9ec5fe; }
+        .qz-option:disabled { cursor: default; }
+        .qz-option.selected { border-color: #007bff; background: #f0f7ff; }
+        .qz-option.correct { border-color: #28a745; background: #e9f7ef; }
+        .qz-option.wrong { border-color: #dc3545; background: #fdecee; }
+        .qz-option.missed { border-color: #28a745; border-style: dashed; }
+        .qz-marker { width: 22px; height: 22px; flex-shrink: 0; border: 2px solid #adb5bd; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6c757d; }
+        .qz-marker.round { border-radius: 50%; }
+        .qz-marker.square { border-radius: 4px; }
+        .qz-option.selected .qz-marker { background: #007bff; border-color: #007bff; color: #fff; }
+        .qz-option.correct .qz-marker { background: #28a745; border-color: #28a745; color: #fff; }
+        .qz-option.wrong .qz-marker { background: #dc3545; border-color: #dc3545; color: #fff; }
+        .qz-feedback { border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.5; }
+        .qz-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+        .qz-score { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+        .qz-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .qz-ring-inner { width: 94px; height: 94px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .qz-review { border-top: 1px solid #f1f3f5; padding: 12px 0; }
+        .qz-review-option { font-size: 13px; padding: 2px 0 2px 22px; position: relative; color: #495057; }
+        .qz-review-option::before { position: absolute; left: 0; }
+        .qz-review-option.correct { color: #1e7b34; font-weight: 600; }
+        .qz-review-option.correct::before { content: "✓"; }
+        .qz-review-option.wrong { color: #b02a37; text-decoration: line-through; }
+        .qz-review-option.wrong::before { content: "✗"; text-decoration: none; }
+    </style>
+</div>
+
+@code {
+    private ElementReference rootRef;
+    private bool focusRoot;
+    private bool confirmAbort;
+    private bool confirmSubmit;
+    private bool confirmClearHistory;
+    private string? confirmDeleteTopicId;
+    private bool onlyWrong;
+    private bool showAllHistory;
+
+    private static string Css(double value) => value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    private static string Letter(int index) => ((char)('A' + index)).ToString();
+    private static string Count(int n, string singular, string plural) => $"{n} {(n == 1 ? singular : plural)}";
+    private static string ScoreColor(double percent) => percent >= 75 ? "#28a745" : percent >= 50 ? "#f0ad4e" : "#dc3545";
+
+    // ---------------- Übersicht: Themen, Start, Verlauf ----------------
+
+    private RenderFragment RenderLibrary() => @<div class="qz-grid">
+        <div class="qz-col-main">
+
+            @if (QuizVm.IsTopicFormOpen)
+            {
+                <div class="qz-card" style="border-color: #9ec5fe;">
+                    <h4>@(QuizVm.IsEditingTopic ? "✏️ Thema bearbeiten" : "➕ Neues Thema")</h4>
+                    <label class="qz-label">Name</label>
+                    <input class="qz-input" placeholder="z. B. Einkommensteuer" @bind="QuizVm.FormName" @bind:event="oninput" />
+                    <label class="qz-label">Worum geht es? <span style="font-weight: normal; color: #6c757d;">(optional – hilft der KI, passende Textstellen zu finden)</span></label>
+                    <textarea class="qz-input" rows="2" placeholder="z. B. Tarif, Freibeträge und Splittingverfahren" @bind="QuizVm.FormDescription" @bind:event="oninput"></textarea>
+                    <label class="qz-label">Dokumente, aus denen die Fragen stammen</label>
+                    @if (DocVm.Documents.Count == 0)
+                    {
+                        <div class="qz-meta">Dieses Profil enthält noch keine Dokumente. Laden Sie links zuerst Dokumente hoch.</div>
+                    }
+                    @foreach (var doc in DocVm.Documents)
+                    {
+                        var path = doc.FilePath;
+                        <label class="qz-check" style="@(doc.IsMissing ? "opacity: 0.5;" : "")">
+                            <input type="checkbox" checked="@QuizVm.IsFormDocumentSelected(path)" disabled="@doc.IsMissing" @onchange="() => QuizVm.ToggleFormDocument(path)" />
+                            <span>@doc.FileName @(doc.IsMissing ? "(nicht gefunden)" : "")</span>
+                        </label>
+                    }
+                    @if (!string.IsNullOrEmpty(QuizVm.FormError))
+                    {
+                        <div style="color: #b02a37; font-size: 12px; margin-top: 6px;">@QuizVm.FormError</div>
+                    }
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                        <button type="button" class="qz-btn" style="background: #28a745;" @onclick="SaveTopicAsync">Speichern</button>
+                        <button type="button" class="qz-btn-outline" @onclick="QuizVm.CloseTopicForm">Abbrechen</button>
+                    </div>
+                </div>
+            }
+
+            @if (QuizVm.Suggestions.Count > 0)
+            {
+                <div class="qz-card" style="border-color: #c5b3f6;">
+                    <h4>✨ Themenvorschläge der KI</h4>
+                    <div class="qz-meta" style="margin-bottom: 6px;">Haken Sie die Themen an, die Sie übernehmen möchten. Sie beruhen auf den gerade aktivierten Dokumenten.</div>
+                    @foreach (var item in QuizVm.Suggestions)
+                    {
+                        var current = item;
+                        <label class="qz-check">
+                            <input type="checkbox" checked="@current.IsChecked" @onchange="() => QuizVm.ToggleSuggestion(current)" />
+                            <span><b>@current.Suggestion.Name</b>@(string.IsNullOrWhiteSpace(current.Suggestion.Description) ? "" : " – " + current.Suggestion.Description)</span>
+                        </label>
+                    }
+                    <div style="display: flex; gap: 8px; margin-top: 10px;">
+                        <button type="button" class="qz-btn" style="background: #7048e8;" @onclick="QuizVm.AcceptSuggestionsAsync">Ausgewählte übernehmen</button>
+                        <button type="button" class="qz-btn-outline" @onclick="QuizVm.DismissSuggestions">Verwerfen</button>
+                    </div>
+                </div>
+            }
+
+            <div class="qz-card">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <h4>📚 Themen</h4>
+                    @if (QuizVm.Topics.Count > 1)
+                    {
+                        <span>
+                            <button class="qz-link" @onclick="() => QuizVm.SelectAllTopics(true)">alle wählen</button> ·
+                            <button class="qz-link" @onclick="() => QuizVm.SelectAllTopics(false)">keine</button>
+                        </span>
+                    }
+                </div>
+
+                @if (QuizVm.Topics.Count == 0)
+                {
+                    <div class="qz-empty">
+                        <div style="font-size: 30px; margin-bottom: 6px;">❓</div>
+                        <b>Noch keine Themen vorhanden.</b><br />
+                        Legen Sie mit <b>➕ Neues Thema</b> selbst ein Thema an (Name + Dokumente)<br />
+                        oder lassen Sie mit <b>✨ Themen vorschlagen</b> die KI Themen aus den links aktivierten Dokumenten finden.
+                    </div>
+                }
+
+                @foreach (var topic in QuizVm.Topics)
+                {
+                    var t = topic;
+                    var stats = QuizVm.TopicStatistics(t.Id);
+                    <div class="qz-topic">
+                        <input type="checkbox" checked="@QuizVm.IsTopicSelected(t.Id)" title="Für das Quiz auswählen" @onchange="() => QuizVm.ToggleTopic(t.Id)" />
+                        <div style="flex: 1; min-width: 0; cursor: pointer;" @onclick="() => QuizVm.ToggleTopic(t.Id)">
+                            <div style="font-size: 14px; font-weight: 600; color: #212529;">
+                                @t.Name
+                                @if (t.Origin == StudyScope.Core.Models.QuizTopicOrigin.Ai)
+                                {
+                                    <span class="qz-badge" style="background: #efe9fd; color: #5f3dc4;">KI</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(t.Description))
+                            {
+                                <div style="font-size: 12px; color: #495057; margin-top: 2px;">@t.Description</div>
+                            }
+                            <div class="qz-meta">
+                                📄 @string.Join(", ", t.Documents.Select(d => d.FileName))
+                                · ❓ @t.Questions.Count Fragen im Pool
+                                @if (stats is { } s)
+                                {
+                                    <span> · <span style="color: @ScoreColor(s.Percent); font-weight: 600;">Ø @Css(s.Percent) %</span> aus @s.Answered Antworten</span>
+                                }
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 2px; flex-shrink: 0;">
+                            @if (confirmDeleteTopicId == t.Id)
+                            {
+                                <button class="qz-btn" style="background: #dc3545; padding: 3px 8px; font-size: 12px;" @onclick="() => DeleteTopicAsync(t.Id)">Löschen?</button>
+                                <button class="qz-icon-btn" title="Nicht löschen" @onclick="() => confirmDeleteTopicId = null">✕</button>
+                            }
+                            else
+                            {
+                                <button class="qz-icon-btn" title="Thema bearbeiten (Name, Beschreibung, Dokumente)" @onclick="() => QuizVm.OpenEditTopicForm(t.Id)">✏️</button>
+                                <button class="qz-icon-btn" title="Fragenpool verwerfen – beim nächsten Quiz erzeugt die KI neue Fragen" disabled="@(t.Questions.Count == 0)" @onclick="() => QuizVm.ResetTopicQuestionsAsync(t.Id)">🔄</button>
+                                <button class="qz-icon-btn" title="Thema löschen" @onclick="() => confirmDeleteTopicId = t.Id">🗑️</button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="qz-col-side">
+            <div class="qz-card">
+                <h4>▶ Quiz starten</h4>
+                <div style="font-size: 13px; color: #495057;">
+                    Ausgewählte Themen: <b>@QuizVm.SelectedTopicCount</b> von @QuizVm.Topics.Count
+                </div>
+
+                <label class="qz-label">Anzahl Fragen (@QuizViewModel.MinQuestions–@QuizViewModel.MaxQuestions)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="range" min="@QuizViewModel.MinQuestions" max="@QuizViewModel.MaxQuestions" style="flex: 1;"
+                           value="@QuizVm.QuestionCount" @oninput="e => QuizVm.QuestionCount = int.TryParse(e.Value?.ToString(), out var v) ? v : QuizVm.QuestionCount" />
+                    <input type="number" class="qz-input" style="width: 64px; text-align: center;" min="@QuizViewModel.MinQuestions" max="@QuizViewModel.MaxQuestions" @bind="QuizVm.QuestionCount" />
+                </div>
+
+                <label class="qz-label">Modus</label>
+                <div class="qz-mode">
+                    <button type="button" class="qz-mode-option @(QuizVm.Mode == StudyScope.Core.Models.QuizMode.Learn ? "active" : "")" @onclick="() => QuizVm.Mode = StudyScope.Core.Models.QuizMode.Learn">
+                        <b>🎓 Lernmodus</b>Rückmeldung und Erklärung nach jeder Frage
+                    </button>
+                    <button type="button" class="qz-mode-option @(QuizVm.Mode == StudyScope.Core.Models.QuizMode.Exam ? "active" : "")" @onclick="() => QuizVm.Mode = StudyScope.Core.Models.QuizMode.Exam">
+                        <b>📝 Prüfungsmodus</b>Alle Fragen beantworten, Auswertung am Ende
+                    </button>
+                </div>
+
+                <label class="qz-label">Fragetypen</label>
+                @foreach (var (type, label) in TypeLabels)
+                {
+                    var current = type;
+                    <label class="qz-check">
+                        <input type="checkbox" checked="@QuizVm.IsTypeAllowed(current)" @onchange="() => QuizVm.ToggleType(current)" />
+                        <span>@label</span>
+                    </label>
+                }
+
+                <button type="button" class="qz-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 10px;"
+                        disabled="@(QuizVm.IsBusy || QuizVm.SelectedTopicCount == 0)" @onclick="StartAsync">
+                    ▶ Quiz mit @QuizVm.QuestionCount Fragen starten
+                </button>
+                <div class="qz-meta" style="margin-top: 8px; line-height: 1.4;">
+                    Fehlende Fragen erzeugt die KI automatisch (in Paketen zu je 10). Erzeugte Fragen werden gespeichert und wiederverwendet –
+                    neue und zuletzt falsch beantwortete Fragen kommen zuerst.
+                </div>
+            </div>
+
+            <div class="qz-card">
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <h4>📈 Verlauf</h4>
+                    @if (QuizVm.History.Count > 0)
+                    {
+                        @if (confirmClearHistory)
+                        {
+                            <span style="font-size: 12px;">
+                                <button class="qz-link" style="color: #dc3545; font-weight: 600;" @onclick="ClearHistoryAsync">Wirklich löschen</button> ·
+                                <button class="qz-link" @onclick="() => confirmClearHistory = false">Nein</button>
+                            </span>
+                        }
+                        else
+                        {
+                            <button class="qz-link" @onclick="() => confirmClearHistory = true">Verlauf löschen</button>
+                        }
+                    }
+                </div>
+                @if (QuizVm.History.Count == 0)
+                {
+                    <div class="qz-meta">Noch keine Quizrunden gespielt.</div>
+                }
+                @foreach (var result in QuizVm.History.Take(showAllHistory ? QuizViewModel.MaxHistoryEntries : 8))
+                {
+                    <div class="qz-history-row">
+                        <div style="width: 74px; color: #6c757d; flex-shrink: 0;">@result.CompletedAt.ToString("dd.MM. HH:mm")</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="@string.Join(", ", result.TopicNames)">
+                                @(result.Mode == StudyScope.Core.Models.QuizMode.Learn ? "🎓" : "📝") @string.Join(", ", result.TopicNames)
+                            </div>
+                            <div class="qz-bar" style="margin-top: 3px;"><div style="width: @Css(result.Percent)%; background: @ScoreColor(result.Percent);"></div></div>
+                        </div>
+                        <div style="width: 70px; text-align: right; flex-shrink: 0;"><b>@result.Correct/@result.Total</b> · @Css(result.Percent) %</div>
+                    </div>
+                }
+                @if (QuizVm.History.Count > 8)
+                {
+                    <button class="qz-link" style="margin-top: 6px;" @onclick="() => showAllHistory = !showAllHistory">@(showAllHistory ? "weniger anzeigen" : $"alle {QuizVm.History.Count} anzeigen")</button>
+                }
+            </div>
+        </div>
+    </div>;
+
+    private static readonly (StudyScope.Core.Models.QuizQuestionType, string)[] TypeLabels =
+    {
+        (StudyScope.Core.Models.QuizQuestionType.SingleChoice, "Multiple Choice – eine Antwort richtig"),
+        (StudyScope.Core.Models.QuizQuestionType.TrueFalse, "Wahr / Falsch"),
+        (StudyScope.Core.Models.QuizQuestionType.MultipleChoice, "Mehrere richtige Antworten")
+    };
+
+    // ---------------- Laufendes Quiz ----------------
+
+    private RenderFragment RenderRunning() => @<div class="qz-run">
+        @if (QuizVm.Session is { Current: { } item } session)
+        {
+            var question = item.Question;
+            var isLearn = session.Mode == StudyScope.Core.Models.QuizMode.Learn;
+            var showSolution = item.IsChecked;
+            var round = question.Type != StudyScope.Core.Models.QuizQuestionType.MultipleChoice;
+
+            <div class="qz-card">
+                <div class="qz-run-head">
+                    <div>
+                        <span style="font-size: 15px; font-weight: 700; color: #212529; margin-right: 10px;">Frage @(session.CurrentIndex + 1) von @session.Count</span>
+                        <span class="qz-chip">@item.TopicName</span>
+                        <span class="qz-chip">@(isLearn ? "🎓 Lernmodus" : "📝 Prüfungsmodus")</span>
+                        @if (isLearn && session.CheckedCount > 0)
+                        {
+                            <span class="qz-chip" style="background: #d1e7dd; color: #0f5132;">@session.CorrectCount von @session.CheckedCount richtig</span>
+                        }
+                    </div>
+                    @if (confirmAbort)
+                    {
+                        <span style="font-size: 12px;">
+                            Quiz abbrechen? Das Ergebnis wird nicht gespeichert.
+                            <button class="qz-link" style="color: #dc3545; font-weight: 600;" @onclick="AbortQuiz">Ja, abbrechen</button> ·
+                            <button class="qz-link" @onclick="() => confirmAbort = false">Weiterspielen</button>
+                        </span>
+                    }
+                    else
+                    {
+                        <button class="qz-btn-outline" style="font-size: 12px; padding: 4px 10px;" @onclick="() => confirmAbort = true">Quiz abbrechen</button>
+                    }
+                </div>
+                <div class="qz-bar" style="margin-top: 10px;">
+                    <div style="width: @Css(100.0 * (isLearn ? session.CheckedCount : session.AnsweredCount) / session.Count)%; background: #007bff;"></div>
+                </div>
+                @if (!isLearn)
+                {
+                    <div class="qz-nav-dots" style="margin-top: 10px;">
+                        @for (var i = 0; i < session.Count; i++)
+                        {
+                            var index = i;
+                            <button class="qz-dot @(session.Items[index].IsAnswered ? "answered" : "") @(index == session.CurrentIndex ? "current" : "")"
+                                    title="@($"Frage {index + 1}{(session.Items[index].IsAnswered ? " (beantwortet)" : "")}")" @onclick="() => GoTo(index)">@(index + 1)</button>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="qz-card">
+                <div class="qz-hint">
+                    @(question.Type switch
+                    {
+                        StudyScope.Core.Models.QuizQuestionType.TrueFalse => "Ist die Aussage wahr oder falsch?",
+                        StudyScope.Core.Models.QuizQuestionType.MultipleChoice => $"Mehrere Antworten sind richtig ({question.CorrectIndices.Count}) – wählen Sie alle richtigen aus.",
+                        _ => "Eine Antwort ist richtig."
+                    })
+                </div>
+                <div class="qz-question">@question.Text</div>
+
+                <div class="qz-options">
+                    @for (var i = 0; i < question.Options.Count; i++)
+                    {
+                        var index = i;
+                        var isSelected = item.Selected.Contains(index);
+                        var isCorrect = question.CorrectIndices.Contains(index);
+                        var css = !showSolution ? (isSelected ? "selected" : "")
+                            : isCorrect && isSelected ? "correct"
+                            : isSelected ? "wrong"
+                            : isCorrect ? "missed" : "";
+                        <button type="button" class="qz-option @css" disabled="@(!session.CanAnswer)" @onclick="() => Select(index)">
+                            <span class="qz-marker @(round ? "round" : "square")">@(showSolution && isCorrect ? "✓" : showSolution && isSelected ? "✗" : Letter(index))</span>
+                            <span>@question.Options[index]</span>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            @if (showSolution)
+            {
+                <div class="qz-feedback" style="background: @(item.IsCorrect ? "#d1e7dd" : "#f8d7da"); color: @(item.IsCorrect ? "#0f5132" : "#842029");">
+                    <b>@(item.IsCorrect ? "✓ Richtig!" : item.IsAnswered ? "✗ Leider falsch." : "✗ Nicht beantwortet.")</b>
+                    @if (!string.IsNullOrWhiteSpace(question.Explanation))
+                    {
+                        <div style="margin-top: 4px; color: #212529;">@question.Explanation</div>
+                    }
+                </div>
+            }
+
+            <div class="qz-actions">
+                <button type="button" class="qz-btn-outline" disabled="@(!session.CanGoPrevious)" @onclick="Previous">◀ Zurück</button>
+                <span class="qz-meta">Tastatur: @(question.Options.Count > 2 ? "A–" + Letter(question.Options.Count - 1) : "A/B") wählen, Enter @(isLearn ? "prüfen/weiter" : "weiter")</span>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    @if (isLearn)
+                    {
+                        @if (!item.IsChecked)
+                        {
+                            <button type="button" class="qz-btn" style="background: #007bff;" disabled="@(!session.CanCheck)" @onclick="Check">Antwort prüfen</button>
+                        }
+                        else if (!session.IsLastQuestion)
+                        {
+                            <button type="button" class="qz-btn" style="background: #007bff;" @onclick="Next">Weiter ▶</button>
+                        }
+                        else
+                        {
+                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="FinishAsync">Ergebnis anzeigen</button>
+                        }
+                    }
+                    else
+                    {
+                        @if (confirmSubmit)
+                        {
+                            <span style="font-size: 12px; color: #856404;">@session.UnansweredCount Frage(n) unbeantwortet – zählen als falsch.</span>
+                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="FinishAsync">Trotzdem abgeben</button>
+                            <button class="qz-link" @onclick="() => confirmSubmit = false">Zurück</button>
+                        }
+                        else
+                        {
+                            @if (!session.IsLastQuestion)
+                            {
+                                <button type="button" class="qz-btn" style="background: #007bff;" @onclick="Next">Weiter ▶</button>
+                            }
+                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="SubmitExam">✔ Abgeben</button>
+                        }
+                    }
+                </div>
+            </div>
+        }
+    </div>;
+
+    // ---------------- Ergebnis ----------------
+
+    private RenderFragment RenderResult() => @<div class="qz-run">
+        @if (QuizVm.LastResult is { } result)
+        {
+            var color = ScoreColor(result.Percent);
+            var session = QuizVm.Session;
+
+            <div class="qz-card">
+                <div class="qz-score">
+                    <div class="qz-ring" style="background: conic-gradient(@color @Css(result.Percent * 3.6)deg, #e9ecef 0deg);">
+                        <div class="qz-ring-inner">
+                            <div style="font-size: 24px; font-weight: 800; color: @color;">@Css(result.Percent) %</div>
+                            <div style="font-size: 11px; color: #6c757d;">@result.Correct von @result.Total</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 220px;">
+                        <div style="font-size: 18px; font-weight: 700; color: #212529;">@QuizViewModel.Verdict(result.Percent)</div>
+                        <div class="qz-meta" style="font-size: 12px;">
+                            @(result.Mode == StudyScope.Core.Models.QuizMode.Learn ? "🎓 Lernmodus" : "📝 Prüfungsmodus") · @string.Join(", ", result.TopicNames)
+                        </div>
+
+                        @if (result.TopicNames.Count > 1 && session != null)
+                        {
+                            <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                                @foreach (var group in session.Items.GroupBy(i => i.TopicName))
+                                {
+                                    var groupPercent = 100.0 * group.Count(i => i.IsCorrect) / group.Count();
+                                    <div style="font-size: 12px;">
+                                        <div style="display: flex; justify-content: space-between;"><span>@group.Key</span><span>@group.Count(i => i.IsCorrect)/@group.Count()</span></div>
+                                        <div class="qz-bar"><div style="width: @Css(groupPercent)%; background: @ScoreColor(groupPercent);"></div></div>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+                            @if (QuizVm.WrongCount > 0)
+                            {
+                                <button type="button" class="qz-btn" style="background: #f76707;" @onclick="RepeatWrong">🔁 Falsche wiederholen (@QuizVm.WrongCount)</button>
+                            }
+                            <button type="button" class="qz-btn" style="background: #007bff;" @onclick="QuizVm.BackToLibrary">Zur Übersicht / neues Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            @if (session != null)
+            {
+                <div class="qz-card">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <h4>Alle Fragen mit Lösung</h4>
+                        <label class="qz-check" style="font-size: 12px;"><input type="checkbox" @bind="onlyWrong" /> nur falsche anzeigen</label>
+                    </div>
+                    @for (var i = 0; i < session.Count; i++)
+                    {
+                        var entry = session.Items[i];
+                        if (onlyWrong && entry.IsCorrect) continue;
+                        var number = i + 1;
+                        <div class="qz-review">
+                            <div style="font-size: 13px; font-weight: 600; color: #212529;">
+                                <span style="color: @(entry.IsCorrect ? "#1e7b34" : "#b02a37");">@(entry.IsCorrect ? "✓" : "✗")</span>
+                                @number. @entry.Question.Text <span class="qz-chip" style="font-weight: normal;">@entry.TopicName</span>
+                            </div>
+                            <div style="margin-top: 4px;">
+                                @for (var o = 0; o < entry.Question.Options.Count; o++)
+                                {
+                                    var isCorrect = entry.Question.CorrectIndices.Contains(o);
+                                    var isSelected = entry.Selected.Contains(o);
+                                    <div class="qz-review-option @(isCorrect ? "correct" : isSelected ? "wrong" : "")">
+                                        @entry.Question.Options[o] @(isSelected ? "  ← Ihre Antwort" : "")
+                                    </div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(entry.Question.Explanation))
+                            {
+                                <div style="font-size: 12px; color: #495057; margin-top: 4px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px;">💡 @entry.Question.Explanation</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        }
+    </div>;
+
+    // ---------------- Ereignisse ----------------
+
+    protected override async Task OnInitializedAsync()
+    {
+        QuizVm.PropertyChanged += OnVmChanged;
+        DocVm.PropertyChanged += OnDocVmChanged;
+        await QuizVm.LoadForProfileAsync(DocVm.CurrentProfile);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusRoot)
+        {
+            focusRoot = false;
+            try { await rootRef.FocusAsync(); } catch { /* ignorieren */ }
+        }
+    }
+
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private async void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocVm.CurrentProfile))
+        {
+            ResetConfirmations();
+            await QuizVm.LoadForProfileAsync(DocVm.CurrentProfile);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ResetConfirmations()
+    {
+        confirmAbort = false;
+        confirmSubmit = false;
+        confirmClearHistory = false;
+        confirmDeleteTopicId = null;
+    }
+
+    private void OpenNewTopic() => QuizVm.OpenNewTopicForm(DocVm.Documents);
+    private Task SaveTopicAsync() => QuizVm.SaveTopicFormAsync(DocVm.Documents);
+    private Task SuggestAsync() => QuizVm.SuggestTopicsAsync(DocVm.Documents);
+
+    private async Task DeleteTopicAsync(string topicId)
+    {
+        confirmDeleteTopicId = null;
+        await QuizVm.DeleteTopicAsync(topicId);
+    }
+
+    private async Task ClearHistoryAsync()
+    {
+        confirmClearHistory = false;
+        await QuizVm.ClearHistoryAsync();
+    }
+
+    private async Task StartAsync()
+    {
+        ResetConfirmations();
+        onlyWrong = false;
+        await QuizVm.StartQuizAsync();
+        focusRoot = true;
+    }
+
+    private void Select(int index)
+    {
+        QuizVm.SelectOption(index);
+        focusRoot = true;
+    }
+
+    private void Check()
+    {
+        QuizVm.CheckAnswer();
+        focusRoot = true;
+    }
+
+    private void Next()
+    {
+        confirmSubmit = false;
+        QuizVm.NextQuestion();
+        focusRoot = true;
+    }
+
+    private void Previous()
+    {
+        confirmSubmit = false;
+        QuizVm.PreviousQuestion();
+        focusRoot = true;
+    }
+
+    private void GoTo(int index)
+    {
+        confirmSubmit = false;
+        QuizVm.GoToQuestion(index);
+        focusRoot = true;
+    }
+
+    private async Task SubmitExam()
+    {
+        if (QuizVm.Session is { UnansweredCount: > 0 })
+        {
+            confirmSubmit = true;
+            return;
+        }
+
+        await FinishAsync();
+    }
+
+    private async Task FinishAsync()
+    {
+        ResetConfirmations();
+        await QuizVm.FinishQuizAsync();
+    }
+
+    private void AbortQuiz()
+    {
+        ResetConfirmations();
+        QuizVm.AbortQuiz();
+    }
+
+    private void RepeatWrong()
+    {
+        onlyWrong = false;
+        QuizVm.RepeatWrongQuestions();
+        focusRoot = true;
+    }
+
+    /// <summary>Tastatur im laufenden Quiz: A–F bzw. 1–6 wählen, Enter prüfen/weiter.</summary>
+    private async Task HandleKey(KeyboardEventArgs e)
+    {
+        if (QuizVm.Screen != QuizScreen.Running || QuizVm.Session is not { Current: { } item } session)
+            return;
+
+        var key = e.Key ?? string.Empty;
+        if (key.Length == 1)
+        {
+            var c = char.ToUpperInvariant(key[0]);
+            var index = c >= 'A' && c <= 'F' ? c - 'A' : c >= '1' && c <= '6' ? c - '1' : -1;
+            if (index >= 0 && index < item.Question.Options.Count)
+            {
+                QuizVm.SelectOption(index);
+                return;
+            }
+        }
+
+        if (key == "Enter")
+        {
+            if (session.Mode == StudyScope.Core.Models.QuizMode.Learn)
+            {
+                if (!item.IsChecked) Check();
+                else if (!session.IsLastQuestion) Next();
+                else await FinishAsync();
+            }
+            else if (!session.IsLastQuestion)
+            {
+                Next();
+            }
+        }
+        else if (key == "ArrowRight" && session.CanGoNext)
+        {
+            Next();
+        }
+        else if (key == "ArrowLeft" && session.CanGoPrevious)
+        {
+            Previous();
+        }
+    }
+
+    public void Dispose()
+    {
+        QuizVm.PropertyChanged -= OnVmChanged;
+        DocVm.PropertyChanged -= OnDocVmChanged;
+    }
+}

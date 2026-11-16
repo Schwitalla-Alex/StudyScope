@@ -35,6 +35,7 @@ class Program
         appBuilder.Services.AddSingleton<IFlashcardService, FlashcardService>();
         appBuilder.Services.AddSingleton<IMindmapService>(sp => new MindmapService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IPresentationService>(sp => new PresentationService(sp.GetRequiredService<ILlmService>()));
+        appBuilder.Services.AddSingleton<IQuizService>(sp => new QuizService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
 
         // ViewModels registrieren
@@ -51,6 +52,7 @@ class Program
         appBuilder.Services.AddSingleton<FlashcardViewModel>();
         appBuilder.Services.AddSingleton<MindmapViewModel>();
         appBuilder.Services.AddSingleton<PresentationViewModel>();
+        appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

@@ -86,6 +86,12 @@ public class LlmServiceDispatcher : ILlmService
         if (FakePresentationResponse.IsPresentationPrompt(prompt))
             return FakePresentationResponse.Create(chunks);
 
+        if (FakeQuizResponse.IsTopicPrompt(prompt))
+            return FakeQuizResponse.CreateTopics(chunks);
+
+        if (FakeQuizResponse.IsQuestionPrompt(prompt))
+            return FakeQuizResponse.CreateQuestions(prompt, chunks);
+
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
         {
             var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";

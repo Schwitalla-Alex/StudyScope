@@ -34,6 +34,10 @@
                         @onclick='() => activeTab = "presentation"'>
                     📽️ Präsentation
                 </button>
+                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "quiz" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "quiz" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "quiz" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                        @onclick='() => activeTab = "quiz"'>
+                    ❓ Quiz
+                </button>
             </div>
 
             <!-- Aktiver Arbeitsbereich -->
@@ -50,9 +54,13 @@
                 {
                     <MindmapView OnAskQuestion="AskFromMindmapAsync" />
                 }
-                else
+                else if (activeTab == "presentation")
                 {
                     <PresentationView />
+                }
+                else
+                {
+                    <QuizView />
                 }
             </div>
         </div>

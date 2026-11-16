@@ -33,7 +33,17 @@ public static class MindmapStatusTexts
     /// Meldung für einen Misserfolg. Auch für die Präsentation genutzt: <paramref name="subject"/> ist der
     /// Gegenstand („Mindmap“, „Präsentation“), <paramref name="buttonText"/> die Beschriftung des Erstellen-Knopfs.
     /// </summary>
-    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText)
+    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText) =>
+        ForFailure(failureReason, rawResponse, subject, buttonText, $"keine {subject}", $"einer {subject}", $"eine {subject}");
+
+    /// <summary>
+    /// Wie oben, mit frei wählbaren Wortformen (z. B. für das Quiz: „kein Quiz“, „einem Quiz“, „ein Quiz“).
+    /// </summary>
+    /// <param name="none">Verneinung im Akkusativ, z. B. „keine Mindmap“.</param>
+    /// <param name="withArticle">Dativ nach „mit“, z. B. „einer Mindmap“.</param>
+    /// <param name="forArticle">Akkusativ nach „für“, z. B. „eine Mindmap“.</param>
+    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText,
+        string none, string withArticle, string forArticle)
     {
         var raw = rawResponse?.Trim() ?? string.Empty;
         var reason = failureReason != MindmapFailureReason.None
@@ -57,25 +67,25 @@ public static class MindmapStatusTexts
 
             case MindmapFailureReason.NoJson when LooksLikeServiceError(raw):
                 return new MindmapStatusText(
-                    $"⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte keine {subject} erstellt werden.",
+                    $"⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte {none} erstellt werden.",
                     new[] { $"Meldung des Dienstes: „{Shorten(raw, MaxServiceMessageLength)}“", TipCheckSettings },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoJson:
                 return new MindmapStatusText(
-                    $"⚠️ Die KI hat mit normalem Text statt mit einer {subject} geantwortet.",
+                    $"⚠️ Die KI hat mit normalem Text statt mit {withArticle} geantwortet.",
                     new[] { tipRetry, TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoTopics:
                 return new MindmapStatusText(
-                    $"⚠️ Die KI hat in den Dokumenten keine Themen für eine {subject} gefunden.",
+                    $"⚠️ Die KI hat in den Dokumenten keine Themen für {forArticle} gefunden.",
                     new[] { tipRetry, "Verwenden Sie Dokumente mit mehr Fließtext." },
                     Shorten(raw, MaxDetailsLength));
 
             default: // InvalidJson
                 return new MindmapStatusText(
-                    $"⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte keine {subject} erstellt werden.",
+                    $"⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte {none} erstellt werden.",
                     new[] { tipRetry, TipFewerDocuments, TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
         }

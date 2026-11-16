@@ -26,6 +26,17 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakePresentationResponse.Create(chunks));
         }
 
+        // Quiz: Themenvorschläge bzw. Fragen (ebenfalls vor dem Karteikarten-Fall)
+        if (FakeQuizResponse.IsTopicPrompt(prompt))
+        {
+            return Task.FromResult(FakeQuizResponse.CreateTopics(chunks));
+        }
+
+        if (FakeQuizResponse.IsQuestionPrompt(prompt))
+        {
+            return Task.FromResult(FakeQuizResponse.CreateQuestions(prompt, chunks));
+        }
+
         // 1. Fall: Generierung von Karteikarten angefordert -> Valides JSON zurückgeben
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
             prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
