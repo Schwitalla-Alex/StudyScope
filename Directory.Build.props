@@ -2,9 +2,9 @@
 
 	<!-- Gemeinsame Versionsnummer für alle Projekte (App und Setup). Nur hier anheben. -->
 	<PropertyGroup>
-		<Version>1.0.4</Version>
-		<AssemblyVersion>1.0.4.0</AssemblyVersion>
-		<FileVersion>1.0.4.0</FileVersion>
+		<Version>1.1.0</Version>
+		<AssemblyVersion>1.1.0.0</AssemblyVersion>
+		<FileVersion>1.1.0.0</FileVersion>
 	</PropertyGroup>
 
 </Project>
