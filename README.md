@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
 ![Plattform](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux-lightgrey.svg)
 
-**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage und automatischen Karteikartengenerierung auf Basis eigener Lernunterlagen. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
+**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage auf Basis eigener Lernunterlagen. Aus Ihren Dokumenten erstellt StudyScope Karteikarten, Mindmaps, Präsentationen, Quizze und Berichte. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
 
 ---
 
@@ -22,9 +22,9 @@
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**
   - **Lokale KI:** Nutzen Sie lokale Sprachmodelle via **Ollama** oder **LM Studio** ganz ohne Internetverbindung und API-Kosten.
-  - **Cloud-KI:** Anbindung an **Google Gemini** und **OpenAI (GPT-4)**.
-  - **Benutzerdefiniert:** Beliebige OpenAI-kompatible Endpunkte (Groq, Mistral, DeepSeek, vLLM, OpenRouter).
-- 🖨️ **Export & Druck:** Exportieren Sie erstellte Karteikarten als Markdown (`.md`) oder drucken Sie diese als DIN-A4-Bögen aus.
+  - **Cloud-KI:** Anbindung an **Google Gemini**, **OpenAI (GPT-4)** und **Mistral AI**. „Speichern & Verbinden“ prüft den API-Schlüssel über die kostenlose Modellliste.
+  - **Benutzerdefiniert:** Beliebige OpenAI-kompatible Endpunkte (Groq, DeepSeek, vLLM, OpenRouter).
+- 🖨️ **Export & Druck:** Karteikarten als Markdown (`.md`) oder DIN-A4-Druckbögen; Mindmap, Präsentation und Berichte mit eigenen Exporten (siehe oben).
 
 ---
 
@@ -63,8 +63,8 @@ Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.conf
 
 - **Lokale Modelle (Ollama / LM Studio):**
   Starten Sie Ihre lokale Instanz (z. B. Port `11434` oder `1234`), wählen Sie im Menü den entsprechenden Provider und klicken Sie auf *Modelle suchen*.
-- **Cloud-Modelle (OpenAI / Gemini):**
-  Wählen Sie den Anbieter aus und tragen Sie Ihren API-Schlüssel ein.
+- **Cloud-Modelle (OpenAI / Gemini / Mistral):**
+  Wählen Sie den Anbieter aus, tragen Sie Ihren API-Schlüssel ein, rufen Sie die Modelle online ab und wählen Sie eines aus. „Speichern & Verbinden“ meldet einen abgelehnten Schlüssel oder eine Störung des Dienstes.
 - **Benutzerdefiniert:**
   Geben Sie Ihre individuelle Base-URL (z. B. `https://api.groq.com/openai/v1`), den Modellnamen und optional Ihren Bearer-Token/API-Key ein.
 

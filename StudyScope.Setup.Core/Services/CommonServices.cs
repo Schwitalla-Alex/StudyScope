@@ -93,13 +93,13 @@ public static class DesktopEntryBuilder
         sb.Append("Version=1.5\n");
         sb.Append("Name=StudyScope\n");
         sb.Append("GenericName=Lernsoftware\n");
-        sb.Append("Comment=Dokumenten-Chat und Lernkarteikarten mit KI-Unterstützung\n");
+        sb.Append("Comment=Mit KI aus eigenen Unterlagen lernen: Chat, Karteikarten, Mindmap, Quiz und mehr\n");
         sb.Append("Exec=").Append(QuoteExecArgument(appExecutablePath)).Append('\n');
         sb.Append("Path=").Append(EscapeValue(installDirectory)).Append('\n');
         sb.Append("Icon=").Append(EscapeValue(icon)).Append('\n');
         sb.Append("Terminal=false\n");
         sb.Append("Categories=Education;Office;\n");
-        sb.Append("Keywords=Lernen;Karteikarten;PDF;KI;\n");
+        sb.Append("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;\n");
         sb.Append("StartupWMClass=StudyScope.UI\n");
 
         if (!string.IsNullOrEmpty(setupExecutablePath))
