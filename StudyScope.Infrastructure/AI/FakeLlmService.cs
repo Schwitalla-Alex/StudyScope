@@ -20,6 +20,12 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakeMindmapResponse.Create(chunks));
         }
 
+        // Präsentation angefordert (ebenfalls vor dem Karteikarten-Fall)
+        if (FakePresentationResponse.IsPresentationPrompt(prompt))
+        {
+            return Task.FromResult(FakePresentationResponse.Create(chunks));
+        }
+
         // 1. Fall: Generierung von Karteikarten angefordert -> Valides JSON zurückgeben
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
             prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))

@@ -83,6 +83,9 @@ public class LlmServiceDispatcher : ILlmService
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
             return FakeMindmapResponse.Create(chunks);
 
+        if (FakePresentationResponse.IsPresentationPrompt(prompt))
+            return FakePresentationResponse.Create(chunks);
+
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
         {
             var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";

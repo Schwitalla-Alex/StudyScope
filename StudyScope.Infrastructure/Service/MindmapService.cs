@@ -109,59 +109,8 @@ public class MindmapService : IMindmapService
     /// </summary>
     public static MindmapParseResult AnalyzeResponse(string? rawResponse, string fallbackRootTitle)
     {
-        if (string.IsNullOrWhiteSpace(rawResponse))
-            return new MindmapParseResult(null, false, MindmapFailureReason.EmptyResponse);
-
-        var text = StripCodeFence(rawResponse.Trim());
-
-        // Ohne Klammer und Anführungszeichen ist es kein JSON-Versuch, sondern Text (z. B. eine Fehlermeldung)
-        var start = text.IndexOfAny(new[] { '[', '{' });
-        if (start < 0 || text.IndexOf('"', start) < 0)
-            return new MindmapParseResult(null, false, MindmapFailureReason.NoJson);
-
-        var candidate = text[start..];
-
-        // 1. Versuch: vom ersten '[' bzw. '{' bis zur letzten passenden Klammer (vollständige Antwort mit Begleittext)
-        var closing = candidate[0] == '[' ? ']' : '}';
-        var end = candidate.LastIndexOf(closing);
-        if (end > 0 && TryBuildTree(candidate[..(end + 1)], fallbackRootTitle, out var root))
-        {
-            return root != null
-                ? new MindmapParseResult(root, false, MindmapFailureReason.None)
-                : new MindmapParseResult(null, false, MindmapFailureReason.NoTopics);
-        }
-
-        // 2. Versuch: abgeschnittene oder hinten fehlerhafte Antwort reparieren
-        foreach (var repaired in GetRepairCandidates(candidate))
-        {
-            if (TryBuildTree(repaired, fallbackRootTitle, out var repairedRoot))
-            {
-                return repairedRoot != null
-                    ? new MindmapParseResult(repairedRoot, true, MindmapFailureReason.None)
-                    : new MindmapParseResult(null, false, MindmapFailureReason.InvalidJson);
-            }
-        }
-
-        return new MindmapParseResult(null, false, MindmapFailureReason.InvalidJson);
-    }
-
-    /// <summary>
-    /// Parst JSON und baut den Baum. Rückgabe false = kein gültiges JSON;
-    /// true mit <paramref name="root"/> = null = gültiges JSON ohne verwertbare Themen.
-    /// </summary>
-    private static bool TryBuildTree(string json, string fallbackRootTitle, out MindmapNode? root)
-    {
-        root = null;
-        try
-        {
-            using var doc = JsonDocument.Parse(json, new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
-            root = BuildTree(doc.RootElement, fallbackRootTitle);
-            return true;
-        }
-        catch (JsonException)
-        {
-            return false;
-        }
+        var result = LenientJson.Analyze(rawResponse, element => BuildTree(element, fallbackRootTitle));
+        return new MindmapParseResult(result.Value, result.WasRepaired, result.FailureReason);
     }
 
     private static MindmapNode? BuildTree(JsonElement rootElement, string fallbackRootTitle)
@@ -189,68 +138,6 @@ public class MindmapService : IMindmapService
         }
 
         return root.Children.Count > 0 ? root : null;
-    }
-
-    private static string StripCodeFence(string text)
-    {
-        // Markdown-Codeblock (```json ... ```) entfernen; ein fehlender Abschluss (abgeschnitten) ist erlaubt
-        if (!text.StartsWith("```"))
-            return text;
-
-        var firstNewline = text.IndexOf('\n');
-        text = firstNewline >= 0 ? text[(firstNewline + 1)..] : string.Empty;
-        var fence = text.LastIndexOf("```", StringComparison.Ordinal);
-        return fence >= 0 ? text[..fence] : text;
-    }
-
-    /// <summary>Höchstzahl an Reparaturversuchen (jeweils ein Thema weniger).</summary>
-    private const int MaxRepairAttempts = 200;
-
-    /// <summary>
-    /// Liefert reparierte Fassungen einer abgeschnittenen JSON-Antwort, beginnend mit der längsten:
-    /// Der Text wird nach jeder vollständig geschlossenen Klammer (also nach einem vollständigen Thema) gekürzt
-    /// und um die noch offenen Klammern ergänzt. Klammern innerhalb von Zeichenketten werden ignoriert.
-    /// </summary>
-    private static IEnumerable<string> GetRepairCandidates(string json)
-    {
-        var stack = new List<char>();
-        var cuts = new List<(int End, string Closers)>();
-        var inString = false;
-        var escaped = false;
-
-        for (var i = 0; i < json.Length; i++)
-        {
-            var c = json[i];
-            if (inString)
-            {
-                if (escaped) escaped = false;
-                else if (c == '\\') escaped = true;
-                else if (c == '"') inString = false;
-                continue;
-            }
-
-            if (c == '"')
-            {
-                inString = true;
-            }
-            else if (c == '{' || c == '[')
-            {
-                stack.Add(c);
-            }
-            else if (c == '}' || c == ']')
-            {
-                var expected = c == '}' ? '{' : '[';
-                if (stack.Count == 0 || stack[^1] != expected)
-                    break; // ab hier ist die Struktur kaputt – nur frühere Schnittpunkte verwenden
-
-                stack.RemoveAt(stack.Count - 1);
-                var closers = new string(stack.AsEnumerable().Reverse().Select(o => o == '{' ? '}' : ']').ToArray());
-                cuts.Add((i, closers));
-            }
-        }
-
-        for (var k = cuts.Count - 1; k >= 0 && k >= cuts.Count - MaxRepairAttempts; k--)
-            yield return json[..(cuts[k].End + 1)] + cuts[k].Closers;
     }
 
     private static MindmapNode? ParseNode(JsonElement element, int depth, NodeBudget budget)
@@ -293,22 +180,9 @@ public class MindmapService : IMindmapService
         return node;
     }
 
-    private static JsonElement? GetProperty(JsonElement element, string[] keys)
-    {
-        foreach (var prop in element.EnumerateObject())
-        {
-            if (keys.Any(k => prop.Name.Equals(k, StringComparison.OrdinalIgnoreCase)))
-                return prop.Value;
-        }
+    private static JsonElement? GetProperty(JsonElement element, string[] keys) => LenientJson.GetProperty(element, keys);
 
-        return null;
-    }
-
-    private static string GetString(JsonElement element, string[] keys)
-    {
-        var value = GetProperty(element, keys);
-        return value is { ValueKind: JsonValueKind.String } s ? s.GetString() ?? string.Empty : string.Empty;
-    }
+    private static string GetString(JsonElement element, string[] keys) => LenientJson.GetString(element, keys);
 
     private static string Shorten(string title)
     {

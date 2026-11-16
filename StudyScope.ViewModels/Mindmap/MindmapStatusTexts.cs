@@ -1,4 +1,4 @@
-using StudyScope.Core.Models;
+﻿using StudyScope.Core.Models;
 
 namespace StudyScope.ViewModels.Mindmap;
 
@@ -22,17 +22,24 @@ public static class MindmapStatusTexts
         "kein gültiger ki-provider", "not found", "401", "403", "404", "429", "500", "503"
     };
 
-    private const string TipRetry = "Klicken Sie erneut auf „Mindmap erstellen“ – die KI antwortet jedes Mal etwas anders.";
     private const string TipFewerDocuments = "Aktivieren Sie weniger Dokumente gleichzeitig, damit die Antwort kürzer wird.";
     private const string TipOtherModel = "Wählen Sie in den Einstellungen ein größeres oder anderes Modell. Kleine lokale Modelle brechen lange Antworten oft ab.";
     private const string TipCheckSettings = "Prüfen Sie in den Einstellungen Verbindung, Modell und gegebenenfalls den API-Schlüssel („Speichern & Prüfen“).";
 
-    public static MindmapStatusText ForFailure(MindmapGenerationResult result)
+    public static MindmapStatusText ForFailure(MindmapGenerationResult result) =>
+        ForFailure(result.FailureReason, result.RawResponse, "Mindmap", "Mindmap erstellen");
+
+    /// <summary>
+    /// Meldung für einen Misserfolg. Auch für die Präsentation genutzt: <paramref name="subject"/> ist der
+    /// Gegenstand („Mindmap“, „Präsentation“), <paramref name="buttonText"/> die Beschriftung des Erstellen-Knopfs.
+    /// </summary>
+    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText)
     {
-        var raw = result.RawResponse?.Trim() ?? string.Empty;
-        var reason = result.FailureReason != MindmapFailureReason.None
-            ? result.FailureReason
+        var raw = rawResponse?.Trim() ?? string.Empty;
+        var reason = failureReason != MindmapFailureReason.None
+            ? failureReason
             : string.IsNullOrWhiteSpace(raw) ? MindmapFailureReason.EmptyResponse : MindmapFailureReason.InvalidJson;
+        var tipRetry = $"Klicken Sie erneut auf „{buttonText}“ – die KI antwortet jedes Mal etwas anders.";
 
         switch (reason)
         {
@@ -50,26 +57,26 @@ public static class MindmapStatusTexts
 
             case MindmapFailureReason.NoJson when LooksLikeServiceError(raw):
                 return new MindmapStatusText(
-                    "⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte keine Mindmap erstellt werden.",
+                    $"⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte keine {subject} erstellt werden.",
                     new[] { $"Meldung des Dienstes: „{Shorten(raw, MaxServiceMessageLength)}“", TipCheckSettings },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoJson:
                 return new MindmapStatusText(
-                    "⚠️ Die KI hat mit normalem Text statt mit einer Mindmap geantwortet.",
-                    new[] { TipRetry, TipOtherModel },
+                    $"⚠️ Die KI hat mit normalem Text statt mit einer {subject} geantwortet.",
+                    new[] { tipRetry, TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoTopics:
                 return new MindmapStatusText(
-                    "⚠️ Die KI hat in den Dokumenten keine Themen für eine Mindmap gefunden.",
-                    new[] { TipRetry, "Verwenden Sie Dokumente mit mehr Fließtext." },
+                    $"⚠️ Die KI hat in den Dokumenten keine Themen für eine {subject} gefunden.",
+                    new[] { tipRetry, "Verwenden Sie Dokumente mit mehr Fließtext." },
                     Shorten(raw, MaxDetailsLength));
 
             default: // InvalidJson
                 return new MindmapStatusText(
-                    "⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte keine Mindmap erstellt werden.",
-                    new[] { TipRetry, TipFewerDocuments, TipOtherModel },
+                    $"⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte keine {subject} erstellt werden.",
+                    new[] { tipRetry, TipFewerDocuments, TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
         }
     }

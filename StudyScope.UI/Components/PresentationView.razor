@@ -1,0 +1,432 @@
+@using Microsoft.JSInterop
+@using StudyScope.UI.Services
+@inject PresentationViewModel PresVm
+@inject DocumentListViewModel DocVm
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="pp-root" tabindex="0" @ref="rootRef" @onkeydown="HandleEditKeyAsync">
+
+    <!-- Obere Steuerleiste -->
+    <div class="pp-toolbar">
+        <div style="min-width: 0;">
+            <h3 style="margin: 0; font-size: 16px; color: #212529;">Präsentation: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: #6c757d;">
+                @(PresVm.HasPresentation ? PresVm.SourceInfoText : "Noch keine Präsentation für dieses Profil")
+            </span>
+        </div>
+
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            @if (PresVm.IsGenerating)
+            {
+                <button type="button" class="pp-btn" style="background: #6c757d;" @onclick="PresVm.CancelGeneration">
+                    <span class="pp-spinner"></span> Abbrechen
+                </button>
+            }
+            else
+            {
+                <label style="font-size: 13px; color: #495057;" title="Anzahl der Inhaltsfolien bei „Mit KI erstellen“">Folien:</label>
+                <input type="number" min="3" max="20" class="pp-number" @bind="PresVm.SlideCount" />
+                <button type="button" class="pp-btn" style="background: #007bff;"
+                        title="Die KI erstellt Folien mit Stichpunkten und Sprechernotizen aus den links aktivierten Dokumenten"
+                        @onclick="GenerateAsync">✨ Mit KI erstellen</button>
+                <button type="button" class="pp-btn" style="background: #7048e8;"
+                        title="Folien aus der Mindmap dieses Profils ableiten (ohne KI, sofort)"
+                        @onclick="FromMindmapAsync">🧠 Aus Mindmap</button>
+            }
+
+            @if (PresVm.HasPresentation && !PresVm.IsGenerating)
+            {
+                <button type="button" class="pp-btn" style="background: #28a745;" title="Vortrag ab der ersten Folie starten (Esc beendet)" @onclick="() => StartPresentingAsync(true)">▶ Vortragen</button>
+                <button type="button" class="pp-btn" style="background: #6c757d;" title="Folien drucken oder als PDF speichern (eine Folie pro Seite)" @onclick="PrintAsync">🖨️ Drucken / PDF</button>
+                <button type="button" class="pp-btn" style="background: #d24726;" title="Als PowerPoint-Datei (.pptx) speichern – mit Sprechernotizen" @onclick="ExportPptxAsync">📊 PowerPoint</button>
+                <button type="button" class="pp-btn" style="background: #dc3545;" title="Präsentation dieses Profils löschen" @onclick="DeleteAsync">🗑️</button>
+            }
+        </div>
+    </div>
+
+    @if (PresVm.IsGenerating)
+    {
+        <div class="pp-info">
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📽️ KI gliedert die Inhalte und formuliert die Folien ...</div>
+            <div class="pp-progress"><div class="pp-progress-bar"></div></div>
+            <div style="font-size: 11px; margin-top: 6px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(PresVm.StatusMessage))
+    {
+        var (statusBg, statusBorder, statusText) = PresVm.IsError
+            ? ("#f8d7da", "#f5c6cb", "#721c24")
+            : PresVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+
+        <div class="pp-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600;">@PresVm.StatusMessage</div>
+                @if (PresVm.StatusTips.Count > 0)
+                {
+                    <div style="margin-top: 6px;">@(PresVm.IsError ? "Das können Sie tun:" : "Tipp:")</div>
+                    <ul style="margin: 2px 0 0 18px; line-height: 1.5;">
+                        @foreach (var tip in PresVm.StatusTips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+                @if (!string.IsNullOrEmpty(PresVm.StatusDetails))
+                {
+                    <details style="margin-top: 6px;">
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <pre class="pp-details-raw">@PresVm.StatusDetails</pre>
+                    </details>
+                }
+            </div>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="PresVm.ClearStatus">✕</button>
+        </div>
+    }
+
+    <!-- Arbeitsbereich -->
+    <div class="pp-body">
+        @if (!PresVm.HasPresentation && !PresVm.IsGenerating)
+        {
+            <div class="pp-empty">
+                <div style="font-size: 34px; margin-bottom: 10px;">📽️</div>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch keine Präsentation vorhanden.</p>
+                <span style="font-size: 12px; line-height: 1.5; display: block;">
+                    <b>✨ Mit KI erstellen:</b> Die KI formuliert aus den links aktivierten Dokumenten Folien mit Stichpunkten und Sprechernotizen.<br />
+                    <b>🧠 Aus Mindmap:</b> Die Mindmap dieses Profils wird sofort in Folien umgewandelt – jeder Hauptast wird zu einer Folie.
+                </span>
+            </div>
+        }
+        else if (PresVm.HasPresentation)
+        {
+            var total = PresVm.Slides.Count;
+
+            <!-- Folienübersicht -->
+            <div class="pp-thumbs">
+                @for (var i = 0; i < total; i++)
+                {
+                    var index = i;
+                    <div class="pp-thumb @(index == PresVm.CurrentIndex ? "active" : "")" title="@PresVm.Slides[index].Title" @onclick="() => GoToAsync(index)">
+                        <span class="pp-thumb-number">@(index + 1)</span>
+                        <div class="pp-thumb-slide">@SlideMarkup(PresVm.Slides[index], index + 1, total)</div>
+                    </div>
+                }
+            </div>
+
+            <!-- Aktuelle Folie mit Notizen -->
+            <div class="pp-main">
+                @if (PresVm.CurrentSlide is { } current)
+                {
+                    <div class="pp-stage">
+                        <div class="pp-stage-slide">@SlideMarkup(current, PresVm.CurrentIndex + 1, total)</div>
+                    </div>
+
+                    <div class="pp-nav">
+                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasPrevious)" @onclick="PreviousAsync">◀ Zurück</button>
+                        <span style="font-size: 13px; color: #495057; min-width: 70px; text-align: center;">Folie @PresVm.ProgressText</span>
+                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasNext)" @onclick="NextAsync">Weiter ▶</button>
+                        <button type="button" class="pp-btn-outline" title="Vortrag ab dieser Folie starten" @onclick="() => StartPresentingAsync(false)">▶ Ab hier vortragen</button>
+                    </div>
+
+                    <div class="pp-notes">
+                        <div style="font-size: 11px; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Sprechernotizen</div>
+                        <div style="font-size: 13px; line-height: 1.5; color: #343a40; white-space: pre-wrap;">
+                            @(string.IsNullOrWhiteSpace(current.Notes) ? "Keine Notizen zu dieser Folie." : current.Notes)
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Vortragsmodus: Folie bildschirmfüllend -->
+    @if (PresVm.IsPresenting && PresVm.CurrentSlide is { } presented)
+    {
+        <div class="pp-present" tabindex="0" @ref="presentRef"
+             @onkeydown="HandlePresentKeyAsync" @onkeydown:preventDefault="true"
+             @onclick="NextInPresentationAsync">
+            <div class="pp-present-slide">@SlideMarkup(presented, PresVm.CurrentIndex + 1, PresVm.Slides.Count)</div>
+            <div class="pp-present-hint">
+                @PresVm.ProgressText · → / Klick: weiter · ←: zurück · Esc: beenden
+            </div>
+        </div>
+    }
+
+    <!-- Druckansicht: eine Folie pro Seite -->
+    @if (PresVm.HasPresentation)
+    {
+        <div class="pp-print-only">
+            @for (var i = 0; i < PresVm.Slides.Count; i++)
+            {
+                <div class="pp-print-page">@SlideMarkup(PresVm.Slides[i], i + 1, PresVm.Slides.Count)</div>
+            }
+        </div>
+    }
+
+    <style>
+        .pp-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
+        .pp-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
+        .pp-btn { padding: 7px 12px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .pp-btn-outline { padding: 6px 12px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .pp-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
+        .pp-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
+        .pp-number { width: 52px; padding: 5px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; text-align: center; }
+        .pp-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .pp-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .pp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .pp-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
+        .pp-empty { margin: auto; text-align: center; color: #6c757d; max-width: 520px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+
+        .pp-thumbs { width: 190px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+        .pp-thumb { display: flex; gap: 6px; align-items: flex-start; cursor: pointer; }
+        .pp-thumb-number { width: 18px; font-size: 11px; color: #6c757d; text-align: right; padding-top: 2px; }
+        .pp-thumb-slide { flex: 1; border: 2px solid transparent; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
+        .pp-thumb.active .pp-thumb-slide { border-color: #007bff; }
+        .pp-thumb:hover .pp-thumb-slide { border-color: #9ec5fe; }
+
+        .pp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+        .pp-stage { display: flex; justify-content: center; }
+        .pp-stage-slide { width: 100%; max-width: 960px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-radius: 6px; overflow: hidden; border: 1px solid #dee2e6; }
+        .pp-nav { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+        .pp-notes { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px 16px; max-width: 960px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+
+        /* Folie: Maße relativ zur Folienbreite (cqw), damit Vorschau, Vortrag und Druck gleich aussehen */
+        .pp-slide { position: relative; width: 100%; aspect-ratio: 16 / 9; container-type: inline-size; overflow: hidden; background: #fff; color: #212529; box-sizing: border-box; font-family: "Segoe UI", -apple-system, Roboto, sans-serif; }
+        .pp-slide-content { position: absolute; inset: 0; padding: 3.75cqw 5.6cqw 0 5.6cqw; }
+        .pp-slide h1 { margin: 0; font-size: 3.3cqw; font-weight: 700; line-height: 1.2; display: flex; align-items: flex-end; min-height: 7.1cqw; }
+        .pp-slide .pp-accent { width: 9cqw; height: 0.38cqw; background: #007bff; margin: 1.1cqw 0 2.2cqw 0; }
+        .pp-slide ul { margin: 0; padding-left: 2.8cqw; list-style: none; }
+        .pp-slide li { position: relative; font-size: 2.6cqw; line-height: 1.25; margin-bottom: 1.2cqw; }
+        .pp-slide li::before { content: "•"; color: #007bff; position: absolute; left: -2.4cqw; }
+        .pp-slide.dense li { font-size: 2.15cqw; margin-bottom: 0.9cqw; }
+        .pp-slide.very-dense li { font-size: 1.75cqw; margin-bottom: 0.7cqw; }
+        .pp-slide .pp-footer { position: absolute; left: 5.6cqw; right: 5.6cqw; bottom: 2.8cqw; display: flex; justify-content: space-between; font-size: 1.15cqw; color: #6c757d; }
+        .pp-slide.title { background: #343a40; color: #fff; }
+        .pp-slide.title .pp-slide-content { display: flex; flex-direction: column; justify-content: center; padding: 0 5.6cqw; }
+        .pp-slide.title h1 { font-size: 4.6cqw; min-height: 0; }
+        .pp-slide.title .pp-accent { width: 11.25cqw; height: 0.45cqw; margin: 1.6cqw 0; }
+        .pp-slide.title .pp-subtitle { font-size: 2.1cqw; color: #ced4da; line-height: 1.35; }
+
+        .pp-present { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; outline: none; cursor: pointer; }
+        .pp-present-slide { width: min(100vw, calc(100vh * 16 / 9)); }
+        .pp-present-hint { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.45); padding: 3px 10px; border-radius: 12px; user-select: none; opacity: 0.35; transition: opacity 0.2s; }
+        .pp-present:hover .pp-present-hint { opacity: 1; }
+
+        .pp-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-radius: 50%; border-top-color: #fff; animation: pp-spin 0.8s linear infinite; }
+        @@keyframes pp-spin { to { transform: rotate(360deg); } }
+        .pp-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .pp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: pp-slide 1.4s ease-in-out infinite; }
+        @@keyframes pp-slide { 0% { left: -40%; } 100% { left: 100%; } }
+
+        .pp-print-only { display: none; }
+
+        /* Druck / PDF: jede Folie auf eine eigene Seite im Format 16:9 */
+        @@media print {
+            @@page { size: 297mm 167mm; margin: 0; }
+            body * { visibility: hidden; }
+            .pp-print-only, .pp-print-only * { visibility: visible; }
+            .pp-print-only { display: block; position: absolute; left: 0; top: 0; width: 297mm; }
+            .pp-print-page { width: 297mm; height: 167mm; overflow: hidden; break-after: page; page-break-after: always; }
+            .pp-print-page:last-child { break-after: auto; page-break-after: auto; }
+            .pp-print-page .pp-slide { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        }
+    </style>
+</div>
+
+@code {
+    private ElementReference rootRef;
+    private ElementReference presentRef;
+    private bool focusPresentation;
+
+    /// <summary>Einheitliche Darstellung einer Folie für Übersicht, Hauptansicht, Vortrag und Druck.</summary>
+    private RenderFragment SlideMarkup(PresentationSlide slide, int number, int total) => @<div class="@SlideCss(slide)">
+        <div class="pp-slide-content">
+            @if (slide.Kind == SlideKind.Title)
+            {
+                <h1>@slide.Title</h1>
+                <div class="pp-accent"></div>
+                @if (!string.IsNullOrWhiteSpace(slide.Subtitle))
+                {
+                    <div class="pp-subtitle">@slide.Subtitle</div>
+                }
+            }
+            else
+            {
+                <h1>@slide.Title</h1>
+                <div class="pp-accent"></div>
+                <ul>
+                    @foreach (var bullet in slide.Bullets)
+                    {
+                        <li>@bullet</li>
+                    }
+                </ul>
+            }
+        </div>
+        @if (slide.Kind != SlideKind.Title)
+        {
+            <div class="pp-footer"><span>@PresVm.Presentation?.Title</span><span>@number / @total</span></div>
+        }
+    </div>;
+
+    private static string SlideCss(PresentationSlide slide)
+    {
+        if (slide.Kind == SlideKind.Title)
+            return "pp-slide title";
+
+        return PresentationViewModel.GetDensity(slide) switch
+        {
+            SlideDensity.VeryDense => "pp-slide very-dense",
+            SlideDensity.Dense => "pp-slide dense",
+            _ => "pp-slide"
+        };
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PresVm.PropertyChanged += OnPresVmChanged;
+        DocVm.PropertyChanged += OnDocVmChanged;
+        await PresVm.LoadForProfileAsync(DocVm.CurrentProfile);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (focusPresentation && PresVm.IsPresenting)
+        {
+            focusPresentation = false;
+            try { await presentRef.FocusAsync(); } catch { /* Element noch nicht bereit */ }
+        }
+    }
+
+    private void OnPresVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private async void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocVm.CurrentProfile))
+        {
+            WindowControl.SetFullScreen(false);
+            await PresVm.LoadForProfileAsync(DocVm.CurrentProfile);
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task GenerateAsync() => PresVm.GenerateFromDocumentsAsync(DocVm.CurrentProfile, DocVm.Documents);
+
+    private Task FromMindmapAsync() => PresVm.CreateFromMindmapAsync(DocVm.CurrentProfile);
+
+    private Task DeleteAsync() => PresVm.DeleteAsync(DocVm.CurrentProfile);
+
+    private async Task GoToAsync(int index)
+    {
+        PresVm.GoTo(index);
+        await FocusRootAsync();
+    }
+
+    private async Task NextAsync()
+    {
+        PresVm.Next();
+        await FocusRootAsync();
+    }
+
+    private async Task PreviousAsync()
+    {
+        PresVm.Previous();
+        await FocusRootAsync();
+    }
+
+    private Task StartPresentingAsync(bool fromBeginning)
+    {
+        PresVm.StartPresenting(fromBeginning);
+        WindowControl.SetFullScreen(true);
+        focusPresentation = true;
+        return Task.CompletedTask;
+    }
+
+    private async Task StopPresentingAsync()
+    {
+        PresVm.StopPresenting();
+        WindowControl.SetFullScreen(false);
+        await FocusRootAsync();
+    }
+
+    private async Task NextInPresentationAsync()
+    {
+        if (PresVm.HasNext)
+            PresVm.Next();
+        else
+            await StopPresentingAsync(); // Klick auf der letzten Folie beendet den Vortrag
+    }
+
+    private async Task HandlePresentKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            await StopPresentingAsync();
+            return;
+        }
+
+        PresVm.HandleKey(e.Key);
+    }
+
+    /// <summary>Pfeiltasten blättern auch außerhalb des Vortragsmodus (nicht im Zahlenfeld).</summary>
+    private void HandleEditKeyAsync(KeyboardEventArgs e)
+    {
+        if (PresVm.IsPresenting || !PresVm.HasPresentation)
+            return;
+
+        if (e.Key is "ArrowRight" or "ArrowLeft" or "PageDown" or "PageUp" or "Home" or "End")
+            PresVm.HandleKey(e.Key);
+    }
+
+    private async Task FocusRootAsync()
+    {
+        try { await rootRef.FocusAsync(); } catch { /* ignorieren */ }
+    }
+
+    private async Task PrintAsync()
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch (Exception ex)
+        {
+            PresVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true);
+        }
+    }
+
+    private async Task ExportPptxAsync()
+    {
+        try
+        {
+            var path = await DesktopDialogs.SaveFileAsync(
+                PresVm.SuggestFileName("pptx"),
+                filterExtension: "pptx",
+                filterDescription: "PowerPoint-Präsentation (*.pptx)",
+                title: "Präsentation speichern als...");
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            if (!path.EndsWith(".pptx", StringComparison.OrdinalIgnoreCase))
+                path += ".pptx";
+
+            await PresVm.ExportToPptxAsync(path);
+        }
+        catch (Exception ex)
+        {
+            PresVm.ShowStatus($"⚠️ Fehler beim PowerPoint-Export: {ex.Message}", isError: true);
+        }
+    }
+
+    public void Dispose()
+    {
+        PresVm.PropertyChanged -= OnPresVmChanged;
+        DocVm.PropertyChanged -= OnDocVmChanged;
+        if (PresVm.IsPresenting)
+        {
+            PresVm.StopPresenting();
+            WindowControl.SetFullScreen(false);
+        }
+    }
+}
