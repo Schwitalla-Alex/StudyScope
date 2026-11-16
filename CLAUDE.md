@@ -1,4 +1,4 @@
-# CLAUDE.md
+﻿# CLAUDE.md
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
@@ -63,7 +63,7 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 - `MindmapService` (Infrastructure) wählt bis zu 16 gleichmäßig über die Dokumente verteilte Chunks, verlangt vom LLM ein **JSON-Array mit genau einem Wurzelobjekt** (`title`/`summary`/`children`; Array, weil der Dispatcher bei „JSON“-Prompts für einige Provider ein JSON-Array vorgibt) und parst tolerant (Codeblöcke, Begleittext, deutsche Schlüssel, mehrere Wurzeln, Grenzen `MaxDepth`/`MaxNodes`). Abgeschnittene Antworten (häufig bei lokalen Modellen) repariert `AnalyzeResponse`: Kürzen nach dem letzten vollständig geschlossenen Objekt, offene Klammern ergänzen → `WasRepaired`. Misserfolge liefern einen `MindmapFailureReason`; die Benutzertexte dazu (Hauptsatz, Tipps, rohe Antwort nur als einklappbare Details) erzeugt `MindmapStatusTexts` in ViewModels/Mindmap. Speicherung je Profil unter `Mindmaps/<Profil>.json` im Benutzerdaten-Ordner; Markdown-Export.
 - Fake-KI: Mindmap-Prompts (enthalten „Mindmap“) werden **vor** dem Karteikarten-Fall erkannt (`FakeMindmapResponse`, genutzt von `FakeLlmService` und `LlmServiceDispatcher.AskFakeAi`).
 - `MindmapLayout` (ViewModels/Mindmap) berechnet das horizontale Baum-Layout rein rechnerisch (testbar); `MindmapViewModel` verwaltet Auf-/Zuklappen, Zoom, Auswahl und formuliert die Chat-Frage zu einem Knoten.
-- `MindmapView.razor` zeichnet reines SVG ohne JavaScript-Bibliothek. Zahlen in SVG-Attributen immer mit `CultureInfo.InvariantCulture` formatieren (deutsche Kultur schreibt Kommas). „Im Chat erklären lassen“ läuft über `OnAskQuestion` → `App.razor` wechselt zum Chat und ruft `ChatViewModel.SendPromptAsync` auf.
+- `MindmapView.razor` zeichnet reines SVG ohne JavaScript-Bibliothek. Zahlen in SVG-Attributen immer mit `CultureInfo.InvariantCulture` formatieren (deutsche Kultur schreibt Kommas). „Drucken / PDF“ nutzt `window.print` mit `@media print`-Regeln in der Komponente (nur die Zeichenfläche samt Kopfzeile, A4 quer, SVG auf die Seite eingepasst; gedruckt wird die aktuell aufgeklappte Ansicht). „Im Chat erklären lassen“ läuft über `OnAskQuestion` → `App.razor` wechselt zum Chat und ruft `ChatViewModel.SendPromptAsync` auf.
 
 ### Persistenz
 

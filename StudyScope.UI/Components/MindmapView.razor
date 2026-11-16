@@ -1,8 +1,10 @@
-@using System.Globalization
+﻿@using System.Globalization
+@using Microsoft.JSInterop
 @using StudyScope.UI.Services
 @using StudyScope.ViewModels.Mindmap
 @inject MindmapViewModel MapVm
 @inject DocumentListViewModel DocVm
+@inject IJSRuntime JSRuntime
 @implements IDisposable
 
 <div class="mm-root">
@@ -45,6 +47,9 @@
                     <button type="button" class="mm-btn-outline" title="Vergrößern" disabled="@(MapVm.Zoom >= MindmapViewModel.MaxZoom)" @onclick="MapVm.ZoomIn">+</button>
                 </span>
 
+                <button type="button" class="mm-btn" style="background: #6c757d;"
+                        title="Mindmap als Grafik drucken oder als PDF speichern (gedruckt wird die aktuelle Ansicht – vorher ggf. „Alle auf“ klicken)"
+                        @onclick="PrintAsync">🖨️ Drucken / PDF</button>
                 <button type="button" class="mm-btn" style="background: #17a2b8;" title="Als Markdown-Gliederung exportieren" @onclick="ExportMarkdownAsync">📄 Export (.md)</button>
                 <button type="button" class="mm-btn" style="background: #dc3545;" title="Mindmap dieses Profils löschen" @onclick="DeleteAsync">🗑️ Löschen</button>
             }
@@ -110,6 +115,11 @@
         {
             var layout = MapVm.Layout;
             <div class="mm-canvas" @onclick="() => MapVm.SelectNode(null)">
+                <!-- Kopfzeile nur für Druck/PDF -->
+                <div class="mm-print-header">
+                    <div style="font-size: 16pt; font-weight: 600;">Mindmap: @MapVm.Mindmap!.Root.Title</div>
+                    <div style="font-size: 9pt; color: #555;">@MapVm.SourceInfoText · Profil: @DocVm.CurrentProfile</div>
+                </div>
                 <svg width="@F(layout.Width * MapVm.Zoom)" height="@F(layout.Height * MapVm.Zoom)"
                      viewBox="0 0 @F(layout.Width) @F(layout.Height)" xmlns="http://www.w3.org/2000/svg">
 
@@ -217,6 +227,23 @@
         .mm-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .mm-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: mm-slide 1.4s ease-in-out infinite; }
         @@keyframes mm-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        .mm-print-header { display: none; }
+
+        /* Druck / PDF: nur die Mindmap als Grafik, auf eine A4-Seite quer eingepasst */
+        @@media print {
+            @@page { size: A4 landscape; margin: 12mm; }
+            body * { visibility: hidden; }
+            .mm-canvas, .mm-canvas * { visibility: visible; }
+            .mm-canvas { position: absolute; left: 0; top: 0; width: 100%; overflow: visible !important; border: none !important; border-radius: 0; }
+            .mm-print-header { display: block; margin-bottom: 6mm; }
+            .mm-canvas svg {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 160mm;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 </div>
 
@@ -264,6 +291,27 @@
     private async Task AskInChatAsync(MindmapNode node)
     {
         await OnAskQuestion.InvokeAsync(MapVm.BuildQuestionFor(node));
+    }
+
+    /// <summary>
+    /// Öffnet den Druckdialog des Systems. Dort lässt sich die Mindmap drucken oder als PDF speichern
+    /// („Als PDF speichern“ / „Microsoft Print to PDF“, unter Linux „In Datei drucken“).
+    /// </summary>
+    private async Task PrintAsync()
+    {
+        // Auswahlrahmen soll nicht mitgedruckt werden
+        MapVm.SelectNode(null);
+        StateHasChanged();
+        await Task.Yield();
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch (Exception ex)
+        {
+            MapVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true);
+        }
     }
 
     private async Task ExportMarkdownAsync()

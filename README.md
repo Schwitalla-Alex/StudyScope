@@ -1,4 +1,4 @@
-# 📚 StudyScope
+﻿# 📚 StudyScope
 
 > **Intelligente Desktop-Lernsoftware mit lokaler LLM-Unterstützung und Dokumenten-RAG.**
 
@@ -14,7 +14,7 @@
 
 - 🔍 **Dokumenten-Chat (RAG):** Stellen Sie gezielte Fragen an Ihre Vorlesungsfolien, Skripte und Unterlagen.
 - 🎴 **Automatische Karteikarten:** Generieren Sie auf Knopfdruck interaktive Lernkarten aus den geladenen Texten.
-- 🧠 **Mindmap:** Die KI ordnet die Inhalte der aktivierten Dokumente als aufklappbaren Themenbaum an. Ein Klick auf ein Thema zeigt eine Kurzerklärung und stellt auf Wunsch eine passende Frage im Chat; Export als Markdown-Gliederung.
+- 🧠 **Mindmap:** Die KI ordnet die Inhalte der aktivierten Dokumente als aufklappbaren Themenbaum an. Ein Klick auf ein Thema zeigt eine Kurzerklärung und stellt auf Wunsch eine passende Frage im Chat; Export als Markdown-Gliederung oder als Grafik über „Drucken / PDF“.
 - 📁 **Unterstützte Formate:** Volle Unterstützung für `.pdf`, `.txt` und `.csv`.
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**
