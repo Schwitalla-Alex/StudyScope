@@ -62,9 +62,34 @@
 
     @if (!string.IsNullOrEmpty(MapVm.StatusMessage))
     {
-        <div class="mm-status" style="background: @(MapVm.IsError ? "#f8d7da" : "#d4edda"); border-color: @(MapVm.IsError ? "#f5c6cb" : "#c3e6cb"); color: @(MapVm.IsError ? "#721c24" : "#155724");">
-            <span>@MapVm.StatusMessage</span>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px;" @onclick="MapVm.ClearStatus">✕</button>
+        var (statusBg, statusBorder, statusText) = MapVm.IsError
+            ? ("#f8d7da", "#f5c6cb", "#721c24")
+            : MapVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+
+        <div class="mm-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600;">@MapVm.StatusMessage</div>
+
+                @if (MapVm.StatusTips.Count > 0)
+                {
+                    <div style="margin-top: 6px;">@(MapVm.IsError ? "Das können Sie tun:" : "Tipp:")</div>
+                    <ul style="margin: 2px 0 0 18px; line-height: 1.5;">
+                        @foreach (var tip in MapVm.StatusTips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+
+                @if (!string.IsNullOrEmpty(MapVm.StatusDetails))
+                {
+                    <details style="margin-top: 6px;">
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <pre class="mm-details-raw">@MapVm.StatusDetails</pre>
+                    </details>
+                }
+            </div>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="MapVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -176,7 +201,8 @@
         .mm-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
         .mm-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
         .mm-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
-        .mm-status { margin-top: 12px; padding: 8px 12px; border: 1px solid; border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .mm-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .mm-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
         .mm-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
         .mm-canvas { flex: 1; min-width: 0; overflow: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; }
         .mm-canvas svg { display: block; user-select: none; }

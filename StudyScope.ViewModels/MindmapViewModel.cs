@@ -80,6 +80,30 @@ public class MindmapViewModel : INotifyPropertyChanged
         private set { _isError = value; OnPropertyChanged(); }
     }
 
+    /// <summary>Erfolg mit Einschränkung (z. B. unvollständige KI-Antwort) – wird gelb statt grün angezeigt.</summary>
+    private bool _isWarning;
+    public bool IsWarning
+    {
+        get => _isWarning;
+        private set { _isWarning = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>Konkrete Tipps zur Statusmeldung (Aufzählung unter der Meldung).</summary>
+    private IReadOnlyList<string> _statusTips = Array.Empty<string>();
+    public IReadOnlyList<string> StatusTips
+    {
+        get => _statusTips;
+        private set { _statusTips = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>Technische Details (rohe KI-Antwort), in der Oberfläche einklappbar.</summary>
+    private string? _statusDetails;
+    public string? StatusDetails
+    {
+        get => _statusDetails;
+        private set { _statusDetails = value; OnPropertyChanged(); }
+    }
+
     private double _zoom = 1.0;
     public double Zoom
     {
@@ -150,7 +174,8 @@ public class MindmapViewModel : INotifyPropertyChanged
 
             if (chunks.Count == 0)
             {
-                ShowStatus("⚠️ Aus den gewählten Dokumenten konnte kein Text gelesen werden.", isError: true);
+                var noText = MindmapStatusTexts.ForFailure(new MindmapGenerationResult { FailureReason = MindmapFailureReason.NoContent });
+                ShowStatus(noText.Message, isError: true, noText.Tips);
                 return;
             }
 
@@ -168,8 +193,8 @@ public class MindmapViewModel : INotifyPropertyChanged
 
             if (!result.IsSuccess)
             {
-                ShowStatus("⚠️ Die KI hat keine gültige Mindmap geliefert. Bitte erneut versuchen oder ein anderes Modell wählen." +
-                          FormatRawHint(result.RawResponse), isError: true);
+                var failure = MindmapStatusTexts.ForFailure(result);
+                ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
 
@@ -183,8 +208,8 @@ public class MindmapViewModel : INotifyPropertyChanged
             await _mindmapService.SaveMindmapAsync(profileName, mindmap);
             SetMindmap(mindmap);
 
-            var count = mindmap.Root.DescendantsAndSelf().Count();
-            ShowStatus($"✓ Mindmap mit {count} Themen erstellt. Klicken Sie auf ein Thema für Details.", isError: false);
+            var success = MindmapStatusTexts.ForSuccess(mindmap.Root.DescendantsAndSelf().Count(), result.WasRepaired);
+            ShowStatus(success.Message, isError: false, success.Tips, isWarning: result.WasRepaired);
         }
         catch (OperationCanceledException)
         {
@@ -306,25 +331,22 @@ public class MindmapViewModel : INotifyPropertyChanged
         return path;
     }
 
-    public void ShowStatus(string message, bool isError)
+    public void ShowStatus(string message, bool isError, IReadOnlyList<string>? tips = null, string? details = null, bool isWarning = false)
     {
         IsError = isError;
+        IsWarning = !isError && isWarning;
+        StatusTips = tips ?? Array.Empty<string>();
+        StatusDetails = string.IsNullOrWhiteSpace(details) ? null : details;
         StatusMessage = message;
     }
 
     public void ClearStatus()
     {
         StatusMessage = null;
+        StatusTips = Array.Empty<string>();
+        StatusDetails = null;
         IsError = false;
-    }
-
-    private static string FormatRawHint(string raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-            return string.Empty;
-
-        var text = raw.Trim().Replace('\n', ' ');
-        return $" (Antwort der KI: „{(text.Length > 160 ? text[..160] + "…" : text)}“)";
+        IsWarning = false;
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>

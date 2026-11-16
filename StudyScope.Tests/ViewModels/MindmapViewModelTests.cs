@@ -80,16 +80,64 @@ public class MindmapViewModelTests
     }
 
     [Test]
-    public async Task GenerateAsync_InvalidResponse_ShowsErrorWithRawHint()
+    public async Task GenerateAsync_ServiceError_ShowsServiceMessageAsTip()
     {
-        _mindmapService.NextResult = new MindmapGenerationResult { RawResponse = "Netzwerkfehler zu Google Gemini" };
+        _mindmapService.NextResult = new MindmapGenerationResult
+        {
+            RawResponse = "Netzwerkfehler zu Google Gemini",
+            FailureReason = MindmapFailureReason.NoJson
+        };
 
         await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
 
         Assert.That(_viewModel.HasMindmap, Is.False);
         Assert.That(_viewModel.IsError, Is.True);
-        Assert.That(_viewModel.StatusMessage, Does.Contain("Netzwerkfehler"));
+        Assert.That(_viewModel.StatusMessage, Does.Contain("Fehler gemeldet"));
+        Assert.That(_viewModel.StatusTips.Any(t => t.Contains("Netzwerkfehler zu Google Gemini")), Is.True);
         Assert.That(_mindmapService.Saved, Is.Empty);
+    }
+
+    [Test]
+    public async Task GenerateAsync_BrokenJson_ShowsFriendlyMessageAndRawOnlyInDetails()
+    {
+        const string raw = "[{\"title\": \"Thema\", \"summary\": \"Ein Satz mit \"falschen\" Anführungszeichen";
+        _mindmapService.NextResult = new MindmapGenerationResult { RawResponse = raw, FailureReason = MindmapFailureReason.InvalidJson };
+
+        await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+
+        Assert.That(_viewModel.IsError, Is.True);
+        Assert.That(_viewModel.StatusMessage, Does.Contain("unvollständig oder fehlerhaft"));
+        Assert.That(_viewModel.StatusMessage, Does.Not.Contain("title"));
+        Assert.That(_viewModel.StatusTips, Has.Count.EqualTo(3));
+        Assert.That(_viewModel.StatusDetails, Is.EqualTo(raw));
+    }
+
+    [Test]
+    public async Task GenerateAsync_RepairedResponse_ShowsWarningAndKeepsMindmap()
+    {
+        _mindmapService.NextResult = new MindmapGenerationResult { Root = CreateTree(), WasRepaired = true };
+
+        await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+
+        Assert.That(_viewModel.HasMindmap, Is.True);
+        Assert.That(_viewModel.IsError, Is.False);
+        Assert.That(_viewModel.IsWarning, Is.True);
+        Assert.That(_viewModel.StatusMessage, Does.Contain("unvollständig"));
+        Assert.That(_mindmapService.Saved.ContainsKey("Testprofil"), Is.True);
+    }
+
+    [Test]
+    public async Task ClearStatus_ResetsTipsDetailsAndWarning()
+    {
+        _mindmapService.NextResult = new MindmapGenerationResult { RawResponse = "kaputt {\"", FailureReason = MindmapFailureReason.InvalidJson };
+        await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+
+        _viewModel.ClearStatus();
+
+        Assert.That(_viewModel.StatusMessage, Is.Null);
+        Assert.That(_viewModel.StatusTips, Is.Empty);
+        Assert.That(_viewModel.StatusDetails, Is.Null);
+        Assert.That(_viewModel.IsWarning, Is.False);
     }
 
     [Test]

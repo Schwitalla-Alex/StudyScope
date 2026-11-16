@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
@@ -41,7 +41,7 @@ public class MindmapService : IMindmapService
     {
         var chunks = SelectRepresentativeChunks(contextChunks, MaxChunks);
         if (chunks.Count == 0)
-            return new MindmapGenerationResult();
+            return new MindmapGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 
         // Hinweis: Der Prompt verlangt bewusst ein JSON-ARRAY mit genau einem Wurzelobjekt, weil der
         // LlmServiceDispatcher bei "JSON"-Prompts für einige Provider ein JSON-Array als Antwortformat vorgibt.
@@ -56,13 +56,17 @@ public class MindmapService : IMindmapService
             "- Die Wurzel ist das übergeordnete Thema der Auszüge.\n" +
             "- 4 bis 7 Hauptäste, je Ast 2 bis 5 Unterpunkte, höchstens 3 Ebenen unter der Wurzel.\n" +
             "- Titel kurz (höchstens 6 Wörter), summary höchstens ein Satz.\n" +
+            "- Insgesamt höchstens 40 Themen, damit die Antwort vollständig bleibt.\n" +
             "- Nur Inhalte verwenden, die in den Auszügen vorkommen. Sprache: Deutsch.";
 
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
+        var parsed = AnalyzeResponse(raw, rootTitle);
         return new MindmapGenerationResult
         {
-            Root = ParseMindmap(raw, rootTitle),
-            RawResponse = raw ?? string.Empty
+            Root = parsed.Root,
+            RawResponse = raw ?? string.Empty,
+            WasRepaired = parsed.WasRepaired,
+            FailureReason = parsed.FailureReason
         };
     }
 
@@ -87,76 +91,166 @@ public class MindmapService : IMindmapService
         return result;
     }
 
-    /// <summary>
-    /// Wandelt die KI-Antwort in einen Knotenbaum um. Toleriert Markdown-Codeblöcke, Begleittext,
-    /// ein Objekt statt eines Arrays, mehrere Wurzeln (werden unter <paramref name="fallbackRootTitle"/> gruppiert),
-    /// deutsche Schlüsselnamen und Unterpunkte als reine Texte. Liefert null, wenn nichts Verwertbares enthalten ist.
-    /// </summary>
-    public static MindmapNode? ParseMindmap(string? rawResponse, string fallbackRootTitle)
-    {
-        var json = ExtractJson(rawResponse);
-        if (json == null)
-            return null;
+    /// <summary>Ergebnis der Auswertung einer KI-Antwort.</summary>
+    public sealed record MindmapParseResult(MindmapNode? Root, bool WasRepaired, MindmapFailureReason FailureReason);
 
+    /// <summary>
+    /// Wandelt die KI-Antwort in einen Knotenbaum um (Kurzform von <see cref="AnalyzeResponse"/>).
+    /// Liefert null, wenn nichts Verwertbares enthalten ist.
+    /// </summary>
+    public static MindmapNode? ParseMindmap(string? rawResponse, string fallbackRootTitle) =>
+        AnalyzeResponse(rawResponse, fallbackRootTitle).Root;
+
+    /// <summary>
+    /// Wertet die KI-Antwort aus. Toleriert Markdown-Codeblöcke, Begleittext, ein Objekt statt eines Arrays,
+    /// mehrere Wurzeln (werden unter <paramref name="fallbackRootTitle"/> gruppiert), deutsche Schlüsselnamen
+    /// und Unterpunkte als reine Texte. Ist die Antwort abgeschnitten (häufig bei lokalen Modellen, wenn das
+    /// Kontextfenster voll ist), wird bis zum letzten vollständigen Thema gekürzt und der Rest ergänzt.
+    /// </summary>
+    public static MindmapParseResult AnalyzeResponse(string? rawResponse, string fallbackRootTitle)
+    {
+        if (string.IsNullOrWhiteSpace(rawResponse))
+            return new MindmapParseResult(null, false, MindmapFailureReason.EmptyResponse);
+
+        var text = StripCodeFence(rawResponse.Trim());
+
+        // Ohne Klammer und Anführungszeichen ist es kein JSON-Versuch, sondern Text (z. B. eine Fehlermeldung)
+        var start = text.IndexOfAny(new[] { '[', '{' });
+        if (start < 0 || text.IndexOf('"', start) < 0)
+            return new MindmapParseResult(null, false, MindmapFailureReason.NoJson);
+
+        var candidate = text[start..];
+
+        // 1. Versuch: vom ersten '[' bzw. '{' bis zur letzten passenden Klammer (vollständige Antwort mit Begleittext)
+        var closing = candidate[0] == '[' ? ']' : '}';
+        var end = candidate.LastIndexOf(closing);
+        if (end > 0 && TryBuildTree(candidate[..(end + 1)], fallbackRootTitle, out var root))
+        {
+            return root != null
+                ? new MindmapParseResult(root, false, MindmapFailureReason.None)
+                : new MindmapParseResult(null, false, MindmapFailureReason.NoTopics);
+        }
+
+        // 2. Versuch: abgeschnittene oder hinten fehlerhafte Antwort reparieren
+        foreach (var repaired in GetRepairCandidates(candidate))
+        {
+            if (TryBuildTree(repaired, fallbackRootTitle, out var repairedRoot))
+            {
+                return repairedRoot != null
+                    ? new MindmapParseResult(repairedRoot, true, MindmapFailureReason.None)
+                    : new MindmapParseResult(null, false, MindmapFailureReason.InvalidJson);
+            }
+        }
+
+        return new MindmapParseResult(null, false, MindmapFailureReason.InvalidJson);
+    }
+
+    /// <summary>
+    /// Parst JSON und baut den Baum. Rückgabe false = kein gültiges JSON;
+    /// true mit <paramref name="root"/> = null = gültiges JSON ohne verwertbare Themen.
+    /// </summary>
+    private static bool TryBuildTree(string json, string fallbackRootTitle, out MindmapNode? root)
+    {
+        root = null;
         try
         {
             using var doc = JsonDocument.Parse(json, new JsonDocumentOptions { AllowTrailingCommas = true, CommentHandling = JsonCommentHandling.Skip });
-            var budget = new NodeBudget(MaxNodes);
-            var rootElement = doc.RootElement;
-
-            if (rootElement.ValueKind == JsonValueKind.Object)
-                return ParseNode(rootElement, 0, budget);
-
-            if (rootElement.ValueKind != JsonValueKind.Array)
-                return null;
-
-            var roots = rootElement.EnumerateArray().ToList();
-            if (roots.Count == 1)
-                return ParseNode(roots[0], 0, budget);
-
-            // Mehrere Wurzeln: unter einem gemeinsamen Hauptthema zusammenfassen
-            var root = new MindmapNode { Title = Shorten(string.IsNullOrWhiteSpace(fallbackRootTitle) ? "Mindmap" : fallbackRootTitle) };
-            budget.TryTake();
-            foreach (var element in roots)
-            {
-                var child = ParseNode(element, 1, budget);
-                if (child != null)
-                    root.Children.Add(child);
-            }
-
-            return root.Children.Count > 0 ? root : null;
+            root = BuildTree(doc.RootElement, fallbackRootTitle);
+            return true;
         }
         catch (JsonException)
         {
-            return null;
+            return false;
         }
     }
 
-    private static string? ExtractJson(string? rawResponse)
+    private static MindmapNode? BuildTree(JsonElement rootElement, string fallbackRootTitle)
     {
-        if (string.IsNullOrWhiteSpace(rawResponse))
+        var budget = new NodeBudget(MaxNodes);
+
+        if (rootElement.ValueKind == JsonValueKind.Object)
+            return ParseNode(rootElement, 0, budget);
+
+        if (rootElement.ValueKind != JsonValueKind.Array)
             return null;
 
-        var text = rawResponse.Trim();
+        var roots = rootElement.EnumerateArray().ToList();
+        if (roots.Count == 1)
+            return ParseNode(roots[0], 0, budget);
 
-        // Markdown-Codeblock (```json ... ```) entfernen
-        if (text.StartsWith("```"))
+        // Mehrere Wurzeln: unter einem gemeinsamen Hauptthema zusammenfassen
+        var root = new MindmapNode { Title = Shorten(string.IsNullOrWhiteSpace(fallbackRootTitle) ? "Mindmap" : fallbackRootTitle) };
+        budget.TryTake();
+        foreach (var element in roots)
         {
-            var firstNewline = text.IndexOf('\n');
-            text = firstNewline >= 0 ? text[(firstNewline + 1)..] : string.Empty;
-            var fence = text.LastIndexOf("```", StringComparison.Ordinal);
-            if (fence >= 0)
-                text = text[..fence];
+            var child = ParseNode(element, 1, budget);
+            if (child != null)
+                root.Children.Add(child);
         }
 
-        // Ab dem ersten '[' oder '{' bis zur passenden letzten Klammer derselben Art
-        var start = text.IndexOfAny(new[] { '[', '{' });
-        if (start < 0)
-            return null;
+        return root.Children.Count > 0 ? root : null;
+    }
 
-        var closing = text[start] == '[' ? ']' : '}';
-        var end = text.LastIndexOf(closing);
-        return end > start ? text.Substring(start, end - start + 1) : null;
+    private static string StripCodeFence(string text)
+    {
+        // Markdown-Codeblock (```json ... ```) entfernen; ein fehlender Abschluss (abgeschnitten) ist erlaubt
+        if (!text.StartsWith("```"))
+            return text;
+
+        var firstNewline = text.IndexOf('\n');
+        text = firstNewline >= 0 ? text[(firstNewline + 1)..] : string.Empty;
+        var fence = text.LastIndexOf("```", StringComparison.Ordinal);
+        return fence >= 0 ? text[..fence] : text;
+    }
+
+    /// <summary>Höchstzahl an Reparaturversuchen (jeweils ein Thema weniger).</summary>
+    private const int MaxRepairAttempts = 200;
+
+    /// <summary>
+    /// Liefert reparierte Fassungen einer abgeschnittenen JSON-Antwort, beginnend mit der längsten:
+    /// Der Text wird nach jeder vollständig geschlossenen Klammer (also nach einem vollständigen Thema) gekürzt
+    /// und um die noch offenen Klammern ergänzt. Klammern innerhalb von Zeichenketten werden ignoriert.
+    /// </summary>
+    private static IEnumerable<string> GetRepairCandidates(string json)
+    {
+        var stack = new List<char>();
+        var cuts = new List<(int End, string Closers)>();
+        var inString = false;
+        var escaped = false;
+
+        for (var i = 0; i < json.Length; i++)
+        {
+            var c = json[i];
+            if (inString)
+            {
+                if (escaped) escaped = false;
+                else if (c == '\\') escaped = true;
+                else if (c == '"') inString = false;
+                continue;
+            }
+
+            if (c == '"')
+            {
+                inString = true;
+            }
+            else if (c == '{' || c == '[')
+            {
+                stack.Add(c);
+            }
+            else if (c == '}' || c == ']')
+            {
+                var expected = c == '}' ? '{' : '[';
+                if (stack.Count == 0 || stack[^1] != expected)
+                    break; // ab hier ist die Struktur kaputt – nur frühere Schnittpunkte verwenden
+
+                stack.RemoveAt(stack.Count - 1);
+                var closers = new string(stack.AsEnumerable().Reverse().Select(o => o == '{' ? '}' : ']').ToArray());
+                cuts.Add((i, closers));
+            }
+        }
+
+        for (var k = cuts.Count - 1; k >= 0 && k >= cuts.Count - MaxRepairAttempts; k--)
+            yield return json[..(cuts[k].End + 1)] + cuts[k].Closers;
     }
 
     private static MindmapNode? ParseNode(JsonElement element, int depth, NodeBudget budget)

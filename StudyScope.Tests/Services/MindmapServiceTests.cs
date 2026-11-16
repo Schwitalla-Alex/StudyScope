@@ -162,6 +162,94 @@ public class MindmapServiceTests
         Assert.That(root!.Children, Has.Count.EqualTo(2));
     }
 
+    // ---------- Abgeschnittene Antworten und Fehlerursachen ----------
+
+    [Test]
+    public void AnalyzeResponse_TruncatedResponse_IsRepairedUpToLastCompleteTopic()
+    {
+        // Typisch für lokale Modelle: Antwort bricht mitten im dritten Ast ab
+        const string raw = """
+            [{"title": "Tätigkeitsprofil", "summary": "Überblick.", "children": [
+                {"title": "Berufserfahrung", "summary": "Stationen.", "children": [
+                    {"title": "Softwareentwicklung", "summary": "C# und WPF."},
+                    {"title": "Datenbanken", "summary": "SQL Server."}
+                ]},
+                {"title": "Kompetenzen", "summary": "Fachlich und methodisch."},
+                {"title": "Projekte", "summary": "Ausgewählte Proj
+            """;
+
+        var result = MindmapService.AnalyzeResponse(raw, "Fallback");
+
+        Assert.That(result.Root, Is.Not.Null);
+        Assert.That(result.WasRepaired, Is.True);
+        Assert.That(result.FailureReason, Is.EqualTo(MindmapFailureReason.None));
+        Assert.That(result.Root!.Title, Is.EqualTo("Tätigkeitsprofil"));
+        Assert.That(result.Root.Children.Select(c => c.Title), Is.EqualTo(new[] { "Berufserfahrung", "Kompetenzen" }));
+        Assert.That(result.Root.Children[0].Children, Has.Count.EqualTo(2));
+    }
+
+    [Test]
+    public void AnalyzeResponse_TruncatedInsideCodeBlock_IsRepaired()
+    {
+        const string raw = "```json\n[{\"title\": \"A\", \"children\": [{\"title\": \"B\"}, {\"title\": \"C\", \"summ";
+
+        var result = MindmapService.AnalyzeResponse(raw, "Fallback");
+
+        Assert.That(result.WasRepaired, Is.True);
+        Assert.That(result.Root!.Children.Select(c => c.Title), Is.EqualTo(new[] { "B" }));
+    }
+
+    [Test]
+    public void AnalyzeResponse_BracketsInsideStrings_DoNotConfuseRepair()
+    {
+        const string raw = "[{\"title\": \"Mengen {a, b} und [x]\", \"children\": [{\"title\": \"Klammer ] im \\\"Text\\\"\"}, {\"title\": \"abgeschn";
+
+        var result = MindmapService.AnalyzeResponse(raw, "Fallback");
+
+        Assert.That(result.Root!.Title, Is.EqualTo("Mengen {a, b} und [x]"));
+        Assert.That(result.Root.Children.Single().Title, Is.EqualTo("Klammer ] im \"Text\""));
+    }
+
+    [Test]
+    public void AnalyzeResponse_CompleteResponse_IsNotMarkedAsRepaired()
+    {
+        var result = MindmapService.AnalyzeResponse("""[{"title": "A", "children": [{"title": "B"}]}]""", "Fallback");
+
+        Assert.That(result.WasRepaired, Is.False);
+        Assert.That(result.FailureReason, Is.EqualTo(MindmapFailureReason.None));
+    }
+
+    [TestCase("", MindmapFailureReason.EmptyResponse)]
+    [TestCase("   ", MindmapFailureReason.EmptyResponse)]
+    [TestCase("Gemini-Fehler: Es ist kein API-Schlüssel in den Einstellungen hinterlegt.", MindmapFailureReason.NoJson)]
+    [TestCase("Ollama-Fehler [404]: model not found", MindmapFailureReason.NoJson)]
+    [TestCase("Gerne! Die wichtigsten Themen sind A, B und C.", MindmapFailureReason.NoJson)]
+    [TestCase("[{\"titel_falsch\": 1}]", MindmapFailureReason.NoTopics)]
+    [TestCase("[{\"title\": ", MindmapFailureReason.InvalidJson)]
+    public void AnalyzeResponse_ClassifiesFailures(string raw, MindmapFailureReason expected)
+    {
+        var result = MindmapService.AnalyzeResponse(raw, "Fallback");
+
+        Assert.That(result.Root, Is.Null);
+        Assert.That(result.FailureReason, Is.EqualTo(expected));
+    }
+
+    [Test]
+    public async Task GenerateMindmapAsync_PassesRepairFlagAndFailureReason()
+    {
+        var truncated = new MindmapService(new RecordingLlm("[{\"title\": \"A\", \"children\": [{\"title\": \"B\"}, {\"title\": \"C"), _tempDir);
+        var serviceError = new MindmapService(new RecordingLlm("Netzwerkfehler zu Mistral AI: Zeitüberschreitung"), _tempDir);
+
+        var repaired = await truncated.GenerateMindmapAsync(new[] { "Text" }, "Titel");
+        var failed = await serviceError.GenerateMindmapAsync(new[] { "Text" }, "Titel");
+        var noContent = await serviceError.GenerateMindmapAsync(Array.Empty<string>(), "Titel");
+
+        Assert.That(repaired.IsSuccess, Is.True);
+        Assert.That(repaired.WasRepaired, Is.True);
+        Assert.That(failed.FailureReason, Is.EqualTo(MindmapFailureReason.NoJson));
+        Assert.That(noContent.FailureReason, Is.EqualTo(MindmapFailureReason.NoContent));
+    }
+
     // ---------- Auswahl der Textstellen ----------
 
     [Test]

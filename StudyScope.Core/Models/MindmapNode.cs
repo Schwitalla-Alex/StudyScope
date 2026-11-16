@@ -44,4 +44,33 @@ public class MindmapGenerationResult
     public MindmapNode? Root { get; init; }
     public string RawResponse { get; init; } = string.Empty;
     public bool IsSuccess => Root != null;
+
+    /// <summary>
+    /// true, wenn die Antwort der KI unvollständig war (z. B. abgeschnitten) und nur der lesbare Teil verwendet wurde.
+    /// </summary>
+    public bool WasRepaired { get; init; }
+
+    /// <summary>Grund des Misserfolgs (bei Erfolg <see cref="MindmapFailureReason.None"/>).</summary>
+    public MindmapFailureReason FailureReason { get; init; }
+}
+
+/// <summary>Warum aus der KI-Antwort keine Mindmap entstehen konnte – Grundlage für verständliche Meldungen.</summary>
+public enum MindmapFailureReason
+{
+    None,
+
+    /// <summary>Aus den Dokumenten kam kein Text, die KI wurde nicht gefragt.</summary>
+    NoContent,
+
+    /// <summary>Die KI hat nichts geantwortet.</summary>
+    EmptyResponse,
+
+    /// <summary>Die KI hat mit Text (oft einer Fehlermeldung des Dienstes) statt mit JSON geantwortet.</summary>
+    NoJson,
+
+    /// <summary>JSON vorhanden, aber fehlerhaft oder so stark abgeschnitten, dass nichts lesbar war.</summary>
+    InvalidJson,
+
+    /// <summary>Gültiges JSON, aber ohne verwertbare Themen.</summary>
+    NoTopics
 }
