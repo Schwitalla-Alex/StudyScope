@@ -1,5 +1,6 @@
 ﻿
 using System.Text.Json;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -155,10 +156,7 @@ public class FlashcardService : IFlashcardService
     {
         return Task.Run(() =>
         {
-            var baseDir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "StudyScope",
-                "Flashcards");
+            var baseDir = Path.Combine(AppPaths.UserDataDirectory, "Flashcards");
 
             Directory.CreateDirectory(baseDir);
 
@@ -170,11 +168,7 @@ public class FlashcardService : IFlashcardService
 
     private static string GetFlashcardsFilePath(string profileName)
     {
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "StudyScope",
-            "Flashcards",
-            $"{profileName}.json");
+        return Path.Combine(AppPaths.UserDataDirectory, "Flashcards", $"{profileName}.json");
     }
 
     public string ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards)
