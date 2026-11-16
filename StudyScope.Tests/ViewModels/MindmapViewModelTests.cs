@@ -1,3 +1,4 @@
+using Moq;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels;
@@ -237,6 +238,94 @@ public class MindmapViewModelTests
     public void Layout_NullRoot_IsEmpty()
     {
         Assert.That(MindmapLayout.Calculate(null, _ => true).Nodes, Is.Empty);
+    }
+
+    // ---------- Abbruch der Erzeugung (Moq) ----------
+
+    /// <summary>
+    /// Baut ein ViewModel, dessen Mindmap-Erzeugung so lange "hängt", bis der Test die
+    /// zurückgegebene TaskCompletionSource auflöst. Der übergebene CancellationToken wird festgehalten.
+    /// </summary>
+    private static (MindmapViewModel vm, Mock<IMindmapService> service, TaskCompletionSource<MindmapGenerationResult> pending, Func<CancellationToken> token)
+        CreatePendingGeneration(bool cancelCompletesTask)
+    {
+        var pending = new TaskCompletionSource<MindmapGenerationResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var captured = CancellationToken.None;
+
+        var service = new Mock<IMindmapService>();
+        service.Setup(s => s.GenerateMindmapAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+               .Returns<IEnumerable<string>, string, CancellationToken>((_, _, ct) =>
+               {
+                   captured = ct;
+                   if (cancelCompletesTask)
+                       ct.Register(() => pending.TrySetCanceled(ct));
+                   return pending.Task;
+               });
+        service.Setup(s => s.LoadMindmapAsync(It.IsAny<string>())).ReturnsAsync((MindmapDocument?)null);
+
+        var docs = new Mock<IDocumentService>();
+        docs.Setup(d => d.ExtractChunksAsync(It.IsAny<string>(), It.IsAny<int>()))
+            .ReturnsAsync(new List<string> { "Testinhalt" });
+
+        return (new MindmapViewModel(service.Object, docs.Object), service, pending, () => captured);
+    }
+
+    [Test]
+    public async Task CancelGeneration_DienstWirftAbbruch_MeldetAbgebrochenOhneSpeichernUndOhneMindmap()
+    {
+        var (vm, service, _, token) = CreatePendingGeneration(cancelCompletesTask: true);
+
+        var generation = vm.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+        Assert.That(vm.IsGenerating, Is.True);
+
+        vm.CancelGeneration();
+        await generation;
+
+        Assert.That(token().IsCancellationRequested, Is.True);
+        Assert.That(vm.StatusMessage, Does.Contain("abgebrochen"));
+        Assert.That(vm.IsError, Is.False);
+        Assert.That(vm.IsGenerating, Is.False);
+        Assert.That(vm.HasMindmap, Is.False);
+        Assert.That(vm.Layout.Nodes, Is.Empty);
+        service.Verify(s => s.SaveMindmapAsync(It.IsAny<string>(), It.IsAny<MindmapDocument>()), Times.Never);
+    }
+
+    [Test]
+    public async Task CancelGeneration_DienstLiefertTrotzdemErgebnis_WirdVerworfen()
+    {
+        // Z. B. ein Modell, das den Token ignoriert und noch eine vollständige Antwort zurückgibt
+        var (vm, service, pending, _) = CreatePendingGeneration(cancelCompletesTask: false);
+
+        var generation = vm.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+        vm.CancelGeneration();
+        pending.SetResult(new MindmapGenerationResult { Root = CreateTree() });
+        await generation;
+
+        Assert.That(vm.StatusMessage, Does.Contain("abgebrochen"));
+        Assert.That(vm.IsError, Is.False);
+        Assert.That(vm.HasMindmap, Is.False);
+        service.Verify(s => s.SaveMindmapAsync(It.IsAny<string>(), It.IsAny<MindmapDocument>()), Times.Never);
+    }
+
+    [Test]
+    public async Task LoadForProfileAsync_WaehrendDerErzeugung_BrichtDieseAb()
+    {
+        var (vm, service, pending, token) = CreatePendingGeneration(cancelCompletesTask: false);
+        var mindmapB = new MindmapDocument { Root = new MindmapNode { Title = "Mindmap von Profil B" } };
+        service.Setup(s => s.LoadMindmapAsync("Profil B")).ReturnsAsync(mindmapB);
+
+        var generation = vm.GenerateAsync("Profil A", Docs(("a.pdf", true)));
+        await vm.LoadForProfileAsync("Profil B");
+
+        Assert.That(token().IsCancellationRequested, Is.True);
+
+        // Die verspätete Antwort für Profil A darf weder gespeichert noch angezeigt werden
+        pending.SetResult(new MindmapGenerationResult { Root = CreateTree() });
+        await generation;
+
+        Assert.That(vm.IsGenerating, Is.False);
+        Assert.That(vm.Mindmap, Is.SameAs(mindmapB));
+        service.Verify(s => s.SaveMindmapAsync(It.IsAny<string>(), It.IsAny<MindmapDocument>()), Times.Never);
     }
 
     // ---------- Attrappen ----------
