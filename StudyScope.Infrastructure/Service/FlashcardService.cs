@@ -171,6 +171,14 @@ public class FlashcardService : IFlashcardService
         return Path.Combine(AppPaths.UserDataDirectory, "Flashcards", $"{profileName}.json");
     }
 
+    /// <summary>Deutsche Bezeichnung des Lernstands – wie in der Oberfläche (Neu, Gelernt, Wiederholen).</summary>
+    public static string StatusDisplayName(FlashcardStatus status) => status switch
+    {
+        FlashcardStatus.Known => "Gelernt",
+        FlashcardStatus.Difficult => "Wiederholen",
+        _ => "Neu"
+    };
+
     public string ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards)
     {
         var sb = new System.Text.StringBuilder();
@@ -187,7 +195,7 @@ public class FlashcardService : IFlashcardService
             sb.AppendLine();
             sb.AppendLine($"**Antwort:** {card.Answer}");
             sb.AppendLine();
-            sb.AppendLine($"*Status:* {card.Status}");
+            sb.AppendLine($"*Status:* {StatusDisplayName(card.Status)}");
             sb.AppendLine();
             sb.AppendLine("---");
             sb.AppendLine();

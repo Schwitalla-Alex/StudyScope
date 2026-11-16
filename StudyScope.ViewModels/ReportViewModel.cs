@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -311,8 +311,8 @@ public class ReportViewModel : INotifyPropertyChanged
             SelectedReport = report;
 
             if (result.WasRepaired)
-                ShowStatus("✓ Bericht erstellt. Die Antwort der KI war allerdings unvollständig, daher fehlen eventuell einige Abschnitte.", isError: false,
-                    new[] { "Für einen vollständigen Bericht erneut erstellen oder weniger Dokumente aktivieren." }, isWarning: true);
+                ShowStatus("✓ Bericht erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Abschnitte.", isError: false,
+                    new[] { "Erneut erstellen – die KI antwortet jedes Mal etwas anders.", "Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird." }, isWarning: true);
             else
                 ShowStatus($"✓ Bericht „{report.Title}“ mit {report.Sections.Count} Abschnitten erstellt.", isError: false);
         }

@@ -171,6 +171,9 @@
     private bool showAllHistory;
 
     private static string Css(double value) => value.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+
+    /// <summary>Prozentwert für sichtbaren Text in deutscher Schreibweise (66,7 statt 66.7).</summary>
+    private static string Percent(double value) => value.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
     private static string Letter(int index) => ((char)('A' + index)).ToString();
     private static string Count(int n, string singular, string plural) => $"{n} {(n == 1 ? singular : plural)}";
     private static string ScoreColor(double percent) => percent >= 75 ? "#28a745" : percent >= 50 ? "#f0ad4e" : "#dc3545";
@@ -277,7 +280,7 @@
                                 · ❓ @t.Questions.Count Fragen im Pool
                                 @if (stats is { } s)
                                 {
-                                    <span> · <span style="color: @ScoreColor(s.Percent); font-weight: 600;">Ø @Css(s.Percent) %</span> aus @s.Answered Antworten</span>
+                                    <span> · <span style="color: @ScoreColor(s.Percent); font-weight: 600;">Ø @Percent(s.Percent) %</span> aus @s.Answered Antworten</span>
                                 }
                             </div>
                         </div>
@@ -375,7 +378,7 @@
                             </div>
                             <div class="qz-bar" style="margin-top: 3px;"><div style="width: @Css(result.Percent)%; background: @ScoreColor(result.Percent);"></div></div>
                         </div>
-                        <div style="width: 70px; text-align: right; flex-shrink: 0;"><b>@result.Correct/@result.Total</b> · @Css(result.Percent) %</div>
+                        <div style="width: 70px; text-align: right; flex-shrink: 0;"><b>@result.Correct/@result.Total</b> · @Percent(result.Percent) %</div>
                     </div>
                 }
                 @if (QuizVm.History.Count > 8)
@@ -536,7 +539,7 @@
                 <div class="qz-score">
                     <div class="qz-ring" style="background: conic-gradient(@color @Css(result.Percent * 3.6)deg, #e9ecef 0deg);">
                         <div class="qz-ring-inner">
-                            <div style="font-size: 24px; font-weight: 800; color: @color;">@Css(result.Percent) %</div>
+                            <div style="font-size: 24px; font-weight: 800; color: @color;">@Percent(result.Percent) %</div>
                             <div style="font-size: 11px; color: #6c757d;">@result.Correct von @result.Total</div>
                         </div>
                     </div>

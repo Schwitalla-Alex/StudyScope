@@ -64,13 +64,13 @@
         <button type="button"
                 style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #ffffff; background: #007bff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente für Abfragen aktivieren"
-                @onclick="DocVm.SelectAll">
+                @onclick="DocVm.SelectAllAsync">
             ✓ Alle an
         </button>
         <button type="button"
                 style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #007bff; background: #ffffff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente deaktivieren"
-                @onclick="DocVm.DeselectAll">
+                @onclick="DocVm.DeselectAllAsync">
             ✕ Alle aus
         </button>
     </div>
@@ -80,7 +80,7 @@
         @if (!DocVm.FilteredDocuments.Any())
         {
             <div style="font-size: 12px; color: #888; text-align: center; margin-top: 20px;">
-                Keine Dokumente geladen
+                @(DocVm.Documents.Any() ? $"Keine Treffer für „{DocVm.SearchText}“" : "Keine Dokumente geladen")
             </div>
         }
         else
@@ -90,7 +90,7 @@
                 <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid #f1f3f5; font-size: 13px; user-select: none;"
                      title="Doppelklick zum Öffnen: @doc.FilePath">
 
-                    <input type="checkbox" @bind="doc.IsSelected" />
+                    <input type="checkbox" checked="@doc.IsSelected" @onchange="e => DocVm.SetDocumentSelectedAsync(doc, e.Value is true)" />
 
                     <!-- Format-Icon und Dateiname -->
                     <span class="@(doc.IsMissing ? "strikethrough" : "")"

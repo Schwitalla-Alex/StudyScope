@@ -93,6 +93,9 @@ public class DocumentListViewModel : INotifyPropertyChanged
 
     public int TotalChunkCount => Documents.Sum(d => d.ExtractedChunkCount);
 
+    /// <summary>Anzahl der aktivierten, vorhandenen Dokumente – unabhängig vom Suchbegriff.</summary>
+    public int ActiveDocumentCount => Documents.Count(d => d.IsSelected && !d.IsMissing);
+
     public async Task RefreshCurrentAiModelAsync()
     {
         var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
@@ -157,10 +160,27 @@ public class DocumentListViewModel : INotifyPropertyChanged
     /// <summary>
     /// Prüft einen Profilnamen für die Oberfläche. Liefert eine verständliche Meldung oder <c>null</c>, wenn er gültig ist.
     /// </summary>
-    public string? ValidateProfileName(string? profileName) => ProfileNameValidator.Validate(profileName);
+    public string? ValidateProfileName(string? profileName)
+    {
+        var formatError = ProfileNameValidator.Validate(profileName);
+        if (formatError != null)
+            return formatError;
+
+        // Vorhandene Profile (auch in anderer Schreibweise) nicht erneut anlegen – sonst würde deren Dokumentliste überschrieben
+        var trimmed = profileName!.Trim();
+        var existing = ProfileExists(trimmed)
+            ? AvailableProfiles.FirstOrDefault(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)) ?? "Standard"
+            : null;
+        return existing == null ? null : $"Ein Profil „{existing}“ gibt es bereits. Bitte wählen Sie es oben in der Liste aus oder vergeben Sie einen anderen Namen.";
+    }
+
+    private bool ProfileExists(string profileName) =>
+        profileName.Equals("Standard", StringComparison.OrdinalIgnoreCase) ||
+        AvailableProfiles.Any(p => p.Equals(profileName, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
-    /// Legt ein Profil an und aktiviert es. Ungültige Namen werden abgelehnt (Rückgabe <c>false</c>, nichts wird gespeichert).
+    /// Legt ein Profil an und aktiviert es. Ungültige und bereits vorhandene Namen werden abgelehnt
+    /// (Rückgabe <c>false</c>, nichts wird gespeichert – vorhandene Profile behalten ihre Dokumente).
     /// </summary>
     public async Task<bool> CreateNewProfileAsync(string newProfileName)
     {
@@ -170,11 +190,8 @@ public class DocumentListViewModel : INotifyPropertyChanged
         var trimmed = newProfileName.Trim();
 
         // 1. In Liste der verfügbaren Profile aufnehmen
-        if (!AvailableProfiles.Any(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
-        {
-            AvailableProfiles.Add(trimmed);
-            OnPropertyChanged(nameof(AvailableProfiles));
-        }
+        AvailableProfiles.Add(trimmed);
+        OnPropertyChanged(nameof(AvailableProfiles));
 
         CurrentProfile = trimmed;
 
@@ -260,28 +277,41 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
     }
 
-    public void SelectAll()
+    /// <summary>Aktiviert alle Dokumente und speichert den Zustand im Profil.</summary>
+    public Task SelectAllAsync() => SetAllSelectedAsync(true);
+
+    /// <summary>Deaktiviert alle Dokumente und speichert den Zustand im Profil.</summary>
+    public Task DeselectAllAsync() => SetAllSelectedAsync(false);
+
+    private async Task SetAllSelectedAsync(bool selected)
     {
         foreach (var doc in Documents)
         {
-            doc.IsSelected = true;
+            doc.IsSelected = selected;
         }
         UpdateCounters();
+        await SaveCurrentDocumentsAsync();
     }
 
-    public void DeselectAll()
+    /// <summary>
+    /// Aktiviert bzw. deaktiviert ein einzelnes Dokument (Häkchen in der Liste),
+    /// aktualisiert die Zähler (Statusleiste) und speichert den Zustand im Profil.
+    /// </summary>
+    public async Task SetDocumentSelectedAsync(DocumentItem document, bool selected)
     {
-        foreach (var doc in Documents)
-        {
-            doc.IsSelected = false;
-        }
+        if (document.IsSelected == selected)
+            return;
+
+        document.IsSelected = selected;
         UpdateCounters();
+        await SaveCurrentDocumentsAsync();
     }
 
     private void UpdateCounters()
     {
         OnPropertyChanged(nameof(TotalDocumentCount));
         OnPropertyChanged(nameof(TotalChunkCount));
+        OnPropertyChanged(nameof(ActiveDocumentCount));
         OnPropertyChanged(nameof(FilteredDocuments));
     }
 

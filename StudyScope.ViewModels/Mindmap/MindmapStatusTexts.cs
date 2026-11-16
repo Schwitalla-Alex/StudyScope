@@ -94,8 +94,8 @@ public static class MindmapStatusTexts
     public static MindmapStatusText ForSuccess(int topicCount, bool wasRepaired) =>
         wasRepaired
             ? new MindmapStatusText(
-                $"✓ Mindmap mit {topicCount} Themen erstellt. Die Antwort der KI war allerdings unvollständig, daher fehlen eventuell einige Themen.",
-                new[] { "Für eine vollständige Mindmap auf „Neu erstellen“ klicken oder weniger Dokumente aktivieren." },
+                $"✓ Mindmap mit {topicCount} Themen erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Themen.",
+                new[] { "Für eine vollständige Mindmap auf „Neu erstellen“ klicken – die KI antwortet jedes Mal etwas anders.", "Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird." },
                 null)
             : new MindmapStatusText(
                 $"✓ Mindmap mit {topicCount} Themen erstellt. Klicken Sie auf ein Thema für Details.",

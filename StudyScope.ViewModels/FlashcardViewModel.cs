@@ -261,11 +261,16 @@ public class FlashcardViewModel : INotifyPropertyChanged
         return cleaned;
     }
 
-    public async Task GenerateCardsFromDocumentsAsync(string profileName, IEnumerable<DocumentItem> documents, int cardCount = 5)
+    /// <summary>
+    /// Erzeugt neue Karten aus den aktivierten Dokumenten und ersetzt damit den Stapel des Profils.
+    /// Liefert die Anzahl der erzeugten Karten. Liefert die KI keine verwertbaren Karten (0),
+    /// bleibt der vorhandene Stapel unverändert. Fehler des KI-Dienstes werden weitergereicht.
+    /// </summary>
+    public async Task<int> GenerateCardsFromDocumentsAsync(string profileName, IEnumerable<DocumentItem> documents, int cardCount = 5)
     {
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (!selectedDocs.Any())
-            return;
+            return 0;
 
         IsGenerating = true;
         try
@@ -279,6 +284,10 @@ public class FlashcardViewModel : INotifyPropertyChanged
 
             var generatedCards = await _flashcardService.GenerateFlashcardsAsync(allChunks, cardCount);
 
+            // Keine verwertbare Antwort: vorhandene Karten (samt Lernstand) nicht durch einen leeren Stapel ersetzen
+            if (generatedCards == null || generatedCards.Count == 0)
+                return 0;
+
             Flashcards.Clear();
             foreach (var card in generatedCards)
             {
@@ -290,6 +299,7 @@ public class FlashcardViewModel : INotifyPropertyChanged
             CurrentIndex = 0;
             IsAnswerRevealed = false;
             NotifyFilterChanged();
+            return generatedCards.Count;
         }
         finally
         {

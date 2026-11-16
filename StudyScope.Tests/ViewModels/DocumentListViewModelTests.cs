@@ -155,12 +155,68 @@ public class DocumentListViewModelTests
         await viewModel.LoadDocumentsAsync();
 
         // Act & Assert - Deselect all
-        viewModel.DeselectAll();
+        await viewModel.DeselectAllAsync();
         Assert.That(viewModel.Documents.All(d => !d.IsSelected), Is.True);
 
         // Act & Assert - Select all
-        viewModel.SelectAll();
+        await viewModel.SelectAllAsync();
         Assert.That(viewModel.Documents.All(d => d.IsSelected), Is.True);
+    }
+
+    [Test]
+    public async Task SetDocumentSelectedAsync_SpeichertUndMeldetAktiveAnzahl()
+    {
+        var testDocs = new List<DocumentItem>
+        {
+            new() { FileName = "Doc1.pdf", IsSelected = true },
+            new() { FileName = "Doc2.pdf", IsSelected = true }
+        };
+        _storageServiceMock.Setup(s => s.LoadDocumentsAsync(It.IsAny<string>())).ReturnsAsync(testDocs);
+        var viewModel = new DocumentListViewModel(_storageServiceMock.Object, _pdfServiceMock.Object);
+        await viewModel.LoadDocumentsAsync();
+        var changed = new List<string?>();
+        viewModel.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        await viewModel.SetDocumentSelectedAsync(viewModel.Documents[0], false);
+
+        Assert.That(viewModel.Documents[0].IsSelected, Is.False);
+        Assert.That(viewModel.ActiveDocumentCount, Is.EqualTo(1));
+        Assert.That(changed, Does.Contain(nameof(DocumentListViewModel.ActiveDocumentCount)));
+        _storageServiceMock.Verify(s => s.SaveDocumentsAsync(It.IsAny<string>(),
+            It.Is<IEnumerable<DocumentItem>>(d => d.Count(x => x.IsSelected) == 1)), Times.Once);
+    }
+
+    [Test]
+    public async Task DeselectAllAsync_SpeichertDenZustand()
+    {
+        var testDocs = new List<DocumentItem> { new() { FileName = "Doc1.pdf", IsSelected = true } };
+        _storageServiceMock.Setup(s => s.LoadDocumentsAsync(It.IsAny<string>())).ReturnsAsync(testDocs);
+        var viewModel = new DocumentListViewModel(_storageServiceMock.Object, _pdfServiceMock.Object);
+        await viewModel.LoadDocumentsAsync();
+
+        await viewModel.DeselectAllAsync();
+
+        Assert.That(viewModel.ActiveDocumentCount, Is.EqualTo(0));
+        _storageServiceMock.Verify(s => s.SaveDocumentsAsync(It.IsAny<string>(),
+            It.Is<IEnumerable<DocumentItem>>(d => d.All(x => !x.IsSelected))), Times.Once);
+    }
+
+    [Test]
+    public async Task ActiveDocumentCount_HaengtNichtVomSuchbegriffAb()
+    {
+        var testDocs = new List<DocumentItem>
+        {
+            new() { FileName = "Alpha.pdf", IsSelected = true },
+            new() { FileName = "Beta.pdf", IsSelected = true }
+        };
+        _storageServiceMock.Setup(s => s.LoadDocumentsAsync(It.IsAny<string>())).ReturnsAsync(testDocs);
+        var viewModel = new DocumentListViewModel(_storageServiceMock.Object, _pdfServiceMock.Object);
+        await viewModel.LoadDocumentsAsync();
+
+        viewModel.SearchText = "Alpha";
+
+        Assert.That(viewModel.FilteredDocuments.Count(), Is.EqualTo(1));
+        Assert.That(viewModel.ActiveDocumentCount, Is.EqualTo(2));
     }
 
     [Test]

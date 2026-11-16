@@ -1,4 +1,4 @@
-using Moq;
+﻿using Moq;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels;
@@ -95,6 +95,20 @@ public class MindmapViewModelTests
         Assert.That(_viewModel.StatusMessage, Does.Contain("Fehler gemeldet"));
         Assert.That(_viewModel.StatusTips.Any(t => t.Contains("Netzwerkfehler zu Google Gemini")), Is.True);
         Assert.That(_mindmapService.Saved, Is.Empty);
+    }
+
+    [Test]
+    public async Task GenerateAsync_DienstGestoert_NenntDenDienstfehlerStattKeineThemen()
+    {
+        _mindmapService.NextException = StudyScope.Core.Common.LlmServiceException.FromHttpStatus("Mistral AI", 503,
+            "{\"object\":\"error\",\"message\":\"Service unavailable.\"}");
+
+        await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+
+        Assert.That(_viewModel.IsError, Is.True);
+        Assert.That(_viewModel.StatusMessage, Does.Contain("Mistral AI").And.Contain("HTTP 503").And.Contain("gestört"));
+        Assert.That(_viewModel.StatusMessage, Does.Not.Contain("keine Themen"));
+        Assert.That(_viewModel.IsGenerating, Is.False);
     }
 
     [Test]
@@ -381,6 +395,7 @@ public class MindmapViewModelTests
     private sealed class FakeMindmapService : IMindmapService
     {
         public MindmapGenerationResult NextResult { get; set; } = new();
+        public Exception? NextException { get; set; }
         public int GenerateCalls { get; private set; }
         public string? LastRootTitle { get; private set; }
         public Dictionary<string, MindmapDocument> Saved { get; } = new();
@@ -389,7 +404,7 @@ public class MindmapViewModelTests
         {
             GenerateCalls++;
             LastRootTitle = rootTitle;
-            return Task.FromResult(NextResult);
+            return NextException != null ? Task.FromException<MindmapGenerationResult>(NextException) : Task.FromResult(NextResult);
         }
 
         public Task<MindmapDocument?> LoadMindmapAsync(string profileName) =>

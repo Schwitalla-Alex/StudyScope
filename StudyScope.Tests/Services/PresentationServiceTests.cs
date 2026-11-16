@@ -1,4 +1,4 @@
-using System.IO.Compression;
+﻿using System.IO.Compression;
 using System.Xml.Linq;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -217,9 +217,19 @@ public class PresentationServiceTests
 
         var organellenSlides = presentation.Slides.Where(s => s.Title.StartsWith("Organellen")).ToList();
         Assert.That(organellenSlides, Has.Count.EqualTo(2));
-        Assert.That(organellenSlides[0].Bullets, Has.Count.EqualTo(PresentationService.MaxBulletsPerSlide));
+        Assert.That(organellenSlides[0].Bullets, Has.Count.EqualTo(5), "9 Punkte gleichmäßig verteilt: 5 + 4");
         Assert.That(organellenSlides[1].Title, Is.EqualTo("Organellen (Fortsetzung)"));
-        Assert.That(organellenSlides[1].Bullets, Has.Count.EqualTo(3));
+        Assert.That(organellenSlides[1].Bullets, Has.Count.EqualTo(4));
+    }
+
+    [Test]
+    public void CreateFromMindmap_SevenSubtopics_KeineFortsetzungsfolieMitNurEinemPunkt()
+    {
+        var presentation = CreateService().CreateFromMindmap(CreateMindmap(branchChildren: 7));
+
+        var organellenSlides = presentation.Slides.Where(s => s.Title.StartsWith("Organellen")).ToList();
+        Assert.That(organellenSlides.Select(s => s.Bullets.Count), Is.EqualTo(new[] { 4, 3 }));
+        Assert.That(organellenSlides.All(s => s.Bullets.Count <= PresentationService.MaxBulletsPerSlide), Is.True);
     }
 
     // ---------- Speicherung ----------

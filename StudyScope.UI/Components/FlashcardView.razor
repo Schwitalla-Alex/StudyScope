@@ -452,16 +452,30 @@
         isErrorMessage = false;
         statusMessage = null;
 
-        var oldCount = FlashVm.Flashcards.Count;
-        await FlashVm.GenerateCardsFromDocumentsAsync(
-            DocVm.CurrentProfile,
-            DocVm.Documents,
-            selectedCardCount);
-
-        var addedCount = FlashVm.Flashcards.Count - oldCount;
-        if (addedCount > 0)
+        var hadCards = FlashVm.Flashcards.Count > 0;
+        try
         {
-            statusMessage = $"✓ Es wurden {addedCount} neue Lernkarteikarten erfolgreich erstellt!";
+            var createdCount = await FlashVm.GenerateCardsFromDocumentsAsync(
+                DocVm.CurrentProfile,
+                DocVm.Documents,
+                selectedCardCount);
+
+            if (createdCount > 0)
+            {
+                statusMessage = $"✓ Es wurden {createdCount} neue Lernkarteikarten erfolgreich erstellt!";
+            }
+            else
+            {
+                isErrorMessage = true;
+                statusMessage = "⚠️ Die KI hat keine verwertbaren Karteikarten geliefert. Bitte erneut auf „Neue Karten erstellen“ klicken."
+                    + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
+            }
+        }
+        catch (Exception ex)
+        {
+            isErrorMessage = true;
+            statusMessage = $"⚠️ Fehler beim Erstellen der Karteikarten: {ex.Message}"
+                + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
         }
 
         await EnsureFocusAsync();

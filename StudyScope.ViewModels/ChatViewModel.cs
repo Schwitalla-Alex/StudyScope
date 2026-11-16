@@ -1,10 +1,12 @@
-﻿using StudyScope.Core.Interfaces;
+﻿using StudyScope.Core.Common;
+using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace StudyScope.ViewModels;
 
@@ -25,6 +27,64 @@ public class ChatViewModel : INotifyPropertyChanged
         _pdfService = pdfService;
         _documentListViewModel = documentListViewModel;
         Messages = new ObservableCollection<ChatMessage>();
+
+        // Gesprächsverlauf je Profil getrennt halten (Datenschutz: kein Verlauf aus anderen Profilen sichtbar)
+        _activeProfile = documentListViewModel?.CurrentProfile ?? string.Empty;
+        if (documentListViewModel != null)
+            documentListViewModel.PropertyChanged += OnDocumentListPropertyChanged;
+    }
+
+    // Verläufe der gerade nicht angezeigten Profile (nur im Speicher, wie bisher kein Speichern auf Platte)
+    private readonly Dictionary<string, List<ChatMessage>> _historyByProfile = new(StringComparer.OrdinalIgnoreCase);
+    private string _activeProfile;
+
+    /// <summary>Profil, dessen Gesprächsverlauf gerade in <see cref="Messages"/> angezeigt wird.</summary>
+    public string ActiveProfile => _activeProfile;
+
+    private void OnDocumentListPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocumentListViewModel.CurrentProfile))
+            SwitchToProfile(_documentListViewModel.CurrentProfile);
+    }
+
+    /// <summary>
+    /// Zeigt den Verlauf eines anderen Profils an. Der bisherige Verlauf bleibt für die Rückkehr erhalten.
+    /// </summary>
+    public void SwitchToProfile(string? profileName)
+    {
+        var target = profileName ?? string.Empty;
+        if (string.Equals(target, _activeProfile, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        _historyByProfile[_activeProfile] = Messages.ToList();
+        Messages.Clear();
+        if (_historyByProfile.Remove(target, out var stored))
+        {
+            foreach (var message in stored)
+                Messages.Add(message);
+        }
+
+        _activeProfile = target;
+        ExportStatusMessage = string.Empty;
+        OnPropertyChanged(nameof(Messages));
+        OnPropertyChanged(nameof(ActiveProfile));
+    }
+
+    /// <summary>
+    /// Fügt eine Nachricht dem Verlauf des angegebenen Profils hinzu – auch wenn inzwischen ein anderes Profil angezeigt wird
+    /// (z. B. eine Antwort, die erst nach einem Profilwechsel eintrifft).
+    /// </summary>
+    private void AddMessage(string profileName, ChatMessage message)
+    {
+        if (string.Equals(profileName, _activeProfile, StringComparison.OrdinalIgnoreCase))
+        {
+            Messages.Add(message);
+            return;
+        }
+
+        if (!_historyByProfile.TryGetValue(profileName, out var list))
+            _historyByProfile[profileName] = list = new List<ChatMessage>();
+        list.Add(message);
     }
 
     public ObservableCollection<ChatMessage> Messages { get; }
@@ -113,25 +173,40 @@ public class ChatViewModel : INotifyPropertyChanged
         await SendPromptAsync();
     }
 
-    private List<string> GetMostRelevantChunks(string query, List<string> allChunks, int maxChunks = 8)
+    // Füllwörter, die in fast jedem Text vorkommen und die Suche verfälschen würden
+    private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "wer", "wie", "was", "wo", "wann", "warum", "welche", "welcher", "welches", "wieso", "weshalb",
+        "der", "die", "das", "ein", "eine", "einer", "eines", "einem", "einen", "und", "oder", "ist",
+        "sind", "in", "im", "dem", "den", "des", "auf", "zu", "zum", "zur", "mit", "von", "vom", "du", "sie", "es",
+        "ich", "mir", "mich", "mein", "meine", "meiner", "meinen", "meinem", "wir", "uns", "unsere", "ihr", "ihre", "ihnen",
+        "für", "über", "bei", "aus", "als", "auch", "nicht", "kein", "keine", "wird", "werden", "wurde", "kann", "können",
+        "muss", "müssen", "soll", "sollte", "nach", "sich", "dass", "dies", "diese", "dieser", "dieses", "hier", "dort",
+        "bitte", "erkläre", "erklären", "erklär", "beschreibe", "beschreiben", "nenne", "nennen", "gib", "gibt",
+        "anhand", "zusammenhang", "zusammenhängen", "unterlagen", "dokument", "dokumente", "dokumenten", "text", "textes"
+    };
+
+    /// <summary>
+    /// Zerlegt eine Frage in Suchwörter: trennt an allen Zeichen außer Buchstaben und Ziffern
+    /// (also auch an typografischen Anführungszeichen „ “ und Bindestrichen) und entfernt Füllwörter.
+    /// </summary>
+    public static List<string> ExtractSearchWords(string query) =>
+        Regex.Split(query ?? string.Empty, @"[^\p{L}\p{N}]+")
+            .Select(w => w.ToLowerInvariant())
+            .Where(w => w.Length > 2 && !StopWords.Contains(w))
+            .Distinct()
+            .ToList();
+
+    /// <summary>
+    /// Wählt die passendsten Textabschnitte per Stichwort-Treffer. Gibt es weniger Treffer als <paramref name="maxChunks"/>,
+    /// wird mit den übrigen Abschnitten (in Dokumentreihenfolge) aufgefüllt, damit die KI genug Zusammenhang erhält.
+    /// </summary>
+    public static List<string> GetMostRelevantChunks(string query, List<string> allChunks, int maxChunks = 8)
     {
         if (allChunks == null || !allChunks.Any())
             return new List<string>();
 
-        // Zerlege die Frage in einzelne Suchwörter (Stoppwörter herausfiltern)
-        var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "wer", "wie", "was", "wo", "wann", "warum", "welche", "welcher", "welches",
-            "der", "die", "das", "ein", "eine", "einer", "eines", "und", "oder", "ist",
-            "sind", "in", "im", "dem", "den", "auf", "zu", "mit", "von", "du", "sie", "es"
-        };
-
-        var queryWords = query
-            .Split(new[] { ' ', '?', '!', '.', ',', ';', ':', '-', '\"', '\'' }, StringSplitOptions.RemoveEmptyEntries)
-            .Where(w => w.Length > 2 && !stopWords.Contains(w))
-            .Select(w => w.ToLowerInvariant())
-            .Distinct()
-            .ToList();
+        var queryWords = ExtractSearchWords(query);
 
         // Falls keine aussagekräftigen Suchbegriffe übrig bleiben, Standard-Auswahl nehmen
         if (!queryWords.Any())
@@ -139,7 +214,7 @@ public class ChatViewModel : INotifyPropertyChanged
 
         // Chunks anhand von Treffern bewerten
         var scoredChunks = allChunks
-            .Select(chunk =>
+            .Select((chunk, index) =>
             {
                 var lowerChunk = chunk.ToLowerInvariant();
                 var score = 0;
@@ -157,26 +232,20 @@ public class ChatViewModel : INotifyPropertyChanged
                     }
                 }
 
-                return new { Chunk = chunk, Score = score };
+                return new { Chunk = chunk, Index = index, Score = score };
             })
-            .OrderByDescending(x => x.Score)
             .ToList();
 
-        // Chunks mit Relevanz bevorzugen
-        var relevantHits = scoredChunks
+        // Chunks mit Relevanz bevorzugen, danach in Dokumentreihenfolge auffüllen
+        return scoredChunks
             .Where(x => x.Score > 0)
-            .Select(x => x.Chunk)
+            .OrderByDescending(x => x.Score)
+            .ThenBy(x => x.Index)
+            .Concat(scoredChunks.Where(x => x.Score == 0).OrderBy(x => x.Index))
             .Take(maxChunks)
+            .Select(x => x.Chunk)
             .ToList();
-
-        if (!relevantHits.Any())
-        {
-            return allChunks.Take(maxChunks).ToList();
-        }
-
-        return relevantHits;
     }
-
     /// <summary>
     /// Bricht die aktuell laufende KI-Anfrage ab.
     /// </summary>
@@ -195,6 +264,9 @@ public class ChatViewModel : INotifyPropertyChanged
 
         var promptText = CurrentInputPrompt.Trim();
         CurrentInputPrompt = string.Empty;
+
+        // Profil merken: Die Antwort gehört in dessen Verlauf, auch wenn zwischendurch gewechselt wird
+        var requestProfile = _activeProfile;
 
         // 1. Benutzer-Nachricht anfügen
         Messages.Add(new ChatMessage
@@ -239,13 +311,16 @@ public class ChatViewModel : INotifyPropertyChanged
             // 3. Antwort vom KI-Service abrufen
             var response = await _llmService.AskQuestionAsync(promptText, relevantChunks, _cancellationTokenSource.Token);
 
+            // Der Dienst meldet einen Abbruch teils als Text statt als Ausnahme – wie einen Abbruch behandeln
+            _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+
             if (string.IsNullOrWhiteSpace(response))
             {
                 response = "Keine Antwort vom Sprachmodell erhalten.";
             }
 
             // 4. KI-Antwort genau einmal anfügen
-            Messages.Add(new ChatMessage
+            AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.Assistant,
                 Content = response
@@ -253,15 +328,23 @@ public class ChatViewModel : INotifyPropertyChanged
         }
         catch (OperationCanceledException)
         {
-            Messages.Add(new ChatMessage
+            AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.System,
                 Content = "Anfrage wurde durch den Benutzer abgebrochen."
             });
         }
+        catch (LlmServiceException ex)
+        {
+            AddMessage(requestProfile, new ChatMessage
+            {
+                Role = MessageRole.System,
+                Content = ex.UserMessage
+            });
+        }
         catch (Exception ex)
         {
-            Messages.Add(new ChatMessage
+            AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.System,
                 Content = $"Fehler bei der Anfrage: {ex.Message}"

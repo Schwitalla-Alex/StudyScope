@@ -52,10 +52,16 @@ Schichtenaufbau mit Abhängigkeiten nur nach innen:
 
 `LlmServiceDispatcher` ist die einzige `ILlmService`-Implementierung im Betrieb: Bei jedem Aufruf lädt er die `AiConfig` des **aktiven Profils** (`last_profile.txt` → `LoadAiConfigForProfileAsync`, dieselbe Quelle wie die Statusleiste; nur wenn das Profil gar keine Einstellung hat, die globale `config.json`) und verzweigt per `switch` auf `SelectedProvider` (Ollama nativ, Gemini nativ, Mistral, sonst OpenAI-kompatibler Pfad für LM Studio/OpenAI/Custom). Ein neuer Provider braucht: Enum-Wert in `AiConfig.cs`, Fälle in `AskQuestionAsync` **und** `ValidateConnectionAsync`, sowie UI in `SettingsModal.razor`/`SettingsViewModel`. `FakeAi` ist der Standard-/Testmodus und liefert für Karteikarten-Prompts (enthält „Lernkarteikarten“ oder „JSON“) ein festes JSON-Array.
 
+- Fehler des Dienstes (HTTP-Status, Netzwerk, Zeitüberschreitung, unerwartete Antwort) wirft der Dispatcher als `LlmServiceException` (Core/Common, `Message` ist ein deutscher Satz mit Handlungsempfehlung je Status, technische Antwort in `Detail`) – **nie** als Antworttext, sonst werten die Dienste die Fehlermeldung als Inhalt aus. Nur ein Abbruch durch den Benutzer liefert `LlmServiceDispatcher.CancelledResponse`. Die ViewModels zeigen `ex.Message` an; `LocalLlmDiscoveryService` meldet HTTP-Fehler der Cloud-Modellabrufe ebenso.
+- Systemanweisungen: `RagSystemPrompt` (Chat: nur aus den Auszügen antworten, sonst ausdrücklich sagen, dass nichts drinsteht) bzw. `JsonSystemPrompt`. Strukturierte Aufträge der Dienste (Prompt enthält „JSON-Array“, `IsStructuredJsonPrompt`) laufen bei Mistral und OpenAI im JSON-Modus (`response_format: json_object`, Anweisung `{"items": [...]}`); `UnwrapJsonItems` gibt den Diensten wieder das Array. LM Studio/Custom ohne JSON-Modus. Gemini-Schlüssel per Header `x-goog-api-key`, nie in der URL.
+
 ### RAG und Karteikarten
 
 - `DocumentService` extrahiert Text (PDF via PdfPig) und zerlegt ihn in Chunks (Standard 250 Wörter).
-- Retrieval ist **kein** Embedding-Verfahren: `ChatViewModel.GetMostRelevantChunks` bewertet Chunks per Stichwort-Treffer (mit deutscher Stoppwortliste) und gibt die Top 8 an das LLM.
+- Retrieval ist **kein** Embedding-Verfahren: `ChatViewModel.GetMostRelevantChunks` bewertet Chunks per Stichwort-Treffer (`ExtractSearchWords` trennt an allen Nicht-Buchstaben/-Ziffern, also auch an „ “ und Bindestrichen, deutsche Stoppwortliste) und gibt die Top 8 an das LLM; bei weniger Treffern wird in Dokumentreihenfolge aufgefüllt.
+- Der Chatverlauf ist je Profil getrennt (nur im Speicher): `ChatViewModel` reagiert auf `DocumentListViewModel.CurrentProfile`; eine Antwort, die nach einem Profilwechsel eintrifft, landet im Verlauf des fragenden Profils.
+- Profile: `DocumentListViewModel.ValidateProfileName` lehnt neben ungültigen Zeichen auch vorhandene Namen (ohne Groß-/Kleinschreibung, inkl. „Standard“) ab – ein erneutes Anlegen würde sonst die Dokumentliste überschreiben. Häkchen und „Alle an/aus“ laufen über `SetDocumentSelectedAsync`/`SelectAllAsync`/`DeselectAllAsync` (speichern sofort, `ActiveDocumentCount` für die Statusleiste, unabhängig vom Suchbegriff).
+- Karteikarten: Liefert die KI keine verwertbaren Karten, bleibt der vorhandene Stapel unverändert (`GenerateCardsFromDocumentsAsync` gibt 0 zurück).
 - `FlashcardService` lässt das LLM ein JSON-Array mit `question`/`answer` erzeugen und parst es; außerdem Markdown-Export und Druck.
 
 ### Mindmap

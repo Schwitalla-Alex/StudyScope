@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -217,7 +217,7 @@ public class PresentationViewModel : INotifyPropertyChanged
 
             if (result.WasRepaired)
             {
-                ShowStatus($"✓ Präsentation mit {presentation.Slides.Count} Folien erstellt. Die Antwort der KI war allerdings unvollständig, daher fehlen eventuell einige Folien.",
+                ShowStatus($"✓ Präsentation mit {presentation.Slides.Count} Folien erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Folien.",
                     isError: false, new[] { "Für eine vollständige Präsentation erneut erstellen oder weniger Folien bzw. Dokumente wählen." }, isWarning: true);
             }
             else

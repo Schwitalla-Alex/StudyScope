@@ -80,6 +80,40 @@ public class FlashcardViewModelTests
     }
 
     [Test]
+    public async Task GenerateCardsAsync_KeineVerwertbarenKarten_BehaeltVorhandenenStapel()
+    {
+        var docs = new List<DocumentItem> { new() { FileName = "Test.pdf", FilePath = "C:/Test.pdf", IsSelected = true } };
+        _pdfServiceMock.Setup(p => p.ExtractChunksAsync("C:/Test.pdf")).ReturnsAsync(new List<string> { "Abschnitt" });
+        _flashcardServiceMock.SetupSequence(s => s.GenerateFlashcardsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<int>()))
+            .ReturnsAsync(new List<Flashcard> { new() { Question = "Alt?", Answer = "Alt", Status = FlashcardStatus.Known } })
+            .ReturnsAsync(new List<Flashcard>());
+
+        Assert.That(await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs), Is.EqualTo(1));
+        _flashcardServiceMock.Invocations.Clear();
+
+        var count = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs);
+
+        Assert.That(count, Is.EqualTo(0));
+        Assert.That(_viewModel.Flashcards.Single().Question, Is.EqualTo("Alt?"));
+        Assert.That(_viewModel.IsGenerating, Is.False);
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<Flashcard>>()), Times.Never);
+    }
+
+    [Test]
+    public void GenerateCardsAsync_DienstFehler_WirdWeitergereichtUndStapelBleibt()
+    {
+        var docs = new List<DocumentItem> { new() { FileName = "Test.pdf", FilePath = "C:/Test.pdf", IsSelected = true } };
+        _pdfServiceMock.Setup(p => p.ExtractChunksAsync("C:/Test.pdf")).ReturnsAsync(new List<string> { "Abschnitt" });
+        _flashcardServiceMock.Setup(s => s.GenerateFlashcardsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<int>()))
+            .ThrowsAsync(StudyScope.Core.Common.LlmServiceException.FromHttpStatus("Mistral AI", 503, "{}"));
+
+        Assert.ThrowsAsync<StudyScope.Core.Common.LlmServiceException>(() => _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs));
+
+        Assert.That(_viewModel.IsGenerating, Is.False);
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<Flashcard>>()), Times.Never);
+    }
+
+    [Test]
     public void FlipCard_ShouldToggleIsAnswerRevealed()
     {
         // Arrange

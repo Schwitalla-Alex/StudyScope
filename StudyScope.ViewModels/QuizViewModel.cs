@@ -568,7 +568,7 @@ public class QuizViewModel : INotifyPropertyChanged
             else if (hints.Count > 0 || wasRepaired)
             {
                 ShowStatus("Das Quiz läuft. Hinweis:", isError: false,
-                    hints.Concat(wasRepaired ? new[] { "Eine Antwort der KI war unvollständig; es wurden nur vollständige Fragen übernommen." } : Array.Empty<string>()).ToList(),
+                    hints.Concat(wasRepaired ? new[] { "Eine Antwort der KI war unvollständig oder fehlerhaft; es wurden nur vollständige Fragen übernommen." } : Array.Empty<string>()).ToList(),
                     isWarning: true);
             }
         }

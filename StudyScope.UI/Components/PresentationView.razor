@@ -23,6 +23,15 @@
                     <span class="pp-spinner"></span> Abbrechen
                 </button>
             }
+            else if (pendingReplace != null)
+            {
+                <!-- Rückfrage: Eine vorhandene Präsentation würde ersetzt -->
+                <span style="font-size: 13px; color: #856404; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; padding: 5px 10px;">
+                    Die vorhandene Präsentation wird ersetzt.
+                </span>
+                <button type="button" class="pp-btn" style="background: #dc3545;" @onclick="ConfirmReplaceAsync">Ersetzen</button>
+                <button type="button" class="pp-btn" style="background: #6c757d;" @onclick="() => pendingReplace = null">Abbrechen</button>
+            }
             else
             {
                 <label style="font-size: 13px; color: #495057;" title="Anzahl der Inhaltsfolien bei „Mit KI erstellen“">Folien:</label>
@@ -310,9 +319,34 @@
         }
     }
 
-    private Task GenerateAsync() => PresVm.GenerateFromDocumentsAsync(DocVm.CurrentProfile, DocVm.Documents);
+    // Rückfrage, bevor eine vorhandene Präsentation ersetzt wird: "ki" oder "mindmap"
+    private string? pendingReplace;
 
-    private Task FromMindmapAsync() => PresVm.CreateFromMindmapAsync(DocVm.CurrentProfile);
+    private Task GenerateAsync() => StartOrConfirm("ki");
+
+    private Task FromMindmapAsync() => StartOrConfirm("mindmap");
+
+    private Task StartOrConfirm(string kind)
+    {
+        if (PresVm.HasPresentation)
+        {
+            pendingReplace = kind;
+            return Task.CompletedTask;
+        }
+
+        return RunAsync(kind);
+    }
+
+    private Task ConfirmReplaceAsync()
+    {
+        var kind = pendingReplace;
+        pendingReplace = null;
+        return kind == null ? Task.CompletedTask : RunAsync(kind);
+    }
+
+    private Task RunAsync(string kind) => kind == "ki"
+        ? PresVm.GenerateFromDocumentsAsync(DocVm.CurrentProfile, DocVm.Documents)
+        : PresVm.CreateFromMindmapAsync(DocVm.CurrentProfile);
 
     private Task DeleteAsync() => PresVm.DeleteAsync(DocVm.CurrentProfile);
 

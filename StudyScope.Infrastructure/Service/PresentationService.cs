@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -261,13 +261,16 @@ public class PresentationService : IPresentationService
         var cleaned = bullets.Select(Clean).Where(b => b.Length > 0).ToList();
         var pages = Math.Max(1, (int)Math.Ceiling(cleaned.Count / (double)MaxBulletsPerSlide));
 
+        // Gleichmäßig verteilen (7 Punkte: 4 + 3 statt 6 + 1), damit keine Fortsetzungsfolie mit nur einem Punkt entsteht
+        var perPage = Math.Max(1, (int)Math.Ceiling(cleaned.Count / (double)pages));
+
         for (var page = 0; page < pages; page++)
         {
             presentation.Slides.Add(new PresentationSlide
             {
                 Kind = SlideKind.Content,
                 Title = page == 0 ? Clean(title) : $"{Clean(title)} (Fortsetzung)",
-                Bullets = cleaned.Skip(page * MaxBulletsPerSlide).Take(MaxBulletsPerSlide).ToList(),
+                Bullets = cleaned.Skip(page * perPage).Take(perPage).ToList(),
                 Notes = page == 0 ? notes.Trim() : string.Empty
             });
         }
