@@ -14,6 +14,12 @@ public class FakeLlmService : ILlmService
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
+        // Bericht zuerst: eine eigene Vorgabe des Benutzers kann Wörter wie "Mindmap" enthalten
+        if (FakeReportResponse.IsReportPrompt(prompt))
+        {
+            return Task.FromResult(FakeReportResponse.Create(prompt, chunks));
+        }
+
         // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
         {

@@ -17,6 +17,7 @@
 - 🧠 **Mindmap:** Die KI ordnet die Inhalte der aktivierten Dokumente als aufklappbaren Themenbaum an. Ein Klick auf ein Thema zeigt eine Kurzerklärung und stellt auf Wunsch eine passende Frage im Chat; Export als Markdown-Gliederung oder als Grafik über „Drucken / PDF“.
 - 📽️ **Präsentation:** Folien mit Stichpunkten und Sprechernotizen – von der KI aus den Dokumenten erstellt oder sofort aus der Mindmap abgeleitet. Vortragsmodus im Vollbild (Pfeiltasten, Esc), Export als PDF (eine Folie pro Seite) und als PowerPoint-Datei (`.pptx`).
 - ❓ **Quiz:** Themen selbst anlegen (mit zugeordneten Dokumenten) oder von der KI vorschlagen lassen, mehrere Themen zu einem Quiz mit 5–100 Fragen kombinieren. Fragetypen: Multiple Choice, Wahr/Falsch und mehrere richtige Antworten. Lernmodus (Rückmeldung mit Erklärung nach jeder Frage) oder Prüfungsmodus (Auswertung am Ende), Verlauf mit Statistik je Thema und „Falsche wiederholen“.
+- 📑 **Berichte:** Aus den aktivierten Dokumenten einen Bericht erstellen lassen – Vorlagen Lernübersicht, Zusammenfassung/Briefing, Glossar, FAQ oder eigene Vorgabe. Der Bericht wird interaktiv angezeigt und kann Mindmap, Karteikarten, Selbsttest (Quizfragen) und Präsentation einbetten. Mehrere Berichte je Profil; Export als Word (.docx), PDF, Markdown, Text oder interaktive HTML-Datei.
 - 📁 **Unterstützte Formate:** Volle Unterstützung für `.pdf`, `.txt` und `.csv`.
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**

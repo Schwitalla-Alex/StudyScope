@@ -1,0 +1,151 @@
+namespace StudyScope.Core.Models;
+
+/// <summary>Vorlage eines Berichts – bestimmt Aufbau und Schwerpunkt.</summary>
+public enum ReportTemplate
+{
+    /// <summary>Lernübersicht: wichtige Konzepte, Begriffe, Merksätze und Wiederholungsfragen.</summary>
+    StudyGuide,
+
+    /// <summary>Zusammenfassung / Briefing: Kernaussagen kompakt.</summary>
+    Briefing,
+
+    /// <summary>Glossar: Fachbegriffe mit Erklärung, nach Themen gruppiert.</summary>
+    Glossary,
+
+    /// <summary>FAQ: häufige Fragen mit Antworten.</summary>
+    Faq,
+
+    /// <summary>Eigene Vorgabe des Benutzers.</summary>
+    Custom
+}
+
+/// <summary>Fachbegriff mit Erklärung.</summary>
+public class ReportTerm
+{
+    public string Term { get; set; } = string.Empty;
+    public string Definition { get; set; } = string.Empty;
+}
+
+/// <summary>Frage mit Antwort (FAQ, Wiederholungsfragen).</summary>
+public class ReportQuestion
+{
+    public string Question { get; set; } = string.Empty;
+    public string Answer { get; set; } = string.Empty;
+}
+
+/// <summary>Abschnitt eines Berichts. Alle Teile sind optional – je nach Vorlage werden andere genutzt.</summary>
+public class ReportSection
+{
+    public string Heading { get; set; } = string.Empty;
+    public List<string> Paragraphs { get; set; } = new();
+    public List<string> Bullets { get; set; } = new();
+    public List<ReportTerm> Terms { get; set; } = new();
+    public List<ReportQuestion> Questions { get; set; } = new();
+
+    /// <summary>Merksatz / Kernaussage des Abschnitts.</summary>
+    public string Takeaway { get; set; } = string.Empty;
+}
+
+/// <summary>Welche Studio-Inhalte im interaktiven Bericht (und in den Exporten) eingebettet werden.</summary>
+public class ReportEmbeds
+{
+    public bool Mindmap { get; set; } = true;
+    public bool Flashcards { get; set; } = true;
+    public bool Quiz { get; set; } = true;
+    public bool Presentation { get; set; } = true;
+}
+
+/// <summary>Ein gespeicherter Bericht.</summary>
+public class Report
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString("N");
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>Einleitung bzw. Kurzfassung.</summary>
+    public string Summary { get; set; } = string.Empty;
+
+    public ReportTemplate Template { get; set; } = ReportTemplate.StudyGuide;
+
+    /// <summary>Nur bei <see cref="ReportTemplate.Custom"/>: Vorgabe des Benutzers.</summary>
+    public string CustomInstruction { get; set; } = string.Empty;
+
+    public List<ReportSection> Sections { get; set; } = new();
+    public ReportEmbeds Embeds { get; set; } = new();
+    public List<string> SourceDocuments { get; set; } = new();
+    public DateTime CreatedAt { get; set; } = DateTime.Now;
+}
+
+/// <summary>Alle Berichte eines Profils.</summary>
+public class ReportLibrary
+{
+    public List<Report> Reports { get; set; } = new();
+}
+
+/// <summary>Ergebnis einer Berichtserstellung durch die KI (Misserfolge wie bei der Mindmap eingeordnet).</summary>
+public class ReportGenerationResult
+{
+    public Report? Report { get; init; }
+    public string RawResponse { get; init; } = string.Empty;
+    public bool WasRepaired { get; init; }
+    public MindmapFailureReason FailureReason { get; init; }
+    public bool IsSuccess => Report != null;
+}
+
+/// <summary>
+/// Momentaufnahme der Studio-Inhalte eines Profils, die in einen Bericht eingebettet werden
+/// (Mindmap, Karteikarten, Quizfragen, Präsentation). Leere Teile werden ausgelassen.
+/// </summary>
+public class ReportStudioContent
+{
+    public MindmapDocument? Mindmap { get; init; }
+    public IReadOnlyList<Flashcard> Flashcards { get; init; } = Array.Empty<Flashcard>();
+    public IReadOnlyList<QuizQuestion> QuizQuestions { get; init; } = Array.Empty<QuizQuestion>();
+    public PresentationDocument? Presentation { get; init; }
+
+    public static ReportStudioContent Empty { get; } = new();
+
+    /// <summary>Nur die Teile, die laut <paramref name="embeds"/> gewünscht und vorhanden sind.</summary>
+    public ReportStudioContent Filter(ReportEmbeds embeds) => new()
+    {
+        Mindmap = embeds.Mindmap ? Mindmap : null,
+        Flashcards = embeds.Flashcards ? Flashcards : Array.Empty<Flashcard>(),
+        QuizQuestions = embeds.Quiz ? QuizQuestions : Array.Empty<QuizQuestion>(),
+        Presentation = embeds.Presentation ? Presentation : null
+    };
+
+    public bool HasAny => Mindmap != null || Flashcards.Count > 0 || QuizQuestions.Count > 0 || Presentation is { Slides.Count: > 0 };
+}
+
+/// <summary>Anzeigenamen und Beschreibungen der Berichtsvorlagen (gemeinsam für Oberfläche und Exporte).</summary>
+public static class ReportTemplates
+{
+    public static string DisplayName(ReportTemplate template) => template switch
+    {
+        ReportTemplate.StudyGuide => "Lernübersicht",
+        ReportTemplate.Briefing => "Zusammenfassung / Briefing",
+        ReportTemplate.Glossary => "Glossar",
+        ReportTemplate.Faq => "FAQ",
+        _ => "Eigene Vorgabe"
+    };
+
+    public static string Description(ReportTemplate template) => template switch
+    {
+        ReportTemplate.StudyGuide => "Fasst wichtige Konzepte mit Begriffen, Merksätzen und Wiederholungsfragen zusammen – ideal zum Lernen.",
+        ReportTemplate.Briefing => "Die Kernaussagen kompakt für einen schnellen Überblick, mit Fazit.",
+        ReportTemplate.Glossary => "Die wichtigen Fachbegriffe mit verständlicher Erklärung, nach Themen gruppiert.",
+        ReportTemplate.Faq => "Häufige Fragen zum Stoff mit ausführlichen Antworten.",
+        _ => "Sie beschreiben selbst, was der Bericht enthalten soll."
+    };
+
+    public static string Icon(ReportTemplate template) => template switch
+    {
+        ReportTemplate.StudyGuide => "🎓",
+        ReportTemplate.Briefing => "📋",
+        ReportTemplate.Glossary => "📖",
+        ReportTemplate.Faq => "❔",
+        _ => "✍️"
+    };
+
+    public static IReadOnlyList<ReportTemplate> All { get; } =
+        new[] { ReportTemplate.StudyGuide, ReportTemplate.Briefing, ReportTemplate.Glossary, ReportTemplate.Faq, ReportTemplate.Custom };
+}

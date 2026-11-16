@@ -79,6 +79,10 @@ public class LlmServiceDispatcher : ILlmService
 
     private static string AskFakeAi(string prompt, List<string> chunks)
     {
+        // Bericht vor allem anderen: eine eigene Vorgabe des Benutzers kann "Mindmap" o. Ä. enthalten
+        if (FakeReportResponse.IsReportPrompt(prompt))
+            return FakeReportResponse.Create(prompt, chunks);
+
         // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
             return FakeMindmapResponse.Create(chunks);
