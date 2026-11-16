@@ -82,8 +82,15 @@ public class QuizService : IQuizService
         };
     }
 
+    private static bool IsTopic(JsonElement element) =>
+        element.ValueKind == JsonValueKind.String ||
+        (LenientJson.GetProperty(element, TopicNameKeys) is { ValueKind: JsonValueKind.String } &&
+         !element.EnumerateObject().Any(p => p.Value.ValueKind == JsonValueKind.Array));
+
     public static List<QuizTopicSuggestion>? ParseTopicSuggestions(JsonElement element)
     {
+        // Hülle aus dem JSON-Modus (z. B. {"quizthemen": [...], "dokument": "…"}) auspacken
+        element = LenientJson.Unwrap(element, e => LenientJson.IsArrayOf(e, IsTopic));
         var items = GetObjectList(element, TopicListKeys);
         var result = new List<QuizTopicSuggestion>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -182,6 +189,9 @@ public class QuizService : IQuizService
         var seen = new HashSet<string>((existingTexts ?? Enumerable.Empty<string>()).Select(Normalize));
         var all = new List<QuizQuestion>();
 
+        // Hülle aus dem JSON-Modus (z. B. {"quizfragen": [...], "anzahl": 5}) auspacken
+        element = LenientJson.Unwrap(element, e => IsQuestion(e) || LenientJson.IsArrayOf(e, IsQuestion));
+
         foreach (var item in GetObjectList(element, QuestionListKeys))
         {
             var question = ParseQuestion(item);
@@ -196,6 +206,10 @@ public class QuizService : IQuizService
         var allowed = all.Where(q => allowedTypes.Contains(q.Type)).ToList();
         return allowed.Count > 0 ? allowed : all;
     }
+
+    private static bool IsQuestion(JsonElement element) =>
+        LenientJson.HasAny(element, QuestionKeys) &&
+        (LenientJson.HasAny(element, OptionsKeys) || LenientJson.HasAny(element, CorrectKeys));
 
     private static QuizQuestion? ParseQuestion(JsonElement item)
     {

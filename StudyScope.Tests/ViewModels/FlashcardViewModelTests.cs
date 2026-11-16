@@ -88,12 +88,13 @@ public class FlashcardViewModelTests
             .ReturnsAsync(new List<Flashcard> { new() { Question = "Alt?", Answer = "Alt", Status = FlashcardStatus.Known } })
             .ReturnsAsync(new List<Flashcard>());
 
-        Assert.That(await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs), Is.EqualTo(1));
+        Assert.That((await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs)).Added, Is.EqualTo(1));
         _flashcardServiceMock.Invocations.Clear();
 
-        var count = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs);
+        var result = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs, mode: FlashcardGenerationMode.Replace);
 
-        Assert.That(count, Is.EqualTo(0));
+        Assert.That(result.Added, Is.EqualTo(0));
+        Assert.That(result.Received, Is.EqualTo(0));
         Assert.That(_viewModel.Flashcards.Single().Question, Is.EqualTo("Alt?"));
         Assert.That(_viewModel.IsGenerating, Is.False);
         _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<Flashcard>>()), Times.Never);
@@ -111,6 +112,112 @@ public class FlashcardViewModelTests
 
         Assert.That(_viewModel.IsGenerating, Is.False);
         _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<Flashcard>>()), Times.Never);
+    }
+
+    // ---------------- Hinzufügen oder Ersetzen ----------------
+
+    private List<DocumentItem> SetupDocsReturning(params List<Flashcard>[] batches)
+    {
+        var docs = new List<DocumentItem> { new() { FileName = "Test.pdf", FilePath = "C:/Test.pdf", IsSelected = true } };
+        _pdfServiceMock.Setup(p => p.ExtractChunksAsync("C:/Test.pdf")).ReturnsAsync(new List<string> { "Abschnitt" });
+        var sequence = _flashcardServiceMock.SetupSequence(s => s.GenerateFlashcardsAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<int>()));
+        foreach (var batch in batches)
+            sequence = sequence.ReturnsAsync(batch);
+        return docs;
+    }
+
+    private void AddExistingCards()
+    {
+        _viewModel.Flashcards.Add(new Flashcard { Question = "Was ist RAG?", Answer = "Abruf plus Erzeugung", Status = FlashcardStatus.Known });
+        _viewModel.Flashcards.Add(new Flashcard { Question = "Was ist ein Chunk?", Answer = "Ein Textabschnitt", Status = FlashcardStatus.Difficult });
+    }
+
+    [Test]
+    public async Task GenerateCards_Standard_FuegtHinzuUndBehaeltLernstand()
+    {
+        AddExistingCards();
+        var docs = SetupDocsReturning(new List<Flashcard>
+        {
+            new() { Question = "Was ist Photino?", Answer = "Ein Desktop-Rahmen" },
+            new() { Question = "Wo liegen die Benutzerdaten?", Answer = "Im Benutzerordner" }
+        });
+
+        var result = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs);
+
+        Assert.That(result.Mode, Is.EqualTo(FlashcardGenerationMode.Append), "Standard ist Hinzufügen");
+        Assert.That(result.Added, Is.EqualTo(2));
+        Assert.That(result.SkippedDuplicates, Is.Zero);
+        Assert.That(_viewModel.Flashcards.Select(c => c.Question), Is.EqualTo(new[]
+        {
+            "Was ist RAG?", "Was ist ein Chunk?", "Was ist Photino?", "Wo liegen die Benutzerdaten?"
+        }));
+        Assert.That(_viewModel.Flashcards[0].Status, Is.EqualTo(FlashcardStatus.Known), "Lernstand bleibt erhalten");
+        Assert.That(_viewModel.Flashcards[1].Status, Is.EqualTo(FlashcardStatus.Difficult), "Lernstand bleibt erhalten");
+        Assert.That(_viewModel.CurrentCard?.Question, Is.EqualTo("Was ist Photino?"), "springt zur ersten neuen Karte");
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync("Testprofil", It.Is<IEnumerable<Flashcard>>(c => c.Count() == 4)), Times.Once);
+    }
+
+    [Test]
+    public async Task GenerateCards_Hinzufuegen_LaesstDoppelteFragenWeg()
+    {
+        AddExistingCards();
+        var docs = SetupDocsReturning(new List<Flashcard>
+        {
+            new() { Question = "  was ist   RAG ", Answer = "Andere Antwort" },     // schon im Stapel (Schreibweise egal)
+            new() { Question = "Was ist Photino?", Answer = "Ein Desktop-Rahmen" },
+            new() { Question = "Was ist Photino", Answer = "Doppelt in der Antwort" } // doppelt innerhalb der Antwort
+        });
+
+        var result = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs);
+
+        Assert.That(result.Received, Is.EqualTo(3));
+        Assert.That(result.Added, Is.EqualTo(1));
+        Assert.That(result.SkippedDuplicates, Is.EqualTo(2));
+        Assert.That(_viewModel.Flashcards, Has.Count.EqualTo(3));
+        Assert.That(_viewModel.Flashcards.Single(c => c.Question == "Was ist RAG?").Answer, Is.EqualTo("Abruf plus Erzeugung"), "vorhandene Karte bleibt unverändert");
+    }
+
+    [Test]
+    public async Task GenerateCards_Hinzufuegen_NurWiederholungen_SpeichertNicht()
+    {
+        AddExistingCards();
+        var docs = SetupDocsReturning(new List<Flashcard> { new() { Question = "Was ist ein Chunk?", Answer = "x" } });
+
+        var result = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs);
+
+        Assert.That(result.Added, Is.Zero);
+        Assert.That(result.SkippedDuplicates, Is.EqualTo(1));
+        Assert.That(_viewModel.Flashcards, Has.Count.EqualTo(2));
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync(It.IsAny<string>(), It.IsAny<IEnumerable<Flashcard>>()), Times.Never);
+    }
+
+    [Test]
+    public async Task GenerateCards_Ersetzen_ErsetztStapelSamtLernstand()
+    {
+        AddExistingCards();
+        var docs = SetupDocsReturning(new List<Flashcard>
+        {
+            new() { Question = "Was ist RAG?", Answer = "Neue Antwort" },
+            new() { Question = "Was ist Photino?", Answer = "Ein Desktop-Rahmen" },
+            new() { Question = "was ist photino", Answer = "Doppelt" }
+        });
+
+        var result = await _viewModel.GenerateCardsFromDocumentsAsync("Testprofil", docs, mode: FlashcardGenerationMode.Replace);
+
+        Assert.That(result.Added, Is.EqualTo(2));
+        Assert.That(result.SkippedDuplicates, Is.EqualTo(1), "nur Wiederholungen innerhalb der neuen Karten");
+        Assert.That(_viewModel.Flashcards.Select(c => c.Question), Is.EqualTo(new[] { "Was ist RAG?", "Was ist Photino?" }));
+        Assert.That(_viewModel.Flashcards.All(c => c.Status == FlashcardStatus.New), "alter Lernstand ist weg");
+        Assert.That(_viewModel.CurrentIndex, Is.Zero);
+        _flashcardServiceMock.Verify(s => s.SaveFlashcardsAsync("Testprofil", It.Is<IEnumerable<Flashcard>>(c => c.Count() == 2)), Times.Once);
+    }
+
+    [TestCase("Was ist RAG?", "was ist rag")]
+    [TestCase("  Was   ist\tRAG ?! ", "was ist rag")]
+    [TestCase(null, "")]
+    public void NormalizeQuestion_IgnoriertSchreibweise(string? input, string expected)
+    {
+        Assert.That(FlashcardViewModel.NormalizeQuestion(input), Is.EqualTo(expected));
     }
 
     [Test]

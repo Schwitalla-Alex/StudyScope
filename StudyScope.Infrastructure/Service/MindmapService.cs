@@ -113,9 +113,19 @@ public class MindmapService : IMindmapService
         return new MindmapParseResult(result.Value, result.WasRepaired, result.FailureReason);
     }
 
+    private static bool IsNode(JsonElement element) =>
+        element.ValueKind == JsonValueKind.String ||
+        LenientJson.GetProperty(element, TitleKeys) is { ValueKind: JsonValueKind.String };
+
+    private static bool IsNodeOrNodeList(JsonElement element) =>
+        (element.ValueKind == JsonValueKind.Object && IsNode(element)) || LenientJson.IsArrayOf(element, IsNode);
+
     private static MindmapNode? BuildTree(JsonElement rootElement, string fallbackRootTitle)
     {
         var budget = new NodeBudget(MaxNodes);
+
+        // Hülle aus dem JSON-Modus (z. B. {"mindmap": {...}} oder {"items": [...]}) auspacken
+        rootElement = LenientJson.Unwrap(rootElement, IsNodeOrNodeList);
 
         if (rootElement.ValueKind == JsonValueKind.Object)
             return ParseNode(rootElement, 0, budget);

@@ -80,10 +80,22 @@ public class PresentationService : IPresentationService
     public static LenientJson.Result<PresentationDocument> AnalyzeResponse(string? rawResponse, string fallbackTitle) =>
         LenientJson.Analyze(rawResponse, element => BuildPresentation(element, fallbackTitle));
 
+    private static bool HasSlides(JsonElement element) =>
+        LenientJson.GetProperty(element, SlidesKeys) is { ValueKind: JsonValueKind.Array };
+
+    private static bool IsSlide(JsonElement element) =>
+        LenientJson.HasAny(element, TitleKeys) && LenientJson.HasAny(element, BulletKeys);
+
+    private static bool IsPresentationOrSlideList(JsonElement element) =>
+        HasSlides(element) || LenientJson.IsArrayOf(element, e => HasSlides(e) || IsSlide(e));
+
     private static PresentationDocument? BuildPresentation(JsonElement element, string fallbackTitle)
     {
         string title = string.Empty, subtitle = string.Empty;
         IEnumerable<JsonElement> slideElements;
+
+        // Hülle aus dem JSON-Modus (z. B. {"praesentation": {...}} oder {"items": [...]}) auspacken
+        element = LenientJson.Unwrap(element, IsPresentationOrSlideList);
 
         if (element.ValueKind == JsonValueKind.Array)
         {

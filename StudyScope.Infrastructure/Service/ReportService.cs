@@ -117,8 +117,16 @@ public class ReportService : IReportService
     public static LenientJson.Result<Report> AnalyzeResponse(string? rawResponse, string fallbackTitle) =>
         LenientJson.Analyze(rawResponse, element => BuildReport(element, fallbackTitle));
 
+    private static bool IsReportOrSection(JsonElement element) =>
+        element.ValueKind == JsonValueKind.Object &&
+        (LenientJson.HasAny(element, SectionsKeys) || LenientJson.HasAny(element, HeadingKeys) ||
+         LenientJson.HasAny(element, TermsKeys) || LenientJson.HasAny(element, QuestionListKeys));
+
     private static Report? BuildReport(JsonElement element, string fallbackTitle)
     {
+        // Hülle aus dem JSON-Modus (z. B. {"bericht": {...}} oder {"items": [...]}) auspacken
+        element = LenientJson.Unwrap(element, e => IsReportOrSection(e) || LenientJson.IsArrayOf(e, IsReportOrSection));
+
         var root = element;
         if (element.ValueKind == JsonValueKind.Array)
         {

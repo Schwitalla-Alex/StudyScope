@@ -45,12 +45,74 @@ public class LlmServiceDispatcher : ILlmService
             AiProviderType.FakeAi => true,
             AiProviderType.OllamaLocal => await CheckHttpReachableAsync($"{config.LocalEndpointUrl?.TrimEnd('/')}/api/tags"),
             AiProviderType.LmStudioLocal => await CheckHttpReachableAsync($"{config.LocalEndpointUrl?.TrimEnd('/')}/v1/models"),
-            AiProviderType.GoogleGemini => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.OpenAiGpt4 => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.MistralAi => !string.IsNullOrWhiteSpace(config.ApiKey),
-            AiProviderType.CustomOpenAi => !string.IsNullOrWhiteSpace(config.LocalEndpointUrl),
+            AiProviderType.GoogleGemini => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("Google Gemini", "https://generativelanguage.googleapis.com/v1beta/models",
+                    request => request.Headers.Add("x-goog-api-key", config.ApiKey.Trim())),
+            AiProviderType.OpenAiGpt4 => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("OpenAI", "https://api.openai.com/v1/models", BearerAuth(config.ApiKey)),
+            AiProviderType.MistralAi => !string.IsNullOrWhiteSpace(config.ApiKey) &&
+                await CheckModelListAsync("Mistral AI", "https://api.mistral.ai/v1/models", BearerAuth(config.ApiKey)),
+            AiProviderType.CustomOpenAi => !string.IsNullOrWhiteSpace(config.LocalEndpointUrl) &&
+                await CheckModelListAsync("Der benutzerdefinierte KI-Dienst", CustomModelsUrl(config.LocalEndpointUrl),
+                    BearerAuth(config.ApiKey), notFoundIsReachable: true),
             _ => false
         };
+    }
+
+    /// <summary>Zeitgrenze für „Speichern &amp; Verbinden“ (Abruf der Modellliste).</summary>
+    public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
+
+    private static Action<HttpRequestMessage> BearerAuth(string? apiKey) => request =>
+    {
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey.Trim());
+    };
+
+    /// <summary>…/v1/chat/completions bzw. …/v1 → …/v1/models</summary>
+    private static string CustomModelsUrl(string endpoint)
+    {
+        var baseUrl = endpoint.Trim().TrimEnd('/');
+        if (baseUrl.EndsWith("/chat/completions", StringComparison.OrdinalIgnoreCase))
+            baseUrl = baseUrl[..^"/chat/completions".Length];
+        return baseUrl.EndsWith("/models", StringComparison.OrdinalIgnoreCase) ? baseUrl : $"{baseUrl}/models";
+    }
+
+    /// <summary>
+    /// Prüft Schlüssel und Erreichbarkeit eines Cloud-Dienstes über die (kostenlose) Modellliste.
+    /// Abgelehnter Schlüssel, Störung, Netzwerkfehler oder Zeitüberschreitung werden als <see cref="LlmServiceException"/>
+    /// mit verständlicher Meldung geworfen. <paramref name="notFoundIsReachable"/>: Ein eigener Server ohne
+    /// Modellliste (HTTP 404) gilt trotzdem als erreichbar.
+    /// </summary>
+    private async Task<bool> CheckModelListAsync(string providerName, string url, Action<HttpRequestMessage> authorize, bool notFoundIsReachable = false)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        authorize(request);
+
+        using var cts = new CancellationTokenSource(ValidationTimeout);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(request, cts.Token);
+        }
+        catch (OperationCanceledException ex)
+        {
+            throw new LlmServiceException(
+                $"{providerName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung). Bitte Internetverbindung prüfen und erneut versuchen.",
+                providerName, null, ex.Message, ex);
+        }
+        catch (HttpRequestException ex)
+        {
+            throw LlmServiceException.FromNetworkError(providerName, ex);
+        }
+
+        using (response)
+        {
+            if (response.IsSuccessStatusCode || (notFoundIsReachable && (int)response.StatusCode == 404))
+                return true;
+
+            var body = await response.Content.ReadAsStringAsync();
+            throw LlmServiceException.FromHttpStatus(providerName, (int)response.StatusCode, body);
+        }
     }
 
     public async Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
@@ -228,12 +290,22 @@ public class LlmServiceDispatcher : ILlmService
             if (root.ValueKind != JsonValueKind.Object)
                 return content;
 
-            if (root.TryGetProperty("items", out var items) && items.ValueKind == JsonValueKind.Array)
-                return items.GetRawText();
+            if (root.TryGetProperty("items", out var items))
+            {
+                if (items.ValueKind == JsonValueKind.Array)
+                    return items.GetRawText();
+                if (items.ValueKind == JsonValueKind.Object)
+                    return "[" + items.GetRawText() + "]";
+            }
 
+            // Einzige Eigenschaft als Hülle: {"karteikarten": [...]} bzw. {"mindmap": {...}}
             var properties = root.EnumerateObject().ToList();
             if (properties.Count == 1 && properties[0].Value.ValueKind == JsonValueKind.Array)
                 return properties[0].Value.GetRawText();
+            if (properties.Count == 1 && properties[0].Value.ValueKind == JsonValueKind.Object)
+                return "[" + properties[0].Value.GetRawText() + "]";
+
+            // Mehrere Eigenschaften (z. B. {"karteikarten": [...], "anzahl": 5}) packen die Dienste selbst aus
 
             // Ein einzelnes Objekt (z. B. Mindmap-Wurzel) als Array mit einem Element weitergeben
             return "[" + root.GetRawText() + "]";

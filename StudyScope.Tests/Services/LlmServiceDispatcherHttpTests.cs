@@ -180,6 +180,125 @@ public class LlmServiceDispatcherHttpTests
         Assert.That(LlmServiceDispatcher.IsStructuredJsonPrompt(prompt), Is.EqualTo(expected));
     }
 
+    // ---------------- Verbindungsprüfung („Speichern & Verbinden“) ----------------
+
+    private static AiConfig Config(AiProviderType provider, string apiKey = "DUMMY_TEST_KEY_verbindung", string endpoint = "") => new()
+    {
+        SelectedProvider = provider,
+        ApiKey = apiKey,
+        LocalEndpointUrl = endpoint,
+        SelectedModelName = "testmodell"
+    };
+
+    [TestCase(AiProviderType.MistralAi, "https://api.mistral.ai/v1/models")]
+    [TestCase(AiProviderType.OpenAiGpt4, "https://api.openai.com/v1/models")]
+    public async Task ValidateConnectionAsync_Cloud_RuftModelllisteMitSchluesselAb(AiProviderType provider, string expectedUrl)
+    {
+        _handler.Respond(HttpStatusCode.OK, "{\"object\":\"list\",\"data\":[{\"id\":\"testmodell\"}]}");
+
+        var ok = await CreateDispatcher().ValidateConnectionAsync(Config(provider));
+
+        Assert.That(ok, Is.True);
+        Assert.That(_handler.LastMethod, Is.EqualTo(HttpMethod.Get), "Modellliste per GET – kein kostenpflichtiger Aufruf");
+        Assert.That(_handler.LastRequestUri!.ToString(), Is.EqualTo(expectedUrl));
+        Assert.That(_handler.LastHeaders!.Authorization!.Scheme, Is.EqualTo("Bearer"));
+        Assert.That(_handler.LastHeaders.Authorization.Parameter, Is.EqualTo("DUMMY_TEST_KEY_verbindung"));
+    }
+
+    [Test]
+    public async Task ValidateConnectionAsync_Gemini_SchluesselImHeaderNichtInDerUrl()
+    {
+        _handler.Respond(HttpStatusCode.OK, "{\"models\":[]}");
+
+        var ok = await CreateDispatcher().ValidateConnectionAsync(Config(AiProviderType.GoogleGemini));
+
+        Assert.That(ok, Is.True);
+        Assert.That(_handler.LastMethod, Is.EqualTo(HttpMethod.Get));
+        Assert.That(_handler.LastRequestUri!.ToString(), Is.EqualTo("https://generativelanguage.googleapis.com/v1beta/models"));
+        Assert.That(_handler.LastHeaders!.GetValues("x-goog-api-key").Single(), Is.EqualTo("DUMMY_TEST_KEY_verbindung"));
+    }
+
+    [TestCase(AiProviderType.MistralAi, 401, "Mistral AI", "API-Schlüssel wurde abgelehnt")]
+    [TestCase(AiProviderType.OpenAiGpt4, 403, "OpenAI", "API-Schlüssel wurde abgelehnt")]
+    [TestCase(AiProviderType.GoogleGemini, 401, "Google Gemini", "API-Schlüssel wurde abgelehnt")]
+    [TestCase(AiProviderType.MistralAi, 500, "Mistral AI", "gestört")]
+    [TestCase(AiProviderType.MistralAi, 503, "Mistral AI", "gestört")]
+    [TestCase(AiProviderType.MistralAi, 429, "Mistral AI", "Zu viele Anfragen")]
+    public void ValidateConnectionAsync_Cloud_FehlerWirdVerstaendlichGemeldet(AiProviderType provider, int status, string providerName, string hint)
+    {
+        _handler.Respond((HttpStatusCode)status, "{\"message\":\"Unauthorized\"}");
+
+        var ex = Assert.ThrowsAsync<LlmServiceException>(() => CreateDispatcher().ValidateConnectionAsync(Config(provider)));
+
+        Assert.That(ex!.StatusCode, Is.EqualTo(status));
+        Assert.That(ex.ProviderName, Is.EqualTo(providerName));
+        Assert.That(ex.Message, Does.Contain($"HTTP {status}").And.Contain(hint));
+        Assert.That(ex.Message, Does.Not.Contain("DUMMY_TEST_KEY"), "Schlüssel darf nicht in der Meldung stehen");
+    }
+
+    [Test]
+    public void ValidateConnectionAsync_Cloud_Netzwerkfehler_WirdVerstaendlichGemeldet()
+    {
+        _handler.Throw(new HttpRequestException("Host nicht gefunden"));
+
+        var ex = Assert.ThrowsAsync<LlmServiceException>(() => CreateDispatcher().ValidateConnectionAsync(Config(AiProviderType.MistralAi)));
+
+        Assert.That(ex!.Message, Does.Contain("nicht erreichbar"));
+    }
+
+    [Test]
+    public void ValidateConnectionAsync_Cloud_Zeitueberschreitung_WirdVerstaendlichGemeldet()
+    {
+        _handler.Delay = TimeSpan.FromSeconds(5);
+
+        var ex = Assert.ThrowsAsync<LlmServiceException>(() =>
+            CreateDispatcher(TimeSpan.FromMilliseconds(100)).ValidateConnectionAsync(Config(AiProviderType.MistralAi)));
+
+        Assert.That(ex!.Message, Does.Contain("Zeitüberschreitung"));
+    }
+
+    [TestCase(AiProviderType.MistralAi)]
+    [TestCase(AiProviderType.OpenAiGpt4)]
+    [TestCase(AiProviderType.GoogleGemini)]
+    public async Task ValidateConnectionAsync_Cloud_OhneSchluessel_FalschOhneAnfrage(AiProviderType provider)
+    {
+        var ok = await CreateDispatcher().ValidateConnectionAsync(Config(provider, apiKey: "  "));
+
+        Assert.That(ok, Is.False);
+        Assert.That(_handler.RequestCount, Is.Zero);
+    }
+
+    [TestCase("http://localhost:8080/v1", "http://localhost:8080/v1/models")]
+    [TestCase("http://localhost:8080/v1/chat/completions", "http://localhost:8080/v1/models")]
+    public async Task ValidateConnectionAsync_Custom_RuftModelllisteAb(string endpoint, string expectedUrl)
+    {
+        _handler.Respond(HttpStatusCode.OK, "{\"data\":[]}");
+
+        var ok = await CreateDispatcher().ValidateConnectionAsync(Config(AiProviderType.CustomOpenAi, endpoint: endpoint));
+
+        Assert.That(ok, Is.True);
+        Assert.That(_handler.LastRequestUri!.ToString(), Is.EqualTo(expectedUrl));
+    }
+
+    [Test]
+    public async Task ValidateConnectionAsync_Custom_OhneModellliste_GiltAlsErreichbar()
+    {
+        _handler.Respond(HttpStatusCode.NotFound, "");
+
+        Assert.That(await CreateDispatcher().ValidateConnectionAsync(Config(AiProviderType.CustomOpenAi, endpoint: "http://localhost:8080/v1")), Is.True);
+    }
+
+    [Test]
+    public void ValidateConnectionAsync_Custom_AbgelehnterSchluessel_WirdGemeldet()
+    {
+        _handler.Respond(HttpStatusCode.Unauthorized, "");
+
+        var ex = Assert.ThrowsAsync<LlmServiceException>(() =>
+            CreateDispatcher().ValidateConnectionAsync(Config(AiProviderType.CustomOpenAi, endpoint: "http://localhost:8080/v1")));
+
+        Assert.That(ex!.StatusCode, Is.EqualTo(401));
+    }
+
     private static string? SystemMessage(JsonDocument body) =>
         body.RootElement.GetProperty("messages").EnumerateArray()
             .First(m => m.GetProperty("role").GetString() == "system")
@@ -195,6 +314,8 @@ public class LlmServiceDispatcherHttpTests
         public TimeSpan Delay { get; set; } = TimeSpan.Zero;
         public string? LastRequestBody { get; private set; }
         public Uri? LastRequestUri { get; private set; }
+        public HttpMethod? LastMethod { get; private set; }
+        public int RequestCount { get; private set; }
         public System.Net.Http.Headers.HttpRequestHeaders? LastHeaders { get; private set; }
 
         public void Respond(HttpStatusCode status, string body) { _status = status; _body = body; _exception = null; }
@@ -202,7 +323,9 @@ public class LlmServiceDispatcherHttpTests
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            RequestCount++;
             LastRequestUri = request.RequestUri;
+            LastMethod = request.Method;
             LastHeaders = request.Headers;
             LastRequestBody = request.Content == null ? null : await request.Content.ReadAsStringAsync(cancellationToken);
             if (Delay > TimeSpan.Zero)

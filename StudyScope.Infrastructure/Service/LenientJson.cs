@@ -136,6 +136,55 @@ public static class LenientJson
             yield return json[..(cuts[k].End + 1)] + cuts[k].Closers;
     }
 
+    // ---------------- Hüllen (JSON-Modus) ----------------
+
+    /// <summary>Maximale Schachtelungstiefe, bis zu der in Hüllobjekten nach dem Inhalt gesucht wird.</summary>
+    private const int MaxEnvelopeDepth = 3;
+
+    /// <summary>
+    /// Packt den eigentlichen Inhalt aus einer Hülle aus. Im JSON-Modus (Mistral/OpenAI) liefert der Dienst immer ein
+    /// Objekt, auch wenn eine Liste verlangt war – etwa {"items": [...]}, {"karteikarten": [...], "anzahl": 5}
+    /// oder {"mindmap": {...}}. Gesucht wird das erste Element, das <paramref name="isTarget"/> erfüllt:
+    /// zuerst das Element selbst, dann der Reihe nach die Objekt-/Listenwerte eines Objekts und der einzige Eintrag
+    /// eines einelementigen Arrays (bis <see cref="MaxEnvelopeDepth"/> Ebenen tief). Ohne Treffer bleibt das Element unverändert.
+    /// </summary>
+    public static JsonElement Unwrap(JsonElement element, Func<JsonElement, bool> isTarget) =>
+        TryFind(element, isTarget, MaxEnvelopeDepth, out var found) ? found : element;
+
+    private static bool TryFind(JsonElement element, Func<JsonElement, bool> isTarget, int depth, out JsonElement found)
+    {
+        found = element;
+        if (isTarget(element))
+            return true;
+        if (depth <= 0)
+            return false;
+
+        IEnumerable<JsonElement> inner = element.ValueKind switch
+        {
+            JsonValueKind.Object => element.EnumerateObject().Select(p => p.Value),
+            JsonValueKind.Array when element.GetArrayLength() == 1 => element.EnumerateArray(),
+            _ => Enumerable.Empty<JsonElement>()
+        };
+
+        foreach (var child in inner)
+        {
+            if (child.ValueKind is JsonValueKind.Object or JsonValueKind.Array &&
+                TryFind(child, isTarget, depth - 1, out found))
+                return true;
+        }
+
+        found = element;
+        return false;
+    }
+
+    /// <summary>Ob das Element ein Objekt mit mindestens einem der Schlüssel ist (Wert nicht null).</summary>
+    public static bool HasAny(JsonElement element, IReadOnlyCollection<string> keys) =>
+        GetProperty(element, keys) is { ValueKind: not JsonValueKind.Null and not JsonValueKind.Undefined };
+
+    /// <summary>Ob das Element ein Array ist, das mindestens einen Eintrag enthält, der <paramref name="isItem"/> erfüllt.</summary>
+    public static bool IsArrayOf(JsonElement element, Func<JsonElement, bool> isItem) =>
+        element.ValueKind == JsonValueKind.Array && element.EnumerateArray().Any(isItem);
+
     // ---------------- Hilfen für das Auslesen ----------------
 
     /// <summary>Erste Eigenschaft, deren Name (ohne Groß-/Kleinschreibung) einem der Schlüssel entspricht.</summary>

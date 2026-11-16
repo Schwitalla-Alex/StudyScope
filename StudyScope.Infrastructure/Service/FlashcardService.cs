@@ -38,98 +38,40 @@ public class FlashcardService : IFlashcardService
         return ParseFlashcardsFromJson(rawResponse);
     }
 
-    private static List<Flashcard> ParseFlashcardsFromJson(string rawResponse)
+    private static readonly string[] QuestionKeys = { "question", "frage", "q" };
+    private static readonly string[] AnswerKeys = { "answer", "antwort", "a" };
+
+    /// <summary>
+    /// Wertet die KI-Antwort nachsichtig aus: Markdown-Codeblöcke, Begleittext, abgeschnittene Antworten
+    /// und Hüllen aus dem JSON-Modus ({"items": [...]}, {"karteikarten": [...], "anzahl": 5}, eine einzelne Karte).
+    /// </summary>
+    public static List<Flashcard> ParseFlashcardsFromJson(string? rawResponse) =>
+        LenientJson.Analyze(rawResponse, BuildCards).Value ?? new List<Flashcard>();
+
+    private static bool IsCard(JsonElement element) =>
+        LenientJson.HasAny(element, QuestionKeys) && LenientJson.HasAny(element, AnswerKeys);
+
+    private static List<Flashcard>? BuildCards(JsonElement element)
     {
-        if (string.IsNullOrWhiteSpace(rawResponse))
-            return new List<Flashcard>();
+        element = LenientJson.Unwrap(element, e => IsCard(e) || LenientJson.IsArrayOf(e, IsCard));
 
-        var cleaned = rawResponse.Trim();
-
-        // 1. Markdown-Codeblöcke bereinigen (```json ... ``` oder ``` ... ```)
-        if (cleaned.StartsWith("```"))
+        IEnumerable<JsonElement> items = element.ValueKind switch
         {
-            var firstNewline = cleaned.IndexOf('\n');
-            if (firstNewline != -1)
-            {
-                cleaned = cleaned.Substring(firstNewline + 1);
-            }
+            JsonValueKind.Array => element.EnumerateArray(),
+            JsonValueKind.Object => new[] { element },
+            _ => Enumerable.Empty<JsonElement>()
+        };
 
-            if (cleaned.EndsWith("```"))
-            {
-                cleaned = cleaned.Substring(0, cleaned.LastIndexOf("```")).Trim();
-            }
+        var list = new List<Flashcard>();
+        foreach (var item in items)
+        {
+            var question = LenientJson.GetString(item, QuestionKeys).Trim();
+            var answer = LenientJson.GetString(item, AnswerKeys).Trim();
+            if (question.Length > 0 && answer.Length > 0)
+                list.Add(new Flashcard { Question = question, Answer = answer, Status = FlashcardStatus.New });
         }
 
-        // 2. Den Bereich zwischen der ersten '[' und der letzten ']' isolieren
-        var firstBracket = cleaned.IndexOf('[');
-        var lastBracket = cleaned.LastIndexOf(']');
-
-        if (firstBracket != -1 && lastBracket != -1 && lastBracket >= firstBracket)
-        {
-            cleaned = cleaned.Substring(firstBracket, lastBracket - firstBracket + 1);
-        }
-        else
-        {
-            return new List<Flashcard>();
-        }
-
-        try
-        {
-            using var doc = JsonDocument.Parse(cleaned);
-            var list = new List<Flashcard>();
-
-            if (doc.RootElement.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var element in doc.RootElement.EnumerateArray())
-                {
-                    string q = string.Empty;
-                    string a = string.Empty;
-
-                    foreach (var prop in element.EnumerateObject())
-                    {
-                        // Groß- und Kleinschreibung unempfindlich abgleichen:
-                        if (prop.Name.Equals("question", StringComparison.OrdinalIgnoreCase) ||
-                            prop.Name.Equals("frage", StringComparison.OrdinalIgnoreCase))
-                        {
-                            q = prop.Value.GetString() ?? string.Empty;
-                        }
-                        else if (prop.Name.Equals("answer", StringComparison.OrdinalIgnoreCase) ||
-                                 prop.Name.Equals("antwort", StringComparison.OrdinalIgnoreCase))
-                        {
-                            a = prop.Value.GetString() ?? string.Empty;
-                        }
-                    }
-
-                    //foreach (var prop in element.EnumerateObject())
-                    //{
-                    //    if (prop.NameEquals("question") || prop.Name.Equals("frage", StringComparison.OrdinalIgnoreCase))
-                    //    {
-                    //        q = prop.Value.GetString() ?? string.Empty;
-                    //    }
-                    //    else if (prop.NameEquals("answer") || prop.Name.Equals("antwort", StringComparison.OrdinalIgnoreCase))
-                    //    {
-                    //        a = prop.Value.GetString() ?? string.Empty;
-                    //    }
-                    //}
-
-                    if (!string.IsNullOrWhiteSpace(q) && !string.IsNullOrWhiteSpace(a))
-                    {
-                        list.Add(new Flashcard
-                        {
-                            Question = q.Trim(),
-                            Answer = a.Trim(),
-                            Status = FlashcardStatus.New
-                        });
-                    }
-                }
-            }
-
-            return list;
-        }
-        catch
-        {
-            return new List<Flashcard>();
-        }
+        return list.Count > 0 ? list : null;
     }
 
     public Task<List<Flashcard>> LoadFlashcardsAsync(string profileName)
