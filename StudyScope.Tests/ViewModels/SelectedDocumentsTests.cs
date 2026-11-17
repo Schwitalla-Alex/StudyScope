@@ -106,6 +106,51 @@ public class SelectedDocumentsTests
     }
 
     [Test]
+    public async Task DefaultSlideSource_MismatchPreselectsNewSlides_UnknownAndMatchKeepPresentation()
+    {
+        var presentationService = new PresentationService(new FakeLlmService(), _tempDir);
+        var old = (await presentationService.GenerateFromDocumentsAsync(new[] { NotCheckedText }, "Alt", 3)).Presentation!;
+        old.SourceDocuments = new List<string> { "vulkane.txt" };
+        await presentationService.SavePresentationAsync(Profile, old);
+
+        // Laden mit den Dokumenten des Profils: abweichende Quellen → „Neue Folien“ vorausgewählt
+        var vm = CreateVideoViewModel(new FakeLlmService());
+        await vm.LoadForProfileAsync(Profile, _all);
+        Assert.That(vm.IsFormOpen, Is.True);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.NewPresentation));
+        Assert.That(vm.PresentationSources(_all).Match, Is.EqualTo(PresentationSourceMatch.Mismatch), "Warnung bleibt");
+
+        // Bewusst zurück auf die Präsentation des Profils – bleibt beim Wiederöffnen des Reiters erhalten
+        vm.SlideSource = VideoSlideSource.ProfilePresentation;
+        await vm.EnsureLoadedForProfileAsync(Profile, _all);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.ProfilePresentation));
+
+        // „Neues Video“ wählt wieder nach den Quellen vor
+        vm.OpenForm(_all);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.NewPresentation));
+
+        // Passende Quellen → Präsentation des Profils
+        old.SourceDocuments = new List<string> { "pflanzen.txt" };
+        await presentationService.SavePresentationAsync(Profile, old);
+        await vm.EnsureLoadedForProfileAsync(Profile, _all);
+        vm.OpenForm(_all);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.ProfilePresentation));
+
+        // Unbekannte Quellen (ältere Präsentation) → bisherige Vorauswahl
+        old.SourceDocuments = new List<string>();
+        await presentationService.SavePresentationAsync(Profile, old);
+        await vm.EnsureLoadedForProfileAsync(Profile, _all);
+        vm.OpenForm(_all);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.ProfilePresentation));
+
+        // Ohne Präsentation → neue Folien
+        await presentationService.DeletePresentationAsync(Profile);
+        await vm.EnsureLoadedForProfileAsync(Profile, _all);
+        vm.OpenForm(_all);
+        Assert.That(vm.SlideSource, Is.EqualTo(VideoSlideSource.NewPresentation));
+    }
+
+    [Test]
     public void ComparePresentationSources_MatchUnknownAndMissingDocuments()
     {
         var presentation = new PresentationDocument { Slides = { new PresentationSlide { Title = "A" } }, SourceDocuments = { "PFLANZEN.txt" } };

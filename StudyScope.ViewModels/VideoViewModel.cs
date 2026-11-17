@@ -211,10 +211,24 @@ public class VideoViewModel : INotifyPropertyChanged
     private string _customTitle = string.Empty;
     public string CustomTitle { get => _customTitle; set { _customTitle = value; OnPropertyChanged(); } }
 
-    public void OpenForm()
+    /// <summary>
+    /// Vorauswahl der Grundlage: ohne Präsentation „Neue Folien“; stammt die Präsentation nachweislich aus anderen als
+    /// den angehakten Dokumenten, ebenfalls „Neue Folien“ (die Warnung bleibt sichtbar, man kann bewusst zurückwechseln);
+    /// sonst – auch bei unbekannten Quellen älterer Präsentationen – die Präsentation des Profils.
+    /// </summary>
+    public VideoSlideSource DefaultSlideSource(IEnumerable<DocumentItem>? documents)
+    {
+        if (!HasProfilePresentation) return VideoSlideSource.NewPresentation;
+        if (documents != null && PresentationSources(documents).Match == PresentationSourceMatch.Mismatch)
+            return VideoSlideSource.NewPresentation;
+        return VideoSlideSource.ProfilePresentation;
+    }
+
+    /// <param name="documents">Dokumente des Profils (für die Vorauswahl der Grundlage; null = nur nach vorhandener Präsentation).</param>
+    public void OpenForm(IEnumerable<DocumentItem>? documents = null)
     {
         _ = StopAsync();
-        SlideSource = HasProfilePresentation ? VideoSlideSource.ProfilePresentation : VideoSlideSource.NewPresentation;
+        SlideSource = DefaultSlideSource(documents);
         UseNotesDirectly = false;
         IsFormOpen = true;
         ClearStatus();
@@ -265,7 +279,8 @@ public class VideoViewModel : INotifyPropertyChanged
 
     // ---------------- Laden ----------------
 
-    public async Task LoadForProfileAsync(string profileName)
+    /// <param name="documents">Dokumente des Profils für die Vorauswahl der Grundlage im Formular.</param>
+    public async Task LoadForProfileAsync(string profileName, IEnumerable<DocumentItem>? documents = null)
     {
         Cancel();
         CancelAudioGeneration();
@@ -282,7 +297,7 @@ public class VideoViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(Items));
         SelectedVideo = Items.FirstOrDefault();
         if (IsFormOpen)
-            SlideSource = HasProfilePresentation ? VideoSlideSource.ProfilePresentation : VideoSlideSource.NewPresentation;
+            SlideSource = DefaultSlideSource(documents);
         OnSpeechChanged();
         await RefreshAvailabilityAsync();
     }
@@ -291,7 +306,7 @@ public class VideoViewModel : INotifyPropertyChanged
     /// Beim Öffnen des Reiters: nur bei Profilwechsel neu laden (eine laufende Wiedergabe geht beim Reiterwechsel weiter).
     /// Die Präsentation wird immer neu gelesen (sie kann im Reiter „Präsentation“ geändert worden sein).
     /// </summary>
-    public async Task EnsureLoadedForProfileAsync(string profileName)
+    public async Task EnsureLoadedForProfileAsync(string profileName, IEnumerable<DocumentItem>? documents = null)
     {
         if (_isLoaded && string.Equals(_profileName, profileName, StringComparison.Ordinal))
         {
@@ -301,7 +316,7 @@ public class VideoViewModel : INotifyPropertyChanged
             return;
         }
 
-        await LoadForProfileAsync(profileName);
+        await LoadForProfileAsync(profileName, documents);
     }
 
     private async Task<PresentationDocument?> LoadPresentationSafeAsync(string profileName)

@@ -18,7 +18,7 @@
             <span style="font-size: 12px; color: #6c757d;">Vertontes Erklärvideo aus einer Präsentation – je Folie ein Sprechtext, abgespielt wie ein Video.</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button type="button" class="vd-btn" style="background: #007bff;" disabled="@VdVm.IsBusy" @onclick="VdVm.OpenForm">➕ Neues Video</button>
+            <button type="button" class="vd-btn" style="background: #007bff;" disabled="@VdVm.IsBusy" @onclick="OpenForm">➕ Neues Video</button>
         </div>
     </div>
 
@@ -463,21 +463,30 @@
                 </button>
             </div>
 
-            @if (VdVm.SlideSource == VideoSlideSource.ProfilePresentation && VdVm.HasProfilePresentation)
+            @if (VdVm.HasProfilePresentation && VdVm.PresentationSources(DocVm.Documents) is { Match: PresentationSourceMatch.Mismatch } mismatch)
             {
-                var sources = VdVm.PresentationSources(DocVm.Documents);
-                @if (sources.Match == PresentationSourceMatch.Mismatch)
-                {
-                    <div class="vd-note warn" style="margin-top: 10px;">
-                        <b>⚠️ Andere Dokumente als angehakt</b><br />
-                        @sources.Message Das Video würde die Folien der vorhandenen Präsentation verwenden.
+                <!-- Warnung bleibt bei beiden Grundlagen sichtbar -->
+                <div class="vd-note warn" style="margin-top: 10px;">
+                    <b>⚠️ Andere Dokumente als angehakt</b><br />
+                    @($"{mismatch.Message} ")
+                    @if (VdVm.SlideSource == VideoSlideSource.ProfilePresentation)
+                    {
+                        <span>Das Video würde die Folien der vorhandenen Präsentation verwenden.</span>
                         <button type="button" class="vd-btn" style="background: #fd7e14; margin-top: 8px; width: 100%; justify-content: center;"
                                 disabled="@(VdVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateFromSelectedAsync">
                             ✨ Stattdessen neu aus den angehakten Dokumenten erzeugen
                         </button>
-                    </div>
-                }
-                else if (sources.Match == PresentationSourceMatch.Unknown)
+                    }
+                    else
+                    {
+                        <span>Deshalb ist „Neue Folien per KI“ aus den angehakten Dokumenten vorausgewählt. Soll trotzdem die vorhandene Präsentation verwendet werden, oben „Präsentation dieses Profils“ wählen.</span>
+                    }
+                </div>
+            }
+            else if (VdVm.SlideSource == VideoSlideSource.ProfilePresentation && VdVm.HasProfilePresentation)
+            {
+                var sources = VdVm.PresentationSources(DocVm.Documents);
+                @if (sources.Match == PresentationSourceMatch.Unknown)
                 {
                     <div class="vd-note info" style="margin-top: 10px;">ℹ️ @sources.Message</div>
                 }
@@ -727,7 +736,7 @@
         VdVm.PropertyChanged += OnVmChanged;
         DocVm.PropertyChanged += OnDocVmChanged;
         DocVm.Documents.CollectionChanged += OnDocumentsChanged;
-        await VdVm.EnsureLoadedForProfileAsync(DocVm.CurrentProfile);
+        await VdVm.EnsureLoadedForProfileAsync(DocVm.CurrentProfile, DocVm.Documents);
         _ = RunTickerAsync();
     }
 
@@ -806,7 +815,7 @@
         if (e.PropertyName == nameof(DocVm.CurrentProfile))
         {
             ResetEditing();
-            await VdVm.LoadForProfileAsync(DocVm.CurrentProfile);
+            await VdVm.LoadForProfileAsync(DocVm.CurrentProfile, DocVm.Documents);
         }
         await InvokeAsync(StateHasChanged);
     }
@@ -827,6 +836,8 @@
     }
 
     private Task GenerateAsync() => VdVm.GenerateAsync(DocVm.Documents);
+
+    private void OpenForm() => VdVm.OpenForm(DocVm.Documents);
 
     private Task GenerateFromSelectedAsync() => VdVm.GenerateFromSelectedDocumentsAsync(DocVm.Documents);
 
