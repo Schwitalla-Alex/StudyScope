@@ -161,6 +161,10 @@ public class LlmServiceDispatcher : ILlmService
         if (FakeAudioScriptResponse.IsAudioScriptPrompt(prompt))
             return FakeAudioScriptResponse.Create(prompt, chunks);
 
+        // Video-Skript nach dem Audio-Skript: Folientitel können "Mindmap", "Quiz" o. Ä. enthalten
+        if (FakeVideoScriptResponse.IsVideoScriptPrompt(prompt))
+            return FakeVideoScriptResponse.Create(prompt, chunks);
+
         // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
             return FakeMindmapResponse.Create(chunks);

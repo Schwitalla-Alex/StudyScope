@@ -24,41 +24,36 @@ public enum AudioScriptExportFormat
 /// </summary>
 public class AudioViewModel : INotifyPropertyChanged
 {
-    public const string LocalAiHint =
-        "Das Skript schreibt Ihre lokale KI. Zum Vorlesen nutzen Sie die Systemstimme (offline) oder Gemini TTS (Audiodatei, Podcast mit zwei Stimmen).";
-
-    public const string GeminiPrivacyHint =
-        "Datenschutz: Bei Gemini TTS wird der Skripttext an Google gesendet. In der kostenlosen Stufe kann Google die Eingaben zur Verbesserung seiner Dienste verwenden.";
-
-    public const string NoFileExportHint =
-        "Mit der Systemstimme ist kein Dateiexport möglich – sie liest nur direkt vor. Für eine Audiodatei (WAV) wählen Sie Gemini TTS.";
+    public const string LocalAiHint = SpeechProviderState.LocalAiHint;
+    public const string GeminiPrivacyHint = SpeechProviderState.GeminiPrivacyHint;
+    public const string NoFileExportHint = SpeechProviderState.NoFileExportHint;
 
     private readonly IAudioScriptService _audioService;
     private readonly IDocumentService _documentService;
-    private readonly IStorageService _storage;
-    private readonly IReadOnlyList<ITextToSpeechService> _speechServices;
+    private readonly SpeechProviderState _speech;
     private readonly IAudioFilePlayer? _filePlayer;
+    private readonly PlaybackCoordinator? _coordinator;
     private CancellationTokenSource? _audioCts;
-    private readonly Dictionary<SpeechProviderType, SpeechAvailability> _availability = new();
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
     private AudioLibrary _library = new();
-    private SpeechSettings _speechSettings = new();
-    private AiConfig? _chatConfig;
     private int _playGeneration;
+
+    private SpeechSettings _speechSettings => _speech.Settings;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public AudioViewModel(IAudioScriptService audioService, IDocumentService documentService, IStorageService storage,
-        IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null)
+        IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null, PlaybackCoordinator? coordinator = null)
     {
         _audioService = audioService;
         _documentService = documentService;
-        _storage = storage;
-        _speechServices = speechServices.ToList();
+        _speech = new SpeechProviderState(storage, speechServices);
         _filePlayer = filePlayer;
         if (_filePlayer != null)
             _filePlayer.PositionChanged += OnFilePositionChanged;
+        _coordinator = coordinator;
+        _coordinator?.Register(PlaybackCoordinator.AudioParticipant, () => _isPlaying, StopAsync);
     }
 
     // ---------------- Beiträge ----------------
@@ -166,8 +161,7 @@ public class AudioViewModel : INotifyPropertyChanged
         ClearStatus();
 
         _library = await _audioService.LoadLibraryAsync(profileName);
-        _speechSettings = await _storage.LoadSpeechSettingsAsync(profileName) ?? new SpeechSettings();
-        _chatConfig = await _storage.LoadAiConfigForProfileAsync(profileName) ?? await _storage.LoadAiConfigAsync();
+        await _speech.LoadAsync(profileName);
 
         _isLoaded = true;
         IsFormOpen = _library.Items.Count == 0;
@@ -185,8 +179,7 @@ public class AudioViewModel : INotifyPropertyChanged
     {
         if (_isLoaded && string.Equals(_profileName, profileName, StringComparison.Ordinal))
         {
-            _speechSettings = await _storage.LoadSpeechSettingsAsync(profileName) ?? _speechSettings;
-            _chatConfig = await _storage.LoadAiConfigForProfileAsync(profileName) ?? await _storage.LoadAiConfigAsync();
+            await _speech.ReloadAsync();
             await RefreshAvailabilityAsync();
             return;
         }
@@ -200,8 +193,7 @@ public class AudioViewModel : INotifyPropertyChanged
     public async Task ReloadSpeechSettingsAsync()
     {
         if (!_isLoaded) return;
-        _speechSettings = await _storage.LoadSpeechSettingsAsync(_profileName) ?? _speechSettings;
-        _chatConfig = await _storage.LoadAiConfigForProfileAsync(_profileName) ?? await _storage.LoadAiConfigAsync();
+        await _speech.ReloadAsync();
         await RefreshAvailabilityAsync();
     }
 
@@ -220,54 +212,33 @@ public class AudioViewModel : INotifyPropertyChanged
     // ---------------- Chat-KI und Sprachausgabe ----------------
 
     /// <summary>Chat-KI des Profils ist lokal (Ollama/LM Studio) – dann wird <see cref="LocalAiHint"/> angezeigt.</summary>
-    public bool IsLocalChatAi => _chatConfig?.SelectedProvider is AiProviderType.OllamaLocal or AiProviderType.LmStudioLocal;
+    public bool IsLocalChatAi => _speech.IsLocalChatAi;
 
-    public SpeechSettings SpeechSettings => _speechSettings;
+    public SpeechSettings SpeechSettings => _speech.Settings;
 
     /// <summary>Alle Anbieter der Sprachausgabe (auch nicht verfügbare – sie werden ausgegraut angezeigt).</summary>
-    public IReadOnlyList<ITextToSpeechService> SpeechServices => _speechServices;
+    public IReadOnlyList<ITextToSpeechService> SpeechServices => _speech.Services;
 
-    public SpeechProviderType SelectedProvider => _speechSettings.Provider;
+    public SpeechProviderType SelectedProvider => _speech.SelectedProvider;
 
-    public ITextToSpeechService? CurrentSpeechService => _speechServices.FirstOrDefault(s => s.Provider == SelectedProvider);
+    public ITextToSpeechService? CurrentSpeechService => _speech.CurrentService;
 
-    public SpeechAvailability AvailabilityOf(SpeechProviderType provider) =>
-        _availability.TryGetValue(provider, out var a)
-            ? a
-            : _speechServices.Any(s => s.Provider == provider)
-                ? SpeechAvailability.Checking()
-                : SpeechAvailability.Unavailable("Diese Sprachausgabe ist in dieser Version nicht enthalten.");
+    public SpeechAvailability AvailabilityOf(SpeechProviderType provider) => _speech.AvailabilityOf(provider);
 
-    public SpeechAvailability CurrentAvailability => AvailabilityOf(SelectedProvider);
+    public SpeechAvailability CurrentAvailability => _speech.CurrentAvailability;
 
     /// <summary>Auswählbar ist ein Anbieter, der verfügbar ist oder noch geprüft wird (der aktuelle bleibt immer gewählt).</summary>
-    public bool CanSelectProvider(SpeechProviderType provider) =>
-        provider == SelectedProvider || AvailabilityOf(provider).Status != SpeechAvailabilityStatus.Unavailable;
+    public bool CanSelectProvider(SpeechProviderType provider) => _speech.CanSelectProvider(provider);
 
-    public bool ShowPrivacyHint => SelectedProvider == SpeechProviderType.GeminiTts;
+    public bool ShowPrivacyHint => _speech.ShowPrivacyHint;
 
-    private IReadOnlyList<SpeechVoice> _systemVoices = Array.Empty<SpeechVoice>();
     /// <summary>Stimmen der Systemstimme (deutsche und Offline-Stimmen zuerst).</summary>
-    public IReadOnlyList<SpeechVoice> SystemVoices { get => _systemVoices; private set { _systemVoices = value; OnPropertyChanged(); } }
+    public IReadOnlyList<SpeechVoice> SystemVoices => _speech.SystemVoices;
 
     /// <summary>Prüft alle Anbieter (vor dem Abspielen/Erzeugen, damit Knöpfe vorab deaktiviert werden können).</summary>
     public async Task RefreshAvailabilityAsync()
     {
-        var context = new SpeechContext(_speechSettings, _chatConfig);
-        foreach (var service in _speechServices)
-        {
-            try
-            {
-                _availability[service.Provider] = await service.GetAvailabilityAsync(context);
-                if (service is ILiveSpeechService && service.Provider == SpeechProviderType.SystemVoice)
-                    SystemVoices = await service.GetVoicesAsync();
-            }
-            catch (Exception ex)
-            {
-                _availability[service.Provider] = SpeechAvailability.Unavailable($"Prüfung fehlgeschlagen: {ex.Message}");
-            }
-        }
-
+        await _speech.RefreshAvailabilityAsync();
         OnSpeechChanged();
     }
 
@@ -276,83 +247,69 @@ public class AudioViewModel : INotifyPropertyChanged
         if (provider == SelectedProvider || !CanSelectProvider(provider)) return;
 
         await StopAsync();
-        _speechSettings.Provider = provider;
-        await SaveSpeechSettingsAsync();
+        try
+        {
+            await _speech.SetProviderAsync(provider);
+        }
+        catch (Exception ex)
+        {
+            ShowSaveError(ex);
+        }
         OnSpeechChanged();
     }
 
     /// <summary>Stimme der Systemstimme für Sprecher 1 (0) bzw. 2 (1); leer = automatisch.</summary>
     public async Task SetSystemVoiceAsync(int speakerIndex, string voiceId)
     {
-        if (speakerIndex == 0) _speechSettings.SystemVoicePrimary = voiceId ?? string.Empty;
-        else _speechSettings.SystemVoiceSecondary = voiceId ?? string.Empty;
-        await SaveSpeechSettingsAsync();
+        try
+        {
+            await _speech.SetSystemVoiceAsync(speakerIndex, voiceId);
+        }
+        catch (Exception ex)
+        {
+            ShowSaveError(ex);
+        }
         OnSpeechChanged();
         await RestartCurrentSegmentIfPlayingAsync();
     }
 
-    public double Rate => _speechSettings.Rate;
+    public double Rate => _speech.Settings.Rate;
 
     public async Task SetRateAsync(double rate)
     {
         var clamped = Math.Round(SpeechSettings.ClampRate(rate), 2);
         if (Math.Abs(clamped - _speechSettings.Rate) < 0.001) return;
-        _speechSettings.Rate = clamped;
-        OnPropertyChanged(nameof(Rate));
-        await SaveSpeechSettingsAsync();
-        await RestartCurrentSegmentIfPlayingAsync();
-    }
-
-    private async Task SaveSpeechSettingsAsync()
-    {
         try
         {
-            await _storage.SaveSpeechSettingsAsync(_profileName, _speechSettings);
+            await _speech.SetRateAsync(clamped);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {ex.Message}", isError: true);
+            ShowSaveError(ex);
         }
+        OnPropertyChanged(nameof(Rate));
+        await RestartCurrentSegmentIfPlayingAsync();
     }
+
+    private void ShowSaveError(Exception ex) =>
+        ShowStatus($"⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {ex.Message}", isError: true);
 
     /// <summary>Sprecherrollen des gewählten Beitrags (bzw. des Formulars): Podcast „Moderatorin“/„Experte“, sonst „Sprecherin“.</summary>
     public IReadOnlyList<string> SpeakerRoles => AudioScriptFormats.Speakers(SelectedSummary?.Format ?? Format);
 
-    public string SpeakerRoleName(int speakerIndex) =>
-        SpeakerRoles.Count == 0 ? $"Sprecher {speakerIndex + 1}" : SpeakerRoles[Math.Clamp(speakerIndex, 0, SpeakerRoles.Count - 1)];
+    public string SpeakerRoleName(int speakerIndex) => SpeechProviderState.RoleName(SpeakerRoles, speakerIndex);
 
     /// <summary>
     /// Gewählte Stimme eines Sprechers (bei automatischer Wahl die tatsächlich verwendete): passend zur Rolle
     /// (Moderatorin/Sprecherin weiblich, Experte männlich), soweit installiert; Sprecher 2 möglichst andere Stimme.
     /// </summary>
-    public string VoiceForSpeakerIndex(int speakerIndex)
-    {
-        var primary = SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoicePrimary, 0, null,
-            SystemVoiceRules.SpeakerGender(SpeakerRoleName(0)));
-        return speakerIndex == 0
-            ? primary
-            : SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoiceSecondary, 1, primary,
-                SystemVoiceRules.SpeakerGender(SpeakerRoleName(1)));
-    }
+    public string VoiceForSpeakerIndex(int speakerIndex) => _speech.VoiceForSpeakerIndex(speakerIndex, SpeakerRoles);
 
     /// <summary>
     /// Hinweis zur automatischen Stimme des zweiten Sprechers (Podcast), wenn keine passende zweite deutsche Stimme
     /// installiert ist – samt Installationsweg unter Windows. Bei manueller Auswahl kein Hinweis.
     /// </summary>
-    public string? VoiceAssignmentHint
-    {
-        get
-        {
-            if (SelectedProvider != SpeechProviderType.SystemVoice || SpeakerRoles.Count < 2 || SystemVoices.Count == 0)
-                return null;
-            if (!string.IsNullOrWhiteSpace(_speechSettings.SystemVoiceSecondary) && SystemVoices.Any(v => v.Id == _speechSettings.SystemVoiceSecondary))
-                return null;
-
-            var role = SpeakerRoleName(1);
-            return SystemVoiceRules.SecondVoiceHint(SystemVoices, VoiceForSpeakerIndex(0), VoiceForSpeakerIndex(1), role,
-                SystemVoiceRules.SpeakerGender(role), OperatingSystem.IsLinux());
-        }
-    }
+    public string? VoiceAssignmentHint => _speech.VoiceAssignmentHint(SpeakerRoles);
 
     /// <summary>Sprecher-Platz (0/1) eines Segments (siehe <see cref="AudioScriptFormats.SpeakerSlot"/>).</summary>
     public static int SpeakerSlot(AudioSummary summary, string speaker) => AudioScriptFormats.SpeakerSlot(summary, speaker);
@@ -386,7 +343,7 @@ public class AudioViewModel : INotifyPropertyChanged
                     return "Der Audio-Player ist in dieser Umgebung nicht verfügbar.";
                 return _filePlayer.IsReady ? null : "Der Audio-Player wird noch geladen …";
             }
-            return AvailabilityReason(CurrentAvailability);
+            return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
     }
 
@@ -402,16 +359,9 @@ public class AudioViewModel : INotifyPropertyChanged
             var service = CurrentSpeechService;
             if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
             if (!service.SupportsFileExport || service is not IAudioFileSpeechService) return NoFileExportHint;
-            return AvailabilityReason(CurrentAvailability);
+            return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
     }
-
-    private static string? AvailabilityReason(SpeechAvailability availability) => availability.Status switch
-    {
-        SpeechAvailabilityStatus.Checking => "Die Sprachausgabe wird noch geprüft …",
-        SpeechAvailabilityStatus.Unavailable => string.IsNullOrWhiteSpace(availability.Hint) ? availability.Message : $"{availability.Message} {availability.Hint}",
-        _ => null
-    };
 
     public bool CanExportScript => HasScript;
 
@@ -482,6 +432,10 @@ public class AudioViewModel : INotifyPropertyChanged
             return;
         }
 
+        // Läuft gerade ein Video, wird es beendet (Player und Systemstimme gibt es nur einmal)
+        if (!_isPlaying && _coordinator != null)
+            await _coordinator.StopOthersAsync(PlaybackCoordinator.AudioParticipant);
+
         if (UsesFilePlayback)
         {
             await PlayFileAsync();
@@ -539,11 +493,7 @@ public class AudioViewModel : INotifyPropertyChanged
         }
         else if (wasPlaying)
         {
-            foreach (var live in _speechServices.OfType<ILiveSpeechService>())
-            {
-                try { await live.StopAsync(); }
-                catch { /* Stopp ist immer erlaubt */ }
-            }
+            await _speech.StopAllLiveAsync();
         }
         OnPlayerChanged();
     }
@@ -752,7 +702,7 @@ public class AudioViewModel : INotifyPropertyChanged
             });
 
             var oldPath = SelectedAudioFilePath;
-            var result = await service.SynthesizeToFileAsync(summary, new SpeechContext(_speechSettings, _chatConfig), path, progress, token);
+            var result = await service.SynthesizeToFileAsync(summary, _speech.Context, path, progress, token);
 
             if (oldPath != null && !string.Equals(Path.GetFullPath(oldPath), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
                 _audioService.DeleteAudioFile(_profileName, summary);
@@ -812,7 +762,7 @@ public class AudioViewModel : INotifyPropertyChanged
         IsTestingConnection = true;
         try
         {
-            var message = await service.TestConnectionAsync(new SpeechContext(_speechSettings, _chatConfig));
+            var message = await service.TestConnectionAsync(_speech.Context);
             ShowStatus(message, isError: false);
         }
         catch (LlmServiceException ex)
@@ -1185,6 +1135,7 @@ public class AudioViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(IsLocalChatAi));
         OnPropertyChanged(nameof(Rate));
         OnPropertyChanged(nameof(VoiceAssignmentHint));
+        OnPropertyChanged(nameof(SystemVoices));
         OnPlayerChanged();
     }
 
