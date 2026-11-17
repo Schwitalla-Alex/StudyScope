@@ -189,6 +189,18 @@ public class AudioViewModel : INotifyPropertyChanged
 
     private bool _isLoaded;
 
+    /// <summary>
+    /// Profilwechsel (auch wenn der Reiter nicht offen ist): eine laufende Wiedergabe des alten Profils wird beendet.
+    /// Geladen wird das neue Profil erst beim Öffnen des Reiters.
+    /// </summary>
+    public async Task HandleProfileChangedAsync(string profileName)
+    {
+        if (string.Equals(_profileName, profileName, StringComparison.Ordinal))
+            return;
+        Cancel();
+        await StopAsync();
+    }
+
     // ---------------- Chat-KI und Sprachausgabe ----------------
 
     /// <summary>Chat-KI des Profils ist lokal (Ollama/LM Studio) – dann wird <see cref="LocalAiHint"/> angezeigt.</summary>
@@ -287,21 +299,58 @@ public class AudioViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Gewählte Stimme eines Sprechers (bei automatischer Wahl die tatsächlich verwendete).</summary>
+    /// <summary>Sprecherrollen des gewählten Beitrags (bzw. des Formulars): Podcast „Moderatorin“/„Experte“, sonst „Sprecherin“.</summary>
+    public IReadOnlyList<string> SpeakerRoles => AudioScriptFormats.Speakers(SelectedSummary?.Format ?? Format);
+
+    public string SpeakerRoleName(int speakerIndex) =>
+        SpeakerRoles.Count == 0 ? $"Sprecher {speakerIndex + 1}" : SpeakerRoles[Math.Clamp(speakerIndex, 0, SpeakerRoles.Count - 1)];
+
+    /// <summary>
+    /// Gewählte Stimme eines Sprechers (bei automatischer Wahl die tatsächlich verwendete): passend zur Rolle
+    /// (Moderatorin/Sprecherin weiblich, Experte männlich), soweit installiert; Sprecher 2 möglichst andere Stimme.
+    /// </summary>
     public string VoiceForSpeakerIndex(int speakerIndex)
     {
-        var primary = SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoicePrimary, 0);
+        var primary = SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoicePrimary, 0, null,
+            SystemVoiceRules.SpeakerGender(SpeakerRoleName(0)));
         return speakerIndex == 0
             ? primary
-            : SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoiceSecondary, 1, primary);
+            : SystemVoiceRules.ResolveVoice(SystemVoices, _speechSettings.SystemVoiceSecondary, 1, primary,
+                SystemVoiceRules.SpeakerGender(SpeakerRoleName(1)));
     }
 
-    private string VoiceForSpeaker(AudioSummary summary, string speaker)
+    /// <summary>
+    /// Hinweis zur automatischen Stimme des zweiten Sprechers (Podcast), wenn keine passende zweite deutsche Stimme
+    /// installiert ist – samt Installationsweg unter Windows. Bei manueller Auswahl kein Hinweis.
+    /// </summary>
+    public string? VoiceAssignmentHint
     {
-        var speakers = summary.Speakers;
-        var index = speakers.FindIndex(s => string.Equals(s, speaker, StringComparison.OrdinalIgnoreCase));
-        return VoiceForSpeakerIndex(index <= 0 ? 0 : index % 2 == 1 ? 1 : 0);
+        get
+        {
+            if (SelectedProvider != SpeechProviderType.SystemVoice || SpeakerRoles.Count < 2 || SystemVoices.Count == 0)
+                return null;
+            if (!string.IsNullOrWhiteSpace(_speechSettings.SystemVoiceSecondary) && SystemVoices.Any(v => v.Id == _speechSettings.SystemVoiceSecondary))
+                return null;
+
+            var role = SpeakerRoleName(1);
+            return SystemVoiceRules.SecondVoiceHint(SystemVoices, VoiceForSpeakerIndex(0), VoiceForSpeakerIndex(1), role,
+                SystemVoiceRules.SpeakerGender(role), OperatingSystem.IsLinux());
+        }
     }
+
+    /// <summary>Sprecher-Platz (0/1) eines Segments: nach Rolle des Formats, sonst nach Reihenfolge des Auftretens.</summary>
+    public static int SpeakerSlot(AudioSummary summary, string speaker)
+    {
+        var roles = AudioScriptFormats.Speakers(summary.Format);
+        var roleIndex = roles.ToList().FindIndex(r => string.Equals(r, speaker, StringComparison.OrdinalIgnoreCase));
+        if (roleIndex >= 0)
+            return roleIndex % 2;
+
+        var index = summary.Speakers.FindIndex(s => string.Equals(s, speaker, StringComparison.OrdinalIgnoreCase));
+        return index <= 0 ? 0 : index % 2;
+    }
+
+    private string VoiceForSpeaker(AudioSummary summary, string speaker) => VoiceForSpeakerIndex(SpeakerSlot(summary, speaker));
 
     // ---------------- Freigabe der Knöpfe ----------------
 
@@ -394,6 +443,10 @@ public class AudioViewModel : INotifyPropertyChanged
         }
     }
 
+    /// <summary>Titel des gerade vorgelesenen Beitrags für die Statusleiste (null = keine Wiedergabe).</summary>
+    public string? NowPlayingTitle => _isPlaying ? _playingTitle : null;
+    private string? _playingTitle;
+
     public bool CanGoPrevious => HasScript && _currentSegmentIndex > 0;
     public bool CanGoNext => HasScript && _currentSegmentIndex < SegmentCount - 1;
 
@@ -478,6 +531,7 @@ public class AudioViewModel : INotifyPropertyChanged
     {
         var summary = SelectedSummary!;
         var generation = ++_playGeneration;
+        _playingTitle = summary.Title;
         _isPlaying = true;
         _isPaused = false;
         OnPlayerChanged();
@@ -793,6 +847,7 @@ public class AudioViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(ShowPrivacyHint));
         OnPropertyChanged(nameof(IsLocalChatAi));
         OnPropertyChanged(nameof(Rate));
+        OnPropertyChanged(nameof(VoiceAssignmentHint));
         OnPlayerChanged();
     }
 
@@ -801,6 +856,7 @@ public class AudioViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CurrentSegmentIndex));
         OnPropertyChanged(nameof(IsPlaying));
         OnPropertyChanged(nameof(IsPaused));
+        OnPropertyChanged(nameof(NowPlayingTitle));
         OnPropertyChanged(nameof(Progress));
         OnPropertyChanged(nameof(ProgressText));
         OnPropertyChanged(nameof(CanPlay));

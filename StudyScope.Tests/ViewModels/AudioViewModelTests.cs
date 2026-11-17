@@ -308,9 +308,95 @@ public class AudioViewModelTests
 
         var hostVoices = _live.Spoken.Where((_, i) => summary.Segments[i].Speaker == "Moderatorin").Select(s => s.Voice).Distinct().ToList();
         var expertVoices = _live.Spoken.Where((_, i) => summary.Segments[i].Speaker == "Experte").Select(s => s.Voice).Distinct().ToList();
-        Assert.That(hostVoices, Is.EqualTo(new[] { "de-2" }), "automatisch: deutsch, alphabetisch zuerst Conrad");
-        Assert.That(expertVoices, Is.EqualTo(new[] { "de-1" }), "zweiter Sprecher bekommt eine andere deutsche Stimme");
+        Assert.That(hostVoices, Is.EqualTo(new[] { "de-1" }), "Moderatorin: weibliche deutsche Stimme (Katja)");
+        Assert.That(expertVoices, Is.EqualTo(new[] { "de-2" }), "Experte: männliche deutsche Stimme (Conrad)");
         Assert.That(_live.Spoken.All(s => Math.Abs(s.Rate - 1.25) < 0.001), Is.True);
+    }
+
+    [Test]
+    public async Task Podcast_WindowsVoices_ExpertGetsStefan_WithoutHint()
+    {
+        _live.Voices = new[]
+        {
+            new SpeechVoice("hedda", "Microsoft Hedda - German (Germany)", "de-DE"),
+            new SpeechVoice("katja", "Microsoft Katja - German (Germany)", "de-DE"),
+            new SpeechVoice("stefan", "Microsoft Stefan - German (Germany)", "de-DE")
+        };
+        await CreateScriptAsync(AudioScriptFormat.Podcast);
+
+        Assert.That(_viewModel.SpeakerRoleName(0), Is.EqualTo("Moderatorin"));
+        Assert.That(_viewModel.SpeakerRoleName(1), Is.EqualTo("Experte"));
+        Assert.That(_viewModel.VoiceForSpeakerIndex(0), Is.EqualTo("hedda"));
+        Assert.That(_viewModel.VoiceForSpeakerIndex(1), Is.EqualTo("stefan"));
+        Assert.That(_viewModel.VoiceAssignmentHint, Is.Null);
+    }
+
+    [Test]
+    public async Task Podcast_NoMaleGermanVoice_UsesOtherGermanVoice_WithHint()
+    {
+        _live.Voices = new[]
+        {
+            new SpeechVoice("hedda", "Microsoft Hedda - German (Germany)", "de-DE"),
+            new SpeechVoice("katja", "Microsoft Katja - German (Germany)", "de-DE"),
+            new SpeechVoice("david", "Microsoft David - English (United States)", "en-US")
+        };
+        await CreateScriptAsync(AudioScriptFormat.Podcast);
+
+        Assert.That(_viewModel.VoiceForSpeakerIndex(1), Is.EqualTo("katja"), "andere deutsche Stimme statt englischer");
+        Assert.That(_viewModel.VoiceAssignmentHint, Does.Contain("Keine männliche deutsche Stimme für „Experte“").And.Contain("„Katja“"));
+        if (!OperatingSystem.IsLinux())
+            Assert.That(_viewModel.VoiceAssignmentHint, Does.Contain("Stefan").And.Contain("Sprachoptionen"));
+
+        // Manuelle Auswahl bleibt möglich und blendet den Hinweis aus
+        await _viewModel.SetSystemVoiceAsync(1, "david");
+        Assert.That(_viewModel.VoiceForSpeakerIndex(1), Is.EqualTo("david"));
+        Assert.That(_viewModel.VoiceAssignmentHint, Is.Null);
+    }
+
+    [Test]
+    public async Task Podcast_OnlyOneGermanVoice_HintSaysBothSoundAlike()
+    {
+        _live.Voices = new[] { new SpeechVoice("katja", "Microsoft Katja - German (Germany)", "de-DE") };
+        await CreateScriptAsync(AudioScriptFormat.Podcast);
+
+        Assert.That(_viewModel.VoiceForSpeakerIndex(1), Is.EqualTo("katja"));
+        Assert.That(_viewModel.VoiceAssignmentHint, Does.Contain("nur eine deutsche Stimme"));
+    }
+
+    [Test]
+    public async Task Summary_NoVoiceHint_AndNarratorPrefersFemaleVoice()
+    {
+        _live.Voices = new[]
+        {
+            new SpeechVoice("conrad", "Conrad", "de-DE"),
+            new SpeechVoice("stefan", "Stefan", "de-DE"),
+            new SpeechVoice("katja", "Katja", "de-DE")
+        };
+        await CreateScriptAsync();
+
+        Assert.That(_viewModel.SpeakerRoleName(0), Is.EqualTo("Sprecherin"));
+        Assert.That(_viewModel.VoiceForSpeakerIndex(0), Is.EqualTo("katja"));
+        Assert.That(_viewModel.VoiceAssignmentHint, Is.Null);
+    }
+
+    [Test]
+    public async Task NowPlayingTitle_ShownWhilePlaying_AndProfileChangeStops()
+    {
+        var summary = await CreateScriptAsync();
+        _live.Block = true;
+
+        var playing = _viewModel.PlayAsync();
+        await _live.WaitForSpeakingAsync();
+        Assert.That(_viewModel.NowPlayingTitle, Is.EqualTo(summary.Title));
+
+        await _viewModel.HandleProfileChangedAsync(Profile);
+        Assert.That(_viewModel.IsPlaying, Is.True, "gleiches Profil: Wiedergabe läuft weiter");
+
+        await _viewModel.HandleProfileChangedAsync("Anderes Testprofil");
+        await playing;
+        Assert.That(_viewModel.IsPlaying, Is.False);
+        Assert.That(_viewModel.NowPlayingTitle, Is.Null);
+        Assert.That(_live.StopCount, Is.GreaterThanOrEqualTo(1));
     }
 
     [Test]

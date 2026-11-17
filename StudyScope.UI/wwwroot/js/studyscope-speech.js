@@ -88,5 +88,9 @@ window.studyScopeSpeech = (function () {
     function resume() { if (isSupported()) window.speechSynthesis.resume(); }
     function stop() { if (isSupported()) window.speechSynthesis.cancel(); }
 
+    // Beim Schließen bzw. Neuladen der Seite nicht weitersprechen
+    window.addEventListener("pagehide", stop);
+    window.addEventListener("beforeunload", stop);
+
     return { check: check, speak: speak, pause: pause, resume: resume, stop: stop };
 })();

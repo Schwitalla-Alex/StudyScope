@@ -104,6 +104,14 @@ class Program
         app.MainWindow.SetMinSize(1000, 700);
 
         app.MainWindow.Center(); // Zentriert das Fenster auf dem Bildschirm
+
+        // Beim Schließen eine laufende Audio-Wiedergabe beenden (nicht abwarten: der Aufruf ginge über die WebView)
+        var audioViewModel = app.Services.GetRequiredService<AudioViewModel>();
+        app.MainWindow.RegisterWindowClosingHandler((_, _) =>
+        {
+            _ = audioViewModel.StopAsync();
+            return false; // Schließen nicht verhindern
+        });
                 
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {

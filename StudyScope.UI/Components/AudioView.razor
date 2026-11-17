@@ -393,11 +393,7 @@
 
     private static string Percent(double value) => (value * 100).ToString("0.#", CultureInfo.InvariantCulture);
 
-    private static int SpeakerIndex(AudioSummary summary, string speaker)
-    {
-        var index = summary.Speakers.FindIndex(s => string.Equals(s, speaker, StringComparison.OrdinalIgnoreCase));
-        return index <= 0 ? 0 : index % 2;
-    }
+    private static int SpeakerIndex(AudioSummary summary, string speaker) => AudioViewModel.SpeakerSlot(summary, speaker);
 
     private static (string Css, string Icon) AvailabilityStyle(SpeechAvailability availability) => availability.Status switch
     {
@@ -451,7 +447,7 @@
                 @if (AuVm.SystemVoices.Count > 0)
                 {
                     <div class="au-voice-row">
-                        <label>Stimme @(podcast ? "Sprecher 1" : "")
+                        <label>Stimme @(podcast ? AuVm.SpeakerRoleName(0) : "")
                             <select class="au-select" value="@AuVm.SpeechSettings.SystemVoicePrimary" @onchange="e => VoiceChangedAsync(0, e)">
                                 <option value="">Automatisch (@VoiceName(AuVm.VoiceForSpeakerIndex(0)))</option>
                                 @foreach (var voice in AuVm.SystemVoices)
@@ -462,7 +458,7 @@
                         </label>
                         @if (podcast)
                         {
-                            <label>Sprecher 2
+                            <label>@AuVm.SpeakerRoleName(1)
                                 <select class="au-select" value="@AuVm.SpeechSettings.SystemVoiceSecondary" @onchange="e => VoiceChangedAsync(1, e)">
                                     <option value="">Automatisch (@VoiceName(AuVm.VoiceForSpeakerIndex(1)))</option>
                                     @foreach (var voice in AuVm.SystemVoices)
@@ -473,6 +469,10 @@
                             </label>
                         }
                     </div>
+                    @if (podcast && AuVm.VoiceAssignmentHint is { } voiceHint)
+                    {
+                        <div class="au-note info">💡 @voiceHint</div>
+                    }
                 }
                 <div class="au-meta" style="margin-top: 6px;">💾 Dateiexport: @AudioViewModel.NoFileExportHint</div>
             }

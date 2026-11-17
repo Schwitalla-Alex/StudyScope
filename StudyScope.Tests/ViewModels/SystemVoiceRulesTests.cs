@@ -65,6 +65,45 @@ public class SystemVoiceRulesTests
         Assert.That(ordered.Select(v => v.Id), Is.EqualTo(new[] { "de-local", "de-online", "en" }));
     }
 
+    [TestCase("Microsoft Stefan - German (Germany)", VoiceGender.Male)]
+    [TestCase("Microsoft Katja Online (Natural) - German (Germany)", VoiceGender.Female)]
+    [TestCase("Microsoft Hedda - German (Germany)", VoiceGender.Female)]
+    [TestCase("Microsoft Conrad Online (Natural) - German (Germany)", VoiceGender.Male)]
+    [TestCase("German+female2", VoiceGender.Female)]
+    [TestCase("Google Deutsch", VoiceGender.Unknown)]
+    public void GuessGender_FromVoiceName(string name, VoiceGender expected) =>
+        Assert.That(SystemVoiceRules.GuessGender(new SpeechVoice("id", name, "de-DE")), Is.EqualTo(expected));
+
+    [Test]
+    public void ResolveVoice_PrefersGender_ButStaysGerman()
+    {
+        var voices = new[]
+        {
+            new SpeechVoice("hedda", "Hedda", "de-DE"),
+            new SpeechVoice("katja", "Katja", "de-DE"),
+            new SpeechVoice("david", "David", "en-US")
+        };
+
+        Assert.That(SystemVoiceRules.ResolveVoice(voices, "", 1, "hedda", VoiceGender.Male), Is.EqualTo("katja"),
+            "keine männliche deutsche Stimme: andere deutsche Stimme, nicht die englische");
+        Assert.That(SystemVoiceRules.ResolveVoice(voices, "", 0, null, VoiceGender.Female), Is.EqualTo("hedda"));
+    }
+
+    [Test]
+    public void ShortName_RemovesVendorAndLanguage() =>
+        Assert.That(SystemVoiceRules.ShortName(new SpeechVoice("x", "Microsoft Stefan - German (Germany)", "de-DE")), Is.EqualTo("Stefan"));
+
+    [Test]
+    public void SecondVoiceHint_OnLinux_HasNoWindowsPath()
+    {
+        var voices = new[] { new SpeechVoice("a", "Anna", "de-DE"), new SpeechVoice("b", "Petra", "de-DE") };
+
+        var hint = SystemVoiceRules.SecondVoiceHint(voices, "a", "b", "Experte", VoiceGender.Male, isLinux: true);
+
+        Assert.That(hint, Does.Contain("Keine männliche deutsche Stimme").And.Not.Contain("Windows"));
+        Assert.That(SystemVoiceRules.SecondVoiceHint(voices, "a", "b", "Experte", VoiceGender.Female, isLinux: false), Is.Null);
+    }
+
     [Test]
     public void ResolveVoice_ChosenOrAutomatic_SecondSpeakerDiffers()
     {
