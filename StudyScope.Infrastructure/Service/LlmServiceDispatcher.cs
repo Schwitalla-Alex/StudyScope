@@ -157,6 +157,10 @@ public class LlmServiceDispatcher : ILlmService
         if (FakeDataTableResponse.IsDataTablePrompt(prompt))
             return FakeDataTableResponse.Create(prompt, chunks);
 
+        // Audio-Skript nach Bericht und Datentabelle: ein Schwerpunkt kann "Mindmap", "Quiz" o. Ä. enthalten
+        if (FakeAudioScriptResponse.IsAudioScriptPrompt(prompt))
+            return FakeAudioScriptResponse.Create(prompt, chunks);
+
         // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
             return FakeMindmapResponse.Create(chunks);

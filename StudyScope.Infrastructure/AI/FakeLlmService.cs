@@ -26,6 +26,12 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakeDataTableResponse.Create(prompt, chunks));
         }
 
+        // Audio-Skript nach Bericht und Datentabelle: ein Schwerpunkt kann ebenfalls "Mindmap" oder "Quiz" enthalten
+        if (FakeAudioScriptResponse.IsAudioScriptPrompt(prompt))
+        {
+            return Task.FromResult(FakeAudioScriptResponse.Create(prompt, chunks));
+        }
+
         // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
         {

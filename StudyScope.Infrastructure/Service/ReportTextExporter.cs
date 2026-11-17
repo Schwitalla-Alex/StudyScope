@@ -133,6 +133,20 @@ public static class ReportTextExporter
             DataTableExporter.AppendMarkdownTable(sb, embedded.Table, embedded.Rows);
             sb.AppendLine();
         }
+
+        foreach (var audio in studio.AudioScripts.Where(a => a.Segments.Count > 0))
+        {
+            sb.AppendLine($"## 🎧 {audio.Title}");
+            sb.AppendLine();
+            sb.AppendLine($"*{AudioMeta(audio)}*");
+            sb.AppendLine();
+            var speakers = audio.Speakers.Count > 1;
+            foreach (var segment in audio.Segments)
+            {
+                sb.AppendLine(speakers ? $"**{segment.Speaker}:** {segment.Text}" : segment.Text);
+                sb.AppendLine();
+            }
+        }
     }
 
     private static void AppendTreeMarkdown(StringBuilder sb, MindmapNode node, int level)
@@ -251,6 +265,19 @@ public static class ReportTextExporter
             sb.AppendLine();
         }
 
+        foreach (var audio in studio.AudioScripts.Where(a => a.Segments.Count > 0))
+        {
+            Heading(sb, $"Audio-Skript – {audio.Title}");
+            sb.AppendLine(AudioMeta(audio));
+            sb.AppendLine();
+            var speakers = audio.Speakers.Count > 1;
+            foreach (var segment in audio.Segments)
+            {
+                sb.AppendLine(speakers ? $"{segment.Speaker}: {segment.Text}" : segment.Text);
+                sb.AppendLine();
+            }
+        }
+
         return sb.ToString().TrimEnd() + Environment.NewLine;
     }
 
@@ -284,6 +311,22 @@ public static class ReportTextExporter
             : $"{embedded.Rows.Count} {(embedded.Rows.Count == 1 ? "Zeile" : "Zeilen")}";
         var topic = string.IsNullOrWhiteSpace(embedded.Table.Topic) ? string.Empty : $" · Thema: {embedded.Table.Topic}";
         return $"{DataTableTemplates.DisplayName(embedded.Table.Template)}{topic} · {rows}";
+    }
+
+    /// <summary>Kurzbeschreibung eines eingebetteten Audio-Skripts, mit „Audiodatei: …“, wenn eine erzeugt wurde.</summary>
+    public static string AudioMeta(AudioSummary audio)
+    {
+        var parts = new List<string>
+        {
+            AudioScriptFormats.DisplayName(audio.Format),
+            $"{audio.Segments.Count} {(audio.Segments.Count == 1 ? "Abschnitt" : "Abschnitte")}",
+            AudioScriptFormats.FormatMinutes(audio.EstimatedMinutes)
+        };
+        if (!string.IsNullOrWhiteSpace(audio.Topic))
+            parts.Add($"Schwerpunkt: {audio.Topic}");
+        if (audio.HasAudioFile)
+            parts.Add($"Audiodatei: {audio.AudioFileName}");
+        return string.Join(" · ", parts);
     }
 
     public static string Letter(int index) => ((char)('A' + index)).ToString();

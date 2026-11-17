@@ -41,7 +41,8 @@ public class ReportViewModelTests
     }
 
     private ReportViewModel CreateViewModel() => new(
-        new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio, new DataTableService(_llm, _tempDir));
+        new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio, new DataTableService(_llm, _tempDir),
+        new AudioScriptService(_llm, _tempDir));
 
     private List<DocumentItem> Documents(bool selected = true) => new()
     {
@@ -278,6 +279,46 @@ public class ReportViewModelTests
 
         await reloaded.ToggleEmbedAsync("datatables");
         Assert.That(reloaded.CurrentHtml, Does.Contain("Glossar-Begriff-0"));
+    }
+
+    [Test]
+    public async Task AudioScripts_NewReportEmbedsText_PreferSourceDocuments_AndToggleIsSaved()
+    {
+        var library = new AudioLibrary();
+        library.Items.Add(new AudioSummary
+        {
+            Title = "Fremder Beitrag", SourceDocuments = new List<string> { "anderes.pdf" },
+            Segments = new List<AudioSegment> { new() { Speaker = "Sprecherin", Text = "Fremder Inhalt." } }
+        });
+        library.Items.Add(new AudioSummary
+        {
+            Title = "Zellen im Gespräch", Format = AudioScriptFormat.Podcast, SourceDocuments = new List<string> { "skript.txt" },
+            AudioFileName = "Zellen_im_Gespraech_1234abcd.wav",
+            Segments = new List<AudioSegment>
+            {
+                new() { Speaker = "Moderatorin", Text = "Was ist eine Zelle?" },
+                new() { Speaker = "Experte", Text = "Die kleinste Einheit des Lebens." }
+            }
+        });
+        await new AudioScriptService(_llm, _tempDir).SaveLibraryAsync("Testprofil", library);
+        await _viewModel.LoadForProfileAsync("Testprofil");
+        Assert.That(_viewModel.AudioScriptCount, Is.EqualTo(2));
+        Assert.That(_viewModel.NewEmbeds.AudioScripts, Is.True);
+
+        _llm.Response = null;
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.SelectedReport!.Embeds.AudioScripts, Is.True);
+        Assert.That(_viewModel.CurrentHtml, Does.Contain("Die kleinste Einheit des Lebens.").And.Contain("id=\"audio\"")
+            .And.Contain("Audiodatei: Zellen_im_Gespraech_1234abcd.wav"));
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Fremder Inhalt."), "bevorzugt aus den Quelldokumenten");
+
+        await _viewModel.ToggleEmbedAsync("audio");
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Die kleinste Einheit des Lebens."));
+
+        var reloaded = CreateViewModel();
+        await reloaded.LoadForProfileAsync("Testprofil");
+        Assert.That(reloaded.SelectedReport!.Embeds.AudioScripts, Is.False);
     }
 
     [Test]

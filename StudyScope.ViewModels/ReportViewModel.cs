@@ -30,6 +30,9 @@ public class ReportViewModel : INotifyPropertyChanged
     public const int MaxEmbeddedDataTables = 5;
     public const int MaxEmbeddedDataTableRows = 50;
 
+    /// <summary>Höchstzahl eingebetteter Audio-Skripte.</summary>
+    public const int MaxEmbeddedAudioScripts = 3;
+
     private readonly IReportService _reportService;
     private readonly IDocumentService _documentService;
     private readonly IMindmapService _mindmapService;
@@ -37,6 +40,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private readonly IQuizService _quizService;
     private readonly IPresentationService _presentationService;
     private readonly IDataTableService _dataTableService;
+    private readonly IAudioScriptService? _audioScriptService;
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
 
@@ -46,6 +50,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private QuizLibrary _quiz = new();
     private PresentationDocument? _presentation;
     private DataTableLibrary _dataTables = new();
+    private AudioLibrary _audio = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -56,7 +61,8 @@ public class ReportViewModel : INotifyPropertyChanged
         IFlashcardService flashcardService,
         IQuizService quizService,
         IPresentationService presentationService,
-        IDataTableService dataTableService)
+        IDataTableService dataTableService,
+        IAudioScriptService? audioScriptService = null)
     {
         _reportService = reportService;
         _documentService = documentService;
@@ -65,6 +71,7 @@ public class ReportViewModel : INotifyPropertyChanged
         _quizService = quizService;
         _presentationService = presentationService;
         _dataTableService = dataTableService;
+        _audioScriptService = audioScriptService;
     }
 
     // ---------------- Berichte ----------------
@@ -126,6 +133,9 @@ public class ReportViewModel : INotifyPropertyChanged
     public int PresentationSlideCount => _presentation?.Slides.Count ?? 0;
     public int DataTableCount => _dataTables.Tables.Count(t => t.Rows.Count > 0);
 
+    /// <summary>Audio-Beiträge mit Skript (eingebettet wird der Text, nicht die Audiodatei).</summary>
+    public int AudioScriptCount => _audio.Items.Count(a => a.Segments.Count > 0);
+
     // ---------------- Fortschritt und Status ----------------
 
     private bool _isBusy;
@@ -184,8 +194,9 @@ public class ReportViewModel : INotifyPropertyChanged
             Flashcards = FlashcardCount > 0,
             Quiz = QuizQuestionCount > 0,
             Presentation = PresentationSlideCount > 0,
-            // Neue Berichte betten Datentabellen standardmäßig ein (auch später angelegte)
-            DataTables = true
+            // Neue Berichte betten Datentabellen und Audio-Skripte standardmäßig ein (auch später angelegte)
+            DataTables = true,
+            AudioScripts = true
         };
 
         IsFormOpen = _library.Reports.Count == 0;
@@ -202,12 +213,16 @@ public class ReportViewModel : INotifyPropertyChanged
         _quiz = await TryLoad(() => _quizService.LoadLibraryAsync(profileName), new QuizLibrary()) ?? new QuizLibrary();
         _presentation = await TryLoad(() => _presentationService.LoadPresentationAsync(profileName), null);
         _dataTables = await TryLoad(() => _dataTableService.LoadLibraryAsync(profileName), new DataTableLibrary()) ?? new DataTableLibrary();
+        _audio = _audioScriptService == null
+            ? new AudioLibrary()
+            : await TryLoad(() => _audioScriptService.LoadLibraryAsync(profileName), new AudioLibrary()) ?? new AudioLibrary();
 
         OnPropertyChanged(nameof(HasMindmap));
         OnPropertyChanged(nameof(FlashcardCount));
         OnPropertyChanged(nameof(QuizQuestionCount));
         OnPropertyChanged(nameof(PresentationSlideCount));
         OnPropertyChanged(nameof(DataTableCount));
+        OnPropertyChanged(nameof(AudioScriptCount));
     }
 
     // T übernimmt die NULL-Zulässigkeit der Ladefunktion (z. B. MindmapDocument? oder List<Flashcard>),
@@ -249,6 +264,11 @@ public class ReportViewModel : INotifyPropertyChanged
         var tables = withRows.Where(t => t.SourceDocuments.Any(sources.Contains)).ToList();
         if (tables.Count == 0) tables = withRows;
 
+        // Audio-Skripte: ebenso bevorzugt aus denselben Dokumenten, neueste zuerst
+        var withSegments = _audio.Items.Where(a => a.Segments.Count > 0).ToList();
+        var scripts = withSegments.Where(a => a.SourceDocuments.Any(sources.Contains)).ToList();
+        if (scripts.Count == 0) scripts = withSegments;
+
         return new ReportStudioContent
         {
             Mindmap = _mindmap,
@@ -259,6 +279,10 @@ public class ReportViewModel : INotifyPropertyChanged
                 .OrderByDescending(t => t.CreatedAt)
                 .Take(MaxEmbeddedDataTables)
                 .Select(t => new ReportDataTable(t, t.Rows.Take(MaxEmbeddedDataTableRows).ToList()))
+                .ToList(),
+            AudioScripts = scripts
+                .OrderByDescending(a => a.CreatedAt)
+                .Take(MaxEmbeddedAudioScripts)
                 .ToList()
         };
     }
@@ -323,7 +347,8 @@ public class ReportViewModel : INotifyPropertyChanged
                 Flashcards = NewEmbeds.Flashcards,
                 Quiz = NewEmbeds.Quiz,
                 Presentation = NewEmbeds.Presentation,
-                DataTables = NewEmbeds.IncludesDataTables
+                DataTables = NewEmbeds.IncludesDataTables,
+                AudioScripts = NewEmbeds.IncludesAudioScripts
             };
 
             _library.Reports.Add(report);
@@ -421,6 +446,7 @@ public class ReportViewModel : INotifyPropertyChanged
             case "quiz": embeds.Quiz = !embeds.Quiz; break;
             case "presentation": embeds.Presentation = !embeds.Presentation; break;
             case "datatables": embeds.DataTables = !embeds.IncludesDataTables; break;
+            case "audio": embeds.AudioScripts = !embeds.IncludesAudioScripts; break;
         }
     }
 

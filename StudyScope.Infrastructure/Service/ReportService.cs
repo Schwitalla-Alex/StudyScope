@@ -330,6 +330,8 @@ public class ReportService : IReportService
                 report.Embeds ??= new ReportEmbeds();
                 // Berichte aus der Zeit vor den Datentabellen: Eigenschaft fehlt → keine Tabellen einbetten
                 report.Embeds.DataTables ??= false;
+                // … und vor den Audio-Beiträgen: keine Skripte einbetten
+                report.Embeds.AudioScripts ??= false;
                 report.SourceDocuments ??= new List<string>();
                 foreach (var section in report.Sections)
                 {

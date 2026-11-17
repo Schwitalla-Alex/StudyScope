@@ -39,6 +39,14 @@ class Program
         appBuilder.Services.AddSingleton<IReportService>(sp => new ReportService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IDataTableService>(sp => new DataTableService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
+        appBuilder.Services.AddSingleton<IAudioScriptService>(sp => new AudioScriptService(sp.GetRequiredService<ILlmService>()));
+
+        // Sprachausgabe: Systemstimme (Web Speech API der WebView) und Gemini TTS, im Reiter „Audio“ je Profil wählbar
+        appBuilder.Services.AddSingleton<BrowserSpeechService>();
+        appBuilder.Services.AddSingleton<ITextToSpeechService>(sp => sp.GetRequiredService<BrowserSpeechService>());
+        appBuilder.Services.AddSingleton<ITextToSpeechService>(_ => new GeminiTextToSpeechService());
+        appBuilder.Services.AddSingleton<BrowserAudioPlayer>();
+        appBuilder.Services.AddSingleton<IAudioFilePlayer>(sp => sp.GetRequiredService<BrowserAudioPlayer>());
 
         // ViewModels registrieren
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
@@ -56,6 +64,15 @@ class Program
         appBuilder.Services.AddSingleton<PresentationViewModel>();
         appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>()));
         appBuilder.Services.AddSingleton<DataTableViewModel>(sp => new DataTableViewModel(sp.GetRequiredService<IDataTableService>(), sp.GetRequiredService<IDocumentService>()));
+        appBuilder.Services.AddSingleton<AudioViewModel>(sp => new AudioViewModel(
+            sp.GetRequiredService<IAudioScriptService>(),
+            sp.GetRequiredService<IDocumentService>(),
+            sp.GetRequiredService<IStorageService>(),
+            sp.GetServices<ITextToSpeechService>(),
+            sp.GetRequiredService<IAudioFilePlayer>()));
+        appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
+            sp.GetRequiredService<IStorageService>(),
+            sp.GetServices<ITextToSpeechService>()));
         appBuilder.Services.AddSingleton<ReportViewModel>(sp => new ReportViewModel(
             sp.GetRequiredService<IReportService>(),
             sp.GetRequiredService<IDocumentService>(),
@@ -63,7 +80,8 @@ class Program
             sp.GetRequiredService<IFlashcardService>(),
             sp.GetRequiredService<IQuizService>(),
             sp.GetRequiredService<IPresentationService>(),
-            sp.GetRequiredService<IDataTableService>()));
+            sp.GetRequiredService<IDataTableService>(),
+            sp.GetRequiredService<IAudioScriptService>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");
@@ -93,6 +111,14 @@ class Program
         app.MainWindow.SetMinSize(1000, 700);
 
         app.MainWindow.Center(); // Zentriert das Fenster auf dem Bildschirm
+
+        // Beim Schließen eine laufende Audio-Wiedergabe beenden (nicht abwarten: der Aufruf ginge über die WebView)
+        var audioViewModel = app.Services.GetRequiredService<AudioViewModel>();
+        app.MainWindow.RegisterWindowClosingHandler((_, _) =>
+        {
+            _ = audioViewModel.StopAsync();
+            return false; // Schließen nicht verhindern
+        });
                 
         AppDomain.CurrentDomain.UnhandledException += (sender, error) =>
         {

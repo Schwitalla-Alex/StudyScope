@@ -45,6 +45,8 @@ public static class ReportHtmlExporter
         if (studio.Presentation is { Slides.Count: > 0 }) toc.Add(("praesentation", "📽️ Präsentation"));
         var dataTables = studio.DataTables.Where(t => t.Rows.Count > 0).ToList();
         if (dataTables.Count > 0) toc.Add(("datentabellen", dataTables.Count == 1 ? "📊 Datentabelle" : "📊 Datentabellen"));
+        var audioScripts = studio.AudioScripts.Where(a => a.Segments.Count > 0).ToList();
+        if (audioScripts.Count > 0) toc.Add(("audio", audioScripts.Count == 1 ? "🎧 Audio-Skript" : "🎧 Audio-Skripte"));
 
         if (toc.Count > 1)
         {
@@ -64,6 +66,7 @@ public static class ReportHtmlExporter
         if (studio.QuizQuestions.Count > 0) AppendQuiz(sb, studio.QuizQuestions);
         if (studio.Presentation is { Slides.Count: > 0 } presentation) AppendPresentation(sb, presentation);
         if (dataTables.Count > 0) AppendDataTables(sb, dataTables);
+        if (audioScripts.Count > 0) AppendAudioScripts(sb, audioScripts);
 
         sb.Append("<footer class=\"foot\">Erstellt mit StudyScope</footer>\n");
         sb.Append("</main>\n<script>\n").Append(Script).Append("\n</script>\n</body>\n</html>\n");
@@ -258,6 +261,29 @@ public static class ReportHtmlExporter
         sb.Append("</section>\n");
     }
 
+    /// <summary>Sprechskripte als einklappbare Blöcke (die Audiodatei wird nicht eingebettet, nur ihr Name genannt).</summary>
+    private static void AppendAudioScripts(StringBuilder sb, IReadOnlyList<AudioSummary> scripts)
+    {
+        sb.Append($"<section class=\"section studio\" id=\"audio\"><h2>🎧 {(scripts.Count == 1 ? "Audio-Skript" : "Audio-Skripte")}</h2>");
+        sb.Append("<div class=\"hint\">Sprechtext der Audio-Beiträge – zum Aufklappen anklicken.</div>");
+        foreach (var audio in scripts)
+        {
+            var speakers = audio.Speakers.Count > 1;
+            sb.Append("<details class=\"audio-script\"><summary>");
+            sb.Append($"<span class=\"audio-title\">{H(audio.Title)}</span><span class=\"meta-small\">{H(ReportTextExporter.AudioMeta(audio))}</span></summary>");
+            sb.Append("<div class=\"audio-body\">");
+            foreach (var segment in audio.Segments)
+            {
+                sb.Append("<p>");
+                if (speakers)
+                    sb.Append($"<b class=\"audio-speaker\">{H(segment.Speaker)}:</b> ");
+                sb.Append(Text(segment.Text)).Append("</p>");
+            }
+            sb.Append("</div></details>");
+        }
+        sb.Append("</section>\n");
+    }
+
     // ---------------- Hilfen ----------------
 
     private static string H(string? text) => WebUtility.HtmlEncode(text ?? string.Empty);
@@ -359,6 +385,12 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .slide-notes { display: none; }
 .deck-nav { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 10px; }
 .deck-pos { color: var(--muted); font-size: 13px; min-width: 60px; text-align: center; }
+.audio-script { border: 1px solid var(--line); border-radius: 8px; margin: 10px 0; background: #fff; }
+.audio-script > summary { cursor: pointer; padding: 10px 14px; display: flex; flex-direction: column; gap: 2px; }
+.audio-title { font-weight: 600; }
+.audio-body { padding: 0 16px 8px; border-top: 1px solid var(--line); }
+.audio-body p { margin: 8px 0; }
+.audio-speaker { color: var(--accent); }
 .dtable { margin: 18px 0 26px; }
 .dtable h3 { font-size: 16px; margin: 0 0 2px; }
 .meta-small { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
@@ -384,7 +416,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
   .section { break-inside: auto; }
   h2 { break-after: avoid; }
   .faq details, .quiz, .terms dl, .takeaway { break-inside: avoid; }
-  .faq details > *, .mm-node > * { display: block; }
+  .faq details > *, .mm-node > *, .audio-script > * { display: block; }
   .quiz-solution, .quiz-expl { display: block; }
   .quiz input { display: none; }
   .card { min-height: 0; break-inside: avoid; perspective: none; }

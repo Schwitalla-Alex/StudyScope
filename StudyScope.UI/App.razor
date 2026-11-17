@@ -2,6 +2,7 @@
 @inject DocumentListViewModel DocVm
 @inject ChatViewModel ChatVm
 @inject SettingsViewModel SettingsVm
+@inject AudioViewModel AuVm
 
 <!-- root-Komponente: Füllt 100vh aus -->
 <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #fff;">
@@ -17,32 +18,36 @@
         <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
 
             <!-- Reiterleiste oben -->
-            <div style="display: flex; background: #e9ecef; border-bottom: 1px solid #ced4da; padding-left: 10px; gap: 4px;">
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "chat" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "chat" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "chat" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+            <div style="display: flex; flex-wrap: wrap; background: #e9ecef; border-bottom: 1px solid #ced4da; padding-left: 10px; gap: 4px;">
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "chat" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "chat" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "chat" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "chat"'>
                     💬 Chat & Fragen
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "cards" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "cards" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "cards" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "cards" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "cards" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "cards" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "cards"'>
                     🎴 Lernkarteikarten
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "mindmap" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "mindmap" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "mindmap" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "mindmap" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "mindmap" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "mindmap" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "mindmap"'>
                     🧠 Mindmap
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "presentation" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "presentation" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "presentation" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "presentation" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "presentation" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "presentation" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "presentation"'>
                     📽️ Präsentation
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "quiz" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "quiz" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "quiz" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "quiz" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "quiz" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "quiz" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "quiz"'>
                     ❓ Quiz
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "tables" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "tables" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "tables" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "tables" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "tables" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "tables" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "tables"'>
                     📊 Datentabelle
                 </button>
-                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "reports" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "reports" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "reports" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "audio" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "audio" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "audio" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                        @onclick='() => activeTab = "audio"'>
+                    🎧 Audio
+                </button>
+                <button style="padding: 6px 16px; white-space: nowrap; border: 1px solid @(activeTab == "reports" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "reports" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "reports" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "reports"'>
                     📑 Berichte
                 </button>
@@ -74,6 +79,10 @@
                 {
                     <DataTableView />
                 }
+                else if (activeTab == "audio")
+                {
+                    <AudioView OnOpenSpeechSettings="OpenSpeechSettings" />
+                }
                 else
                 {
                     <ReportView />
@@ -88,7 +97,7 @@
 
 @if (showSettings)
 {
-    <SettingsModal OnClose="CloseSettingsModal" />
+    <SettingsModal OnClose="CloseSettingsModal" InitialSection="@settingsSection" />
 }
 
 @if (showAbout)
@@ -107,8 +116,27 @@
         await SettingsVm.InitializeAsync();
     }
 
-    private void OpenSettingsModal() => showSettings = true;
-    private void CloseSettingsModal() => showSettings = false;
+    private string settingsSection = "ai";
+
+    private void OpenSettingsModal()
+    {
+        settingsSection = "ai";
+        showSettings = true;
+    }
+
+    /// <summary>Aus dem Audio-Reiter: Einstellungen direkt im Abschnitt „Sprachausgabe“ öffnen.</summary>
+    private void OpenSpeechSettings()
+    {
+        settingsSection = "speech";
+        showSettings = true;
+    }
+
+    private async Task CloseSettingsModal()
+    {
+        showSettings = false;
+        // Schlüssel/Modell der Sprachausgabe oder die Chat-KI können sich geändert haben
+        await AuVm.ReloadSpeechSettingsAsync();
+    }
 
     /// <summary>
     /// Frage aus der Mindmap: zum Chat wechseln und die Frage dort mit den aktivierten Dokumenten stellen.

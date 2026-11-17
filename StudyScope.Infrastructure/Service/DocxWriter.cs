@@ -181,6 +181,19 @@ public static class DocxWriter
                     DataTableColumnWidths(embedded), firstColumnBold: false, compact: header.Length > 4));
             }
         }
+
+        foreach (var audio in studio.AudioScripts.Where(a => a.Segments.Count > 0))
+        {
+            body.Append(Paragraph("Heading1", Run($"Audio-Skript – {audio.Title}")));
+            body.Append(Paragraph(null, Run(ReportTextExporter.AudioMeta(audio), color: ColorMuted)));
+            var speakers = audio.Speakers.Count > 1;
+            foreach (var segment in audio.Segments)
+            {
+                body.Append(speakers
+                    ? Paragraph(null, Run($"{segment.Speaker}: ", bold: true) + Run(segment.Text))
+                    : Paragraph(null, Run(segment.Text)));
+            }
+        }
     }
 
     /// <summary>
