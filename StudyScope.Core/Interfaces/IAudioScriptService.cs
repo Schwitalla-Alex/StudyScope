@@ -32,6 +32,9 @@ public interface IAudioScriptService
     /// <summary>Löscht die Audiodatei eines Beitrags (falls vorhanden) und leert <see cref="AudioSummary.AudioFileName"/>.</summary>
     void DeleteAudioFile(string profileName, AudioSummary summary);
 
+    /// <summary>Pfad, unter dem eine neu erzeugte Audiodatei (WAV) eines Beitrags gespeichert wird.</summary>
+    string GetTargetAudioFilePath(string profileName, AudioSummary summary);
+
     string ExportToText(AudioSummary summary);
     string ExportToMarkdown(AudioSummary summary);
 }

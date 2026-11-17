@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Globalization;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Audio;
@@ -35,6 +37,8 @@ public class AudioViewModel : INotifyPropertyChanged
     private readonly IDocumentService _documentService;
     private readonly IStorageService _storage;
     private readonly IReadOnlyList<ITextToSpeechService> _speechServices;
+    private readonly IAudioFilePlayer? _filePlayer;
+    private CancellationTokenSource? _audioCts;
     private readonly Dictionary<SpeechProviderType, SpeechAvailability> _availability = new();
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
@@ -46,12 +50,15 @@ public class AudioViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public AudioViewModel(IAudioScriptService audioService, IDocumentService documentService, IStorageService storage,
-        IEnumerable<ITextToSpeechService> speechServices)
+        IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null)
     {
         _audioService = audioService;
         _documentService = documentService;
         _storage = storage;
         _speechServices = speechServices.ToList();
+        _filePlayer = filePlayer;
+        if (_filePlayer != null)
+            _filePlayer.PositionChanged += OnFilePositionChanged;
     }
 
     // ---------------- Beiträge ----------------
@@ -188,6 +195,15 @@ public class AudioViewModel : INotifyPropertyChanged
     }
 
     private bool _isLoaded;
+
+    /// <summary>Nach dem Schließen der Einstellungen: Sprachausgabe und Chat-KI neu lesen und neu prüfen.</summary>
+    public async Task ReloadSpeechSettingsAsync()
+    {
+        if (!_isLoaded) return;
+        _speechSettings = await _storage.LoadSpeechSettingsAsync(_profileName) ?? _speechSettings;
+        _chatConfig = await _storage.LoadAiConfigForProfileAsync(_profileName) ?? await _storage.LoadAiConfigAsync();
+        await RefreshAvailabilityAsync();
+    }
 
     /// <summary>
     /// Profilwechsel (auch wenn der Reiter nicht offen ist): eine laufende Wiedergabe des alten Profils wird beendet.
@@ -338,17 +354,8 @@ public class AudioViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Sprecher-Platz (0/1) eines Segments: nach Rolle des Formats, sonst nach Reihenfolge des Auftretens.</summary>
-    public static int SpeakerSlot(AudioSummary summary, string speaker)
-    {
-        var roles = AudioScriptFormats.Speakers(summary.Format);
-        var roleIndex = roles.ToList().FindIndex(r => string.Equals(r, speaker, StringComparison.OrdinalIgnoreCase));
-        if (roleIndex >= 0)
-            return roleIndex % 2;
-
-        var index = summary.Speakers.FindIndex(s => string.Equals(s, speaker, StringComparison.OrdinalIgnoreCase));
-        return index <= 0 ? 0 : index % 2;
-    }
+    /// <summary>Sprecher-Platz (0/1) eines Segments (siehe <see cref="AudioScriptFormats.SpeakerSlot"/>).</summary>
+    public static int SpeakerSlot(AudioSummary summary, string speaker) => AudioScriptFormats.SpeakerSlot(summary, speaker);
 
     private string VoiceForSpeaker(AudioSummary summary, string speaker) => VoiceForSpeakerIndex(SpeakerSlot(summary, speaker));
 
@@ -367,11 +374,18 @@ public class AudioViewModel : INotifyPropertyChanged
         get
         {
             if (!HasScript) return "Bitte zuerst ein Skript erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis das Skript fertig erstellt ist.";
+            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
             var service = CurrentSpeechService;
             if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
             if (!service.SupportsLivePlayback)
-                return $"{service.DisplayName} liest nicht direkt vor – erzeugen Sie eine Audiodatei oder wählen Sie die Systemstimme.";
+            {
+                // Erzeugte Audiodatei abspielen (dafür ist kein Schlüssel nötig)
+                if (SelectedAudioFilePath == null)
+                    return $"{service.DisplayName} liest nicht direkt vor – erzeugen Sie zuerst die Audiodatei („🎙️ Audiodatei erzeugen“) oder wählen Sie die Systemstimme.";
+                if (_filePlayer == null)
+                    return "Der Audio-Player ist in dieser Umgebung nicht verfügbar.";
+                return _filePlayer.IsReady ? null : "Der Audio-Player wird noch geladen …";
+            }
             return AvailabilityReason(CurrentAvailability);
         }
     }
@@ -384,10 +398,10 @@ public class AudioViewModel : INotifyPropertyChanged
         get
         {
             if (!HasScript) return "Bitte zuerst ein Skript erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis das Skript fertig erstellt ist.";
+            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
             var service = CurrentSpeechService;
             if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
-            if (!service.SupportsFileExport) return NoFileExportHint;
+            if (!service.SupportsFileExport || service is not IAudioFileSpeechService) return NoFileExportHint;
             return AvailabilityReason(CurrentAvailability);
         }
     }
@@ -415,11 +429,14 @@ public class AudioViewModel : INotifyPropertyChanged
 
     public int SegmentCount => SelectedSummary?.Segments.Count ?? 0;
 
-    /// <summary>Fortschritt 0…1 nach Zeichen bis zum aktuellen Segment.</summary>
+    /// <summary>Fortschritt 0…1 nach Zeichen bis zum aktuellen Segment (bei der Audiodatei nach Abspielposition).</summary>
     public double Progress
     {
         get
         {
+            if (UsesFilePlayback && SelectedSummary is { AudioDurationSeconds: > 0 } withFile && (_isPlaying || _filePosition > 0))
+                return Math.Clamp(_filePosition / withFile.AudioDurationSeconds, 0, 1);
+
             var summary = SelectedSummary;
             if (summary == null || summary.Segments.Count == 0 || _currentSegmentIndex < 0) return 0;
             var total = Math.Max(1, summary.CharacterCount);
@@ -434,6 +451,11 @@ public class AudioViewModel : INotifyPropertyChanged
         {
             var summary = SelectedSummary;
             if (summary == null || summary.Segments.Count == 0) return string.Empty;
+            if (UsesFilePlayback && summary.AudioDurationSeconds > 0)
+            {
+                var segmentInfo = _currentSegmentIndex < 0 ? $"{summary.Segments.Count} Abschnitte" : $"Abschnitt {_currentSegmentIndex + 1} von {summary.Segments.Count}";
+                return $"{FormatClock(_filePosition)} / {FormatClock(summary.AudioDurationSeconds)} · {segmentInfo} · Audiodatei";
+            }
             var position = _currentSegmentIndex < 0 ? 0 : _currentSegmentIndex;
             var remainingWords = summary.Segments.Skip(position).Sum(s => AudioScriptFormats.CountWords(s.Text));
             var minutes = AudioScriptFormats.EstimateMinutes(remainingWords) / Math.Max(SpeechSettings.MinRate, Rate);
@@ -460,6 +482,12 @@ public class AudioViewModel : INotifyPropertyChanged
             return;
         }
 
+        if (UsesFilePlayback)
+        {
+            await PlayFileAsync();
+            return;
+        }
+
         var live = (ILiveSpeechService)CurrentSpeechService!;
         if (_isPlaying && _isPaused)
         {
@@ -478,7 +506,16 @@ public class AudioViewModel : INotifyPropertyChanged
 
     public async Task PauseAsync()
     {
-        if (!_isPlaying || _isPaused || CurrentSpeechService is not ILiveSpeechService live) return;
+        if (!_isPlaying || _isPaused) return;
+        if (_fileMode)
+        {
+            await _filePlayer!.PauseAsync();
+            _isPaused = true;
+            OnPlayerChanged();
+            return;
+        }
+
+        if (CurrentSpeechService is not ILiveSpeechService live) return;
         await live.PauseAsync();
         _isPaused = true;
         OnPlayerChanged();
@@ -490,10 +527,17 @@ public class AudioViewModel : INotifyPropertyChanged
     public async Task StopAsync()
     {
         var wasPlaying = _isPlaying;
+        var wasFile = _fileMode;
         _playGeneration++;
         _isPlaying = false;
         _isPaused = false;
-        if (wasPlaying)
+        _fileMode = false;
+        if (wasPlaying && wasFile && _filePlayer != null)
+        {
+            try { await _filePlayer.StopAsync(); }
+            catch { /* Stopp ist immer erlaubt */ }
+        }
+        else if (wasPlaying)
         {
             foreach (var live in _speechServices.OfType<ILiveSpeechService>())
             {
@@ -512,6 +556,17 @@ public class AudioViewModel : INotifyPropertyChanged
     {
         if (!HasScript || index < 0 || index >= SegmentCount) return;
 
+        if (UsesFilePlayback)
+        {
+            _currentSegmentIndex = index;
+            _filePosition = SegmentStart(index);
+            if (_isPlaying && _fileMode)
+                await _filePlayer!.PlayAsync(SelectedAudioFilePath!, _filePosition, Rate);
+            _isPaused = false;
+            OnPlayerChanged();
+            return;
+        }
+
         var resume = _isPlaying;
         await StopAsync();
         _currentSegmentIndex = index;
@@ -523,8 +578,290 @@ public class AudioViewModel : INotifyPropertyChanged
 
     private async Task RestartCurrentSegmentIfPlayingAsync()
     {
+        if (_fileMode)
+        {
+            if (_filePlayer != null)
+                await _filePlayer.SetRateAsync(Rate);
+            return;
+        }
+
         if (_isPlaying && !_isPaused)
             await GoToSegmentAsync(_currentSegmentIndex);
+    }
+
+    // ---------------- Wiedergabe der Audiodatei ----------------
+
+    private bool _fileMode;
+    private double _filePosition;
+
+    /// <summary>Pfad der Audiodatei des gewählten Beitrags (null = keine bzw. nicht vorhanden).</summary>
+    public string? SelectedAudioFilePath =>
+        SelectedSummary is { HasAudioFile: true } summary ? _audioService.GetAudioFilePath(_profileName, summary) : null;
+
+    /// <summary>
+    /// Abspielen über die Audiodatei: wenn die gewählte Sprachausgabe nicht direkt vorliest (Gemini TTS) und für den
+    /// Beitrag eine Datei vorhanden ist. Mit der Systemstimme wird immer live vorgelesen.
+    /// </summary>
+    public bool UsesFilePlayback => CurrentSpeechService is { SupportsLivePlayback: false } && SelectedAudioFilePath != null;
+
+    private double SegmentStart(int index)
+    {
+        var starts = SelectedSummary?.AudioSegmentStarts;
+        if (starts == null || starts.Count == 0 || index < 0) return 0;
+        return starts[Math.Min(index, starts.Count - 1)];
+    }
+
+    private async Task PlayFileAsync()
+    {
+        if (_isPlaying && _isPaused)
+        {
+            await _filePlayer!.ResumeAsync();
+            _isPaused = false;
+            OnPlayerChanged();
+            return;
+        }
+
+        if (_isPlaying) return;
+
+        var start = _currentSegmentIndex > 0 ? SegmentStart(_currentSegmentIndex) : 0;
+        if (_currentSegmentIndex < 0) _currentSegmentIndex = 0;
+        _playGeneration++;
+        _fileMode = true;
+        _isPlaying = true;
+        _isPaused = false;
+        _filePosition = start;
+        _playingTitle = SelectedSummary!.Title;
+        OnPlayerChanged();
+
+        try
+        {
+            await _filePlayer!.PlayAsync(SelectedAudioFilePath!, start, Rate);
+        }
+        catch (Exception ex)
+        {
+            _fileMode = false;
+            _isPlaying = false;
+            ShowStatus($"⚠️ Die Audiodatei konnte nicht abgespielt werden: {ex.Message}", isError: true);
+            OnPlayerChanged();
+        }
+    }
+
+    /// <summary>Position der Audiodatei (vom Player): Hervorhebung nachführen, am Ende zurücksetzen.</summary>
+    private void OnFilePositionChanged(double seconds, bool ended)
+    {
+        if (!_fileMode) return;
+
+        if (ended)
+        {
+            _isPlaying = false;
+            _isPaused = false;
+            _fileMode = false;
+            _filePosition = 0;
+            _currentSegmentIndex = -1;
+            OnPlayerChanged();
+            return;
+        }
+
+        _filePosition = seconds;
+        var starts = SelectedSummary?.AudioSegmentStarts ?? new List<double>();
+        var index = 0;
+        for (var i = 0; i < starts.Count && i < SegmentCount; i++)
+        {
+            if (starts[i] <= seconds + 0.05) index = i;
+            else break;
+        }
+
+        _currentSegmentIndex = index;
+        OnPlayerChanged();
+    }
+
+    private static string FormatClock(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(Math.Max(0, Math.Round(seconds)));
+        return t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
+    }
+
+    // ---------------- Audiodatei erzeugen ----------------
+
+    /// <summary>Schätzung vor dem Erzeugen (nur Gemini TTS): Dauer, Dateigröße, Kosten.</summary>
+    public GeminiTtsEstimate? AudioEstimate =>
+        SelectedSummary is { } summary && SelectedProvider == SpeechProviderType.GeminiTts
+            ? GeminiTtsInfo.Estimate(summary.WordCount, summary.CharacterCount, DateTime.Today)
+            : null;
+
+    /// <summary>„ca. 8 Min. Audio · ca. 23 MB (WAV) · geschätzt 0,11 US-Dollar …“</summary>
+    public string? AudioEstimateText
+    {
+        get
+        {
+            if (AudioEstimate is not { } e) return null;
+            var de = CultureInfo.GetCultureInfo("de-DE");
+            var minutes = AudioScriptFormats.FormatMinutes(e.Seconds / 60);
+            var size = e.Megabytes < 10 ? e.Megabytes.ToString("0.0", de) : e.Megabytes.ToString("0", de);
+            var usd = e.Usd < 0.01 ? "unter 0,01" : e.Usd.ToString("0.00", de);
+            return $"{minutes} Audio · ca. {size} MB (WAV) · geschätzt {usd} US-Dollar bei bezahlter Nutzung. {GeminiTtsInfo.FreeTierHint}";
+        }
+    }
+
+    private bool _isGeneratingAudio;
+    public bool IsGeneratingAudio { get => _isGeneratingAudio; private set { _isGeneratingAudio = value; OnPropertyChanged(); } }
+
+    private double _audioProgress;
+    /// <summary>Fortschritt der Erzeugung 0…1.</summary>
+    public double AudioProgress { get => _audioProgress; private set { _audioProgress = value; OnPropertyChanged(); } }
+
+    private string _audioProgressText = string.Empty;
+    public string AudioProgressText { get => _audioProgressText; private set { _audioProgressText = value; OnPropertyChanged(); } }
+
+    public void CancelAudioGeneration() => _audioCts?.Cancel();
+
+    /// <summary>
+    /// Erzeugt die Audiodatei (WAV) mit der gewählten Sprachausgabe. Fortschritt je Teil; bei Abbruch oder Fehler bleibt
+    /// keine halbe Datei zurück und eine vorhandene Audiodatei unverändert.
+    /// </summary>
+    public async Task GenerateAudioAsync()
+    {
+        if (!CanGenerateAudio)
+        {
+            if (GenerateAudioDisabledReason is { } reason)
+                ShowStatus($"⚠️ {reason}", isError: false, isWarning: true);
+            return;
+        }
+
+        var summary = SelectedSummary!;
+        var service = (IAudioFileSpeechService)CurrentSpeechService!;
+        await StopAsync();
+
+        IsBusy = true;
+        IsGeneratingAudio = true;
+        AudioProgress = 0;
+        AudioProgressText = "Audiodatei wird vorbereitet …";
+        ClearStatus();
+        _audioCts = new CancellationTokenSource();
+        var token = _audioCts.Token;
+
+        try
+        {
+            var path = _audioService.GetTargetAudioFilePath(_profileName, summary);
+            var progress = new SynchronousProgress<SpeechSynthesisProgress>(p =>
+            {
+                AudioProgress = p.Fraction;
+                AudioProgressText = p.CompletedParts < p.TotalParts
+                    ? $"Teil {p.CompletedParts + 1} von {p.TotalParts} wird erzeugt …"
+                    : "Audiodatei wird gespeichert …";
+            });
+
+            var oldPath = SelectedAudioFilePath;
+            var result = await service.SynthesizeToFileAsync(summary, new SpeechContext(_speechSettings, _chatConfig), path, progress, token);
+
+            if (oldPath != null && !string.Equals(Path.GetFullPath(oldPath), Path.GetFullPath(path), StringComparison.OrdinalIgnoreCase))
+                _audioService.DeleteAudioFile(_profileName, summary);
+            summary.AudioFileName = Path.GetFileName(path);
+            summary.AudioDurationSeconds = result.DurationSeconds;
+            summary.AudioSegmentStarts = result.SegmentStartSeconds.ToList();
+            summary.AudioCreatedAt = DateTime.Now;
+            summary.AudioScriptHash = summary.ComputeScriptHash();
+            summary.AudioCreatedWith = result.CreatedWith;
+            await SaveAsync();
+
+            _currentSegmentIndex = -1;
+            _filePosition = 0;
+            var size = File.Exists(path) ? new FileInfo(path).Length / 1_000_000.0 : 0;
+            ShowStatus($"✓ Audiodatei erzeugt ({FormatClock(result.DurationSeconds)} Min., {size.ToString("0.0", CultureInfo.GetCultureInfo("de-DE"))} MB). " +
+                       "Mit ▶ abspielen oder als WAV exportieren.", isError: false);
+        }
+        catch (OperationCanceledException)
+        {
+            ShowStatus("Die Erzeugung der Audiodatei wurde abgebrochen. Es wurde keine Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert.", isError: false);
+        }
+        catch (LlmServiceException ex)
+        {
+            ShowStatus($"⚠️ {ex.Message}", isError: true,
+                new[] { "Es wurde keine halbe Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert." }, ex.Detail);
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"⚠️ Fehler beim Erzeugen der Audiodatei: {ex.Message}", isError: true,
+                new[] { "Es wurde keine halbe Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert." });
+        }
+        finally
+        {
+            _audioCts?.Dispose();
+            _audioCts = null;
+            IsGeneratingAudio = false;
+            AudioProgress = 0;
+            AudioProgressText = string.Empty;
+            IsBusy = false;
+            OnScriptChanged();
+        }
+    }
+
+    /// <summary>Meldet Fortschritt sofort (ohne SynchronizationContext-Umweg wie bei Progress&lt;T&gt;).</summary>
+    private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
+    }
+
+    private bool _isTestingConnection;
+    public bool IsTestingConnection { get => _isTestingConnection; private set { _isTestingConnection = value; OnPropertyChanged(); } }
+
+    /// <summary>Prüft Schlüssel und Modell der Sprachausgabe ohne Kosten (nur Anbieter mit Dateiexport).</summary>
+    public async Task TestSpeechConnectionAsync()
+    {
+        if (CurrentSpeechService is not IAudioFileSpeechService service || IsTestingConnection) return;
+        IsTestingConnection = true;
+        try
+        {
+            var message = await service.TestConnectionAsync(new SpeechContext(_speechSettings, _chatConfig));
+            ShowStatus(message, isError: false);
+        }
+        catch (LlmServiceException ex)
+        {
+            ShowStatus($"⚠️ {ex.Message}", isError: true, null, ex.Detail);
+        }
+        finally
+        {
+            IsTestingConnection = false;
+        }
+    }
+
+    /// <summary>Löscht nur die Audiodatei des gewählten Beitrags (das Skript bleibt).</summary>
+    public async Task DeleteAudioFileAsync()
+    {
+        var summary = SelectedSummary;
+        if (summary is not { HasAudioFile: true }) return;
+        await StopAsync();
+        _audioService.DeleteAudioFile(_profileName, summary);
+        if (summary.HasAudioFile)
+        {
+            ShowStatus("⚠️ Die Audiodatei konnte nicht gelöscht werden (noch in Benutzung). Bitte später erneut versuchen.", isError: true);
+            return;
+        }
+        await SaveAsync();
+        OnScriptChanged();
+        ShowStatus("✓ Audiodatei gelöscht. Das Skript bleibt erhalten.", isError: false);
+    }
+
+    public bool CanExportAudio => SelectedAudioFilePath != null && !IsBusy;
+
+    public async Task<bool> ExportAudioAsync(string filePath)
+    {
+        var source = SelectedAudioFilePath;
+        if (source == null) return false;
+        try
+        {
+            await using (var input = File.OpenRead(source))
+            await using (var output = File.Create(filePath))
+                await input.CopyToAsync(output);
+            ShowStatus($"✓ Audiodatei exportiert: {Path.GetFileName(filePath)}", isError: false);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"⚠️ Fehler beim Export der Audiodatei: {ex.Message}", isError: true,
+                new[] { "Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren." });
+            return false;
+        }
     }
 
     private async Task RunPlaybackAsync(ILiveSpeechService live)
@@ -864,6 +1201,9 @@ public class AudioViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(CanGenerateAudio));
         OnPropertyChanged(nameof(GenerateAudioDisabledReason));
         OnPropertyChanged(nameof(HasScript));
+        OnPropertyChanged(nameof(UsesFilePlayback));
+        OnPropertyChanged(nameof(CanExportAudio));
+        OnPropertyChanged(nameof(AudioEstimateText));
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null) =>

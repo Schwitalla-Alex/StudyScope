@@ -71,6 +71,35 @@ public static class GeminiTtsInfo
     /// <summary>Höchstens zwei Sprecher je Anfrage.</summary>
     public const int MaxSpeakers = 2;
 
+    /// <summary>Bis zu diesem Tag gilt der Einführungspreis; danach verdoppelt Google den Preis für Audio-Ausgabe.</summary>
+    public static readonly DateTime IntroductoryPriceUntil = new(2026, 12, 31);
+
+    /// <summary>Kostenlose Stufe (mit Tageslimits) – Hinweis für die Kostenanzeige.</summary>
+    public const string FreeTierHint = "In der kostenlosen Stufe von Google AI Studio fallen keine Kosten an (Tageslimits).";
+
+    /// <summary>Preis je 1 Mio. Audio-Token zum angegebenen Datum.</summary>
+    public static double UsdPerMillionAudioTokensAt(DateTime date) =>
+        date.Date <= IntroductoryPriceUntil ? UsdPerMillionAudioTokens : UsdPerMillionAudioTokens * 2;
+
+    /// <summary>Geschätzte Audiodauer, Dateigröße (WAV) und Kosten für ein Skript.</summary>
+    public static GeminiTtsEstimate Estimate(int words, int characters, DateTime date)
+    {
+        var seconds = Math.Max(1, words) / AudioScriptFormats.WordsPerMinute * 60;
+        var audioTokens = seconds * AudioTokensPerSecond;
+        var textTokens = characters / 4.0 + 50;
+        var usd = audioTokens * UsdPerMillionAudioTokensAt(date) / 1_000_000 + textTokens * UsdPerMillionTextTokens / 1_000_000;
+        return new GeminiTtsEstimate(seconds, (long)(seconds * WavBytesPerSecond) + 44, usd);
+    }
+
+    /// <summary>Stimmlage der vorgefertigten Stimmen (laut Google; für die Vorauswahl je Sprecherrolle).</summary>
+    public static bool IsFemaleVoice(string voice) => FemaleVoices.Contains(voice);
+
+    private static readonly HashSet<string> FemaleVoices = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Zephyr", "Kore", "Leda", "Aoede", "Callirrhoe", "Autonoe", "Despina", "Erinome", "Laomedeia", "Achernar",
+        "Gacrux", "Pulcherrima", "Vindemiatrix", "Sulafat"
+    };
+
     /// <summary>Die 30 vorgefertigten Stimmen.</summary>
     public static IReadOnlyList<string> Voices { get; } = new[]
     {
@@ -78,4 +107,10 @@ public static class GeminiTtsInfo
         "Enceladus", "Iapetus", "Umbriel", "Algieba", "Despina", "Erinome", "Algenib", "Rasalgethi", "Laomedeia", "Achernar",
         "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird", "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat"
     };
+}
+
+/// <summary>Schätzung vor dem Erzeugen: Dauer, Dateigröße und Kosten (US-Dollar, ohne kostenlose Stufe).</summary>
+public sealed record GeminiTtsEstimate(double Seconds, long FileBytes, double Usd)
+{
+    public double Megabytes => FileBytes / 1_000_000.0;
 }

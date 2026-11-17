@@ -66,6 +66,16 @@ public class ReportEmbeds
     /// <summary>Ob Datentabellen eingebettet werden (null = älterer Bericht = nein).</summary>
     [JsonIgnore]
     public bool IncludesDataTables => DataTables == true;
+
+    /// <summary>
+    /// Sprechskripte der Audio-Beiträge einbetten (nur als Text; die Audiodatei selbst wird nicht eingebettet, nur ihr
+    /// Name genannt). Wie <see cref="DataTables"/> ohne Standardwert: ältere Berichte bleiben unverändert.
+    /// </summary>
+    public bool? AudioScripts { get; set; }
+
+    /// <summary>Ob Audio-Skripte eingebettet werden (null = älterer Bericht = nein).</summary>
+    [JsonIgnore]
+    public bool IncludesAudioScripts => AudioScripts == true;
 }
 
 /// <summary>Ein gespeicherter Bericht.</summary>
@@ -116,6 +126,9 @@ public class ReportStudioContent
     public PresentationDocument? Presentation { get; init; }
     public IReadOnlyList<ReportDataTable> DataTables { get; init; } = Array.Empty<ReportDataTable>();
 
+    /// <summary>Sprechskripte der Audio-Beiträge (Text; Audiodatei nur als Name).</summary>
+    public IReadOnlyList<AudioSummary> AudioScripts { get; init; } = Array.Empty<AudioSummary>();
+
     public static ReportStudioContent Empty { get; } = new();
 
     /// <summary>Nur die Teile, die laut <paramref name="embeds"/> gewünscht und vorhanden sind.</summary>
@@ -125,11 +138,12 @@ public class ReportStudioContent
         Flashcards = embeds.Flashcards ? Flashcards : Array.Empty<Flashcard>(),
         QuizQuestions = embeds.Quiz ? QuizQuestions : Array.Empty<QuizQuestion>(),
         Presentation = embeds.Presentation ? Presentation : null,
-        DataTables = embeds.IncludesDataTables ? DataTables : Array.Empty<ReportDataTable>()
+        DataTables = embeds.IncludesDataTables ? DataTables : Array.Empty<ReportDataTable>(),
+        AudioScripts = embeds.IncludesAudioScripts ? AudioScripts : Array.Empty<AudioSummary>()
     };
 
     public bool HasAny => Mindmap != null || Flashcards.Count > 0 || QuizQuestions.Count > 0 || Presentation is { Slides.Count: > 0 }
-                          || DataTables.Any(t => t.Rows.Count > 0);
+                          || DataTables.Any(t => t.Rows.Count > 0) || AudioScripts.Any(a => a.Segments.Count > 0);
 }
 
 /// <summary>

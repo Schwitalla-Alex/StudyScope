@@ -530,6 +530,9 @@ public partial class AudioScriptService : IAudioScriptService
                 }
                 item.SourceDocuments ??= new List<string>();
                 item.AudioFileName ??= string.Empty;
+                item.AudioSegmentStarts ??= new List<double>();
+                item.AudioScriptHash ??= string.Empty;
+                item.AudioCreatedWith ??= string.Empty;
                 item.Title ??= string.Empty;
                 item.Topic ??= string.Empty;
             }
@@ -589,7 +592,23 @@ public partial class AudioScriptService : IAudioScriptService
             }
         }
 
-        summary.AudioFileName = string.Empty;
+        summary.ClearAudio();
+    }
+
+    public string GetTargetAudioFilePath(string profileName, AudioSummary summary) =>
+        Path.Combine(GetAudioDirectory(profileName), SuggestAudioFileName(summary));
+
+    /// <summary>Lesbarer Dateiname aus Titel und Kennung, z. B. „Zellbiologie_im_Gespraech_1a2b3c4d.wav“.</summary>
+    public static string SuggestAudioFileName(AudioSummary summary)
+    {
+        var title = (summary.Title ?? string.Empty)
+            .Replace("ä", "ae").Replace("ö", "oe").Replace("ü", "ue").Replace("Ä", "Ae").Replace("Ö", "Oe").Replace("Ü", "Ue").Replace("ß", "ss");
+        var chars = title.Select(c => char.IsAsciiLetterOrDigit(c) ? c : '_').ToArray();
+        var name = string.Join("_", new string(chars).Split('_', StringSplitOptions.RemoveEmptyEntries));
+        if (name.Length > 40) name = name[..40].TrimEnd('_');
+        var id = new string(summary.Id.Where(char.IsAsciiLetterOrDigit).ToArray());
+        id = id.Length > 8 ? id[..8] : id;
+        return name.Length == 0 ? $"Audio_{id}.wav" : $"{name}_{id}.wav";
     }
 
     private string GetFilePath(string profileName) =>

@@ -1,3 +1,7 @@
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json.Serialization;
+
 namespace StudyScope.Core.Models;
 
 /// <summary>Art des Hörbeitrags.</summary>
@@ -45,6 +49,46 @@ public class AudioSummary
 
     /// <summary>Dateiname der erzeugten Audiodatei im Ordner <c>Audio/&lt;Profil&gt;/</c>; leer = keine Datei.</summary>
     public string AudioFileName { get; set; } = string.Empty;
+
+    /// <summary>Dauer der Audiodatei in Sekunden (0 = unbekannt bzw. keine Datei).</summary>
+    public double AudioDurationSeconds { get; set; }
+
+    /// <summary>Startzeit jedes Segments in der Audiodatei (Sekunden) – für Hervorhebung und Springen.</summary>
+    public List<double> AudioSegmentStarts { get; set; } = new();
+
+    /// <summary>Wann die Audiodatei erzeugt wurde.</summary>
+    public DateTime? AudioCreatedAt { get; set; }
+
+    /// <summary>Prüfsumme des Skripts beim Erzeugen der Audiodatei (erkennt spätere Änderungen).</summary>
+    public string AudioScriptHash { get; set; } = string.Empty;
+
+    /// <summary>Womit die Datei erzeugt wurde, z. B. „Gemini TTS (gemini-3.8-flash-tts)“.</summary>
+    public string AudioCreatedWith { get; set; } = string.Empty;
+
+    [JsonIgnore]
+    public bool HasAudioFile => !string.IsNullOrWhiteSpace(AudioFileName);
+
+    /// <summary>Das Skript wurde nach dem Erzeugen der Audiodatei geändert.</summary>
+    [JsonIgnore]
+    public bool IsAudioOutdated => HasAudioFile && !string.IsNullOrEmpty(AudioScriptHash) && AudioScriptHash != ComputeScriptHash();
+
+    /// <summary>Prüfsumme über Sprecher und Texte aller Segmente.</summary>
+    public string ComputeScriptHash()
+    {
+        var text = string.Join("\u001e", Segments.Select(s => $"{s.Speaker}\u001f{s.Text}"));
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)))[..16];
+    }
+
+    /// <summary>Entfernt die Angaben zur Audiodatei (die Datei selbst löscht der Dienst).</summary>
+    public void ClearAudio()
+    {
+        AudioFileName = string.Empty;
+        AudioDurationSeconds = 0;
+        AudioSegmentStarts = new List<double>();
+        AudioCreatedAt = null;
+        AudioScriptHash = string.Empty;
+        AudioCreatedWith = string.Empty;
+    }
 
     /// <summary>Wörter des ganzen Skripts.</summary>
     public int WordCount => Segments.Sum(s => AudioScriptFormats.CountWords(s.Text));
@@ -121,6 +165,27 @@ public static class AudioScriptFormats
     };
 
     /// <summary>Feste Sprechernamen je Format (die KI soll genau diese verwenden).</summary>
+    /// <summary>
+    /// Sprecher-Platz (0/1) eines Segments: nach der Rolle des Formats (Moderatorin 0, Experte 1), sonst nach der
+    /// Reihenfolge des ersten Auftretens (abwechselnd). Gilt für Systemstimme und Gemini TTS gleichermaßen.
+    /// </summary>
+    public static int SpeakerSlot(AudioSummary summary, string speaker)
+    {
+        var roles = Speakers(summary.Format);
+        for (var i = 0; i < roles.Count; i++)
+        {
+            if (string.Equals(roles[i], speaker?.Trim(), StringComparison.OrdinalIgnoreCase))
+                return i % 2;
+        }
+
+        var index = summary.Speakers.FindIndex(s => string.Equals(s, speaker?.Trim(), StringComparison.OrdinalIgnoreCase));
+        return index <= 0 ? 0 : index % 2;
+    }
+
+    /// <summary>Ob im Beitrag zwei Sprecher-Plätze vorkommen (dann zwei Stimmen).</summary>
+    public static bool HasTwoSpeakers(AudioSummary summary) =>
+        summary.Segments.Select(s => SpeakerSlot(summary, s.Speaker)).Distinct().Count() > 1;
+
     public static IReadOnlyList<string> Speakers(AudioScriptFormat format) => format == AudioScriptFormat.Podcast
         ? new[] { HostName, ExpertName }
         : new[] { NarratorName };

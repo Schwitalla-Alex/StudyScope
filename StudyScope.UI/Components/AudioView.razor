@@ -5,6 +5,7 @@
 @inject AudioViewModel AuVm
 @inject DocumentListViewModel DocVm
 @inject BrowserSpeechService SystemSpeech
+@inject BrowserAudioPlayer FilePlayer
 @inject IJSRuntime JSRuntime
 @implements IDisposable
 
@@ -24,7 +25,18 @@
         }
     </div>
 
-    @if (AuVm.IsBusy)
+    @if (AuVm.IsGeneratingAudio)
+    {
+        <div class="au-info">
+            <div style="font-weight: 600; font-size: 13px;">🎙️ @(AuVm.CurrentSpeechService?.DisplayName ?? "Sprachausgabe") erzeugt die Audiodatei … @AuVm.AudioProgressText</div>
+            <div class="au-bar" style="margin-top: 8px;"><div class="au-bar-fill" style="width: @(Percent(AuVm.AudioProgress))%;"></div></div>
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
+                <span style="font-size: 11px; color: #6c757d;">Lange Skripte werden in mehreren Teilen erzeugt. Beim Abbrechen wird keine Datei gespeichert.</span>
+                <button type="button" class="au-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="AuVm.CancelAudioGeneration">Abbrechen</button>
+            </div>
+        </div>
+    }
+    else if (AuVm.IsBusy)
     {
         <div class="au-info">
             <div style="font-weight: 600; font-size: 13px;">🎧 KI liest die Dokumente und schreibt das Sprechskript (@AudioScriptFormats.DisplayName(AuVm.Format), @AudioScriptFormats.LengthName(AuVm.Length)) ...</div>
@@ -57,7 +69,7 @@
                 @if (!string.IsNullOrEmpty(AuVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details</summary>
                         <pre class="au-details-raw">@AuVm.StatusDetails</pre>
                     </details>
                 }
@@ -222,6 +234,8 @@
                     {
                         <div class="au-hint">🔇 @playReason</div>
                     }
+
+                    @AudioFilePanel(summary)
                 </div>
 
                 <!-- Skript -->
@@ -354,6 +368,8 @@
         .au-play-btn:disabled { opacity: 0.4; cursor: not-allowed; }
         .au-bar { height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; }
         .au-bar-fill { height: 100%; background: #0d6efd; transition: width 0.3s; }
+        .au-file { margin-top: 10px; padding-top: 10px; border-top: 1px dashed #dee2e6; font-size: 13px; }
+        .au-confirm { background: #f3eefc; border: 1px solid #d6c8f5; border-radius: 6px; padding: 9px 12px; }
         .au-hint { margin-top: 8px; font-size: 12px; color: #856404; background: #fff8e1; border: 1px solid #ffe8a1; border-radius: 4px; padding: 5px 9px; }
         .au-script { display: flex; flex-direction: column; gap: 6px; }
         .au-seg { background: #fff; border: 1px solid #dee2e6; border-left: 4px solid #dee2e6; border-radius: 6px; padding: 8px 12px; transition: background 0.2s, border-color 0.2s; }
@@ -441,6 +457,10 @@
             {
                 <div class="au-note @(current.Status == SpeechAvailabilityStatus.Unavailable ? "warn" : "info")">💡 @current.Hint</div>
             }
+            @if (AuVm.AvailabilityOf(SpeechProviderType.GeminiTts).Status == SpeechAvailabilityStatus.Unavailable)
+            {
+                <button type="button" class="au-link" style="margin-top: 6px;" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Gemini TTS einrichten (Einstellungen › Sprachausgabe)</button>
+            }
 
             @if (AuVm.SelectedProvider == SpeechProviderType.SystemVoice)
             {
@@ -478,7 +498,14 @@
             }
             else if (AuVm.SelectedProvider == SpeechProviderType.GeminiTts)
             {
-                <div class="au-note info">☁️ Gemini TTS erzeugt eine Audiodatei (WAV), beim Podcast mit zwei Stimmen. Die Erzeugung der Audiodatei folgt im nächsten Ausbauschritt.</div>
+                <div class="au-note info">☁️ Gemini TTS erzeugt eine Audiodatei (WAV), beim Podcast mit zwei Stimmen (Sprecherin/Moderatorin: <b>@AuVm.SpeechSettings.GeminiVoicePrimary</b>, Experte: <b>@AuVm.SpeechSettings.GeminiVoiceSecondary</b>).</div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
+                    <button type="button" class="au-btn" style="background: #17a2b8;" disabled="@(!AuVm.CurrentAvailability.IsAvailable || AuVm.IsTestingConnection)"
+                            title="Prüft Schlüssel und Modell über die kostenlose Modellabfrage – es wird keine Sprache erzeugt" @onclick="AuVm.TestSpeechConnectionAsync">
+                        @(AuVm.IsTestingConnection ? "Prüfe …" : "🔌 Verbindung testen")
+                    </button>
+                    <button type="button" class="au-btn" style="background: #6c757d;" title="Schlüssel, Modell und Stimmen ändern" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Schlüssel, Modell, Stimmen</button>
+                </div>
             }
 
             @if (AuVm.ShowPrivacyHint)
@@ -491,6 +518,131 @@
             }
         </div>
     };
+
+    [Parameter] public EventCallback OnOpenSpeechSettings { get; set; }
+
+    private bool confirmGenerateAudio;
+    private bool confirmDeleteAudio;
+
+    /// <summary>Audiodatei: vorhandene Datei (Infos, Export, Löschen) und Erzeugen mit Kostenschätzung und Bestätigung.</summary>
+    private RenderFragment AudioFilePanel(AudioSummary summary) => __builder =>
+    {
+        var service = AuVm.CurrentSpeechService;
+        var canCreateFiles = service is { SupportsFileExport: true };
+        if (!summary.HasAudioFile && !canCreateFiles)
+            return;
+
+        <div class="au-file">
+            @if (summary.HasAudioFile)
+            {
+                var exists = AuVm.SelectedAudioFilePath != null;
+                <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-weight: 600;">🎵 Audiodatei:</span>
+                    <span class="au-meta" style="font-size: 12px;">
+                        @summary.AudioFileName
+                        @if (summary.AudioDurationSeconds > 0) { <span> · @Clock(summary.AudioDurationSeconds) Min.</span> }
+                        @if (summary.AudioCreatedAt is { } created) { <span> · erzeugt am @created.ToString("dd.MM.yyyy HH:mm")</span> }
+                        @if (!string.IsNullOrWhiteSpace(summary.AudioCreatedWith)) { <span> · @summary.AudioCreatedWith</span> }
+                    </span>
+                    <span style="flex: 1;"></span>
+                    <button type="button" class="au-btn" style="background: #198754;" disabled="@(!AuVm.CanExportAudio)" title="Audiodatei (WAV) speichern unter …" @onclick="ExportAudioAsync">💾 WAV exportieren</button>
+                    @if (confirmDeleteAudio)
+                    {
+                        <button type="button" class="au-btn" style="background: #dc3545;" @onclick="DeleteAudioFileAsync">Audiodatei löschen?</button>
+                        <button class="au-icon" title="Nicht löschen" @onclick="() => confirmDeleteAudio = false">✕</button>
+                    }
+                    else
+                    {
+                        <button class="au-icon" title="Nur die Audiodatei löschen (das Skript bleibt)" disabled="@AuVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
+                    }
+                </div>
+                @if (!exists)
+                {
+                    <div class="au-hint">⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie sie bei Bedarf neu.</div>
+                }
+                else if (summary.IsAudioOutdated)
+                {
+                    <div class="au-hint">✏️ Das Skript wurde nach dem Erzeugen geändert – die Audiodatei enthält noch die alte Fassung. Erzeugen Sie sie neu, damit Ton und Text übereinstimmen.</div>
+                }
+                else if (!AuVm.UsesFilePlayback && service is { SupportsLivePlayback: true })
+                {
+                    <div class="au-meta" style="margin-top: 4px;">▶ liest mit der Systemstimme vor. Zum Abspielen der Audiodatei oben „Gemini TTS“ wählen.</div>
+                }
+            }
+
+            @if (canCreateFiles)
+            {
+                <div style="margin-top: @(summary.HasAudioFile ? "8px" : "0");">
+                    @if (confirmGenerateAudio && AuVm.CanGenerateAudio)
+                    {
+                        <div class="au-confirm">
+                            <div style="font-weight: 600;">🎙️ Audiodatei mit @service!.DisplayName erzeugen?</div>
+                            @if (AuVm.AudioEstimateText is { } estimate)
+                            {
+                                <div class="au-meta" style="margin-top: 3px; font-size: 12px;">Geschätzt: @estimate</div>
+                            }
+                            @if (summary.HasAudioFile)
+                            {
+                                <div class="au-meta" style="margin-top: 3px;">Die vorhandene Audiodatei wird erst ersetzt, wenn die neue vollständig erzeugt ist.</div>
+                            }
+                            <div class="au-meta" style="margin-top: 3px;">🔒 Der Skripttext wird dazu an Google gesendet.</div>
+                            <div style="display: flex; gap: 6px; margin-top: 8px;">
+                                <button type="button" class="au-btn" style="background: #28a745;" @onclick="GenerateAudioAsync">Jetzt erzeugen</button>
+                                <button type="button" class="au-link" @onclick="() => confirmGenerateAudio = false">Abbrechen</button>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <button type="button" class="au-btn" style="background: #6f42c1;" disabled="@(!AuVm.CanGenerateAudio)"
+                                    title="@(AuVm.GenerateAudioDisabledReason ?? "Audiodatei erzeugen (vorher werden Kosten und Größe angezeigt)")"
+                                    @onclick="() => { confirmGenerateAudio = true; confirmDeleteAudio = false; }">
+                                🎙️ @(summary.HasAudioFile ? "Audiodatei neu erzeugen" : "Audiodatei erzeugen")
+                            </button>
+                            @if (AuVm.AudioEstimateText is { } estimate)
+                            {
+                                <span class="au-meta">@estimate</span>
+                            }
+                        </div>
+                        @if (AuVm.GenerateAudioDisabledReason is { } reason && !AuVm.IsBusy)
+                        {
+                            <div class="au-hint">🔇 @reason</div>
+                        }
+                    }
+                </div>
+            }
+        </div>
+    };
+
+    private static string Clock(double seconds)
+    {
+        var t = TimeSpan.FromSeconds(Math.Round(seconds));
+        return t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
+    }
+
+    private async Task GenerateAudioAsync()
+    {
+        confirmGenerateAudio = false;
+        await AuVm.GenerateAudioAsync();
+    }
+
+    private async Task DeleteAudioFileAsync()
+    {
+        confirmDeleteAudio = false;
+        await AuVm.DeleteAudioFileAsync();
+    }
+
+    private async Task ExportAudioAsync()
+    {
+        var path = await DesktopDialogs.SaveFileAsync(AuVm.SuggestFileName("wav"), filterExtension: "wav",
+            filterDescription: "WAV-Audiodatei (*.wav)", title: "Audiodatei speichern als...");
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+        if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
+            path += ".wav";
+        await AuVm.ExportAudioAsync(path);
+    }
 
     private string VoiceName(string id) =>
         AuVm.SystemVoices.FirstOrDefault(v => v.Id == id)?.Name ?? "Standard";
@@ -508,6 +660,9 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
+        if (firstRender)
+            FilePlayer.Attach(JSRuntime);
+
         if (firstRender && !SystemSpeech.IsAttached)
         {
             SystemSpeech.Attach(JSRuntime);

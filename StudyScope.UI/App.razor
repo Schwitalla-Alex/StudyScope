@@ -2,6 +2,7 @@
 @inject DocumentListViewModel DocVm
 @inject ChatViewModel ChatVm
 @inject SettingsViewModel SettingsVm
+@inject AudioViewModel AuVm
 
 <!-- root-Komponente: Füllt 100vh aus -->
 <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #fff;">
@@ -80,7 +81,7 @@
                 }
                 else if (activeTab == "audio")
                 {
-                    <AudioView />
+                    <AudioView OnOpenSpeechSettings="OpenSpeechSettings" />
                 }
                 else
                 {
@@ -96,7 +97,7 @@
 
 @if (showSettings)
 {
-    <SettingsModal OnClose="CloseSettingsModal" />
+    <SettingsModal OnClose="CloseSettingsModal" InitialSection="@settingsSection" />
 }
 
 @if (showAbout)
@@ -115,8 +116,27 @@
         await SettingsVm.InitializeAsync();
     }
 
-    private void OpenSettingsModal() => showSettings = true;
-    private void CloseSettingsModal() => showSettings = false;
+    private string settingsSection = "ai";
+
+    private void OpenSettingsModal()
+    {
+        settingsSection = "ai";
+        showSettings = true;
+    }
+
+    /// <summary>Aus dem Audio-Reiter: Einstellungen direkt im Abschnitt „Sprachausgabe“ öffnen.</summary>
+    private void OpenSpeechSettings()
+    {
+        settingsSection = "speech";
+        showSettings = true;
+    }
+
+    private async Task CloseSettingsModal()
+    {
+        showSettings = false;
+        // Schlüssel/Modell der Sprachausgabe oder die Chat-KI können sich geändert haben
+        await AuVm.ReloadSpeechSettingsAsync();
+    }
 
     /// <summary>
     /// Frage aus der Mindmap: zum Chat wechseln und die Frage dort mit den aktivierten Dokumenten stellen.
