@@ -50,6 +50,10 @@ public class DataTableSortingTests
     [TestCase("Kapitel 3")]
     [TestCase("3 Gesetze der Thermodynamik im Überblick")]
     [TestCase("1914–1918")]
+    [TestCase("14.07.1789")]
+    [TestCase("500 v. Chr.")]
+    [TestCase("19. Jh.")]
+    [TestCase("1.2.3")]
     public void SortNumber_RejectsText(string text) =>
         Assert.That(DataTableValues.TryParseSortNumber(text, out _), Is.False, text);
 
@@ -105,6 +109,15 @@ public class DataTableSortingTests
 
         Assert.That(DataTableSorting.DetectKind(rows, 0), Is.EqualTo(DataTableColumnKind.Date));
         Assert.That(First(DataTableSorting.Sort(rows, 0, false)), Is.EqualTo(new[] { "500 v. Chr.", "1492", "14. Juli 1789", "19. Jh.", "09.11.1989" }));
+    }
+
+    [Test]
+    public void Sort_NumericDatesAndEras_AreDatesNotNumbers()
+    {
+        var rows = Rows("14.07.1789", "1804", "500 v. Chr.", "01.01.1790");
+
+        Assert.That(DataTableSorting.DetectKind(rows, 0), Is.EqualTo(DataTableColumnKind.Date));
+        Assert.That(First(DataTableSorting.Sort(rows, 0, false)), Is.EqualTo(new[] { "500 v. Chr.", "14.07.1789", "01.01.1790", "1804" }));
     }
 
     [Test]

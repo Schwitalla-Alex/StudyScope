@@ -62,7 +62,8 @@ class Program
             sp.GetRequiredService<IMindmapService>(),
             sp.GetRequiredService<IFlashcardService>(),
             sp.GetRequiredService<IQuizService>(),
-            sp.GetRequiredService<IPresentationService>()));
+            sp.GetRequiredService<IPresentationService>(),
+            sp.GetRequiredService<IDataTableService>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

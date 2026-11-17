@@ -167,6 +167,61 @@ public static class DocxWriter
                     body.Append(Bullet(bullet, 0));
             }
         }
+
+        var tables = studio.DataTables.Where(t => t.Rows.Count > 0).ToList();
+        if (tables.Count > 0)
+        {
+            body.Append(Paragraph("Heading1", Run(tables.Count == 1 ? "Datentabelle" : "Datentabellen")));
+            foreach (var embedded in tables)
+            {
+                body.Append(Paragraph("Heading2", Run(embedded.Table.Title)));
+                body.Append(Paragraph(null, Run(ReportTextExporter.DataTableMeta(embedded), color: ColorMuted)));
+                var header = DataTableExporter.Header(embedded.Table).ToArray();
+                body.Append(Table(header, embedded.Rows.Select(r => DataTableExporter.Values(embedded.Table, r).ToArray()),
+                    DataTableColumnWidths(embedded), firstColumnBold: false, compact: header.Length > 4));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Spaltenbreiten (Anteile) einer Datentabelle: Jede Spalte bekommt zuerst so viel Platz, dass ihr längstes Wort
+    /// (höchstens 20 Zeichen, auch in der Überschrift) nicht umbricht; der übrige Platz wird nach der mittleren Textlänge
+    /// verteilt. Reicht die Breite nicht einmal dafür, wird im Verhältnis der Mindestbreiten verkleinert.
+    /// </summary>
+    public static double[] DataTableColumnWidths(ReportDataTable embedded)
+    {
+        var header = DataTableExporter.Header(embedded.Table);
+        var rows = embedded.Rows.Select(r => DataTableExporter.Values(embedded.Table, r)).ToList();
+        var charWidth = header.Count > 4 ? 100.0 : 115.0; // Twips je Zeichen (kompakte Schrift ab 5 Spalten)
+        const double cellPadding = 260;                   // Zellenränder links/rechts plus Luft
+
+        static int LongestWord(string text) =>
+            text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Select(w => w.Length).DefaultIfEmpty(0).Max();
+
+        var minimum = header.Select((h, i) =>
+            Math.Min(20, Math.Max(LongestWord(h), rows.Select(v => LongestWord(v[i])).DefaultIfEmpty(0).Max())) * charWidth + cellPadding).ToArray();
+        var wanted = header.Select((h, i) =>
+        {
+            var average = rows.Count == 0 ? h.Length : rows.Average(v => Math.Min(v[i].Length, 200));
+            return Math.Max(minimum[i], Math.Min(average * charWidth + cellPadding, TextWidth * 0.5));
+        }).ToArray();
+
+        double[] widths;
+        var minSum = minimum.Sum();
+        if (minSum >= TextWidth)
+        {
+            widths = minimum;
+        }
+        else
+        {
+            var growth = wanted.Select((w, i) => w - minimum[i]).ToArray();
+            var growthSum = growth.Sum();
+            var extra = TextWidth - minSum;
+            widths = minimum.Select((m, i) => m + (growthSum > 0 ? extra * growth[i] / growthSum : extra / minimum.Length)).ToArray();
+        }
+
+        var sum = widths.Sum();
+        return widths.Select(w => w / sum).ToArray();
     }
 
     private static void AppendTree(StringBuilder body, MindmapNode node, int level)
@@ -190,20 +245,22 @@ public static class DocxWriter
     private static string BulletRaw(string runs, int level) =>
         $"<w:p><w:pPr><w:pStyle w:val=\"ListBullet\"/><w:numPr><w:ilvl w:val=\"{level}\"/><w:numId w:val=\"1\"/></w:numPr></w:pPr>{runs}</w:p>";
 
-    private static string Run(string text, bool bold = false, string? color = null)
+    private static string Run(string text, bool bold = false, string? color = null, bool small = false)
     {
-        var props = (bold ? "<w:b/>" : string.Empty) + (color != null ? $"<w:color w:val=\"{color}\"/>" : string.Empty);
+        // Reihenfolge in w:rPr nach Schema: b, color, sz, szCs
+        var props = (bold ? "<w:b/>" : string.Empty) + (color != null ? $"<w:color w:val=\"{color}\"/>" : string.Empty)
+                    + (small ? "<w:sz w:val=\"18\"/><w:szCs w:val=\"18\"/>" : string.Empty);
         return $"<w:r>{(props.Length > 0 ? $"<w:rPr>{props}</w:rPr>" : string.Empty)}<w:t xml:space=\"preserve\">{Esc(text)}</w:t></w:r>";
     }
 
     /// <summary>Text mit Zeilenumbrüchen als mehrere Läufe mit &lt;w:br/&gt;.</summary>
-    private static string Text(string text)
+    private static string Text(string text, bool small = false)
     {
         var lines = (text ?? string.Empty).Replace("\r", string.Empty).Split('\n');
-        return string.Join("<w:r><w:br/></w:r>", lines.Select(l => Run(l)));
+        return string.Join("<w:r><w:br/></w:r>", lines.Select(l => Run(l, small: small)));
     }
 
-    private static string Table(string[] headers, IEnumerable<string[]> rows, double[] widths)
+    private static string Table(string[] headers, IEnumerable<string[]> rows, double[] widths, bool firstColumnBold = true, bool compact = false)
     {
         var columns = widths.Select(w => (int)(TextWidth * w)).ToArray();
         var sb = new StringBuilder();
@@ -217,14 +274,17 @@ public static class DocxWriter
 
         sb.Append("<w:tr><w:trPr><w:tblHeader/></w:trPr>");
         for (var i = 0; i < headers.Length; i++)
-            sb.Append(Cell(Run(headers[i], bold: true, color: "FFFFFF"), columns[i], "343A40"));
+            sb.Append(Cell(Run(headers[i], bold: true, color: "FFFFFF", small: compact), columns[i], "343A40"));
         sb.Append("</w:tr>");
 
         foreach (var row in rows)
         {
             sb.Append("<w:tr><w:trPr><w:cantSplit/></w:trPr>");
             for (var i = 0; i < headers.Length; i++)
-                sb.Append(Cell(i == 0 ? Run(row[i], bold: true) : Text(row[i]), columns[i], null));
+            {
+                var value = i < row.Length ? row[i] : string.Empty;
+                sb.Append(Cell(i == 0 && firstColumnBold ? Run(value, bold: true, small: compact) : Text(value, compact), columns[i], null));
+            }
             sb.Append("</w:tr>");
         }
 

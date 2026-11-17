@@ -328,6 +328,8 @@ public class ReportService : IReportService
             {
                 report.Sections ??= new List<ReportSection>();
                 report.Embeds ??= new ReportEmbeds();
+                // Berichte aus der Zeit vor den Datentabellen: Eigenschaft fehlt → keine Tabellen einbetten
+                report.Embeds.DataTables ??= false;
                 report.SourceDocuments ??= new List<string>();
                 foreach (var section in report.Sections)
                 {

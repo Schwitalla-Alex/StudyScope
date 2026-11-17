@@ -4,14 +4,6 @@ using StudyScope.Core.Models;
 
 namespace StudyScope.ViewModels.DataTable;
 
-/// <summary>Erkannte Art einer Spalte, bestimmt die Sortierung.</summary>
-public enum DataTableColumnKind
-{
-    Text,
-    Number,
-    Date
-}
-
 /// <summary>
 /// Sortierung und Filter einer Datentabelle ohne Oberfläche (testbar).
 /// Spalte <see cref="SourceColumn"/> steht für die Quellspalte.
@@ -33,20 +25,10 @@ public static class DataTableSorting
     /// Art einer Spalte: Zahl, wenn alle nicht leeren Zellen Zahlen sind (auch mit Einheit/Prozent);
     /// Datum, wenn alle Datumsangaben sind; sonst Text.
     /// </summary>
-    public static DataTableColumnKind DetectKind(IEnumerable<DataTableRow> rows, int column)
-    {
-        var values = rows.Select(r => CellValue(r, column).Trim()).Where(v => v.Length > 0).ToList();
-        if (values.Count == 0 || column == SourceColumn)
-            return DataTableColumnKind.Text;
-
-        if (values.All(v => DataTableValues.TryParseSortNumber(v, out _)))
-            return DataTableColumnKind.Number;
-
-        if (values.All(v => DataTableValues.TryParseDateKey(v, out _)))
-            return DataTableColumnKind.Date;
-
-        return DataTableColumnKind.Text;
-    }
+    public static DataTableColumnKind DetectKind(IEnumerable<DataTableRow> rows, int column) =>
+        column == SourceColumn
+            ? DataTableColumnKind.Text
+            : DataTableValues.DetectKind(rows.Select(r => CellValue(r, column)));
 
     /// <summary>
     /// Sortiert stabil nach einer Spalte. Leere Zellen stehen immer am Ende (auch absteigend).

@@ -3,6 +3,14 @@ using System.Text.RegularExpressions;
 
 namespace StudyScope.Core.Common;
 
+/// <summary>Erkannte Art einer Tabellenspalte, bestimmt die Sortierung.</summary>
+public enum DataTableColumnKind
+{
+    Text,
+    Number,
+    Date
+}
+
 /// <summary>
 /// Erkennt Zahlen und Datumsangaben in Tabellenzellen (deutsche und englische Schreibweise),
 /// gemeinsam für die Sortierung der Ansicht, den Excel-Export und die HTML-Berichte.
@@ -33,6 +41,30 @@ public static partial class DataTableValues
             lookup[name] = month;
         return lookup;
     }
+
+    /// <summary>
+    /// Art einer Spalte: Zahl, wenn alle nicht leeren Werte Zahlen sind (auch mit Einheit/Prozent);
+    /// Datum, wenn alle Datumsangaben sind; sonst Text.
+    /// </summary>
+    public static DataTableColumnKind DetectKind(IEnumerable<string?> values)
+    {
+        var filled = values.Select(v => (v ?? string.Empty).Trim()).Where(v => v.Length > 0).ToList();
+        if (filled.Count == 0)
+            return DataTableColumnKind.Text;
+        if (filled.All(v => TryParseSortNumber(v, out _)))
+            return DataTableColumnKind.Number;
+        if (filled.All(v => TryParseDateKey(v, out _)))
+            return DataTableColumnKind.Date;
+        return DataTableColumnKind.Text;
+    }
+
+    /// <summary>Sortierschlüssel eines Werts für eine Spalte der Art <paramref name="kind"/> (null bei Text oder ungültig).</summary>
+    public static double? SortKey(string? value, DataTableColumnKind kind) => kind switch
+    {
+        DataTableColumnKind.Number when TryParseSortNumber(value, out var n) => n,
+        DataTableColumnKind.Date when TryParseDateKey(value, out var d) => d,
+        _ => null
+    };
 
     // ---------------- Zahlen ----------------
 
@@ -84,6 +116,11 @@ public static partial class DataTableValues
         if (rest.Length > 15 || rest.Any(char.IsDigit))
             return false;
 
+        // Jahresangaben wie „500 v. Chr.“ oder „19. Jh.“ sind Datumsangaben, keine Zahlen
+        var lowerRest = rest.ToLowerInvariant();
+        if (BeforeChrist().IsMatch(lowerRest) || AfterChrist().IsMatch(lowerRest) || Century().IsMatch("1. " + lowerRest))
+            return false;
+
         return TryParseNumberPart(match.Groups["num"].Value, out value);
     }
 
@@ -94,6 +131,10 @@ public static partial class DataTableValues
         var negative = s.StartsWith('-');
         s = s.TrimStart('-', '+');
         if (s.Length == 0 || !char.IsDigit(s[0]))
+            return false;
+
+        // Nur echte Zahlschreibweisen (Tausendergruppen zu je 3 Ziffern), damit „14.07.1789“ keine Zahl ist
+        if (!NumberShape().IsMatch(s.TrimEnd('.')))
             return false;
 
         var lastDot = s.LastIndexOf('.');
@@ -216,6 +257,9 @@ public static partial class DataTableValues
 
     [GeneratedRegex(@"^\d{1,3}(?:\.\d{3})+$")]
     private static partial Regex DotThousands();
+
+    [GeneratedRegex(@"^(?:\d{1,3}(?:[.,]\d{3})+|\d+)(?:[.,]\d+)?$")]
+    private static partial Regex NumberShape();
 
     [GeneratedRegex(@"^(?:[€$£]\s*)?(?<num>[-+]?\d[\d.,'’ ]*)(?<rest>.*)$")]
     private static partial Regex LenientNumber();

@@ -18,7 +18,7 @@ public enum ReportExportFormat
 /// <summary>
 /// Steuert den Reiter „Berichte“: Bericht nach Vorlage aus den aktivierten Dokumenten erstellen,
 /// mehrere Berichte je Profil verwalten, interaktive Ansicht mit eingebetteten Studio-Inhalten
-/// (Mindmap, Karteikarten, Quizfragen, Präsentation) und Export als Word, Markdown, Text oder HTML.
+/// (Mindmap, Karteikarten, Quizfragen, Präsentation, Datentabellen) und Export als Word, Markdown, Text oder HTML.
 /// </summary>
 public class ReportViewModel : INotifyPropertyChanged
 {
@@ -26,12 +26,17 @@ public class ReportViewModel : INotifyPropertyChanged
     public const int MaxEmbeddedFlashcards = 40;
     public const int MaxEmbeddedQuizQuestions = 10;
 
+    /// <summary>Höchstzahl eingebetteter Datentabellen und ihrer Zeilen (längere Tabellen werden gekürzt und als gekürzt markiert).</summary>
+    public const int MaxEmbeddedDataTables = 5;
+    public const int MaxEmbeddedDataTableRows = 50;
+
     private readonly IReportService _reportService;
     private readonly IDocumentService _documentService;
     private readonly IMindmapService _mindmapService;
     private readonly IFlashcardService _flashcardService;
     private readonly IQuizService _quizService;
     private readonly IPresentationService _presentationService;
+    private readonly IDataTableService _dataTableService;
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
 
@@ -40,6 +45,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private List<Flashcard> _flashcards = new();
     private QuizLibrary _quiz = new();
     private PresentationDocument? _presentation;
+    private DataTableLibrary _dataTables = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -49,7 +55,8 @@ public class ReportViewModel : INotifyPropertyChanged
         IMindmapService mindmapService,
         IFlashcardService flashcardService,
         IQuizService quizService,
-        IPresentationService presentationService)
+        IPresentationService presentationService,
+        IDataTableService dataTableService)
     {
         _reportService = reportService;
         _documentService = documentService;
@@ -57,6 +64,7 @@ public class ReportViewModel : INotifyPropertyChanged
         _flashcardService = flashcardService;
         _quizService = quizService;
         _presentationService = presentationService;
+        _dataTableService = dataTableService;
     }
 
     // ---------------- Berichte ----------------
@@ -116,6 +124,7 @@ public class ReportViewModel : INotifyPropertyChanged
     public int FlashcardCount => _flashcards.Count;
     public int QuizQuestionCount => _quiz.Topics.Sum(t => t.Questions.Count);
     public int PresentationSlideCount => _presentation?.Slides.Count ?? 0;
+    public int DataTableCount => _dataTables.Tables.Count(t => t.Rows.Count > 0);
 
     // ---------------- Fortschritt und Status ----------------
 
@@ -174,7 +183,9 @@ public class ReportViewModel : INotifyPropertyChanged
             Mindmap = HasMindmap,
             Flashcards = FlashcardCount > 0,
             Quiz = QuizQuestionCount > 0,
-            Presentation = PresentationSlideCount > 0
+            Presentation = PresentationSlideCount > 0,
+            // Neue Berichte betten Datentabellen standardmäßig ein (auch später angelegte)
+            DataTables = true
         };
 
         IsFormOpen = _library.Reports.Count == 0;
@@ -190,11 +201,13 @@ public class ReportViewModel : INotifyPropertyChanged
         _flashcards = await TryLoad(() => _flashcardService.LoadFlashcardsAsync(profileName), new List<Flashcard>()) ?? new List<Flashcard>();
         _quiz = await TryLoad(() => _quizService.LoadLibraryAsync(profileName), new QuizLibrary()) ?? new QuizLibrary();
         _presentation = await TryLoad(() => _presentationService.LoadPresentationAsync(profileName), null);
+        _dataTables = await TryLoad(() => _dataTableService.LoadLibraryAsync(profileName), new DataTableLibrary()) ?? new DataTableLibrary();
 
         OnPropertyChanged(nameof(HasMindmap));
         OnPropertyChanged(nameof(FlashcardCount));
         OnPropertyChanged(nameof(QuizQuestionCount));
         OnPropertyChanged(nameof(PresentationSlideCount));
+        OnPropertyChanged(nameof(DataTableCount));
     }
 
     // T übernimmt die NULL-Zulässigkeit der Ladefunktion (z. B. MindmapDocument? oder List<Flashcard>),
@@ -231,12 +244,22 @@ public class ReportViewModel : INotifyPropertyChanged
             }
         }
 
+        // Datentabellen: bevorzugt aus denselben Dokumenten, neueste zuerst, Zeilen ggf. gekürzt
+        var withRows = _dataTables.Tables.Where(t => t.Rows.Count > 0).ToList();
+        var tables = withRows.Where(t => t.SourceDocuments.Any(sources.Contains)).ToList();
+        if (tables.Count == 0) tables = withRows;
+
         return new ReportStudioContent
         {
             Mindmap = _mindmap,
             Flashcards = cards.Take(MaxEmbeddedFlashcards).ToList(),
             QuizQuestions = questions,
-            Presentation = _presentation
+            Presentation = _presentation,
+            DataTables = tables
+                .OrderByDescending(t => t.CreatedAt)
+                .Take(MaxEmbeddedDataTables)
+                .Select(t => new ReportDataTable(t, t.Rows.Take(MaxEmbeddedDataTableRows).ToList()))
+                .ToList()
         };
     }
 
@@ -299,7 +322,8 @@ public class ReportViewModel : INotifyPropertyChanged
                 Mindmap = NewEmbeds.Mindmap,
                 Flashcards = NewEmbeds.Flashcards,
                 Quiz = NewEmbeds.Quiz,
-                Presentation = NewEmbeds.Presentation
+                Presentation = NewEmbeds.Presentation,
+                DataTables = NewEmbeds.IncludesDataTables
             };
 
             _library.Reports.Add(report);
@@ -377,7 +401,7 @@ public class ReportViewModel : INotifyPropertyChanged
         ShowStatus($"✓ Bericht „{report.Title}“ gelöscht.", isError: false);
     }
 
-    /// <summary>Schaltet eine Einbettung des gewählten Berichts um (mindmap, flashcards, quiz, presentation).</summary>
+    /// <summary>Schaltet eine Einbettung des gewählten Berichts um (mindmap, flashcards, quiz, presentation, datatables).</summary>
     public async Task ToggleEmbedAsync(string part)
     {
         if (SelectedReport == null) return;
@@ -396,6 +420,7 @@ public class ReportViewModel : INotifyPropertyChanged
             case "flashcards": embeds.Flashcards = !embeds.Flashcards; break;
             case "quiz": embeds.Quiz = !embeds.Quiz; break;
             case "presentation": embeds.Presentation = !embeds.Presentation; break;
+            case "datatables": embeds.DataTables = !embeds.IncludesDataTables; break;
         }
     }
 
