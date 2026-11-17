@@ -153,6 +153,10 @@ public class LlmServiceDispatcher : ILlmService
         if (FakeReportResponse.IsReportPrompt(prompt))
             return FakeReportResponse.Create(prompt, chunks);
 
+        // Datentabelle direkt danach: auch ihre eigene Vorgabe kann "Mindmap", "Quiz" o. Ä. enthalten
+        if (FakeDataTableResponse.IsDataTablePrompt(prompt))
+            return FakeDataTableResponse.Create(prompt, chunks);
+
         // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
             return FakeMindmapResponse.Create(chunks);

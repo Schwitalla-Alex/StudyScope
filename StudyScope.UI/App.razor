@@ -38,6 +38,10 @@
                         @onclick='() => activeTab = "quiz"'>
                     ❓ Quiz
                 </button>
+                <button style="padding: 6px 16px; border: 1px solid @(activeTab == "tables" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "tables" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "tables" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
+                        @onclick='() => activeTab = "tables"'>
+                    📊 Datentabelle
+                </button>
                 <button style="padding: 6px 16px; border: 1px solid @(activeTab == "reports" ? "#ced4da" : "transparent"); border-bottom: none; background: @(activeTab == "reports" ? "#fff" : "transparent"); border-top-left-radius: 4px; border-top-right-radius: 4px; font-weight: @(activeTab == "reports" ? "bold" : "normal"); cursor: pointer; font-size: 13px;"
                         @onclick='() => activeTab = "reports"'>
                     📑 Berichte
@@ -65,6 +69,10 @@
                 else if (activeTab == "quiz")
                 {
                     <QuizView />
+                }
+                else if (activeTab == "tables")
+                {
+                    <DataTableView />
                 }
                 else
                 {

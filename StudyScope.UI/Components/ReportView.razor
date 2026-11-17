@@ -100,7 +100,8 @@
                     @EmbedCheckbox("flashcards", "🎴 Karteikarten", RepVm.NewEmbeds.Flashcards, RepVm.FlashcardCount > 0, $"{RepVm.FlashcardCount}", true)
                     @EmbedCheckbox("quiz", "❓ Selbsttest (Quizfragen)", RepVm.NewEmbeds.Quiz, RepVm.QuizQuestionCount > 0, $"{RepVm.QuizQuestionCount}", true)
                     @EmbedCheckbox("presentation", "📽️ Präsentation", RepVm.NewEmbeds.Presentation, RepVm.PresentationSlideCount > 0, $"{RepVm.PresentationSlideCount} Folien", true)
-                    <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz und Präsentation.</div>
+                    @EmbedCheckbox("datatables", "📊 Datentabellen", RepVm.NewEmbeds.IncludesDataTables, RepVm.DataTableCount > 0, $"{RepVm.DataTableCount}", true)
+                    <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz, Präsentation und Datentabelle.</div>
 
                     <button type="button" class="rp-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(RepVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
@@ -174,6 +175,7 @@
                             @EmbedCheckbox("flashcards", "Karteikarten", selected.Embeds.Flashcards, RepVm.FlashcardCount > 0, null, false)
                             @EmbedCheckbox("quiz", "Selbsttest", selected.Embeds.Quiz, RepVm.QuizQuestionCount > 0, null, false)
                             @EmbedCheckbox("presentation", "Präsentation", selected.Embeds.Presentation, RepVm.PresentationSlideCount > 0, null, false)
+                            @EmbedCheckbox("datatables", "Datentabellen", selected.Embeds.IncludesDataTables, RepVm.DataTableCount > 0, null, false)
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button type="button" class="rp-btn" style="background: #2b579a;" title="Als Word-Dokument speichern" @onclick="() => ExportAsync(ReportExportFormat.Word)">📝 Word</button>
@@ -193,7 +195,7 @@
                     <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch kein Bericht ausgewählt.</p>
                     <span style="font-size: 12px; line-height: 1.5; display: block;">
                         Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Bericht erstellen“.
-                        Der Bericht wird interaktiv angezeigt – mit Mindmap, Karteikarten, Selbsttest und Folien – und lässt sich als
+                        Der Bericht wird interaktiv angezeigt – mit Mindmap, Karteikarten, Selbsttest, Folien und Datentabellen – und lässt sich als
                         Word, PDF, Markdown, Text oder HTML speichern.
                     </span>
                 </div>

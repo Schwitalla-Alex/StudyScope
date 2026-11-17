@@ -123,6 +123,16 @@ public static class ReportTextExporter
                 sb.AppendLine();
             }
         }
+
+        foreach (var embedded in studio.DataTables.Where(t => t.Rows.Count > 0))
+        {
+            sb.AppendLine($"## 📊 {embedded.Table.Title}");
+            sb.AppendLine();
+            sb.AppendLine($"*{DataTableMeta(embedded)}*");
+            sb.AppendLine();
+            DataTableExporter.AppendMarkdownTable(sb, embedded.Table, embedded.Rows);
+            sb.AppendLine();
+        }
     }
 
     private static void AppendTreeMarkdown(StringBuilder sb, MindmapNode node, int level)
@@ -232,6 +242,15 @@ public static class ReportTextExporter
             }
         }
 
+        foreach (var embedded in studio.DataTables.Where(t => t.Rows.Count > 0))
+        {
+            Heading(sb, $"Datentabelle – {embedded.Table.Title}");
+            sb.AppendLine(DataTableMeta(embedded));
+            sb.AppendLine();
+            DataTableExporter.AppendPlainText(sb, embedded.Table, embedded.Rows);
+            sb.AppendLine();
+        }
+
         return sb.ToString().TrimEnd() + Environment.NewLine;
     }
 
@@ -255,6 +274,16 @@ public static class ReportTextExporter
     {
         var sources = report.SourceDocuments.Count > 0 ? $" · Quellen: {string.Join(", ", report.SourceDocuments)}" : string.Empty;
         return $"{ReportTemplates.DisplayName(report.Template)} · erstellt am {report.CreatedAt:dd.MM.yyyy HH:mm}{sources}";
+    }
+
+    /// <summary>Kurzbeschreibung einer eingebetteten Datentabelle („Zeitleiste · 12 Zeilen“ bzw. „erste 50 von 120 Zeilen“).</summary>
+    public static string DataTableMeta(ReportDataTable embedded)
+    {
+        var rows = embedded.IsTruncated
+            ? $"erste {embedded.Rows.Count} von {embedded.TotalRows} Zeilen – vollständig im Reiter „Datentabelle“"
+            : $"{embedded.Rows.Count} {(embedded.Rows.Count == 1 ? "Zeile" : "Zeilen")}";
+        var topic = string.IsNullOrWhiteSpace(embedded.Table.Topic) ? string.Empty : $" · Thema: {embedded.Table.Topic}";
+        return $"{DataTableTemplates.DisplayName(embedded.Table.Template)}{topic} · {rows}";
     }
 
     public static string Letter(int index) => ((char)('A' + index)).ToString();

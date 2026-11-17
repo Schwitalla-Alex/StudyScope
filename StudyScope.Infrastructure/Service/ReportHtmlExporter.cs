@@ -1,5 +1,7 @@
-﻿using System.Net;
+﻿using System.Globalization;
+using System.Net;
 using System.Text;
+using StudyScope.Core.Common;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Infrastructure.Services;
@@ -8,7 +10,7 @@ namespace StudyScope.Infrastructure.Services;
 /// Erzeugt den interaktiven Bericht als eigenständige HTML-Seite (CSS und JavaScript eingebettet,
 /// keine externen Dateien, funktioniert offline). Dieselbe Seite wird in StudyScope angezeigt und
 /// als .html exportiert. Interaktiv: Inhaltsverzeichnis, aufklappbare FAQ und Mindmap,
-/// umdrehbare Karteikarten, Selbsttest mit Auswertung und Folien zum Durchblättern.
+/// umdrehbare Karteikarten, Selbsttest mit Auswertung, Folien zum Durchblättern und sortierbare Datentabellen.
 /// Beim Drucken (PDF) wird alles aufgeklappt und mit Lösungen ausgegeben.
 /// </summary>
 public static class ReportHtmlExporter
@@ -41,6 +43,8 @@ public static class ReportHtmlExporter
         if (studio.Flashcards.Count > 0) toc.Add(("karteikarten", "🎴 Karteikarten"));
         if (studio.QuizQuestions.Count > 0) toc.Add(("selbsttest", "❓ Selbsttest"));
         if (studio.Presentation is { Slides.Count: > 0 }) toc.Add(("praesentation", "📽️ Präsentation"));
+        var dataTables = studio.DataTables.Where(t => t.Rows.Count > 0).ToList();
+        if (dataTables.Count > 0) toc.Add(("datentabellen", dataTables.Count == 1 ? "📊 Datentabelle" : "📊 Datentabellen"));
 
         if (toc.Count > 1)
         {
@@ -59,6 +63,7 @@ public static class ReportHtmlExporter
         if (studio.Flashcards.Count > 0) AppendFlashcards(sb, studio.Flashcards);
         if (studio.QuizQuestions.Count > 0) AppendQuiz(sb, studio.QuizQuestions);
         if (studio.Presentation is { Slides.Count: > 0 } presentation) AppendPresentation(sb, presentation);
+        if (dataTables.Count > 0) AppendDataTables(sb, dataTables);
 
         sb.Append("<footer class=\"foot\">Erstellt mit StudyScope</footer>\n");
         sb.Append("</main>\n<script>\n").Append(Script).Append("\n</script>\n</body>\n</html>\n");
@@ -205,6 +210,54 @@ public static class ReportHtmlExporter
         sb.Append("</section>\n");
     }
 
+    /// <summary>
+    /// Datentabellen als sortierbare HTML-Tabellen: Die Kopfzeile trägt die Spaltenart (Zahl/Datum/Text), Zellen mit
+    /// Zahl oder Datum einen numerischen Sortierschlüssel (data-sort) – dieselbe Erkennung wie in StudyScope.
+    /// </summary>
+    private static void AppendDataTables(StringBuilder sb, IReadOnlyList<ReportDataTable> tables)
+    {
+        sb.Append($"<section class=\"section studio\" id=\"datentabellen\"><h2>📊 {(tables.Count == 1 ? "Datentabelle" : "Datentabellen")}</h2>");
+        sb.Append("<div class=\"hint\">Klicken Sie auf eine Spaltenüberschrift, um nach dieser Spalte zu sortieren (erneuter Klick: absteigend).</div>");
+
+        for (var t = 0; t < tables.Count; t++)
+        {
+            var embedded = tables[t];
+            var table = embedded.Table;
+            var header = DataTableExporter.Header(table);
+            var rows = embedded.Rows.Select(r => DataTableExporter.Values(table, r)).ToList();
+            var kinds = header.Select((_, c) => c == header.Count - 1
+                ? DataTableColumnKind.Text
+                : DataTableValues.DetectKind(rows.Select(v => v[c]))).ToList();
+
+            sb.Append($"<div class=\"dtable\" id=\"tabelle-{t + 1}\"><h3>{H(table.Title)}</h3>");
+            sb.Append($"<div class=\"meta-small\">{H(ReportTextExporter.DataTableMeta(embedded))}</div>");
+            sb.Append("<div class=\"dt-wrap\"><table class=\"dt\"><thead><tr>");
+            for (var c = 0; c < header.Count; c++)
+            {
+                var kind = kinds[c] switch { DataTableColumnKind.Number => "num", DataTableColumnKind.Date => "date", _ => "text" };
+                sb.Append($"<th data-kind=\"{kind}\" tabindex=\"0\" role=\"button\" title=\"Sortieren\"{(c == header.Count - 1 ? " class=\"src\"" : string.Empty)}>");
+                sb.Append($"{H(header[c])}<span class=\"arrow\"></span></th>");
+            }
+            sb.Append("</tr></thead><tbody>");
+
+            foreach (var values in rows)
+            {
+                sb.Append("<tr>");
+                for (var c = 0; c < values.Count; c++)
+                {
+                    var key = DataTableValues.SortKey(values[c], kinds[c]);
+                    var sortAttr = key is { } k ? $" data-sort=\"{k.ToString("R", CultureInfo.InvariantCulture)}\"" : string.Empty;
+                    sb.Append($"<td{sortAttr}{(c == values.Count - 1 ? " class=\"src\"" : string.Empty)}>{Text(values[c])}</td>");
+                }
+                sb.Append("</tr>");
+            }
+
+            sb.Append("</tbody></table></div></div>");
+        }
+
+        sb.Append("</section>\n");
+    }
+
     // ---------------- Hilfen ----------------
 
     private static string H(string? text) => WebUtility.HtmlEncode(text ?? string.Empty);
@@ -306,6 +359,18 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .slide-notes { display: none; }
 .deck-nav { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 10px; }
 .deck-pos { color: var(--muted); font-size: 13px; min-width: 60px; text-align: center; }
+.dtable { margin: 18px 0 26px; }
+.dtable h3 { font-size: 16px; margin: 0 0 2px; }
+.meta-small { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
+.dt-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+table.dt { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+table.dt th { background: #e9f2ff; text-align: left; padding: 7px 10px; border-bottom: 2px solid #9ec5fe; cursor: pointer; user-select: none; white-space: nowrap; }
+table.dt th:hover { background: #d8e8ff; }
+table.dt th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+table.dt th .arrow { color: var(--accent); font-size: 11px; margin-left: 4px; }
+table.dt td { padding: 6px 10px; border-top: 1px solid var(--line); vertical-align: top; }
+table.dt tbody tr:nth-child(even) td { background: var(--soft); }
+table.dt .src { color: var(--muted); font-size: 12px; }
 .foot { margin-top: 36px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; text-align: center; }
 
 @media (max-width: 640px) { .report { margin: 0; border-radius: 0; padding: 20px; } .toc ol { columns: 1; } .terms dl { grid-template-columns: 1fr; } }
@@ -328,6 +393,13 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
   .card-face.back { margin-top: 4px; }
   .slide, .slide.title-slide { display: block !important; break-inside: avoid; margin-bottom: 8mm; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .slide.title-slide { display: flex !important; }
+  .dt-wrap { overflow: visible; border: none; }
+  table.dt { font-size: 9.5pt; }
+  table.dt thead { display: table-header-group; }
+  table.dt tr { break-inside: avoid; }
+  table.dt th .arrow { display: none; }
+  table.dt th, table.dt td { border: 1px solid #bbb; }
+  table.dt th, table.dt tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .slide-notes { display: block; position: absolute; left: 6%; right: 6%; bottom: 7%; font-size: 1.6cqw; color: var(--muted); }
   .mm-node.d0 > summary, .card-face.back, .takeaway, .terms dt { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
@@ -416,6 +488,34 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
       if (e.key === 'ArrowLeft') { e.preventDefault(); moveSlide(-1); }
     });
   }
+
+  // Datentabellen sortieren: Klick (oder Enter) auf die Kopfzeile, erneut = absteigend; leere Zellen bleiben unten
+  var sortTable = function (th) {
+    var table = th.closest('table');
+    var index = Array.prototype.indexOf.call(th.parentNode.children, th);
+    var desc = th.dataset.dir === 'asc';
+    var kind = th.dataset.kind;
+    table.querySelectorAll('th').forEach(function (h) { h.dataset.dir = ''; h.querySelector('.arrow').textContent = ''; });
+    th.dataset.dir = desc ? 'desc' : 'asc';
+    th.querySelector('.arrow').textContent = desc ? '▼' : '▲';
+    var body = table.tBodies[0];
+    var rows = Array.prototype.slice.call(body.rows).map(function (row, i) { return { row: row, i: i, cell: row.cells[index] }; });
+    var text = function (x) { return x.cell.textContent.trim(); };
+    rows.sort(function (a, b) {
+      var ta = text(a), tb = text(b);
+      if (!ta || !tb) return (!ta && !tb) ? a.i - b.i : (!ta ? 1 : -1);
+      var r;
+      if ((kind === 'num' || kind === 'date') && a.cell.dataset.sort && b.cell.dataset.sort) r = Number(a.cell.dataset.sort) - Number(b.cell.dataset.sort);
+      else r = ta.localeCompare(tb, 'de', { sensitivity: 'base', numeric: true });
+      if (desc) r = -r;
+      return r || a.i - b.i;
+    });
+    rows.forEach(function (x) { body.appendChild(x.row); });
+  };
+  document.querySelectorAll('table.dt th').forEach(function (th) {
+    th.addEventListener('click', function () { sortTable(th); });
+    th.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sortTable(th); } });
+  });
 
   // Beim Drucken alles aufklappen, danach Zustand wiederherstellen
   var opened = [];

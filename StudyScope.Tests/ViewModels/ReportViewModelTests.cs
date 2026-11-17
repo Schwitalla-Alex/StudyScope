@@ -41,7 +41,7 @@ public class ReportViewModelTests
     }
 
     private ReportViewModel CreateViewModel() => new(
-        new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio);
+        new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio, new DataTableService(_llm, _tempDir));
 
     private List<DocumentItem> Documents(bool selected = true) => new()
     {
@@ -230,6 +230,98 @@ public class ReportViewModelTests
 
         Assert.That(studio.Flashcards, Has.Count.EqualTo(2));
         Assert.That(studio.QuizQuestions, Has.Count.EqualTo(ReportViewModel.MaxEmbeddedQuizQuestions));
+    }
+
+    // ---------- Datentabellen ----------
+
+    private async Task SeedDataTablesAsync(params (string Title, string Source, int Rows, int AgeMinutes)[] tables)
+    {
+        var library = new DataTableLibrary();
+        foreach (var (title, source, rows, age) in tables)
+        {
+            var table = new DataTableDocument
+            {
+                Title = title,
+                Columns = new List<string> { "Begriff", "Erklärung" },
+                SourceDocuments = new List<string> { source },
+                CreatedAt = DateTime.Now.AddMinutes(-age)
+            };
+            for (var i = 0; i < rows; i++)
+                table.Rows.Add(new DataTableRow { Cells = new List<string> { $"{title}-Begriff-{i}", "x" }, Source = source });
+            library.Tables.Add(table);
+        }
+
+        await new DataTableService(_llm, _tempDir).SaveLibraryAsync("Testprofil", library);
+        await _viewModel.LoadForProfileAsync("Testprofil");
+    }
+
+    [Test]
+    public async Task DataTables_NewReportEmbedsThem_AndToggleIsSaved()
+    {
+        await SeedDataTablesAsync(("Glossar", "skript.txt", 3, 0));
+        Assert.That(_viewModel.DataTableCount, Is.EqualTo(1));
+        Assert.That(_viewModel.NewEmbeds.DataTables, Is.True);
+
+        _llm.Response = null;
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.SelectedReport!.Embeds.DataTables, Is.True);
+        Assert.That(_viewModel.CurrentHtml, Does.Contain("Glossar-Begriff-0").And.Contain("id=\"datentabellen\""));
+
+        await _viewModel.ToggleEmbedAsync("datatables");
+        Assert.That(_viewModel.SelectedReport.Embeds.DataTables, Is.False);
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Glossar-Begriff-0"));
+
+        var reloaded = CreateViewModel();
+        await reloaded.LoadForProfileAsync("Testprofil");
+        Assert.That(reloaded.SelectedReport!.Embeds.DataTables, Is.False);
+
+        await reloaded.ToggleEmbedAsync("datatables");
+        Assert.That(reloaded.CurrentHtml, Does.Contain("Glossar-Begriff-0"));
+    }
+
+    [Test]
+    public async Task DataTables_FormCheckboxCanSwitchThemOff()
+    {
+        await SeedDataTablesAsync(("Glossar", "skript.txt", 3, 0));
+        _viewModel.ToggleNewEmbed("datatables");
+        _llm.Response = null;
+
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.SelectedReport!.Embeds.DataTables, Is.False);
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Glossar-Begriff-0"));
+    }
+
+    [Test]
+    public async Task GetStudioContent_DataTables_PreferSourceDocuments_NewestFirst_AndAreLimited()
+    {
+        await SeedDataTablesAsync(
+            ("Fremd", "anderes.pdf", 2, 0),
+            ("Alt", "skript.txt", 3, 60),
+            ("Lang", "skript.txt", 70, 10),
+            ("Leer", "skript.txt", 0, 1));
+
+        var studio = _viewModel.GetStudioContent(new Report { SourceDocuments = new List<string> { "SKRIPT.txt" } });
+
+        Assert.That(studio.DataTables.Select(t => t.Table.Title), Is.EqualTo(new[] { "Lang", "Alt" }), "passende Dokumente, neueste zuerst, ohne leere");
+        Assert.That(studio.DataTables[0].Rows, Has.Count.EqualTo(ReportViewModel.MaxEmbeddedDataTableRows));
+        Assert.That(studio.DataTables[0].IsTruncated, Is.True);
+        Assert.That(studio.DataTables[1].IsTruncated, Is.False);
+
+        var fallback = _viewModel.GetStudioContent(new Report { SourceDocuments = new List<string> { "unbekannt.pdf" } });
+        Assert.That(fallback.DataTables.Select(t => t.Table.Title), Is.EqualTo(new[] { "Fremd", "Lang", "Alt" }));
+    }
+
+    [Test]
+    public async Task GetStudioContent_DataTables_AtMostFive()
+    {
+        await SeedDataTablesAsync(Enumerable.Range(1, 7).Select(i => ($"T{i}", "skript.txt", 1, i)).ToArray());
+
+        var studio = _viewModel.GetStudioContent(new Report { SourceDocuments = new List<string> { "skript.txt" } });
+
+        Assert.That(studio.DataTables, Has.Count.EqualTo(ReportViewModel.MaxEmbeddedDataTables));
+        Assert.That(studio.DataTables[0].Table.Title, Is.EqualTo("T1"));
     }
 
     // ---------- Export ----------

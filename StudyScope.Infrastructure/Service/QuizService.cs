@@ -58,7 +58,7 @@ public class QuizService : IQuizService
 
     public async Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
     {
-        var chunks = MindmapService.SelectRepresentativeChunks(contextChunks, MindmapService.MaxChunks);
+        var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
             return new QuizTopicSuggestionResult { FailureReason = MindmapFailureReason.NoContent };
 
@@ -409,64 +409,8 @@ public class QuizService : IQuizService
     /// je Paket den Ausschnitt, damit nicht immer dieselben Stellen abgefragt werden. Gibt es keine Treffer,
     /// werden gleichmäßig verteilte Textstellen genommen.
     /// </summary>
-    public static List<string> SelectChunksForTopic(IReadOnlyList<string> chunks, QuizTopic topic, int batchIndex, int count = ChunksPerRequest)
-    {
-        var all = chunks.Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
-        if (all.Count <= count)
-            return all;
-
-        var keywords = Keywords($"{topic.Name} {topic.Description}");
-        var ranked = all
-            .Select((chunk, index) => (chunk, index, score: Score(chunk, keywords)))
-            .Where(x => x.score > 0)
-            .OrderByDescending(x => x.score)
-            .ThenBy(x => x.index)
-            .Take(count * 3)
-            .Select(x => x.chunk)
-            .ToList();
-
-        // Zu wenige Treffer: mit verteilten Textstellen auffüllen
-        if (ranked.Count < count)
-        {
-            foreach (var chunk in MindmapService.SelectRepresentativeChunks(all, count * 3))
-            {
-                if (!ranked.Contains(chunk))
-                    ranked.Add(chunk);
-            }
-        }
-
-        var start = (Math.Max(0, batchIndex) * (count / 2)) % ranked.Count;
-        return Enumerable.Range(0, Math.Min(count, ranked.Count))
-            .Select(i => ranked[(start + i) % ranked.Count])
-            .ToList();
-    }
-
-    private static HashSet<string> Keywords(string text) =>
-        text.ToLowerInvariant()
-            .Split(new[] { ' ', ',', '.', ';', ':', '(', ')', '-', '–', '/', '„', '“', '"', '?', '!' }, StringSplitOptions.RemoveEmptyEntries)
-            .Where(w => w.Length >= 4)
-            .ToHashSet();
-
-    private static int Score(string chunk, HashSet<string> keywords)
-    {
-        if (keywords.Count == 0)
-            return 0;
-
-        var lower = chunk.ToLowerInvariant();
-        return keywords.Sum(k => CountOccurrences(lower, k));
-    }
-
-    private static int CountOccurrences(string text, string word)
-    {
-        var count = 0;
-        var index = 0;
-        while ((index = text.IndexOf(word, index, StringComparison.Ordinal)) >= 0)
-        {
-            count++;
-            index += word.Length;
-        }
-        return count;
-    }
+    public static List<string> SelectChunksForTopic(IReadOnlyList<string> chunks, QuizTopic topic, int batchIndex, int count = ChunksPerRequest) =>
+        ChunkSelector.SelectByKeywords(chunks, $"{topic.Name} {topic.Description}", batchIndex, count);
 
     // ---------------- Speicherung ----------------
 

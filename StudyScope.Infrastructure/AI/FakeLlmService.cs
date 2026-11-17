@@ -20,6 +20,12 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakeReportResponse.Create(prompt, chunks));
         }
 
+        // Datentabelle direkt danach: eine eigene Vorgabe kann ebenfalls "Mindmap", "Quiz" oder "JSON" enthalten
+        if (FakeDataTableResponse.IsDataTablePrompt(prompt))
+        {
+            return Task.FromResult(FakeDataTableResponse.Create(prompt, chunks));
+        }
+
         // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
         {

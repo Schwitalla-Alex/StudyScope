@@ -99,7 +99,7 @@ public static class DesktopEntryBuilder
         sb.Append("Icon=").Append(EscapeValue(icon)).Append('\n');
         sb.Append("Terminal=false\n");
         sb.Append("Categories=Education;Office;\n");
-        sb.Append("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;\n");
+        sb.Append("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;Tabelle;\n");
         sb.Append("StartupWMClass=StudyScope.UI\n");
 
         if (!string.IsNullOrEmpty(setupExecutablePath))

@@ -6,7 +6,7 @@
 ![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
 ![Plattform](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux-lightgrey.svg)
 
-**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage auf Basis eigener Lernunterlagen. Aus Ihren Dokumenten erstellt StudyScope Karteikarten, Mindmaps, Präsentationen, Quizze und Berichte. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
+**StudyScope** ist eine schlanke, plattformübergreifende Desktop-Anwendung für Windows und Linux zur gezielten Wissensabfrage auf Basis eigener Lernunterlagen. Aus Ihren Dokumenten erstellt StudyScope Karteikarten, Mindmaps, Präsentationen, Quizze, Datentabellen und Berichte. Dank Retrieval-Augmented Generation (RAG) durchsucht StudyScope Dokumente semantisch und beantwortet Fragen präzise anhand Ihrer Quellen – wahlweise vollständig offline und datenschutzfreundlich oder über gängige Cloud-KI-Dienste.
 
 ---
 
@@ -17,14 +17,15 @@
 - 🧠 **Mindmap:** Die KI ordnet die Inhalte der aktivierten Dokumente als aufklappbaren Themenbaum an. Ein Klick auf ein Thema zeigt eine Kurzerklärung und stellt auf Wunsch eine passende Frage im Chat; Export als Markdown-Gliederung oder als Grafik über „Drucken / PDF“.
 - 📽️ **Präsentation:** Folien mit Stichpunkten und Sprechernotizen – von der KI aus den Dokumenten erstellt oder sofort aus der Mindmap abgeleitet. Vortragsmodus im Vollbild (Pfeiltasten, Esc), Export als PDF (eine Folie pro Seite) und als PowerPoint-Datei (`.pptx`).
 - ❓ **Quiz:** Themen selbst anlegen (mit zugeordneten Dokumenten) oder von der KI vorschlagen lassen, mehrere Themen zu einem Quiz mit 5–100 Fragen kombinieren. Fragetypen: Multiple Choice, Wahr/Falsch und mehrere richtige Antworten. Lernmodus (Rückmeldung mit Erklärung nach jeder Frage) oder Prüfungsmodus (Auswertung am Ende), Verlauf mit Statistik je Thema und „Falsche wiederholen“.
-- 📑 **Berichte:** Aus den aktivierten Dokumenten einen Bericht erstellen lassen – Vorlagen Lernübersicht, Zusammenfassung/Briefing, Glossar, FAQ oder eigene Vorgabe. Der Bericht wird interaktiv angezeigt und kann Mindmap, Karteikarten, Selbsttest (Quizfragen) und Präsentation einbetten. Mehrere Berichte je Profil; Export als Word (.docx), PDF, Markdown, Text oder interaktive HTML-Datei.
+- 📊 **Datentabelle:** Strukturierte Angaben aus den aktivierten Dokumenten als Tabelle herausziehen lassen – Vorlagen Begriffe & Definitionen, Vergleich, Zeitleiste, Personen & Beiträge, Formeln & Kennzahlen oder eigene Vorgabe (optional mit eigenen Spalten), wahlweise auf ein Thema eingegrenzt. Jede Zeile nennt ihr Quelldokument; Fehlendes bleibt leer statt erfunden. Spalten per Klick sortieren (Zahlen und Datumsangaben richtig), filtern, Zellen per Doppelklick bearbeiten, Zeilen und Spalten hinzufügen, umbenennen oder löschen, „Weitere Zeilen ergänzen“ per KI (ohne Wiederholungen, bis 500 Zeilen). Mehrere Tabellen je Profil; Export als Excel (.xlsx), CSV, Markdown oder PDF.
+- 📑 **Berichte:** Aus den aktivierten Dokumenten einen Bericht erstellen lassen – Vorlagen Lernübersicht, Zusammenfassung/Briefing, Glossar, FAQ oder eigene Vorgabe. Der Bericht wird interaktiv angezeigt und kann Mindmap, Karteikarten, Selbsttest (Quizfragen), Präsentation und Datentabellen (per Klick sortierbar) einbetten. Mehrere Berichte je Profil; Export als Word (.docx), PDF, Markdown, Text oder interaktive HTML-Datei.
 - 📁 **Unterstützte Formate:** Volle Unterstützung für `.pdf`, `.txt` und `.csv`.
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**
   - **Lokale KI:** Nutzen Sie lokale Sprachmodelle via **Ollama** oder **LM Studio** ganz ohne Internetverbindung und API-Kosten.
   - **Cloud-KI:** Anbindung an **Google Gemini**, **OpenAI (GPT-4)** und **Mistral AI**. „Speichern & Verbinden“ prüft den API-Schlüssel über die kostenlose Modellliste.
   - **Benutzerdefiniert:** Beliebige OpenAI-kompatible Endpunkte (Groq, DeepSeek, vLLM, OpenRouter).
-- 🖨️ **Export & Druck:** Karteikarten als Markdown (`.md`) oder DIN-A4-Druckbögen; Mindmap, Präsentation und Berichte mit eigenen Exporten (siehe oben).
+- 🖨️ **Export & Druck:** Karteikarten als Markdown (`.md`) oder DIN-A4-Druckbögen; Mindmap, Präsentation, Datentabellen und Berichte mit eigenen Exporten (siehe oben).
 
 ---
 

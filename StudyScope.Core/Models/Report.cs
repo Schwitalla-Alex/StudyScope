@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace StudyScope.Core.Models;
 
 /// <summary>Vorlage eines Berichts – bestimmt Aufbau und Schwerpunkt.</summary>
@@ -53,6 +55,17 @@ public class ReportEmbeds
     public bool Flashcards { get; set; } = true;
     public bool Quiz { get; set; } = true;
     public bool Presentation { get; set; } = true;
+
+    /// <summary>
+    /// Datentabellen einbetten. Bewusst ohne Standardwert: Fehlt die Eigenschaft beim Einlesen (Bericht aus einer
+    /// Version vor den Datentabellen), bleibt sie null und gilt als „aus“ – ältere Berichte sehen unverändert aus.
+    /// Neue Berichte setzen sie ausdrücklich (Standard: an).
+    /// </summary>
+    public bool? DataTables { get; set; }
+
+    /// <summary>Ob Datentabellen eingebettet werden (null = älterer Bericht = nein).</summary>
+    [JsonIgnore]
+    public bool IncludesDataTables => DataTables == true;
 }
 
 /// <summary>Ein gespeicherter Bericht.</summary>
@@ -101,6 +114,7 @@ public class ReportStudioContent
     public IReadOnlyList<Flashcard> Flashcards { get; init; } = Array.Empty<Flashcard>();
     public IReadOnlyList<QuizQuestion> QuizQuestions { get; init; } = Array.Empty<QuizQuestion>();
     public PresentationDocument? Presentation { get; init; }
+    public IReadOnlyList<ReportDataTable> DataTables { get; init; } = Array.Empty<ReportDataTable>();
 
     public static ReportStudioContent Empty { get; } = new();
 
@@ -110,10 +124,21 @@ public class ReportStudioContent
         Mindmap = embeds.Mindmap ? Mindmap : null,
         Flashcards = embeds.Flashcards ? Flashcards : Array.Empty<Flashcard>(),
         QuizQuestions = embeds.Quiz ? QuizQuestions : Array.Empty<QuizQuestion>(),
-        Presentation = embeds.Presentation ? Presentation : null
+        Presentation = embeds.Presentation ? Presentation : null,
+        DataTables = embeds.IncludesDataTables ? DataTables : Array.Empty<ReportDataTable>()
     };
 
-    public bool HasAny => Mindmap != null || Flashcards.Count > 0 || QuizQuestions.Count > 0 || Presentation is { Slides.Count: > 0 };
+    public bool HasAny => Mindmap != null || Flashcards.Count > 0 || QuizQuestions.Count > 0 || Presentation is { Slides.Count: > 0 }
+                          || DataTables.Any(t => t.Rows.Count > 0);
+}
+
+/// <summary>
+/// Eingebettete Datentabelle: die Tabelle, die übernommenen Zeilen (ggf. gekürzt) und die Gesamtzahl ihrer Zeilen.
+/// </summary>
+public sealed record ReportDataTable(DataTableDocument Table, IReadOnlyList<DataTableRow> Rows)
+{
+    public int TotalRows => Table.Rows.Count;
+    public bool IsTruncated => Rows.Count < TotalRows;
 }
 
 /// <summary>Anzeigenamen und Beschreibungen der Berichtsvorlagen (gemeinsam für Oberfläche und Exporte).</summary>

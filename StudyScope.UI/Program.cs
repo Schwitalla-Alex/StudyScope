@@ -37,6 +37,7 @@ class Program
         appBuilder.Services.AddSingleton<IPresentationService>(sp => new PresentationService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IQuizService>(sp => new QuizService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IReportService>(sp => new ReportService(sp.GetRequiredService<ILlmService>()));
+        appBuilder.Services.AddSingleton<IDataTableService>(sp => new DataTableService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
 
         // ViewModels registrieren
@@ -54,13 +55,15 @@ class Program
         appBuilder.Services.AddSingleton<MindmapViewModel>();
         appBuilder.Services.AddSingleton<PresentationViewModel>();
         appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>()));
+        appBuilder.Services.AddSingleton<DataTableViewModel>(sp => new DataTableViewModel(sp.GetRequiredService<IDataTableService>(), sp.GetRequiredService<IDocumentService>()));
         appBuilder.Services.AddSingleton<ReportViewModel>(sp => new ReportViewModel(
             sp.GetRequiredService<IReportService>(),
             sp.GetRequiredService<IDocumentService>(),
             sp.GetRequiredService<IMindmapService>(),
             sp.GetRequiredService<IFlashcardService>(),
             sp.GetRequiredService<IQuizService>(),
-            sp.GetRequiredService<IPresentationService>()));
+            sp.GetRequiredService<IPresentationService>(),
+            sp.GetRequiredService<IDataTableService>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

@@ -50,7 +50,7 @@ public class ReportService : IReportService
         string fallbackTitle,
         CancellationToken cancellationToken = default)
     {
-        var chunks = MindmapService.SelectRepresentativeChunks(contextChunks, MindmapService.MaxChunks);
+        var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
             return new ReportGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 
@@ -328,6 +328,8 @@ public class ReportService : IReportService
             {
                 report.Sections ??= new List<ReportSection>();
                 report.Embeds ??= new ReportEmbeds();
+                // Berichte aus der Zeit vor den Datentabellen: Eigenschaft fehlt → keine Tabellen einbetten
+                report.Embeds.DataTables ??= false;
                 report.SourceDocuments ??= new List<string>();
                 foreach (var section in report.Sections)
                 {
