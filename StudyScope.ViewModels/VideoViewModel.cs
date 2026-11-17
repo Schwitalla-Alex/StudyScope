@@ -20,6 +20,25 @@ public enum VideoSlideSource
     NewPresentation
 }
 
+/// <summary>Passen die Quelldokumente der Präsentation zu den angehakten Dokumenten?</summary>
+public enum PresentationSourceMatch
+{
+    /// <summary>Keine Präsentation vorhanden.</summary>
+    None,
+
+    /// <summary>Ältere Präsentation ohne gespeicherte Quellen (neutraler Hinweis).</summary>
+    Unknown,
+
+    /// <summary>Quellen entsprechen genau den angehakten Dokumenten.</summary>
+    Match,
+
+    /// <summary>Quellen weichen von den angehakten Dokumenten ab (deutliche Warnung).</summary>
+    Mismatch
+}
+
+/// <summary>Ergebnis des Vergleichs samt Anzeigetext.</summary>
+public sealed record PresentationSourceInfo(PresentationSourceMatch Match, IReadOnlyList<string> Sources, IReadOnlyList<string> Selected, string Message);
+
 /// <summary>Exportformate der Sprechtexte.</summary>
 public enum VideoScriptExportFormat
 {
@@ -128,6 +147,43 @@ public class VideoViewModel : INotifyPropertyChanged
 
     /// <summary>Die Präsentation des Profils wurde gelöscht (das Video nutzt weiter seine Kopie der Folien).</summary>
     public bool IsPresentationMissing => SelectedVideo is { OwnSlides: false } && !HasProfilePresentation;
+
+    /// <summary>
+    /// Vergleicht die Quelldokumente der Präsentation mit den angehakten Dokumenten (<c>IsSelected &amp;&amp; !IsMissing</c>,
+    /// wie beim Erzeugen). Die Präsentation des Profils kann früher aus anderen Dokumenten entstanden sein – dann
+    /// zeigt der Reiter eine Warnung und bietet an, die Folien stattdessen aus den angehakten Dokumenten zu erzeugen.
+    /// </summary>
+    public static PresentationSourceInfo ComparePresentationSources(PresentationDocument? presentation, IEnumerable<DocumentItem> documents)
+    {
+        var selected = documents.Where(d => d.IsSelected && !d.IsMissing).Select(d => d.FileName)
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (presentation is not { Slides.Count: > 0 })
+            return new PresentationSourceInfo(PresentationSourceMatch.None, Array.Empty<string>(), selected, string.Empty);
+
+        var sources = (presentation.SourceDocuments ?? new List<string>()).Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (sources.Count == 0)
+            return new PresentationSourceInfo(PresentationSourceMatch.Unknown, sources, selected,
+                "Aus welchen Dokumenten die Präsentation erstellt wurde, ist nicht gespeichert (ältere Präsentation). Prüfen Sie die Folien vor dem Erstellen.");
+
+        var same = sources.Count == selected.Count && sources.All(s => selected.Contains(s, StringComparer.OrdinalIgnoreCase));
+        return same
+            ? new PresentationSourceInfo(PresentationSourceMatch.Match, sources, selected, $"Erstellt aus: {string.Join(", ", sources)}")
+            : new PresentationSourceInfo(PresentationSourceMatch.Mismatch, sources, selected,
+                $"Die Präsentation stammt aus: {string.Join(", ", sources)}. Angehakt ist: {(selected.Count == 0 ? "kein Dokument" : string.Join(", ", selected))}.");
+    }
+
+    /// <summary>Vergleich für die aktuelle Präsentation des Profils.</summary>
+    public PresentationSourceInfo PresentationSources(IEnumerable<DocumentItem> documents) =>
+        ComparePresentationSources(CurrentPresentation, documents);
+
+    /// <summary>„Stattdessen neu aus den angehakten Dokumenten erzeugen“: neue Folien nur für dieses Video.</summary>
+    public Task GenerateFromSelectedDocumentsAsync(IEnumerable<DocumentItem> documents)
+    {
+        SlideSource = VideoSlideSource.NewPresentation;
+        UseNotesDirectly = false;
+        return GenerateAsync(documents);
+    }
 
     // ---------------- Formular „Neues Video“ ----------------
 

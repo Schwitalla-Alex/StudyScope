@@ -352,6 +352,7 @@ public partial class VideoScriptService : IVideoScriptService
         video.PresentationTitle = presentation.Title ?? string.Empty;
         video.PresentationHash = VideoDocument.ComputePresentationHash(presentation);
         video.OwnSlides = false;
+        video.SourceDocuments = presentation.SourceDocuments.ToList();
         return oldScenes.Where(s => !used.Contains(s)).ToList();
     }
 

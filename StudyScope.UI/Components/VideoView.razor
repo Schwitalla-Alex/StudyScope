@@ -101,6 +101,7 @@
                                     <div class="vd-item-title" title="@it.Title">@it.Title</div>
                                 }
                                 <div class="vd-meta">@it.Scenes.Count Folien · @AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(it.WordCount)) · @it.CreatedAt.ToString("dd.MM.yyyy HH:mm")@(it.HasAudioFile ? " · 🎵" : "")</div>
+                                <div class="vd-meta" title="Aus diesen Dokumenten wurde das Video erstellt">📄 @(it.SourceDocuments.Count > 0 ? string.Join(", ", it.SourceDocuments) : "Quelle unbekannt")</div>
                             </div>
                             <div style="display: flex; gap: 2px; align-items: center;" @onclick:stopPropagation="true">
                                 @if (renameId == it.Id)
@@ -140,6 +141,10 @@
                                 @total Folien · @video.WordCount Wörter · @AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(video.WordCount))
                                 · @(video.NarrationSource == VideoNarrationSource.Notes ? "Sprechtexte aus den Sprechernotizen" : "Sprechtexte von der KI")
                                 · @(video.OwnSlides ? "eigene Folien" : "Folien aus der Präsentation")
+                                @if (video.SourceDocuments.Count > 0)
+                                {
+                                    <span> · Quellen: @string.Join(", ", video.SourceDocuments)</span>
+                                }
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -457,6 +462,30 @@
                     </span>
                 </button>
             </div>
+
+            @if (VdVm.SlideSource == VideoSlideSource.ProfilePresentation && VdVm.HasProfilePresentation)
+            {
+                var sources = VdVm.PresentationSources(DocVm.Documents);
+                @if (sources.Match == PresentationSourceMatch.Mismatch)
+                {
+                    <div class="vd-note warn" style="margin-top: 10px;">
+                        <b>⚠️ Andere Dokumente als angehakt</b><br />
+                        @sources.Message Das Video würde die Folien der vorhandenen Präsentation verwenden.
+                        <button type="button" class="vd-btn" style="background: #fd7e14; margin-top: 8px; width: 100%; justify-content: center;"
+                                disabled="@(VdVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateFromSelectedAsync">
+                            ✨ Stattdessen neu aus den angehakten Dokumenten erzeugen
+                        </button>
+                    </div>
+                }
+                else if (sources.Match == PresentationSourceMatch.Unknown)
+                {
+                    <div class="vd-note info" style="margin-top: 10px;">ℹ️ @sources.Message</div>
+                }
+                else if (sources.Match == PresentationSourceMatch.Match)
+                {
+                    <div class="vd-meta" style="margin-top: 8px;">📄 @sources.Message</div>
+                }
+            }
 
             @if (VdVm.SlideSource == VideoSlideSource.NewPresentation)
             {
@@ -798,6 +827,8 @@
     }
 
     private Task GenerateAsync() => VdVm.GenerateAsync(DocVm.Documents);
+
+    private Task GenerateFromSelectedAsync() => VdVm.GenerateFromSelectedDocumentsAsync(DocVm.Documents);
 
     private async Task RecheckAsync()
     {
