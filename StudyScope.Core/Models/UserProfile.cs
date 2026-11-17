@@ -14,4 +14,7 @@ public class UserProfile
 
     // Die profilbezogene KI-Einstellung:
     public AiConfig AiSettings { get; set; } = new();
+
+    /// <summary>Sprachausgabe der Audio-Beiträge (null = noch nicht eingestellt, dann gilt die globale Einstellung).</summary>
+    public SpeechSettings? SpeechSettings { get; set; }
 }

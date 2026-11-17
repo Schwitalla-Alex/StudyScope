@@ -28,4 +28,10 @@ public interface IStorageService
     // NEU: Profilspezifische KI-Konfiguration laden / speichern
     Task<AiConfig> LoadAiConfigForProfileAsync(string profileName);
     Task SaveAiConfigForProfileAsync(string profileName, AiConfig config);
+
+    // Sprachausgabe (Audio-Beiträge): je Profil, Rückfall auf die globale config.json, sonst Standard (Systemstimme)
+    Task<SpeechSettings> LoadSpeechSettingsAsync(string profileName);
+
+    /// <summary>Speichert die Sprachausgabe im Profil (maßgeblich) und global (Rückfall); der Gemini-Schlüssel wird verschlüsselt.</summary>
+    Task SaveSpeechSettingsAsync(string profileName, SpeechSettings settings);
 }

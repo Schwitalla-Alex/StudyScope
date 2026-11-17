@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -142,6 +143,11 @@ public class JsonStorageService : IStorageService
                     profile.AiSettings.ApiKey = DecryptApiKey(profile.AiSettings.ApiKey);
                 }
 
+                if (profile.SpeechSettings != null)
+                {
+                    profile.SpeechSettings.GeminiApiKey = DecryptApiKey(profile.SpeechSettings.GeminiApiKey);
+                }
+
                 return profile;
             }
         }
@@ -164,7 +170,8 @@ public class JsonStorageService : IStorageService
             Name = profile.Name,
             CreatedAt = profile.CreatedAt,
             Documents = profile.Documents ?? new List<DocumentItem>(),
-            AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig())
+            AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig()),
+            SpeechSettings = profile.SpeechSettings == null ? null : EncryptedCopy(profile.SpeechSettings)
         };
 
         var filePath = GetProfileFilePath(profileName);
@@ -181,6 +188,16 @@ public class JsonStorageService : IStorageService
         LocalEndpointUrl = config.LocalEndpointUrl,
         SelectedModelName = config.SelectedModelName
     };
+
+    /// <summary>Kopie der Sprachausgabe mit verschlüsseltem Gemini-Schlüssel (das Original bleibt Klartext).</summary>
+    private SpeechSettings EncryptedCopy(SpeechSettings settings)
+    {
+        var copy = settings.Clone();
+        copy.GeminiApiKey = string.IsNullOrWhiteSpace(settings.GeminiApiKey)
+            ? string.Empty
+            : _encryptionService.Encrypt(DecryptApiKey(settings.GeminiApiKey));
+        return copy;
+    }
 
     /// <summary>
     /// Entschlüsselt einen gespeicherten ApiKey. Wird so lange wiederholt, bis sich der Wert nicht mehr ändert:
@@ -348,8 +365,81 @@ public class JsonStorageService : IStorageService
 
     public async Task SaveAiConfigAsync(AiConfig config)
     {
+        var node = JsonSerializer.SerializeToNode(EncryptedCopy(config), JsonOptions)!.AsObject();
+
+        // Die globale Sprachausgabe steht in derselben Datei und bleibt erhalten
+        var existing = await ReadConfigNodeAsync();
+        if (existing?[SpeechSettingsProperty] is JsonNode speech)
+            node[SpeechSettingsProperty] = speech.DeepClone();
+
+        await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    // ---------------- Sprachausgabe ----------------
+
+    private const string SpeechSettingsProperty = "SpeechSettings";
+
+    private async Task<JsonObject?> ReadConfigNodeAsync()
+    {
         var filePath = GetConfigFilePath();
-        var json = JsonSerializer.Serialize(EncryptedCopy(config), JsonOptions);
-        await File.WriteAllTextAsync(filePath, json);
+        if (!File.Exists(filePath))
+            return null;
+
+        try
+        {
+            return JsonNode.Parse(await File.ReadAllTextAsync(filePath)) as JsonObject;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public async Task<SpeechSettings> LoadSpeechSettingsAsync(string profileName)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+        if (profile.SpeechSettings != null)
+            return Normalize(profile.SpeechSettings);
+
+        try
+        {
+            if ((await ReadConfigNodeAsync())?[SpeechSettingsProperty] is JsonObject node &&
+                node.Deserialize<SpeechSettings>(JsonOptions) is { } global)
+            {
+                global.GeminiApiKey = DecryptApiKey(global.GeminiApiKey);
+                return Normalize(global);
+            }
+        }
+        catch
+        {
+            // Fehlerhafte globale Einstellung: Standard verwenden
+        }
+
+        return new SpeechSettings();
+    }
+
+    public async Task SaveSpeechSettingsAsync(string profileName, SpeechSettings settings)
+    {
+        // 1. Im Profil (maßgeblich); Verschlüsselung übernimmt WriteProfileFileAsync
+        var profile = await ReadProfileFileAsync(profileName);
+        profile.SpeechSettings = settings.Clone();
+        await WriteProfileFileAsync(profileName, profile);
+
+        // 2. Global als Rückfall, ohne die KI-Konfiguration in config.json zu verändern
+        var node = await ReadConfigNodeAsync() ?? JsonSerializer.SerializeToNode(EncryptedCopy(new AiConfig()), JsonOptions)!.AsObject();
+        node[SpeechSettingsProperty] = JsonSerializer.SerializeToNode(EncryptedCopy(settings), JsonOptions);
+        await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    private static SpeechSettings Normalize(SpeechSettings settings)
+    {
+        settings.GeminiApiKey ??= string.Empty;
+        settings.GeminiModel = string.IsNullOrWhiteSpace(settings.GeminiModel) ? GeminiTtsInfo.DefaultModel : settings.GeminiModel.Trim();
+        settings.GeminiVoicePrimary = string.IsNullOrWhiteSpace(settings.GeminiVoicePrimary) ? GeminiTtsInfo.DefaultVoicePrimary : settings.GeminiVoicePrimary;
+        settings.GeminiVoiceSecondary = string.IsNullOrWhiteSpace(settings.GeminiVoiceSecondary) ? GeminiTtsInfo.DefaultVoiceSecondary : settings.GeminiVoiceSecondary;
+        settings.SystemVoicePrimary ??= string.Empty;
+        settings.SystemVoiceSecondary ??= string.Empty;
+        settings.Rate = SpeechSettings.ClampRate(settings.Rate == 0 ? 1.0 : settings.Rate);
+        return settings;
     }
 }

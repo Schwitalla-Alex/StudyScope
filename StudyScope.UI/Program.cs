@@ -39,6 +39,12 @@ class Program
         appBuilder.Services.AddSingleton<IReportService>(sp => new ReportService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IDataTableService>(sp => new DataTableService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
+        appBuilder.Services.AddSingleton<IAudioScriptService>(sp => new AudioScriptService(sp.GetRequiredService<ILlmService>()));
+
+        // Sprachausgabe: Systemstimme (Web Speech API der WebView) und Gemini TTS, im Reiter „Audio“ je Profil wählbar
+        appBuilder.Services.AddSingleton<BrowserSpeechService>();
+        appBuilder.Services.AddSingleton<ITextToSpeechService>(sp => sp.GetRequiredService<BrowserSpeechService>());
+        appBuilder.Services.AddSingleton<ITextToSpeechService, GeminiTextToSpeechService>();
 
         // ViewModels registrieren
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
@@ -56,6 +62,11 @@ class Program
         appBuilder.Services.AddSingleton<PresentationViewModel>();
         appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>()));
         appBuilder.Services.AddSingleton<DataTableViewModel>(sp => new DataTableViewModel(sp.GetRequiredService<IDataTableService>(), sp.GetRequiredService<IDocumentService>()));
+        appBuilder.Services.AddSingleton<AudioViewModel>(sp => new AudioViewModel(
+            sp.GetRequiredService<IAudioScriptService>(),
+            sp.GetRequiredService<IDocumentService>(),
+            sp.GetRequiredService<IStorageService>(),
+            sp.GetServices<ITextToSpeechService>()));
         appBuilder.Services.AddSingleton<ReportViewModel>(sp => new ReportViewModel(
             sp.GetRequiredService<IReportService>(),
             sp.GetRequiredService<IDocumentService>(),
