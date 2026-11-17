@@ -50,7 +50,7 @@ public class ReportService : IReportService
         string fallbackTitle,
         CancellationToken cancellationToken = default)
     {
-        var chunks = MindmapService.SelectRepresentativeChunks(contextChunks, MindmapService.MaxChunks);
+        var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
             return new ReportGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 

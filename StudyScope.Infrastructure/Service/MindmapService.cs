@@ -39,7 +39,7 @@ public class MindmapService : IMindmapService
 
     public async Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default)
     {
-        var chunks = SelectRepresentativeChunks(contextChunks, MaxChunks);
+        var chunks = ChunkSelector.SelectRepresentative(contextChunks, MaxChunks);
         if (chunks.Count == 0)
             return new MindmapGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 
@@ -74,22 +74,8 @@ public class MindmapService : IMindmapService
     /// Wählt gleichmäßig verteilte Textstellen aus, damit die Mindmap das ganze Dokument abdeckt
     /// und nicht nur den Anfang (wie bei einem einfachen Take(n)).
     /// </summary>
-    public static List<string> SelectRepresentativeChunks(IEnumerable<string>? chunks, int maxCount)
-    {
-        var list = chunks?.Where(c => !string.IsNullOrWhiteSpace(c)).ToList() ?? new List<string>();
-        if (list.Count <= maxCount || maxCount <= 0)
-            return maxCount <= 0 ? new List<string>() : list;
-
-        var result = new List<string>(maxCount);
-        for (var i = 0; i < maxCount; i++)
-        {
-            // Indizes von 0 bis Count-1 gleichmäßig verteilt (erste und letzte Textstelle sind dabei)
-            var index = (int)Math.Round(i * (list.Count - 1) / (double)(maxCount - 1));
-            result.Add(list[index]);
-        }
-
-        return result;
-    }
+    public static List<string> SelectRepresentativeChunks(IEnumerable<string>? chunks, int maxCount) =>
+        ChunkSelector.SelectRepresentative(chunks, maxCount);
 
     /// <summary>Ergebnis der Auswertung einer KI-Antwort.</summary>
     public sealed record MindmapParseResult(MindmapNode? Root, bool WasRepaired, MindmapFailureReason FailureReason);

@@ -40,7 +40,7 @@ public class PresentationService : IPresentationService
     public async Task<PresentationGenerationResult> GenerateFromDocumentsAsync(
         IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, CancellationToken cancellationToken = default)
     {
-        var chunks = MindmapService.SelectRepresentativeChunks(contextChunks, MindmapService.MaxChunks);
+        var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
             return new PresentationGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 

@@ -1,0 +1,741 @@
+@using Microsoft.JSInterop
+@using StudyScope.UI.Services
+@using StudyScope.ViewModels.DataTable
+@inject DataTableViewModel DtVm
+@inject DocumentListViewModel DocVm
+@inject IJSRuntime JSRuntime
+@implements IDisposable
+
+<div class="dt-root">
+
+    <div class="dt-toolbar">
+        <div>
+            <h3 style="margin: 0; font-size: 16px; color: #212529;">Datentabellen: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: #6c757d;">
+                @(DtVm.Tables.Count == 0 ? "Noch keine Tabellen" : DtVm.Tables.Count == 1 ? "1 Tabelle" : $"{DtVm.Tables.Count} Tabellen")
+                · Grundlage: @ActiveDocumentsText
+            </span>
+        </div>
+        @if (!DtVm.IsFormOpen && !DtVm.IsBusy)
+        {
+            <button type="button" class="dt-btn" style="background: #007bff;" @onclick="DtVm.OpenForm">➕ Neue Tabelle</button>
+        }
+    </div>
+
+    @if (DtVm.IsBusy)
+    {
+        <div class="dt-info">
+            <div style="font-weight: 600; font-size: 13px;">
+                @(DtVm.IsAppending
+                    ? "📊 KI sucht weitere Zeilen in den Dokumenten ..."
+                    : $"📊 KI liest die Dokumente und stellt die Tabelle zusammen ({DataTableTemplates.DisplayName(DtVm.Template)}) ...")
+            </div>
+            <div class="dt-progress"><div class="dt-progress-bar"></div></div>
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
+                <span style="font-size: 11px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
+                <button type="button" class="dt-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="DtVm.Cancel">Abbrechen</button>
+            </div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(DtVm.StatusMessage))
+    {
+        var (statusBg, statusBorder, statusText) = DtVm.IsError
+            ? ("#f8d7da", "#f5c6cb", "#721c24")
+            : DtVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+
+        <div class="dt-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
+            <div style="flex: 1; min-width: 0;">
+                <div style="font-weight: 600;">@DtVm.StatusMessage</div>
+                @if (DtVm.StatusTips.Count > 0)
+                {
+                    <ul style="margin: 4px 0 0 18px; line-height: 1.5;">
+                        @foreach (var tip in DtVm.StatusTips)
+                        {
+                            <li>@tip</li>
+                        }
+                    </ul>
+                }
+                @if (!string.IsNullOrEmpty(DtVm.StatusDetails))
+                {
+                    <details style="margin-top: 6px;">
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <pre class="dt-details-raw">@DtVm.StatusDetails</pre>
+                    </details>
+                }
+            </div>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="DtVm.ClearStatus">✕</button>
+        </div>
+    }
+
+    <div class="dt-body">
+        <!-- Linke Spalte: neue Tabelle + Liste (einklappbar, damit die Tabelle mehr Platz hat) -->
+        <div class="dt-side" style="@(sideCollapsed && !DtVm.IsFormOpen ? "display: none;" : "")">
+            @if (DtVm.IsFormOpen)
+            {
+                <div class="dt-card" style="border-color: #9ec5fe;">
+                    <h4>➕ Neue Datentabelle</h4>
+
+                    <label class="dt-label">Vorlage</label>
+                    <div class="dt-templates">
+                        @foreach (var template in DataTableTemplates.All)
+                        {
+                            var current = template;
+                            <button type="button" class="dt-template @(DtVm.Template == current ? "active" : "")" disabled="@DtVm.IsBusy" @onclick="() => DtVm.Template = current">
+                                <span style="font-size: 18px;">@DataTableTemplates.Icon(current)</span>
+                                <span>
+                                    <b>@DataTableTemplates.DisplayName(current)</b>
+                                    <span class="dt-desc">@DataTableTemplates.Description(current)</span>
+                                    @if (DataTableTemplates.SuggestedColumns(current).Count > 0)
+                                    {
+                                        <span class="dt-desc" style="font-style: italic;">Spalten z. B.: @string.Join(", ", DataTableTemplates.SuggestedColumns(current))</span>
+                                    }
+                                </span>
+                            </button>
+                        }
+                    </div>
+
+                    @if (DtVm.Template == DataTableTemplate.Custom)
+                    {
+                        <label class="dt-label">Ihre Vorgabe</label>
+                        <textarea class="dt-input" rows="3" placeholder="z. B. Alle Steuerarten mit Steuersatz, Bemessungsgrundlage und Beispiel" @bind="DtVm.CustomInstruction" @bind:event="oninput"></textarea>
+                    }
+
+                    <label class="dt-label">Spalten <span style="font-weight: normal; color: #6c757d;">(optional – durch Komma getrennt)</span></label>
+                    <input class="dt-input" placeholder="@ColumnsPlaceholder" @bind="DtVm.CustomColumns" @bind:event="oninput" />
+                    <div class="dt-meta" style="margin-top: 3px;">Leer lassen, dann schlägt die KI passende Spalten vor. Die Spalte „Quelle“ kommt immer automatisch dazu.</div>
+
+                    <label class="dt-label">Thema / Suchbegriff <span style="font-weight: normal; color: #6c757d;">(optional)</span></label>
+                    <input class="dt-input" placeholder="z. B. Photosynthese" @bind="DtVm.Topic" @bind:event="oninput" />
+                    <div class="dt-meta" style="margin-top: 3px;">Grenzt die Tabelle auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</div>
+
+                    <label class="dt-label">Titel <span style="font-weight: normal; color: #6c757d;">(optional – sonst wählt die KI einen)</span></label>
+                    <input class="dt-input" @bind="DtVm.CustomTitle" @bind:event="oninput" />
+
+                    <button type="button" class="dt-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
+                            disabled="@(DtVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
+                        ✨ Tabelle erstellen
+                    </button>
+                    @if (ActiveDocumentCount == 0)
+                    {
+                        <div class="dt-meta" style="color: #b02a37; margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                    }
+                    @if (DtVm.Tables.Count > 0 && !DtVm.IsBusy)
+                    {
+                        <button type="button" class="dt-link" style="margin-top: 8px;" @onclick="() => DtVm.IsFormOpen = false">Abbrechen</button>
+                    }
+                </div>
+            }
+
+            @if (DtVm.Tables.Count > 0)
+            {
+                <div class="dt-card">
+                    <h4>📊 Gespeicherte Tabellen</h4>
+                    @foreach (var table in DtVm.Tables)
+                    {
+                        var t = table;
+                        var isSelected = DtVm.SelectedTable?.Id == t.Id && !DtVm.IsFormOpen;
+                        <div class="dt-item @(isSelected ? "active" : "")" @onclick="() => SelectTable(t.Id)">
+                            <span style="font-size: 16px;">@DataTableTemplates.Icon(t.Template)</span>
+                            <div style="flex: 1; min-width: 0;">
+                                @if (renameId == t.Id)
+                                {
+                                    <input class="dt-input" style="padding: 3px 6px;" @bind="renameText" @bind:event="oninput" @onclick:stopPropagation="true"
+                                           @onkeydown="e => RenameKeyAsync(e, t.Id)" />
+                                }
+                                else
+                                {
+                                    <div class="dt-item-title" title="@t.Title">@t.Title</div>
+                                }
+                                <div class="dt-meta">@DataTableTemplates.DisplayName(t.Template) · @t.Rows.Count Zeilen · @t.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                            </div>
+                            <div style="display: flex; gap: 2px; flex-shrink: 0;" @onclick:stopPropagation="true">
+                                @if (renameId == t.Id)
+                                {
+                                    <button class="dt-icon" title="Übernehmen" @onclick="() => RenameAsync(t.Id)">✔</button>
+                                    <button class="dt-icon" title="Abbrechen" @onclick="() => renameId = null">✕</button>
+                                }
+                                else if (confirmDeleteId == t.Id)
+                                {
+                                    <button class="dt-btn" style="background: #dc3545; padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(t.Id)">Löschen?</button>
+                                    <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
+                                }
+                                else
+                                {
+                                    <button class="dt-icon" title="Umbenennen" @onclick="() => StartRename(t)">✏️</button>
+                                    <button class="dt-icon" title="Tabelle löschen" @onclick="() => confirmDeleteId = t.Id">🗑️</button>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Rechte Spalte: Tabelle -->
+        <div class="dt-main">
+            @if (DtVm.SelectedTable is { } selected && !DtVm.IsFormOpen)
+            {
+                var visible = DtVm.VisibleRows;
+
+                <div class="dt-card dt-head dt-noprint">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
+                        <div style="min-width: 0; display: flex; gap: 8px; align-items: flex-start;">
+                            <button class="dt-icon" title="@(sideCollapsed ? "Tabellenliste einblenden" : "Tabellenliste ausblenden – mehr Platz für die Tabelle")" @onclick="() => sideCollapsed = !sideCollapsed">@(sideCollapsed ? "▶" : "◀")</button>
+                            <div style="min-width: 0;">
+                            <div style="font-size: 15px; font-weight: 700; color: #212529;">@selected.Title</div>
+                            <div class="dt-meta">
+                                @DataTableTemplates.DisplayName(selected.Template)
+                                @if (!string.IsNullOrWhiteSpace(selected.Topic))
+                                {
+                                    <span> · Thema: @selected.Topic</span>
+                                }
+                                · @selected.Rows.Count / @DataTableDocument.MaxRows Zeilen · @selected.Columns.Count Spalten
+                                @if (selected.SourceDocuments.Count > 0)
+                                {
+                                    <span> · Quellen: @string.Join(", ", selected.SourceDocuments)</span>
+                                }
+                            </div>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" class="dt-btn" style="background: #28a745;" disabled="@(!DtVm.CanAddMoreRows)"
+                                    title="@(DtVm.IsAtRowLimit ? DtVm.RowLimitHint : "Die KI sucht in den Dokumenten weitere Zeilen; Wiederholungen werden weggelassen")"
+                                    @onclick="GenerateMoreRowsAsync">✨ Weitere Zeilen ergänzen</button>
+                            <button type="button" class="dt-btn" style="background: #007bff;" disabled="@(DtVm.IsBusy || DtVm.IsAtRowLimit)" title="Leere Zeile anhängen" @onclick="AddRowAsync">➕ Zeile</button>
+                            <button type="button" class="dt-btn" style="background: #007bff;" disabled="@(DtVm.IsBusy || selected.Columns.Count >= DataTableDocument.MaxColumns)" title="Spalte hinzufügen" @onclick="StartAddColumn">➕ Spalte</button>
+                        </div>
+                    </div>
+
+                    @if (DtVm.IsAtRowLimit)
+                    {
+                        <div class="dt-limit">⚠️ @DtVm.RowLimitHint</div>
+                    }
+
+                    @if (addingColumn)
+                    {
+                        <div style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
+                            <input id="dt-newcol" class="dt-input" style="max-width: 260px;" placeholder="Name der neuen Spalte" @bind="newColumnName" @bind:event="oninput" @onkeydown="AddColumnKeyAsync" />
+                            <button class="dt-btn" style="background: #28a745;" @onclick="AddColumnAsync">Hinzufügen</button>
+                            <button class="dt-icon" title="Abbrechen" @onclick="() => addingColumn = false">✕</button>
+                        </div>
+                    }
+
+                    <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <input class="dt-input" style="width: 260px;" placeholder="🔍 Filtern (alle Wörter müssen vorkommen)" @bind="DtVm.FilterText" @bind:event="oninput" />
+                            @if (DtVm.HasFilter)
+                            {
+                                <span class="dt-meta">@visible.Count von @selected.Rows.Count Zeilen</span>
+                                <button class="dt-link" @onclick='() => DtVm.FilterText = ""'>Filter löschen</button>
+                                <label class="dt-check" title="Sonst werden alle Zeilen exportiert (in der aktuellen Sortierung)">
+                                    <input type="checkbox" checked="@DtVm.ExportFilteredOnly" @onchange="e => DtVm.ExportFilteredOnly = e.Value is true" />
+                                    <span>Nur gefilterte Zeilen exportieren</span>
+                                </label>
+                            }
+                            @if (DtVm.SortColumn != null)
+                            {
+                                <button class="dt-link" @onclick="DtVm.ClearSort">Sortierung aufheben</button>
+                            }
+                        </div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <button type="button" class="dt-btn" style="background: #1d6f42;" title="Als Excel-Arbeitsmappe speichern" @onclick="() => ExportAsync(DataTableExportFormat.Excel)">📗 Excel</button>
+                            <button type="button" class="dt-btn" style="background: #495057;" title="Als CSV-Datei speichern (Semikolon, für Excel)" @onclick="() => ExportAsync(DataTableExportFormat.Csv)">🧾 CSV</button>
+                            <button type="button" class="dt-btn" style="background: #17a2b8;" title="Als Markdown-Tabelle speichern" @onclick="() => ExportAsync(DataTableExportFormat.Markdown)">📄 Markdown</button>
+                            <button type="button" class="dt-btn" style="background: #6c757d;" title="Drucken oder als PDF speichern (aktuelle Ansicht)" @onclick="PrintAsync">🖨️ PDF</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dt-print-area">
+                    <div class="dt-print-header">
+                        <div style="font-size: 16pt; font-weight: bold;">@selected.Title</div>
+                        <div style="font-size: 9pt; color: #555;">
+                            @DataTableTemplates.DisplayName(selected.Template) · @visible.Count Zeilen · StudyScope, @DateTime.Now.ToString("dd.MM.yyyy")
+                        </div>
+                    </div>
+
+                    <div class="dt-scroll">
+                        <table class="dt-table">
+                            <thead>
+                                <tr>
+                                    @for (var c = 0; c < selected.Columns.Count; c++)
+                                    {
+                                        var col = c;
+                                        <th>
+                                            @if (renameColumn == col)
+                                            {
+                                                <div style="display: flex; gap: 3px; align-items: center;">
+                                                    <input id="dt-colrename" class="dt-input" style="padding: 2px 5px; min-width: 90px;" @bind="renameColumnText" @bind:event="oninput" @onkeydown="e => RenameColumnKeyAsync(e, col)" />
+                                                    <button class="dt-icon" title="Übernehmen" @onclick="() => RenameColumnAsync(col)">✔</button>
+                                                    <button class="dt-icon" title="Abbrechen" @onclick="() => renameColumn = null">✕</button>
+                                                </div>
+                                            }
+                                            else if (confirmDeleteColumn == col)
+                                            {
+                                                <div style="display: flex; gap: 3px; align-items: center;">
+                                                    <button class="dt-btn" style="background: #dc3545; padding: 2px 8px; font-size: 11px;" @onclick="() => DeleteColumnAsync(col)">„@selected.Columns[col]“ löschen?</button>
+                                                    <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteColumn = null">✕</button>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <div class="dt-th">
+                                                    <button class="dt-sort" title="Sortieren" @onclick="() => DtVm.ToggleSort(col)">
+                                                        @selected.Columns[col] <span class="dt-arrow">@SortArrow(col)</span>
+                                                    </button>
+                                                    <span class="dt-th-tools dt-noprint">
+                                                        <button class="dt-icon small" title="Spalte umbenennen" @onclick="() => StartRenameColumn(col)">✏️</button>
+                                                        <button class="dt-icon small" title="Spalte löschen" @onclick="() => StartDeleteColumn(col)">🗑️</button>
+                                                    </span>
+                                                </div>
+                                            }
+                                        </th>
+                                    }
+                                    <th class="dt-source-col">
+                                        <button class="dt-sort" title="Nach Quelle sortieren" @onclick="() => DtVm.ToggleSort(DataTableSorting.SourceColumn)">
+                                            @DataTableDocument.SourceColumnName <span class="dt-arrow">@SortArrow(DataTableSorting.SourceColumn)</span>
+                                        </button>
+                                    </th>
+                                    <th class="dt-actions dt-noprint"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in visible)
+                                {
+                                    var r = row;
+                                    <tr @key="r.Id">
+                                        @for (var c = 0; c < selected.Columns.Count; c++)
+                                        {
+                                            var col = c;
+                                            @Cell(r, col)
+                                        }
+                                        @Cell(r, DataTableSorting.SourceColumn)
+                                        <td class="dt-actions dt-noprint">
+                                            @if (confirmDeleteRowId == r.Id)
+                                            {
+                                                <button class="dt-btn" style="background: #dc3545; padding: 2px 6px; font-size: 11px;" @onclick="() => DeleteRowAsync(r.Id)">Löschen?</button>
+                                                <button class="dt-icon small" title="Nicht löschen" @onclick="() => confirmDeleteRowId = null">✕</button>
+                                            }
+                                            else
+                                            {
+                                                <button class="dt-icon small" title="Zeile löschen" @onclick="() => confirmDeleteRowId = r.Id">🗑️</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                @if (visible.Count == 0)
+                                {
+                                    <tr>
+                                        <td colspan="@(selected.Columns.Count + 2)" class="dt-empty-row">
+                                            @(DtVm.HasFilter ? "Keine Zeile passt zum Filter." : "Die Tabelle hat noch keine Zeilen.")
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="dt-meta dt-noprint" style="margin-top: 6px;">Doppelklick auf eine Zelle zum Bearbeiten – Enter übernimmt, Esc bricht ab. Änderungen werden sofort gespeichert.</div>
+                </div>
+            }
+            else if (!DtVm.IsBusy)
+            {
+                <div class="dt-empty">
+                    <div style="font-size: 34px; margin-bottom: 10px;">📊</div>
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch keine Tabelle ausgewählt.</p>
+                    <span style="font-size: 12px; line-height: 1.5; display: block;">
+                        Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Tabelle erstellen“.
+                        Die KI sucht die Angaben aus Ihren Unterlagen heraus – jede Zeile mit ihrer Quelle. Die Tabelle lässt sich
+                        sortieren, filtern, bearbeiten und als Excel, CSV, Markdown oder PDF speichern.
+                    </span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <style>
+        .dt-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
+        .dt-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
+        .dt-btn { padding: 6px 11px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+        .dt-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .dt-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
+        .dt-icon { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; padding: 2px 5px; }
+        .dt-icon.small { font-size: 11px; padding: 1px 3px; }
+        .dt-icon:hover { background: #f1f3f5; border-color: #dee2e6; }
+        .dt-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .dt-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .dt-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: dt-slide 1.4s ease-in-out infinite; }
+        @@keyframes dt-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        .dt-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .dt-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .dt-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
+        .dt-side { width: 320px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+        .dt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
+        .dt-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
+        .dt-card h4 { margin: 0 0 8px 0; font-size: 14px; color: #212529; }
+        .dt-head { padding: 10px 14px; }
+        .dt-limit { margin-top: 8px; padding: 6px 10px; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 4px; font-size: 12px; }
+        .dt-label { font-size: 12px; font-weight: 600; color: #495057; margin: 12px 0 4px 0; display: block; }
+        .dt-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .dt-templates { display: flex; flex-direction: column; gap: 6px; }
+        .dt-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid #dee2e6; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; color: #212529; font-family: inherit; }
+        .dt-template.active { border-color: #007bff; background: #f0f7ff; }
+        .dt-template b { display: block; }
+        .dt-desc { display: block; font-size: 11.5px; color: #6c757d; line-height: 1.35; }
+        .dt-check { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; cursor: pointer; color: #495057; }
+        .dt-meta { font-size: 11px; color: #6c757d; }
+        .dt-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+        .dt-item:hover { background: #f8f9fa; }
+        .dt-item.active { background: #f0f7ff; border-color: #9ec5fe; }
+        .dt-item-title { font-size: 13px; font-weight: 600; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dt-print-area { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; }
+        .dt-print-header { display: none; }
+        .dt-scroll { flex: 1 1 auto; min-height: 340px; max-height: calc(100vh - 160px); overflow: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; }
+        .dt-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
+        .dt-table th { position: sticky; top: 0; z-index: 1; background: #e9f2ff; color: #212529; text-align: left; padding: 6px 8px; border-bottom: 2px solid #9ec5fe; border-right: 1px solid #dee2e6; vertical-align: top; min-width: 90px; }
+        .dt-table td { padding: 5px 8px; border-bottom: 1px solid #edf0f2; border-right: 1px solid #f1f3f5; vertical-align: top; white-space: pre-wrap; word-break: break-word; cursor: text; min-width: 60px; }
+        .dt-table tbody tr:nth-child(even) td { background: #fafbfc; }
+        .dt-table tbody tr:hover td { background: #f0f7ff; }
+        .dt-table td.dt-source, .dt-table th.dt-source-col { color: #6c757d; font-size: 11.5px; min-width: 110px; }
+        .dt-table .dt-actions { width: 1%; white-space: nowrap; min-width: 0; text-align: right; cursor: default; }
+        .dt-table td.editing { padding: 2px 4px; background: #fffbe6 !important; }
+        .dt-cell-input { width: 100%; box-sizing: border-box; min-width: 120px; padding: 3px 5px; border: 1px solid #007bff; border-radius: 3px; font-size: 12.5px; font-family: inherit; }
+        .dt-th { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; }
+        .dt-sort { background: none; border: none; padding: 0; font-weight: 700; font-size: 12.5px; cursor: pointer; text-align: left; color: inherit; font-family: inherit; }
+        .dt-arrow { color: #007bff; font-size: 11px; }
+        .dt-th-tools { display: inline-flex; opacity: 0.35; flex-shrink: 0; }
+        .dt-table th:hover .dt-th-tools { opacity: 1; }
+        .dt-empty-row { text-align: center; color: #6c757d; padding: 20px !important; cursor: default !important; }
+        .dt-empty { margin: auto; text-align: center; color: #6c757d; max-width: 480px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+
+        @@media print {
+            @@page { size: A4 landscape; margin: 12mm; }
+            body * { visibility: hidden; }
+            .dt-print-area, .dt-print-area * { visibility: visible; }
+            .dt-print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+            .dt-print-header { display: block; margin-bottom: 5mm; }
+            .dt-noprint, .dt-noprint * { display: none !important; }
+            .dt-scroll { overflow: visible !important; max-height: none !important; min-height: 0 !important; border: none; border-radius: 0; }
+            .dt-root, .dt-main, .dt-body { background: #fff !important; overflow: visible !important; }
+            .dt-table { font-size: 9pt; }
+            .dt-table th { position: static; background: #e9f2ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .dt-table thead { display: table-header-group; }
+            .dt-table tr { page-break-inside: avoid; break-inside: avoid; }
+            .dt-table th, .dt-table td { border: 1px solid #bbb; }
+        }
+    </style>
+</div>
+
+@code {
+    private string? renameId;
+    private string renameText = string.Empty;
+    private string? confirmDeleteId;
+
+    private string? editRowId;
+    private int editColumn;
+    private string editText = string.Empty;
+    private bool focusEditor;
+
+    private int? renameColumn;
+    private string renameColumnText = string.Empty;
+    private int? confirmDeleteColumn;
+    private bool addingColumn;
+    private string newColumnName = string.Empty;
+    private string? focusElementId;
+
+    private string? confirmDeleteRowId;
+    private bool sideCollapsed;
+
+    private int ActiveDocumentCount => DocVm.Documents.Count(d => d.IsSelected && !d.IsMissing);
+
+    private string ActiveDocumentsText => ActiveDocumentCount switch
+    {
+        0 => "kein Dokument aktiviert",
+        1 => "1 aktiviertes Dokument",
+        var n => $"{n} aktivierte Dokumente"
+    };
+
+    private string ColumnsPlaceholder
+    {
+        get
+        {
+            var suggested = DataTableTemplates.SuggestedColumns(DtVm.Template);
+            return suggested.Count > 0 ? string.Join(", ", suggested) : "z. B. Steuerart, Steuersatz, Beispiel";
+        }
+    }
+
+    private string SortArrow(int column) =>
+        DtVm.SortColumn == column ? (DtVm.SortDescending ? "▼" : "▲") : "";
+
+    /// <summary>Zelle: Anzeige, per Doppelklick Eingabefeld (Enter übernimmt, Esc bricht ab, Verlassen übernimmt).</summary>
+    private RenderFragment Cell(DataTableRow row, int column) => __builder =>
+    {
+        var value = DataTableSorting.CellValue(row, column);
+        var isSource = column == DataTableSorting.SourceColumn;
+        if (editRowId == row.Id && editColumn == column)
+        {
+            <td class="editing @(isSource ? "dt-source" : "")">
+                <input id="dt-cell-editor" class="dt-cell-input" @bind="editText" @bind:event="oninput"
+                       @onkeydown="EditKeyAsync" @onblur="CommitEditAsync" />
+            </td>
+        }
+        else
+        {
+            <td class="@(isSource ? "dt-source" : "")" title="@(isSource ? "Quelldokument – Doppelklick zum Ändern" : null)" @ondblclick="() => StartEdit(row, column)">@value</td>
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        DtVm.PropertyChanged += OnVmChanged;
+        DocVm.PropertyChanged += OnDocVmChanged;
+        DocVm.Documents.CollectionChanged += OnDocumentsChanged;
+        await DtVm.LoadForProfileAsync(DocVm.CurrentProfile);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        string? id = null;
+        if (focusEditor)
+        {
+            focusEditor = false;
+            id = "dt-cell-editor";
+        }
+        else if (focusElementId != null)
+        {
+            id = focusElementId;
+            focusElementId = null;
+        }
+
+        if (id != null)
+        {
+            try
+            {
+                await JSRuntime.InvokeVoidAsync("eval", $"(function(){{var e=document.getElementById('{id}'); if(e){{e.focus(); if(e.select) e.select();}}}})()");
+            }
+            catch
+            {
+                // Fokus ist nur eine Bequemlichkeit
+            }
+        }
+    }
+
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private void OnDocumentsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private async void OnDocVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(DocVm.CurrentProfile))
+        {
+            ResetEditing();
+            renameId = null;
+            confirmDeleteId = null;
+            await DtVm.LoadForProfileAsync(DocVm.CurrentProfile);
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void ResetEditing()
+    {
+        editRowId = null;
+        renameColumn = null;
+        confirmDeleteColumn = null;
+        confirmDeleteRowId = null;
+        addingColumn = false;
+    }
+
+    private void SelectTable(string id)
+    {
+        ResetEditing();
+        DtVm.SelectTable(id);
+    }
+
+    private Task GenerateAsync() => DtVm.GenerateAsync(DocVm.Documents);
+
+    private Task GenerateMoreRowsAsync() => DtVm.GenerateMoreRowsAsync(DocVm.Documents);
+
+    // ---------------- Zellen ----------------
+
+    private void StartEdit(DataTableRow row, int column)
+    {
+        editRowId = row.Id;
+        editColumn = column;
+        editText = DataTableSorting.CellValue(row, column);
+        focusEditor = true;
+    }
+
+    private async Task CommitEditAsync()
+    {
+        if (editRowId == null) return;
+
+        var rowId = editRowId;
+        var column = editColumn;
+        var text = editText;
+        editRowId = null;
+        await DtVm.SetCellAsync(rowId, column, text);
+    }
+
+    private async Task EditKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await CommitEditAsync();
+        else if (e.Key == "Escape") editRowId = null;
+    }
+
+    // ---------------- Zeilen ----------------
+
+    private async Task AddRowAsync()
+    {
+        ResetEditing();
+        // Mit Filter wäre die leere Zeile unsichtbar
+        if (DtVm.HasFilter) DtVm.FilterText = string.Empty;
+
+        var id = await DtVm.AddRowAsync();
+        var row = id == null ? null : DtVm.SelectedTable?.Rows.FirstOrDefault(r => r.Id == id);
+        if (row != null && DtVm.SelectedTable!.Columns.Count > 0)
+            StartEdit(row, 0);
+    }
+
+    private async Task DeleteRowAsync(string rowId)
+    {
+        confirmDeleteRowId = null;
+        if (editRowId == rowId) editRowId = null;
+        await DtVm.DeleteRowAsync(rowId);
+    }
+
+    // ---------------- Spalten ----------------
+
+    private void StartAddColumn()
+    {
+        ResetEditing();
+        addingColumn = true;
+        newColumnName = string.Empty;
+        focusElementId = "dt-newcol";
+    }
+
+    private async Task AddColumnAsync()
+    {
+        if (await DtVm.AddColumnAsync(newColumnName))
+        {
+            addingColumn = false;
+            newColumnName = string.Empty;
+        }
+    }
+
+    private async Task AddColumnKeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await AddColumnAsync();
+        else if (e.Key == "Escape") addingColumn = false;
+    }
+
+    private void StartRenameColumn(int column)
+    {
+        ResetEditing();
+        renameColumn = column;
+        renameColumnText = DtVm.SelectedTable?.Columns[column] ?? string.Empty;
+        focusElementId = "dt-colrename";
+    }
+
+    private async Task RenameColumnAsync(int column)
+    {
+        if (await DtVm.RenameColumnAsync(column, renameColumnText))
+            renameColumn = null;
+    }
+
+    private async Task RenameColumnKeyAsync(KeyboardEventArgs e, int column)
+    {
+        if (e.Key == "Enter") await RenameColumnAsync(column);
+        else if (e.Key == "Escape") renameColumn = null;
+    }
+
+    private void StartDeleteColumn(int column)
+    {
+        ResetEditing();
+        confirmDeleteColumn = column;
+    }
+
+    private async Task DeleteColumnAsync(int column)
+    {
+        confirmDeleteColumn = null;
+        await DtVm.DeleteColumnAsync(column);
+    }
+
+    // ---------------- Tabellen ----------------
+
+    private void StartRename(DataTableDocument table)
+    {
+        confirmDeleteId = null;
+        renameId = table.Id;
+        renameText = table.Title;
+    }
+
+    private async Task RenameAsync(string tableId)
+    {
+        if (await DtVm.RenameTableAsync(tableId, renameText))
+            renameId = null;
+    }
+
+    private async Task RenameKeyAsync(KeyboardEventArgs e, string tableId)
+    {
+        if (e.Key == "Enter") await RenameAsync(tableId);
+        else if (e.Key == "Escape") renameId = null;
+    }
+
+    private async Task DeleteAsync(string tableId)
+    {
+        confirmDeleteId = null;
+        ResetEditing();
+        await DtVm.DeleteTableAsync(tableId);
+    }
+
+    // ---------------- Export und Druck ----------------
+
+    private async Task ExportAsync(DataTableExportFormat format)
+    {
+        try
+        {
+            var extension = DataTableViewModel.Extension(format);
+            var path = await DesktopDialogs.SaveFileAsync(
+                DtVm.SuggestFileName(format),
+                filterExtension: extension,
+                filterDescription: DataTableViewModel.FormatDescription(format),
+                title: "Datentabelle speichern als...");
+
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            if (!path.EndsWith("." + extension, StringComparison.OrdinalIgnoreCase))
+                path += "." + extension;
+
+            await DtVm.ExportAsync(format, path);
+        }
+        catch (Exception ex)
+        {
+            DtVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+        }
+    }
+
+    /// <summary>Druckt die aktuelle Ansicht der Tabelle (Filter und Sortierung) über die eigene Druckansicht.</summary>
+    private async Task PrintAsync()
+    {
+        ResetEditing();
+        StateHasChanged();
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.print");
+        }
+        catch (Exception ex)
+        {
+            DtVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true,
+                new[] { "Alternative: Tabelle als „📗 Excel“ speichern und dort drucken." });
+        }
+    }
+
+    public void Dispose()
+    {
+        DtVm.PropertyChanged -= OnVmChanged;
+        DocVm.PropertyChanged -= OnDocVmChanged;
+        DocVm.Documents.CollectionChanged -= OnDocumentsChanged;
+    }
+}
