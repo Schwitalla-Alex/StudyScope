@@ -1,6 +1,7 @@
 ﻿@using StudyScope.ViewModels
 @inject DocumentListViewModel DocVm
 @inject AudioViewModel AuVm
+@inject VideoViewModel VdVm
 @implements IDisposable
 
 <div style="background: #e9ecef; border-top: 1px solid #ced4da; padding: 4px 15px; font-size: 12px; color: #495057; display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -20,6 +21,14 @@
                 <button class="sb-audio-btn" title="Stopp" @onclick="AuVm.StopAsync">⏹</button>
             </span>
         }
+        @if (VdVm.NowPlayingTitle is { } video)
+        {
+            <span class="sb-audio" title="Video wird abgespielt (läuft in allen Reitern weiter)">
+                🎬 <b>@video</b> @(VdVm.IsPaused ? "ist pausiert" : "läuft")
+                <button class="sb-audio-btn" title="@(VdVm.IsPaused ? "Weiter" : "Pause")" @onclick="VdVm.TogglePlayPauseAsync">@(VdVm.IsPaused ? "▶" : "⏸")</button>
+                <button class="sb-audio-btn" title="Stopp" @onclick="VdVm.StopAsync">⏹</button>
+            </span>
+        }
         <span>KI: <b>@DocVm.CurrentAiModelDisplayName</b></span>
         <span>Profil: <b>@DocVm.CurrentProfile</b></span>
     </div>
@@ -37,13 +46,17 @@
     {
         DocVm.PropertyChanged += OnDocVmPropertyChanged;
         AuVm.PropertyChanged += OnAudioChanged;
+        VdVm.PropertyChanged += OnVideoChanged;
     }
 
     private void OnDocVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Profilwechsel beendet eine laufende Wiedergabe (auch wenn der Audio-Reiter nicht offen ist)
         if (e.PropertyName == nameof(DocumentListViewModel.CurrentProfile))
+        {
             _ = InvokeAsync(() => AuVm.HandleProfileChangedAsync(DocVm.CurrentProfile));
+            _ = InvokeAsync(() => VdVm.HandleProfileChangedAsync(DocVm.CurrentProfile));
+        }
         InvokeAsync(StateHasChanged);
     }
 
@@ -53,8 +66,15 @@
             InvokeAsync(StateHasChanged);
     }
 
+    private void OnVideoChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(VideoViewModel.NowPlayingTitle) or nameof(VideoViewModel.IsPaused))
+            InvokeAsync(StateHasChanged);
+    }
+
     public void Dispose()
     {
+        VdVm.PropertyChanged -= OnVideoChanged;
         DocVm.PropertyChanged -= OnDocVmPropertyChanged;
         AuVm.PropertyChanged -= OnAudioChanged;
     }

@@ -1,0 +1,59 @@
+@* Einheitliche Darstellung einer Folie für Präsentation (Übersicht, Hauptansicht, Vortrag, Druck) und Video.
+   Maße in cqw (relativ zur Folienbreite), Stil in wwwroot/css/studyscope-slides.css. *@
+
+<div class="@CssClass">
+    <div class="pp-slide-content">
+        @if (Slide.Kind == SlideKind.Title)
+        {
+            <h1>@Slide.Title</h1>
+            <div class="pp-accent"></div>
+            @if (!string.IsNullOrWhiteSpace(Slide.Subtitle))
+            {
+                <div class="pp-subtitle">@Slide.Subtitle</div>
+            }
+        }
+        else
+        {
+            <h1>@Slide.Title</h1>
+            <div class="pp-accent"></div>
+            <ul>
+                @for (var i = 0; i < Slide.Bullets.Count; i++)
+                {
+                    <li class="@(VisibleBullets is { } visible && i >= visible ? "pp-bullet-hidden" : null)">@Slide.Bullets[i]</li>
+                }
+            </ul>
+        }
+    </div>
+    @if (Slide.Kind != SlideKind.Title)
+    {
+        <div class="pp-footer"><span>@PresentationTitle</span><span>@Number / @Total</span></div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public PresentationSlide Slide { get; set; } = default!;
+    [Parameter] public int Number { get; set; }
+    [Parameter] public int Total { get; set; }
+
+    /// <summary>Titel der Präsentation in der Fußzeile der Inhaltsfolien.</summary>
+    [Parameter] public string? PresentationTitle { get; set; }
+
+    /// <summary>Anzahl sichtbarer Stichpunkte (null = alle); weitere werden ausgeblendet und sanft eingeblendet.</summary>
+    [Parameter] public int? VisibleBullets { get; set; }
+
+    private string CssClass
+    {
+        get
+        {
+            if (Slide.Kind == SlideKind.Title)
+                return "pp-slide title";
+
+            return PresentationViewModel.GetDensity(Slide) switch
+            {
+                SlideDensity.VeryDense => "pp-slide very-dense",
+                SlideDensity.Dense => "pp-slide dense",
+                _ => "pp-slide"
+            };
+        }
+    }
+}

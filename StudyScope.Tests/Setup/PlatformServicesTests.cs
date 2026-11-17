@@ -24,7 +24,7 @@ public class DesktopEntryBuilderTests
         Assert.That(content, Does.Contain("Exec=\"/home/anna/.local/share/StudyScope/StudyScope.UI\"\n"));
         Assert.That(content, Does.Contain("Path=/home/anna/.local/share/StudyScope\n"));
         Assert.That(content, Does.Contain("Icon=studyscope\n"));
-        Assert.That(content, Does.Contain("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;Tabelle;Audio;Podcast;\n"));
+        Assert.That(content, Does.Contain("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;Tabelle;Audio;Podcast;Video;\n"));
         Assert.That(content, Does.Match(@"\nComment=[^\n]*Mindmap[^\n]*\n"));
         Assert.That(content, Does.Contain("Actions=Uninstall;\n"));
         Assert.That(content, Does.Contain("[Desktop Action Uninstall]\n"));

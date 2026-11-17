@@ -40,6 +40,7 @@ class Program
         appBuilder.Services.AddSingleton<IDataTableService>(sp => new DataTableService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<ILocalLlmDiscoveryService, LocalLlmDiscoveryService>();
         appBuilder.Services.AddSingleton<IAudioScriptService>(sp => new AudioScriptService(sp.GetRequiredService<ILlmService>()));
+        appBuilder.Services.AddSingleton<IVideoScriptService>(sp => new VideoScriptService(sp.GetRequiredService<ILlmService>()));
 
         // Sprachausgabe: Systemstimme (Web Speech API der WebView) und Gemini TTS, im Reiter „Audio“ je Profil wählbar
         appBuilder.Services.AddSingleton<BrowserSpeechService>();
@@ -49,6 +50,8 @@ class Program
         appBuilder.Services.AddSingleton<IAudioFilePlayer>(sp => sp.GetRequiredService<BrowserAudioPlayer>());
 
         // ViewModels registrieren
+        // Audio und Video teilen sich Player und Systemstimme: es läuft immer nur eine Wiedergabe
+        appBuilder.Services.AddSingleton<PlaybackCoordinator>();
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
@@ -69,7 +72,16 @@ class Program
             sp.GetRequiredService<IDocumentService>(),
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>(),
-            sp.GetRequiredService<IAudioFilePlayer>()));
+            sp.GetRequiredService<IAudioFilePlayer>(),
+            sp.GetRequiredService<PlaybackCoordinator>()));
+        appBuilder.Services.AddSingleton<VideoViewModel>(sp => new VideoViewModel(
+            sp.GetRequiredService<IVideoScriptService>(),
+            sp.GetRequiredService<IPresentationService>(),
+            sp.GetRequiredService<IDocumentService>(),
+            sp.GetRequiredService<IStorageService>(),
+            sp.GetServices<ITextToSpeechService>(),
+            sp.GetRequiredService<IAudioFilePlayer>(),
+            sp.GetRequiredService<PlaybackCoordinator>()));
         appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>()));
@@ -112,11 +124,13 @@ class Program
 
         app.MainWindow.Center(); // Zentriert das Fenster auf dem Bildschirm
 
-        // Beim Schließen eine laufende Audio-Wiedergabe beenden (nicht abwarten: der Aufruf ginge über die WebView)
+        // Beim Schließen eine laufende Audio- bzw. Video-Wiedergabe beenden (nicht abwarten: der Aufruf ginge über die WebView)
         var audioViewModel = app.Services.GetRequiredService<AudioViewModel>();
+        var videoViewModel = app.Services.GetRequiredService<VideoViewModel>();
         app.MainWindow.RegisterWindowClosingHandler((_, _) =>
         {
             _ = audioViewModel.StopAsync();
+            _ = videoViewModel.StopAsync();
             return false; // Schließen nicht verhindern
         });
                 

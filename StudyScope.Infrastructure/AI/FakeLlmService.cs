@@ -32,6 +32,12 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakeAudioScriptResponse.Create(prompt, chunks));
         }
 
+        // Video-Skript nach dem Audio-Skript: Folientitel können "Mindmap" oder "Quiz" enthalten, der Prompt enthält "JSON"
+        if (FakeVideoScriptResponse.IsVideoScriptPrompt(prompt))
+        {
+            return Task.FromResult(FakeVideoScriptResponse.Create(prompt, chunks));
+        }
+
         // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
         {
