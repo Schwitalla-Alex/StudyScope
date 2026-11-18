@@ -3,16 +3,25 @@
 @using StudyScope.Core.Models
 @using StudyScope.UI.Services
 @using StudyScope.ViewModels
+@using Microsoft.JSInterop
 
 @* Dependency Injection: Bereitstellung der ViewModel-Logik und des nativen Dateiöffners *@
 @inject DocumentListViewModel DocVm
 @inject SettingsViewModel SettingsVm
 @inject LayoutViewModel LayoutVm
 @inject IFileOpenerService FileOpenerService
+@inject IJSRuntime JS
 @implements IDisposable
 
 <!-- Linke Seitenleiste: Verwaltung von Profilen, Suchfilter und Dokumentenliste (ein-/ausklappbar, Strg+B) -->
-<div class="ss-sidebar @(LayoutVm.IsSidebarCollapsed ? "collapsed" : "")">
+<div class="ss-sidebar @(LayoutVm.IsSidebarCollapsed ? "collapsed" : "")" style="@WidthStyle">
+
+<!-- Ziehbare Trennlinie: Maus (Pointer Events, studyscope-layout.js), Doppelklick = Standardbreite, Tastatur ← → Pos1 Ende -->
+<div @ref="resizerRef" class="ss-sidebar-resizer" role="separator" aria-orientation="vertical"
+     aria-label="Breite der Seitenleiste" title="Ziehen zum Ändern der Breite, Doppelklick: Standardbreite"
+     aria-valuemin="@Px(LayoutViewModel.MinSidebarWidth)" aria-valuemax="@Px(LayoutVm.MaxSidebarWidthNow)" aria-valuenow="@Px(LayoutVm.EffectiveSidebarWidth)"
+     tabindex="@(LayoutVm.IsSidebarCollapsed ? "-1" : "0")"
+     @ondblclick="LayoutVm.ResetWidthAsync"></div>
 
 <!-- Eingeklappt: schmale Leiste mit ▶ und Hinweis auf die aktiven Dokumente -->
 <div class="ss-sidebar-rail" aria-hidden="@(LayoutVm.IsSidebarCollapsed ? "false" : "true")">
@@ -116,7 +125,7 @@
                           style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; display: flex; align-items: center; gap: 6px;"
                           @ondblclick="() => HandleDocumentDoubleClick(doc)">
                         <span>@(doc.IsMissing ? "⚠️" : GetFileIcon(doc.FilePath))</span>
-                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@doc.FileName</span>
+                        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="@doc.FileName">@doc.FileName</span>
                     </span>
 
                     <button type="button"
@@ -181,6 +190,41 @@
 
 @code {
     [Parameter] public EventCallback OnOpenSettings { get; set; }
+
+    private ElementReference resizerRef;
+    private DotNetObjectReference<SidebarPanel>? selfRef;
+
+    // Zahlen für Stil und aria-Attribute immer mit Punkt (deutsche Kultur schreibt Kommas)
+    private static string Px(double value) => Math.Round(value).ToString(System.Globalization.CultureInfo.InvariantCulture);
+    private string WidthStyle => $"--ss-sidebar-width: {Px(LayoutVm.EffectiveSidebarWidth)}px";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selfRef = DotNetObjectReference.Create(this);
+        try
+        {
+            await JS.InvokeVoidAsync("studyScopeLayout.attachResizer", resizerRef, selfRef, new
+            {
+                min = LayoutViewModel.MinSidebarWidth,
+                minContent = LayoutViewModel.MinContentWidth,
+                maxFraction = LayoutViewModel.MaxSidebarFraction,
+                collapseBelow = LayoutViewModel.CollapseDragWidth
+            });
+        }
+        catch (JSException)
+        {
+            // Skript nicht geladen – Breite bleibt, Doppelklick und Einklappen funktionieren weiter
+        }
+    }
+
+    /// <summary>Ende des Ziehens (studyscope-layout.js): begrenzen und speichern bzw. einklappen; null = eingeklappt.</summary>
+    [JSInvokable]
+    public Task<double?> EndSidebarResize(double requestedWidth) => LayoutVm.EndResizeAsync(requestedWidth);
+
+    /// <summary>Pfeil links/rechts, Pos1, Ende auf der fokussierten Trennlinie.</summary>
+    [JSInvokable]
+    public Task<bool> OnSeparatorKey(string key) => LayoutVm.HandleSeparatorKeyAsync(key);
 
     private bool showCreateModal = false;
     private string newProfileName = string.Empty;
@@ -306,5 +350,6 @@
     {
         DocVm.PropertyChanged -= OnDocVmPropertyChanged;
         LayoutVm.PropertyChanged -= OnDocVmPropertyChanged;
+        selfRef?.Dispose();
     }
 }

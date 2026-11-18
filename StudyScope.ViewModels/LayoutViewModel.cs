@@ -25,6 +25,8 @@ public sealed record ShortcutKey(
 /// Linke Seitenleiste ein-/ausklappen: gemerkter Zustand (global in <c>config.json</c> unter <c>UiSettings</c>),
 /// automatisches Einklappen bei schmalem Fenster ohne den gemerkten Zustand zu überschreiben, Strg+B mit den
 /// Bedingungen (nicht beim Schreiben, nicht im Vortrags-/Vollbildmodus) und der Hinweis auf die aktiven Dokumente.
+/// Dazu die Breite: gespeichert in <see cref="SavedSidebarWidth"/>, angezeigt begrenzt auf das aktuelle Fenster
+/// (<see cref="EffectiveSidebarWidth"/>), Ziehen unter <see cref="CollapseDragWidth"/> klappt ein.
 /// </summary>
 public class LayoutViewModel : INotifyPropertyChanged
 {
@@ -33,6 +35,24 @@ public class LayoutViewModel : INotifyPropertyChanged
 
     /// <summary>Höchstens so viele Dokumentnamen im Tooltip des Hinweises.</summary>
     public const int MaxTooltipDocuments = 10;
+
+    /// <summary>Standardbreite der Seitenleiste (Doppelklick auf die Trennlinie).</summary>
+    public const double DefaultSidebarWidth = 320;
+
+    /// <summary>Schmaler lässt sich die Seitenleiste nicht ziehen.</summary>
+    public const double MinSidebarWidth = 220;
+
+    /// <summary>Der Reiterbereich behält mindestens diese Breite.</summary>
+    public const double MinContentWidth = 480;
+
+    /// <summary>Höchstens dieser Anteil des Fensters.</summary>
+    public const double MaxSidebarFraction = 0.5;
+
+    /// <summary>Wird beim Ziehen schmaler als diese Breite losgelassen, klappt die Seitenleiste ein (wie ◀).</summary>
+    public const double CollapseDragWidth = MinSidebarWidth - 60;
+
+    /// <summary>Schritt der Pfeiltasten auf der Trennlinie.</summary>
+    public const double KeyboardStep = 20;
 
     private readonly IStorageService _storage;
 
@@ -52,6 +72,36 @@ public class LayoutViewModel : INotifyPropertyChanged
     /// <summary>Bei schmalem Fenster vorübergehend aufgeklappt (wird nicht gespeichert).</summary>
     public bool ExpandedWhileNarrow { get => _expandedWhileNarrow; private set { if (_expandedWhileNarrow == value) return; _expandedWhileNarrow = value; Changed(); } }
 
+    private double _savedSidebarWidth = DefaultSidebarWidth;
+    /// <summary>Gewählte (und gespeicherte) Breite, unabhängig von der aktuellen Fenstergröße.</summary>
+    public double SavedSidebarWidth { get => _savedSidebarWidth; private set { if (_savedSidebarWidth == value) return; _savedSidebarWidth = value; Changed(); } }
+
+    private double _windowWidth;
+    /// <summary>Zuletzt gemeldete Fensterbreite (0 = noch unbekannt).</summary>
+    public double WindowWidth { get => _windowWidth; private set { if (_windowWidth == value) return; _windowWidth = value; Changed(); } }
+
+    /// <summary>Angezeigte Breite: gespeicherte Breite, begrenzt auf das aktuelle Fenster (überschreibt nichts).</summary>
+    public double EffectiveSidebarWidth => ClampWidth(SavedSidebarWidth, WindowWidth);
+
+    /// <summary>Größte erlaubte Breite im aktuellen Fenster (für aria-valuemax und Ende).</summary>
+    public double MaxSidebarWidthNow => MaxSidebarWidth(WindowWidth);
+
+    /// <summary>Größte erlaubte Breite: höchstens die Hälfte des Fensters und so, dass der Reiterbereich mindestens
+    /// <see cref="MinContentWidth"/> behält – nie unter <see cref="MinSidebarWidth"/>. Fenster unbekannt (0): keine Obergrenze.</summary>
+    public static double MaxSidebarWidth(double windowWidth)
+    {
+        if (windowWidth <= 0) return double.MaxValue;
+        var max = Math.Min(windowWidth * MaxSidebarFraction, windowWidth - MinContentWidth);
+        return Math.Max(MinSidebarWidth, Math.Floor(max));
+    }
+
+    /// <summary>Breite auf die erlaubten Grenzen bringen (ganze Pixel).</summary>
+    public static double ClampWidth(double width, double windowWidth)
+    {
+        if (double.IsNaN(width) || width <= 0) width = DefaultSidebarWidth;
+        return Math.Round(Math.Clamp(width, MinSidebarWidth, MaxSidebarWidth(windowWidth)));
+    }
+
     /// <summary>Tatsächlich angezeigter Zustand.</summary>
     public bool IsSidebarCollapsed => UserCollapsed || (IsNarrowWindow && !ExpandedWhileNarrow);
 
@@ -67,6 +117,58 @@ public class LayoutViewModel : INotifyPropertyChanged
     {
         var settings = await _storage.LoadUiSettingsAsync();
         UserCollapsed = settings.SidebarCollapsed;
+        // Gespeicherte Breite nur grob prüfen; die Begrenzung auf das Fenster geschieht beim Anzeigen
+        SavedSidebarWidth = settings.SidebarWidth >= MinSidebarWidth && settings.SidebarWidth < 10000
+            ? Math.Round(settings.SidebarWidth)
+            : DefaultSidebarWidth;
+    }
+
+    private Task SaveAsync() =>
+        _storage.SaveUiSettingsAsync(new UiSettings { SidebarCollapsed = UserCollapsed, SidebarWidth = SavedSidebarWidth });
+
+    /// <summary>
+    /// Ende des Ziehens an der Trennlinie: unter <see cref="CollapseDragWidth"/> losgelassen → einklappen (die gespeicherte
+    /// Breite bleibt für das Wiederaufklappen), sonst die begrenzte Breite speichern. Liefert die nun angezeigte Breite
+    /// bzw. null, wenn eingeklappt wurde.
+    /// </summary>
+    public async Task<double?> EndResizeAsync(double requestedWidth)
+    {
+        if (requestedWidth < CollapseDragWidth)
+        {
+            if (!IsSidebarCollapsed) await ToggleAsync();
+            return null;
+        }
+
+        await SetSavedWidthAsync(ClampWidth(requestedWidth, WindowWidth));
+        return EffectiveSidebarWidth;
+    }
+
+    /// <summary>Doppelklick auf die Trennlinie: Standardbreite.</summary>
+    public Task ResetWidthAsync() => SetSavedWidthAsync(DefaultSidebarWidth);
+
+    /// <summary>
+    /// Tastatur auf der Trennlinie: Pfeil links/rechts um <see cref="KeyboardStep"/>, Pos1/Ende auf Minimum/Maximum.
+    /// Ausgangspunkt ist die angezeigte Breite; per Tastatur wird nie eingeklappt. Liefert true, wenn die Taste verarbeitet wurde.
+    /// </summary>
+    public async Task<bool> HandleSeparatorKeyAsync(string key)
+    {
+        double? target = key switch
+        {
+            "ArrowLeft" => EffectiveSidebarWidth - KeyboardStep,
+            "ArrowRight" => EffectiveSidebarWidth + KeyboardStep,
+            "Home" => MinSidebarWidth,
+            "End" => MaxSidebarWidthNow,
+            _ => null
+        };
+        if (target is null) return false;
+        await SetSavedWidthAsync(ClampWidth(target.Value, WindowWidth));
+        return true;
+    }
+
+    private async Task SetSavedWidthAsync(double width)
+    {
+        SavedSidebarWidth = width;
+        await SaveAsync();
     }
 
     /// <summary>
@@ -84,13 +186,14 @@ public class LayoutViewModel : INotifyPropertyChanged
         UserCollapsed = !UserCollapsed;
         // Aus dem gemerkten Zustand „eingeklappt“ heraus aufgeklappt: auch im schmalen Fenster sichtbar lassen
         ExpandedWhileNarrow = IsNarrowWindow && !UserCollapsed;
-        await _storage.SaveUiSettingsAsync(new UiSettings { SidebarCollapsed = UserCollapsed });
+        await SaveAsync();
     }
 
     /// <summary>Fensterbreite (CSS-Pixel) melden; wird das Fenster wieder breit, gilt wieder der gemerkte Zustand.</summary>
     public void SetWindowWidth(double width)
     {
         if (width <= 0) return;
+        WindowWidth = Math.Round(width);
         var narrow = width < NarrowWindowWidth;
         if (!narrow) ExpandedWhileNarrow = false;
         IsNarrowWindow = narrow;
@@ -163,5 +266,7 @@ public class LayoutViewModel : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsSidebarCollapsed)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsAutoCollapsed)));
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ToggleTooltip)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(EffectiveSidebarWidth)));
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(MaxSidebarWidthNow)));
     }
 }

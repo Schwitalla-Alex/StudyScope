@@ -214,6 +214,167 @@ public class LayoutViewModelTests
         Assert.That(changed, Does.Contain(nameof(LayoutViewModel.ToggleTooltip)));
     }
 
+    // ---------- Breite ----------
+
+    [TestCase(1200, 600)]   // Hälfte des Fensters
+    [TestCase(1000, 500)]   // Hälfte = Fenster − 480 + 20 → Hälfte
+    [TestCase(900, 420)]    // Reiterbereich behält 480 px
+    [TestCase(600, 220)]    // nie unter der Mindestbreite
+    public void MaxSidebarWidth_HalfWindow_AndContentKeeps480(double window, double expected)
+    {
+        Assert.That(LayoutViewModel.MaxSidebarWidth(window), Is.EqualTo(expected));
+    }
+
+    [TestCase(100, 1200, 220)]
+    [TestCase(350.4, 1200, 350)]
+    [TestCase(900, 1200, 600)]
+    [TestCase(0, 1200, 320)]
+    [TestCase(double.NaN, 1200, 320)]
+    [TestCase(800, 0, 800)]   // Fenster unbekannt: nur Mindestbreite
+    public void ClampWidth_RespectsLimits(double width, double window, double expected)
+    {
+        Assert.That(LayoutViewModel.ClampWidth(width, window), Is.EqualTo(expected));
+    }
+
+    [Test]
+    public async Task Width_DefaultsTo320_OldEntryWithoutWidth()
+    {
+        await File.WriteAllTextAsync(Path.Combine(_tempDir, "config.json"), """{ "UiSettings": { "SidebarCollapsed": false } }""");
+        var vm = new LayoutViewModel(_storage);
+
+        await vm.LoadAsync();
+
+        Assert.That(vm.SavedSidebarWidth, Is.EqualTo(LayoutViewModel.DefaultSidebarWidth));
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(320));
+    }
+
+    [Test]
+    public async Task EndResize_SavesClampedWidth_RestoredAfterRestart()
+    {
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+        vm.SetWindowWidth(1400);
+
+        var shown = await vm.EndResizeAsync(455.6);
+
+        Assert.That(shown, Is.EqualTo(456));
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarWidth, Is.EqualTo(456));
+        var restarted = new LayoutViewModel(new JsonStorageService(_tempDir));
+        await restarted.LoadAsync();
+        Assert.That(restarted.EffectiveSidebarWidth, Is.EqualTo(456));
+
+        Assert.That(await vm.EndResizeAsync(5000), Is.EqualTo(700), "höchstens die Hälfte von 1400");
+        Assert.That(await vm.EndResizeAsync(190), Is.EqualTo(220), "zwischen Einklapp-Schwelle und Minimum: Minimum");
+        Assert.That(vm.IsSidebarCollapsed, Is.False);
+    }
+
+    [Test]
+    public async Task EndResize_FarBelowMinimum_Collapses_KeepsSavedWidth()
+    {
+        await _storage.SaveUiSettingsAsync(new UiSettings { SidebarWidth = 400 });
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+        vm.SetWindowWidth(1400);
+
+        var shown = await vm.EndResizeAsync(LayoutViewModel.CollapseDragWidth - 1);
+
+        Assert.That(shown, Is.Null);
+        Assert.That(vm.IsSidebarCollapsed, Is.True);
+        var saved = await _storage.LoadUiSettingsAsync();
+        Assert.That(saved.SidebarCollapsed, Is.True);
+        Assert.That(saved.SidebarWidth, Is.EqualTo(400), "Breite für das Wiederaufklappen erhalten");
+
+        await vm.ToggleAsync();
+        Assert.That(vm.IsSidebarCollapsed, Is.False);
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(400), "beim Wiederaufklappen gilt die gespeicherte Breite");
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarWidth, Is.EqualTo(400), "Umschalten behält die Breite");
+    }
+
+    [Test]
+    public async Task SmallerWindow_LimitsShownWidth_WithoutOverwritingSaved()
+    {
+        await _storage.SaveUiSettingsAsync(new UiSettings { SidebarWidth = 600 });
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+
+        vm.SetWindowWidth(1000);
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(500));
+        Assert.That(vm.SavedSidebarWidth, Is.EqualTo(600));
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarWidth, Is.EqualTo(600), "nichts gespeichert");
+
+        vm.SetWindowWidth(1400);
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(600), "größeres Fenster: wieder die gespeicherte Breite");
+    }
+
+    [Test]
+    public async Task NarrowWindow_TemporarilyExpanded_UsesClampedWidth_DragCollapseNotSaved()
+    {
+        await _storage.SaveUiSettingsAsync(new UiSettings { SidebarWidth = 450 });
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+        vm.SetWindowWidth(800);
+        await vm.ToggleAsync();
+
+        Assert.That(vm.IsSidebarCollapsed, Is.False);
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(320), "800 − 480");
+
+        await vm.EndResizeAsync(50);
+        Assert.That(vm.IsSidebarCollapsed, Is.True);
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarCollapsed, Is.False, "schmal: Einklappen nur vorübergehend");
+    }
+
+    [Test]
+    public async Task ResetWidth_SetsDefault()
+    {
+        await _storage.SaveUiSettingsAsync(new UiSettings { SidebarWidth = 480 });
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+
+        await vm.ResetWidthAsync();
+
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(320));
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarWidth, Is.EqualTo(320));
+    }
+
+    [Test]
+    public async Task SeparatorKeys_StepHomeEnd_NeverCollapse()
+    {
+        var vm = new LayoutViewModel(_storage);
+        await vm.LoadAsync();
+        vm.SetWindowWidth(1200);
+
+        Assert.That(await vm.HandleSeparatorKeyAsync("ArrowRight"), Is.True);
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(340));
+        await vm.HandleSeparatorKeyAsync("ArrowLeft");
+        await vm.HandleSeparatorKeyAsync("ArrowLeft");
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(300));
+        await vm.HandleSeparatorKeyAsync("End");
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(600));
+        await vm.HandleSeparatorKeyAsync("ArrowRight");
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(600), "nicht über das Maximum");
+        await vm.HandleSeparatorKeyAsync("Home");
+        await vm.HandleSeparatorKeyAsync("ArrowLeft");
+        Assert.That(vm.EffectiveSidebarWidth, Is.EqualTo(220));
+        Assert.That(vm.IsSidebarCollapsed, Is.False, "Tastatur klappt nie ein");
+        Assert.That((await _storage.LoadUiSettingsAsync()).SidebarWidth, Is.EqualTo(220));
+
+        Assert.That(await vm.HandleSeparatorKeyAsync("Tab"), Is.False, "andere Tasten bleiben frei");
+    }
+
+    [Test]
+    public async Task Width_RaisesPropertyChanged()
+    {
+        var vm = new LayoutViewModel(_storage);
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        vm.SetWindowWidth(1000);
+        await vm.EndResizeAsync(400);
+
+        Assert.That(changed, Does.Contain(nameof(LayoutViewModel.EffectiveSidebarWidth)));
+        Assert.That(changed, Does.Contain(nameof(LayoutViewModel.MaxSidebarWidthNow)));
+    }
+
     // ---------- Hinweis auf die aktiven Dokumente ----------
 
     private static DocumentItem Doc(string name, bool selected = true, bool missing = false) =>
