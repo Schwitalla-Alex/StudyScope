@@ -8,6 +8,8 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+  # Aufruf aus release.yml: dort ist das Ereignis ein Push (des Tags), daher entstehen auch die Pakete
+  workflow_call:
 
 # Ein neuer Push in denselben Pull Request bricht den alten Lauf ab; Läufe auf master laufen immer zu Ende.
 concurrency:

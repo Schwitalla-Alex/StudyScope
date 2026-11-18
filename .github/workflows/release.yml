@@ -1,0 +1,88 @@
+# Release: Ein Tag „v<Version>“ (z. B. v1.1.0) auf master prüft Version und CHANGELOG, baut und testet über ci.yml
+# (inkl. setup.exe unter Windows und linux-x64.tar.gz unter Linux) und legt ein GitHub-Release als ENTWURF an.
+# Veröffentlicht wird von Hand auf GitHub – bestehende Releases werden nie verändert.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Tag, Version und CHANGELOG prüfen
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Quellcode holen (mit Verlauf für die master-Prüfung)
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Prüfen
+        id: check
+        shell: pwsh
+        run: ./.github/scripts/release-check.ps1 -Tag "${{ github.ref_name }}" -Commit "${{ github.sha }}"
+
+  ci:
+    name: Build, Tests und Pakete
+    needs: verify
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Release-Entwurf anlegen
+    needs: [verify, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ github.ref_name }}
+      VERSION: ${{ needs.verify.outputs.version }}
+    steps:
+      - name: Quellcode holen
+        uses: actions/checkout@v7
+
+      - name: Gibt es das Release schon?
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "::error title=Release abgebrochen::Zu $TAG gibt es auf GitHub schon ein Release (oder einen Entwurf). Bestehende Releases werden nicht verändert – den Entwurf bei Bedarf auf GitHub löschen und den Lauf erneut starten."
+            exit 1
+          fi
+
+      - name: Pakete aus dem Build holen
+        uses: actions/download-artifact@v8
+        with:
+          pattern: installationspaket-*
+          merge-multiple: true
+          path: dist
+
+      - name: Release-Text und Prüfsummen erstellen
+        shell: pwsh
+        run: ./.github/scripts/release-notes.ps1 -Version "$env:VERSION" -PackageDirectory dist -OutFile release-notes.md
+
+      - name: Entwurf anlegen
+        run: |
+          gh release create "$TAG" \
+            "dist/StudyScope-$VERSION-Setup.exe" \
+            "dist/StudyScope-$VERSION-linux-x64.tar.gz" \
+            "dist/SHA256SUMS.txt" \
+            --draft --verify-tag \
+            --title "StudyScope $VERSION" \
+            --notes-file release-notes.md
+          {
+            echo "## Release-Entwurf StudyScope $VERSION angelegt"
+            echo
+            echo "Prüfen und veröffentlichen: ${{ github.server_url }}/${{ github.repository }}/releases"
+            echo
+            cat release-notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
