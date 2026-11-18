@@ -3,6 +3,7 @@ using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -381,7 +382,7 @@ public class VideoMp4Tests
     private static void RequireSkia()
     {
         var (ok, error) = SlideRasterizerLoader.Probe();
-        if (!ok) Assert.Ignore($"SkiaSharp ist hier nicht lauffähig: {error}");
+        if (!ok) IntegrationRequirement.Unavailable($"SkiaSharp ist hier nicht lauffähig: {error}");
     }
 
     [Test]
@@ -617,7 +618,7 @@ public class VideoMp4Tests
 }
 
 /// <summary>
-/// Integration mit einem echten ffmpeg – nur, wenn es auf dem Rechner gefunden wird (sonst Ignore mit Grund):
+/// Integration mit einem echten ffmpeg – nur, wenn es auf dem Rechner gefunden wird (sonst Ignore mit Grund, in der CI Fehler):
 /// MP3 (Datei, Abbruch ohne Reste) und MP4 (Dauer, Auflösung, Tonspur per ffprobe).
 /// </summary>
 [TestFixture]
@@ -636,7 +637,7 @@ public class FfmpegIntegrationTests
         _ffmpeg = new FfmpegService(new JsonStorageService(Path.Combine(_dir, "daten")));
         _status = await _ffmpeg.GetStatusAsync();
         if (!_status.IsAvailable)
-            Assert.Ignore($"Kein ffmpeg gefunden – Integrationstest übersprungen ({_status.Message})");
+            IntegrationRequirement.Unavailable($"Kein ffmpeg gefunden – Integrationstest übersprungen ({_status.Message})");
     }
 
     [TearDown]
@@ -655,7 +656,7 @@ public class FfmpegIntegrationTests
     [Test]
     public async Task Mp3_RealFfmpeg_FileWritten_ProgressReported()
     {
-        if (!_status.CanEncodeMp3) Assert.Ignore("ffmpeg ohne libmp3lame");
+        if (!_status.CanEncodeMp3) IntegrationRequirement.Unavailable("ffmpeg ohne libmp3lame");
         var transcoder = new FfmpegAudioTranscoder(_ffmpeg);
         var target = Path.Combine(_dir, "Ausgabe ü.mp3");
         var progress = new List<double>();
@@ -672,7 +673,7 @@ public class FfmpegIntegrationTests
     [Test]
     public async Task Mp3_Cancelled_KillsProcess_NoFileLeft()
     {
-        if (!_status.CanEncodeMp3) Assert.Ignore("ffmpeg ohne libmp3lame");
+        if (!_status.CanEncodeMp3) IntegrationRequirement.Unavailable("ffmpeg ohne libmp3lame");
         var transcoder = new FfmpegAudioTranscoder(_ffmpeg);
         var target = Path.Combine(_dir, "abgebrochen.mp3");
         using var cts = new CancellationTokenSource();
@@ -687,11 +688,11 @@ public class FfmpegIntegrationTests
     [Test]
     public async Task Mp4_RealFfmpeg_DurationResolutionAudio()
     {
-        if (!_status.CanEncodeMp4) Assert.Ignore("ffmpeg ohne H.264/AAC");
+        if (!_status.CanEncodeMp4) IntegrationRequirement.Unavailable("ffmpeg ohne H.264/AAC");
         var (ok, error) = SlideRasterizerLoader.Probe();
-        if (!ok) Assert.Ignore($"SkiaSharp nicht lauffähig: {error}");
+        if (!ok) IntegrationRequirement.Unavailable($"SkiaSharp nicht lauffähig: {error}");
         var ffprobe = Path.Combine(Path.GetDirectoryName(_status.ExecutablePath)!, OperatingSystem.IsWindows() ? "ffprobe.exe" : "ffprobe");
-        if (!File.Exists(ffprobe)) Assert.Ignore("ffprobe liegt nicht neben ffmpeg");
+        if (!File.Exists(ffprobe)) IntegrationRequirement.Unavailable("ffprobe liegt nicht neben ffmpeg");
 
         var video = new VideoDocument
         {

@@ -2,6 +2,7 @@
 
 > **Intelligente Desktop-Lernsoftware mit lokaler LLM-Unterstützung und Dokumenten-RAG.**
 
+[![CI](https://github.com/Schwitalla-Alex/StudyScope/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Schwitalla-Alex/StudyScope/actions/workflows/ci.yml)
 ![Lizenz](https://img.shields.io/badge/Lizenz-Apache%202.0-blue.svg)
 ![.NET](https://img.shields.io/badge/.NET-10.0-purple.svg)
 ![Plattform](https://img.shields.io/badge/Plattform-Windows%20%7C%20Linux-lightgrey.svg)
@@ -114,3 +115,7 @@ dotnet run --project StudyScope.UI
 # Linux
 ./build/build-setup.sh all
 ```
+Mit `-OutputDirectory <ordner>` (PowerShell) bzw. der Umgebungsvariable `STUDYSCOPE_ARTIFACTS_DIR=<ordner>` landen die Pakete in einem anderen Ordner; vorhandene Dateien in `artifacts/` bleiben dann unberührt.
+
+### Automatische Prüfungen (CI)
+Jeder Pull Request nach `master` und jeder Push auf `master` wird mit GitHub Actions unter Windows und Linux gebaut und getestet (inklusive der Tests mit echtem ffmpeg und SkiaSharp). Nach dem Merge auf `master` entstehen zusätzlich die Installationspakete als Download (Reiter **Actions** › Lauf › *Artifacts*, 7 Tage aufbewahrt).

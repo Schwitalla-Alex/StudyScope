@@ -19,11 +19,16 @@ dotnet test StudyScope.Tests --filter "Name=MethodenName"                       
 dotnet publish StudyScope.UI -c Release -r win-x64                                     # Release-Build (siehe Properties/PublishProfiles)
 .\build\build-setup.ps1 -Runtime all          # Installationsprogramme nach artifacts/ (setup.exe, linux-x64.tar.gz)
 ./build/build-setup.sh all                     # dasselbe unter Linux
+.uilduild-setup.ps1 -OutputDirectory <ordner>   # Prüfbau, ohne Pakete in artifacts/ zu überschreiben (Linux: STUDYSCOPE_ARTIFACTS_DIR=<ordner>)
 ```
 
 Tests: NUnit 4 + Moq. Die Versionsnummer steht zentral in `Directory.Build.props` (gilt für App und Setup).
 
 Testdaten: In Tests nur eindeutig erfundene Werte verwenden, die nicht wie echte API-Keys aussehen (z. B. `"DUMMY_TEST_KEY_…"`, nie `AIza…`, `sk-…` o. Ä.), damit GitHubs Secret-Scanning nicht anschlägt. Ebenso neutrale Profilnamen wie „Testprofil“ statt Namen echter Profile; nie echte Dokumente oder Benutzerdaten ins Repository legen.
+
+## CI
+
+`.github/workflows/ci.yml` (GitHub Actions) bei Pull Requests nach master, Push auf master und manuell: Matrix `windows-latest`/`ubuntu-latest`, .NET 10 (`global.json`: SDK 10.0.x mit `rollForward: latestFeature`), NuGet-Cache, `dotnet build -c Release` (Warnungen als Hinweis, kein Fehler), Tests mit trx-Artefakt und Zusammenfassung (`.github/scripts/test-summary.ps1`). Installiert ffmpeg (Linux apt, Windows Chocolatey) sowie unter Linux nur `fontconfig` + `fonts-dejavu-core` für SkiaSharp – WebKitGTK/GTK/libnotify braucht die CI nicht, weil die Tests kein Photino einbinden. In der CI gilt `STUDYSCOPE_REQUIRE_INTEGRATION=1`: Tests, die ffmpeg oder SkiaSharp brauchen, rufen `IntegrationRequirement.Unavailable(grund)` (Tests/Common) statt `Assert.Ignore` – lokal übersprungen, in der CI ein Fehler. Job „Installationspaket“ nur bei Push auf master/manuell: Build-Skripte mit `STUDYSCOPE_ARTIFACTS_DIR` im Temp-Ordner des Runners, Pakete 7 Tage als Artefakt. Läuft ein Test in der CI nur gelegentlich schief, den Test stabil machen statt Wiederholungen einzubauen.
 
 ## Architektur
 

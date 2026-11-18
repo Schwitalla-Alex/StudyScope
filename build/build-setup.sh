@@ -7,12 +7,16 @@
 #
 # Schritte: StudyScope.UI veröffentlichen → payload.zip packen → Setup als Single-File mit
 # eingebettetem Paket veröffentlichen → Auslieferung nach artifacts/. Version aus Directory.Build.props.
+# Mit der Umgebungsvariable STUDYSCOPE_ARTIFACTS_DIR=<ordner> landen alle Zwischen- und Auslieferungsdateien
+# dort statt in artifacts/ – so bleiben dort liegende Pakete unberührt (CI, Prüfbauten).
 set -euo pipefail
 
 RUNTIME="${1:-linux-x64}"
 CONFIGURATION="${CONFIGURATION:-Release}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ARTIFACTS="$ROOT/artifacts"
+ARTIFACTS="${STUDYSCOPE_ARTIFACTS_DIR:-$ROOT/artifacts}"
+mkdir -p "$ARTIFACTS"
+ARTIFACTS="$(cd "$ARTIFACTS" && pwd)"
 
 case "$RUNTIME" in
   linux-x64|win-x64) RUNTIMES=("$RUNTIME") ;;
