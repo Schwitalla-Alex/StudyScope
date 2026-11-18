@@ -1,10 +1,15 @@
 ﻿@using StudyScope.UI.Components
+@using Microsoft.JSInterop
 @inject DocumentListViewModel DocVm
 @inject ChatViewModel ChatVm
 @inject SettingsViewModel SettingsVm
 @inject AudioViewModel AuVm
 @inject VideoViewModel VdVm
 @inject ReportViewModel RepVm
+@inject LayoutViewModel LayoutVm
+@inject PresentationViewModel PresVm
+@inject IJSRuntime JS
+@implements IDisposable
 
 <!-- root-Komponente: Füllt 100vh aus -->
 <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #fff;">
@@ -120,10 +125,48 @@
     private bool showAbout = false;
     private string activeTab = "chat";
 
+    private DotNetObjectReference<App>? selfRef;
+
     protected override async Task OnInitializedAsync()
     {
+        // Zuerst den gemerkten Zustand der Seitenleiste, damit sie nicht sichtbar auf- und zuklappt
+        await LayoutVm.LoadAsync();
         await DocVm.InitializeAsync();
         await SettingsVm.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selfRef = DotNetObjectReference.Create(this);
+        try
+        {
+            var width = await JS.InvokeAsync<double>("studyScopeLayout.attach", selfRef);
+            LayoutVm.SetWindowWidth(width);
+        }
+        catch (JSException)
+        {
+            // Skript nicht geladen – Strg+B und automatisches Einklappen entfallen, der Knopf funktioniert weiter
+        }
+    }
+
+    /// <summary>Strg+B aus <c>studyscope-layout.js</c>; die Bedingungen prüft <see cref="LayoutViewModel"/>.</summary>
+    [JSInvokable]
+    public async Task OnLayoutShortcut(string key, bool ctrl, bool alt, bool shift, bool meta, bool repeat,
+        string focusTag, string focusType, bool focusEditable)
+    {
+        var isPresenting = PresVm.IsPresenting || VdVm.IsPresenting;
+        await LayoutVm.HandleShortcutAsync(new ShortcutKey(key, ctrl, alt, shift, meta, repeat, focusTag, focusType, focusEditable), isPresenting);
+    }
+
+    /// <summary>Fensterbreite aus <c>studyscope-layout.js</c> (beim Ändern der Größe, entprellt).</summary>
+    [JSInvokable]
+    public void OnWindowWidth(double width) => LayoutVm.SetWindowWidth(width);
+
+    public void Dispose()
+    {
+        try { _ = JS.InvokeVoidAsync("studyScopeLayout.detach"); } catch { /* Fenster wird geschlossen */ }
+        selfRef?.Dispose();
     }
 
     private string settingsSection = "ai";

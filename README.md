@@ -24,6 +24,7 @@
 - 📑 **Berichte:** Aus den aktivierten Dokumenten einen Bericht erstellen lassen – Vorlagen Lernübersicht, Zusammenfassung/Briefing, Glossar, FAQ oder eigene Vorgabe. Der Bericht wird interaktiv angezeigt und kann Mindmap, Karteikarten, Selbsttest (Quizfragen), Präsentation, Datentabellen (per Klick sortierbar), Audio-Skripte und Video-Skripte (je als Text, aufklappbar) einbetten. Aus dem Video-Abschnitt startet „▶ Video abspielen“ das Video im Reiter „Video“; beim HTML-Export können die Videos auf Wunsch als Player mit Folien und Ton eingebettet werden. Mehrere Berichte je Profil; Export als Word (.docx), PDF, Markdown, Text oder interaktive HTML-Datei.
 - 📁 **Unterstützte Formate:** Volle Unterstützung für `.pdf`, `.txt` und `.csv`.
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
+- ◀ **Mehr Platz:** Die linke Seitenleiste lässt sich mit ◀ bzw. **Strg+B** einklappen; eingeklappt bleibt eine schmale Leiste mit ▶ und der Anzahl aktiver Dokumente (z. B. „📄 1/2“). Der Zustand wird gemerkt, bei sehr schmalem Fenster (unter 900 px) klappt sie automatisch ein.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**
   - **Lokale KI:** Nutzen Sie lokale Sprachmodelle via **Ollama** oder **LM Studio** ganz ohne Internetverbindung und API-Kosten.
   - **Cloud-KI:** Anbindung an **Google Gemini**, **OpenAI (GPT-4)** und **Mistral AI**. „Speichern & Verbinden“ prüft den API-Schlüssel über die kostenlose Modellliste.

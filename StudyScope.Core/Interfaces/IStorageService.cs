@@ -40,4 +40,10 @@ public interface IStorageService
 
     /// <summary>Speichert die Export-Einstellungen in <c>config.json</c>, ohne KI-Konfiguration und Sprachausgabe zu verändern.</summary>
     Task SaveExportSettingsAsync(ExportSettings settings);
+
+    /// <summary>Globale Einstellungen der Oberfläche (z. B. Seitenleiste eingeklappt) aus <c>config.json</c>; fehlt der Eintrag, Standardwerte.</summary>
+    Task<UiSettings> LoadUiSettingsAsync();
+
+    /// <summary>Speichert die Oberflächen-Einstellungen in <c>config.json</c>, ohne die übrigen Einträge zu verändern.</summary>
+    Task SaveUiSettingsAsync(UiSettings settings);
 }

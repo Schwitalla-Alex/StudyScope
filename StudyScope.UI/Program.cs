@@ -60,6 +60,7 @@ class Program
         // Audio und Video teilen sich Player und Systemstimme: es läuft immer nur eine Wiedergabe
         appBuilder.Services.AddSingleton<PlaybackCoordinator>();
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
+        appBuilder.Services.AddSingleton<LayoutViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
         new ChatViewModel(

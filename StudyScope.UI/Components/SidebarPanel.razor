@@ -7,15 +7,34 @@
 @* Dependency Injection: Bereitstellung der ViewModel-Logik und des nativen Dateiöffners *@
 @inject DocumentListViewModel DocVm
 @inject SettingsViewModel SettingsVm
+@inject LayoutViewModel LayoutVm
 @inject IFileOpenerService FileOpenerService
 @implements IDisposable
 
-<!-- Linke Seitenleiste: Verwaltung von Profilen, Suchfilter und Dokumentenliste -->
-<div style="width: 320px; border-right: 1px solid #dee2e6; background: #fafafa; display: flex; flex-direction: column; padding: 10px; gap: 10px; height: 100%; box-sizing: border-box;">
+<!-- Linke Seitenleiste: Verwaltung von Profilen, Suchfilter und Dokumentenliste (ein-/ausklappbar, Strg+B) -->
+<div class="ss-sidebar @(LayoutVm.IsSidebarCollapsed ? "collapsed" : "")">
+
+<!-- Eingeklappt: schmale Leiste mit ▶ und Hinweis auf die aktiven Dokumente -->
+<div class="ss-sidebar-rail" aria-hidden="@(LayoutVm.IsSidebarCollapsed ? "false" : "true")">
+    <button type="button" class="ss-icon-btn" title="@LayoutVm.ToggleTooltip" aria-label="Seitenleiste einblenden"
+            tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">▶</button>
+    <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfile, DocVm.Documents)"
+            aria-label="Aktive Dokumente – Seitenleiste einblenden"
+            tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">
+        <span class="ss-rail-icon">📄</span>
+        <span>@LayoutViewModel.DocumentCount(DocVm.Documents)</span>
+    </button>
+</div>
+
+<div class="ss-sidebar-inner">
 
     <!-- 1. Profil-Kopfbereich -->
     <div style="margin-bottom: 5px;">
-        <label style="font-weight: bold; font-size: 13px; color: #495057;">Profil / Thema:</label>
+        <div style="display: flex; align-items: center; justify-content: space-between;">
+            <label style="font-weight: bold; font-size: 13px; color: #495057;">Profil / Thema:</label>
+            <button type="button" class="ss-icon-btn" title="@LayoutVm.ToggleTooltip" aria-label="Seitenleiste ausblenden"
+                    @onclick="LayoutVm.ToggleAsync">◀</button>
+        </div>
 
         <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
             <!-- Profil-Dropdown -->
@@ -117,6 +136,7 @@
             @onclick="AddDocumentFromDialogAsync">
         + Dokument hinzufügen
     </button>
+</div>
 </div>
 
 <!-- Modal-Dialog: Neues Profil anlegen -->
@@ -269,6 +289,7 @@
     protected override async Task OnInitializedAsync()
     {
         DocVm.PropertyChanged += OnDocVmPropertyChanged;
+        LayoutVm.PropertyChanged += OnDocVmPropertyChanged;
 
         if (!DocVm.AvailableProfiles.Any())
         {
@@ -284,5 +305,6 @@
     public void Dispose()
     {
         DocVm.PropertyChanged -= OnDocVmPropertyChanged;
+        LayoutVm.PropertyChanged -= OnDocVmPropertyChanged;
     }
 }
