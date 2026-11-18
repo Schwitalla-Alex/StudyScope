@@ -57,6 +57,19 @@ Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinsta
 
 `install.sh` prüft die benötigten Systembibliotheken (WebKitGTK 4.1, GTK 3, libnotify, ICU), nennt bei Bedarf den passenden Installationsbefehl Ihrer Distribution und startet dann den Setup-Assistenten. Installiert wird nach `~/.local/share/StudyScope`, mit Eintrag im Anwendungsmenü. Deinstallation über den Menüeintrag (Rechtsklick ➔ „StudyScope deinstallieren“) oder mit `bash install.sh --uninstall`.
 
+### Download-Links
+Diese Links zeigen immer auf die neueste veröffentlichte Version und eignen sich z. B. für eine Homepage:
+
+- Windows: <https://github.com/Schwitalla-Alex/StudyScope/releases/latest/download/StudyScope-Setup.exe>
+- Linux (x86_64): <https://github.com/Schwitalla-Alex/StudyScope/releases/latest/download/StudyScope-linux-x64.tar.gz>
+
+Die Dateien sind inhaltlich identisch mit den Dateien mit Versionsnummer im selben Release (gleiche Prüfsumme). Das Linux-Archiv entpackt sich weiterhin in einen Ordner mit Versionsnummer:
+```bash
+tar -xzf StudyScope-linux-x64.tar.gz
+cd StudyScope-*-linux-x64
+bash install.sh
+```
+
 ### Download prüfen (SHA-256)
 Zu jedem Release stehen in der Beschreibung die SHA-256-Prüfsummen der Dateien, zusätzlich liegt die Datei `SHA256SUMS.txt` bei. Stimmt die Prüfsumme Ihrer heruntergeladenen Datei mit der angegebenen überein, ist die Datei vollständig und unverändert.
 

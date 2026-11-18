@@ -75,6 +75,8 @@ jobs:
           gh release create "$TAG" \
             "dist/StudyScope-$VERSION-Setup.exe" \
             "dist/StudyScope-$VERSION-linux-x64.tar.gz" \
+            "dist/StudyScope-Setup.exe" \
+            "dist/StudyScope-linux-x64.tar.gz" \
             "dist/SHA256SUMS.txt" \
             --draft --verify-tag \
             --title "StudyScope $VERSION" \
