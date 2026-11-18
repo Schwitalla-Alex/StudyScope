@@ -104,7 +104,7 @@ jobs:
           if-no-files-found: warn
 
   packages:
-    name: Installationspaket (${{ matrix.name }})
+    name: Installationspaket
     # Nicht bei jedem Pull Request – nur nach dem Merge auf master und auf Knopfdruck
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     needs: test
