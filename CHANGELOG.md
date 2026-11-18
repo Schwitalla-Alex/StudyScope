@@ -44,6 +44,7 @@ StudyScope findet ffmpeg meist von selbst; sonst lässt sich der Pfad unter *Ein
 
 ### Kosten und Datenschutz
 - **Gemini TTS ist kostenpflichtig** (abgerechnet von Google über Ihren API-Schlüssel). StudyScope zeigt vor jedem Erzeugen eine Schätzung von Dauer und Kosten; bei Videos werden nur geänderte Folien neu vertont. Die Preise legt Google fest und können sich ändern.
+- **Kostenlose Stufe:** Google bietet für Gemini TTS auch eine kostenlose Stufe mit Tageslimits an. Bei der kostenlosen Stufe kann Google die Eingaben – also die Sprechtexte – zur Verbesserung seiner Dienste nutzen. Für vertrauliche Unterlagen eignen sich deshalb die kostenpflichtige Stufe oder die Systemstimme.
 - Für Gemini TTS wird der **Sprechtext an Google übertragen**, für Cloud-KI im Chat und in allen KI-Bereichen wie bisher Auszüge aus Ihren Dokumenten an den gewählten Anbieter. Mit einer lokalen KI (Ollama, LM Studio) und der Systemstimme bleibt alles auf Ihrem Computer.
 - Manche Systemstimmen sind Online-Stimmen, die den Text an einen Dienst senden; StudyScope weist darauf hin und bevorzugt lokale Stimmen.
 
