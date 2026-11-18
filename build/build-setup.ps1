@@ -9,21 +9,26 @@
     4. Auslieferungsdatei nach artifacts/ schreiben
 
     Beide Runtimes lassen sich unter Windows bauen. Die Version stammt aus Directory.Build.props.
+    Mit -OutputDirectory (oder der Umgebungsvariable STUDYSCOPE_ARTIFACTS_DIR) landen alle Zwischen- und
+    Auslieferungsdateien außerhalb von artifacts/ – so bleiben dort liegende Pakete unberührt (CI, Prüfbauten).
 
 .EXAMPLE
     .\build\build-setup.ps1                 # Windows (win-x64)
     .\build\build-setup.ps1 -Runtime linux-x64
     .\build\build-setup.ps1 -Runtime all
+    .\build\build-setup.ps1 -OutputDirectory C:\Temp\studyscope-pruefbau
 #>
 param(
     [ValidateSet("win-x64", "linux-x64", "all")]
     [string]$Runtime = "win-x64",
-    [string]$Configuration = "Release"
+    [string]$Configuration = "Release",
+    [string]$OutputDirectory = $env:STUDYSCOPE_ARTIFACTS_DIR
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
-$artifacts = Join-Path $root "artifacts"
+$artifacts = if ($OutputDirectory) { [System.IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $root "artifacts" }
+New-Item -ItemType Directory -Force $artifacts | Out-Null
 
 function Invoke-Dotnet {
     & dotnet @args
