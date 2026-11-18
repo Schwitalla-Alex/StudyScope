@@ -76,6 +76,16 @@ public class ReportEmbeds
     /// <summary>Ob Audio-Skripte eingebettet werden (null = älterer Bericht = nein).</summary>
     [JsonIgnore]
     public bool IncludesAudioScripts => AudioScripts == true;
+
+    /// <summary>
+    /// Sprechtexte der Videos einbetten (nur als Text je Folie; Folien und Audio werden nicht eingebettet, nur
+    /// „Video: Titel“ genannt). Wie <see cref="DataTables"/> ohne Standardwert: ältere Berichte bleiben unverändert.
+    /// </summary>
+    public bool? VideoScripts { get; set; }
+
+    /// <summary>Ob Video-Skripte eingebettet werden (null = älterer Bericht = nein).</summary>
+    [JsonIgnore]
+    public bool IncludesVideoScripts => VideoScripts == true;
 }
 
 /// <summary>Ein gespeicherter Bericht.</summary>
@@ -129,6 +139,9 @@ public class ReportStudioContent
     /// <summary>Sprechskripte der Audio-Beiträge (Text; Audiodatei nur als Name).</summary>
     public IReadOnlyList<AudioSummary> AudioScripts { get; init; } = Array.Empty<AudioSummary>();
 
+    /// <summary>Sprechtexte der Videos (Text je Folie; Folien und Audio nur als Hinweis „Video: Titel“).</summary>
+    public IReadOnlyList<VideoDocument> VideoScripts { get; init; } = Array.Empty<VideoDocument>();
+
     public static ReportStudioContent Empty { get; } = new();
 
     /// <summary>Nur die Teile, die laut <paramref name="embeds"/> gewünscht und vorhanden sind.</summary>
@@ -139,11 +152,13 @@ public class ReportStudioContent
         QuizQuestions = embeds.Quiz ? QuizQuestions : Array.Empty<QuizQuestion>(),
         Presentation = embeds.Presentation ? Presentation : null,
         DataTables = embeds.IncludesDataTables ? DataTables : Array.Empty<ReportDataTable>(),
-        AudioScripts = embeds.IncludesAudioScripts ? AudioScripts : Array.Empty<AudioSummary>()
+        AudioScripts = embeds.IncludesAudioScripts ? AudioScripts : Array.Empty<AudioSummary>(),
+        VideoScripts = embeds.IncludesVideoScripts ? VideoScripts : Array.Empty<VideoDocument>()
     };
 
     public bool HasAny => Mindmap != null || Flashcards.Count > 0 || QuizQuestions.Count > 0 || Presentation is { Slides.Count: > 0 }
-                          || DataTables.Any(t => t.Rows.Count > 0) || AudioScripts.Any(a => a.Segments.Count > 0);
+                          || DataTables.Any(t => t.Rows.Count > 0) || AudioScripts.Any(a => a.Segments.Count > 0)
+                          || VideoScripts.Any(ReportVideoScripts.HasNarration);
 }
 
 /// <summary>
@@ -153,6 +168,20 @@ public sealed record ReportDataTable(DataTableDocument Table, IReadOnlyList<Data
 {
     public int TotalRows => Table.Rows.Count;
     public bool IsTruncated => Rows.Count < TotalRows;
+}
+
+/// <summary>Hilfen für eingebettete Video-Skripte.</summary>
+public static class ReportVideoScripts
+{
+    /// <summary>Das Video hat mindestens eine Szene mit Sprechtext (sonst wird es nicht eingebettet).</summary>
+    public static bool HasNarration(VideoDocument video) => video.Scenes.Any(s => s.HasNarration);
+
+    /// <summary>Überschrift einer Szene: „Folie 3: Titel“ bzw. „Folie 3“, wenn die Folie keinen Titel hat.</summary>
+    public static string SceneHeading(VideoDocument video, int index)
+    {
+        var title = video.SlideAt(index)?.Title?.Trim() ?? string.Empty;
+        return title.Length > 0 ? $"Folie {index + 1}: {title}" : $"Folie {index + 1}";
+    }
 }
 
 /// <summary>Anzeigenamen und Beschreibungen der Berichtsvorlagen (gemeinsam für Oberfläche und Exporte).</summary>

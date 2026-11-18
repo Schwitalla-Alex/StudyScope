@@ -42,7 +42,7 @@ public class ReportViewModelTests
 
     private ReportViewModel CreateViewModel() => new(
         new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio, new DataTableService(_llm, _tempDir),
-        new AudioScriptService(_llm, _tempDir));
+        new AudioScriptService(_llm, _tempDir), new VideoScriptService(_llm, _tempDir));
 
     private List<DocumentItem> Documents(bool selected = true) => new()
     {
@@ -319,6 +319,56 @@ public class ReportViewModelTests
         var reloaded = CreateViewModel();
         await reloaded.LoadForProfileAsync("Testprofil");
         Assert.That(reloaded.SelectedReport!.Embeds.AudioScripts, Is.False);
+    }
+
+    [Test]
+    public async Task VideoScripts_NewReportEmbedsText_PreferSourceDocuments_AndToggleIsSaved()
+    {
+        var foreign = Services.ReportVideoEmbedTests.Video("Fremdes Video");
+        foreign.SourceDocuments = new List<string> { "anderes.pdf" };
+        foreign.Scenes[0].Narration = "Fremder Sprechtext.";
+        var own = Services.ReportVideoEmbedTests.Video();
+        own.SourceDocuments = new List<string> { "skript.txt" };
+        var silent = Services.ReportVideoEmbedTests.Video("Stummes Video");
+        foreach (var scene in silent.Scenes) scene.Narration = string.Empty;
+        var library = new VideoLibrary();
+        library.Items.AddRange(new[] { foreign, own, silent });
+        await new VideoScriptService(_llm, _tempDir).SaveLibraryAsync("Testprofil", library);
+
+        await _viewModel.LoadForProfileAsync("Testprofil");
+        Assert.That(_viewModel.VideoScriptCount, Is.EqualTo(2), "Videos ohne Sprechtext zählen nicht");
+        Assert.That(_viewModel.NewEmbeds.VideoScripts, Is.True);
+
+        _llm.Response = null;
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.SelectedReport!.Embeds.VideoScripts, Is.True);
+        Assert.That(System.Net.WebUtility.HtmlDecode(_viewModel.CurrentHtml), Does.Contain("Jede Zelle hat einen Kern und eine Membran.")
+            .And.Contain("id=\"video\"").And.Contain("Video: Zellen erklärt"));
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Fremder Sprechtext."), "bevorzugt aus den Quelldokumenten");
+
+        await _viewModel.ToggleEmbedAsync("video");
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Jede Zelle hat einen Kern und eine Membran."));
+
+        var reloaded = CreateViewModel();
+        await reloaded.LoadForProfileAsync("Testprofil");
+        Assert.That(reloaded.SelectedReport!.Embeds.VideoScripts, Is.False);
+    }
+
+    [Test]
+    public async Task VideoScripts_FormCheckboxCanSwitchThemOff()
+    {
+        var library = new VideoLibrary();
+        library.Items.Add(Services.ReportVideoEmbedTests.Video());
+        await new VideoScriptService(_llm, _tempDir).SaveLibraryAsync("Testprofil", library);
+        await _viewModel.LoadForProfileAsync("Testprofil");
+
+        _viewModel.ToggleNewEmbed("video");
+        _llm.Response = null;
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.SelectedReport!.Embeds.VideoScripts, Is.False);
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("Jede Zelle hat einen Kern"));
     }
 
     [Test]

@@ -93,7 +93,8 @@ class Program
             sp.GetRequiredService<IQuizService>(),
             sp.GetRequiredService<IPresentationService>(),
             sp.GetRequiredService<IDataTableService>(),
-            sp.GetRequiredService<IAudioScriptService>()));
+            sp.GetRequiredService<IAudioScriptService>(),
+            sp.GetRequiredService<IVideoScriptService>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

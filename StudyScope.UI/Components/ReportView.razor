@@ -102,7 +102,8 @@
                     @EmbedCheckbox("presentation", "📽️ Präsentation", RepVm.NewEmbeds.Presentation, RepVm.PresentationSlideCount > 0, $"{RepVm.PresentationSlideCount} Folien", true)
                     @EmbedCheckbox("datatables", "📊 Datentabellen", RepVm.NewEmbeds.IncludesDataTables, RepVm.DataTableCount > 0, $"{RepVm.DataTableCount}", true)
                     @EmbedCheckbox("audio", "🎧 Audio-Skripte (Text)", RepVm.NewEmbeds.IncludesAudioScripts, RepVm.AudioScriptCount > 0, $"{RepVm.AudioScriptCount}", true)
-                    <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz, Präsentation, Datentabelle und Audio.</div>
+                    @EmbedCheckbox("video", "🎬 Video-Skripte (Text)", RepVm.NewEmbeds.IncludesVideoScripts, RepVm.VideoScriptCount > 0, $"{RepVm.VideoScriptCount}", true)
+                    <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz, Präsentation, Datentabelle, Audio und Video.</div>
 
                     <button type="button" class="rp-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(RepVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
@@ -178,6 +179,7 @@
                             @EmbedCheckbox("presentation", "Präsentation", selected.Embeds.Presentation, RepVm.PresentationSlideCount > 0, null, false)
                             @EmbedCheckbox("datatables", "Datentabellen", selected.Embeds.IncludesDataTables, RepVm.DataTableCount > 0, null, false)
                             @EmbedCheckbox("audio", "Audio-Skripte", selected.Embeds.IncludesAudioScripts, RepVm.AudioScriptCount > 0, null, false)
+                            @EmbedCheckbox("video", "Video-Skripte", selected.Embeds.IncludesVideoScripts, RepVm.VideoScriptCount > 0, null, false)
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button type="button" class="rp-btn" style="background: #2b579a;" title="Als Word-Dokument speichern" @onclick="() => ExportAsync(ReportExportFormat.Word)">📝 Word</button>

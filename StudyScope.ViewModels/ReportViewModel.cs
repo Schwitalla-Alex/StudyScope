@@ -33,6 +33,9 @@ public class ReportViewModel : INotifyPropertyChanged
     /// <summary>Höchstzahl eingebetteter Audio-Skripte.</summary>
     public const int MaxEmbeddedAudioScripts = 3;
 
+    /// <summary>Höchstzahl eingebetteter Video-Skripte.</summary>
+    public const int MaxEmbeddedVideoScripts = 3;
+
     private readonly IReportService _reportService;
     private readonly IDocumentService _documentService;
     private readonly IMindmapService _mindmapService;
@@ -41,6 +44,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private readonly IPresentationService _presentationService;
     private readonly IDataTableService _dataTableService;
     private readonly IAudioScriptService? _audioScriptService;
+    private readonly IVideoScriptService? _videoScriptService;
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
 
@@ -51,6 +55,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private PresentationDocument? _presentation;
     private DataTableLibrary _dataTables = new();
     private AudioLibrary _audio = new();
+    private VideoLibrary _videos = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -62,7 +67,8 @@ public class ReportViewModel : INotifyPropertyChanged
         IQuizService quizService,
         IPresentationService presentationService,
         IDataTableService dataTableService,
-        IAudioScriptService? audioScriptService = null)
+        IAudioScriptService? audioScriptService = null,
+        IVideoScriptService? videoScriptService = null)
     {
         _reportService = reportService;
         _documentService = documentService;
@@ -72,6 +78,7 @@ public class ReportViewModel : INotifyPropertyChanged
         _presentationService = presentationService;
         _dataTableService = dataTableService;
         _audioScriptService = audioScriptService;
+        _videoScriptService = videoScriptService;
     }
 
     // ---------------- Berichte ----------------
@@ -136,6 +143,9 @@ public class ReportViewModel : INotifyPropertyChanged
     /// <summary>Audio-Beiträge mit Skript (eingebettet wird der Text, nicht die Audiodatei).</summary>
     public int AudioScriptCount => _audio.Items.Count(a => a.Segments.Count > 0);
 
+    /// <summary>Videos mit Sprechtext (eingebettet wird der Text je Folie, nicht Folien oder Audio).</summary>
+    public int VideoScriptCount => _videos.Items.Count(ReportVideoScripts.HasNarration);
+
     // ---------------- Fortschritt und Status ----------------
 
     private bool _isBusy;
@@ -194,9 +204,10 @@ public class ReportViewModel : INotifyPropertyChanged
             Flashcards = FlashcardCount > 0,
             Quiz = QuizQuestionCount > 0,
             Presentation = PresentationSlideCount > 0,
-            // Neue Berichte betten Datentabellen und Audio-Skripte standardmäßig ein (auch später angelegte)
+            // Neue Berichte betten Datentabellen, Audio- und Video-Skripte standardmäßig ein (auch später angelegte)
             DataTables = true,
-            AudioScripts = true
+            AudioScripts = true,
+            VideoScripts = true
         };
 
         IsFormOpen = _library.Reports.Count == 0;
@@ -216,6 +227,9 @@ public class ReportViewModel : INotifyPropertyChanged
         _audio = _audioScriptService == null
             ? new AudioLibrary()
             : await TryLoad(() => _audioScriptService.LoadLibraryAsync(profileName), new AudioLibrary()) ?? new AudioLibrary();
+        _videos = _videoScriptService == null
+            ? new VideoLibrary()
+            : await TryLoad(() => _videoScriptService.LoadLibraryAsync(profileName), new VideoLibrary()) ?? new VideoLibrary();
 
         OnPropertyChanged(nameof(HasMindmap));
         OnPropertyChanged(nameof(FlashcardCount));
@@ -223,6 +237,7 @@ public class ReportViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PresentationSlideCount));
         OnPropertyChanged(nameof(DataTableCount));
         OnPropertyChanged(nameof(AudioScriptCount));
+        OnPropertyChanged(nameof(VideoScriptCount));
     }
 
     // T übernimmt die NULL-Zulässigkeit der Ladefunktion (z. B. MindmapDocument? oder List<Flashcard>),
@@ -269,6 +284,11 @@ public class ReportViewModel : INotifyPropertyChanged
         var scripts = withSegments.Where(a => a.SourceDocuments.Any(sources.Contains)).ToList();
         if (scripts.Count == 0) scripts = withSegments;
 
+        // Video-Skripte: ebenso bevorzugt aus denselben Dokumenten, neueste zuerst
+        var withNarration = _videos.Items.Where(ReportVideoScripts.HasNarration).ToList();
+        var videos = withNarration.Where(v => v.SourceDocuments.Any(sources.Contains)).ToList();
+        if (videos.Count == 0) videos = withNarration;
+
         return new ReportStudioContent
         {
             Mindmap = _mindmap,
@@ -283,6 +303,10 @@ public class ReportViewModel : INotifyPropertyChanged
             AudioScripts = scripts
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(MaxEmbeddedAudioScripts)
+                .ToList(),
+            VideoScripts = videos
+                .OrderByDescending(v => v.CreatedAt)
+                .Take(MaxEmbeddedVideoScripts)
                 .ToList()
         };
     }
@@ -348,7 +372,8 @@ public class ReportViewModel : INotifyPropertyChanged
                 Quiz = NewEmbeds.Quiz,
                 Presentation = NewEmbeds.Presentation,
                 DataTables = NewEmbeds.IncludesDataTables,
-                AudioScripts = NewEmbeds.IncludesAudioScripts
+                AudioScripts = NewEmbeds.IncludesAudioScripts,
+                VideoScripts = NewEmbeds.IncludesVideoScripts
             };
 
             _library.Reports.Add(report);
@@ -447,6 +472,7 @@ public class ReportViewModel : INotifyPropertyChanged
             case "presentation": embeds.Presentation = !embeds.Presentation; break;
             case "datatables": embeds.DataTables = !embeds.IncludesDataTables; break;
             case "audio": embeds.AudioScripts = !embeds.IncludesAudioScripts; break;
+            case "video": embeds.VideoScripts = !embeds.IncludesVideoScripts; break;
         }
     }
 

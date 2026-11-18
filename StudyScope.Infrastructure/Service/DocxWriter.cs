@@ -194,6 +194,18 @@ public static class DocxWriter
                     : Paragraph(null, Run(segment.Text)));
             }
         }
+
+        foreach (var video in studio.VideoScripts.Where(ReportVideoScripts.HasNarration))
+        {
+            body.Append(Paragraph("Heading1", Run($"Video-Skript – {video.Title}")));
+            body.Append(Paragraph(null, Run(ReportTextExporter.VideoMeta(video), color: ColorMuted)));
+            for (var i = 0; i < video.Scenes.Count; i++)
+            {
+                if (!video.Scenes[i].HasNarration) continue;
+                body.Append(Paragraph(null, Run(ReportVideoScripts.SceneHeading(video, i), bold: true)));
+                body.Append(Paragraph(null, Run(video.Scenes[i].Narration.Trim())));
+            }
+        }
     }
 
     /// <summary>
