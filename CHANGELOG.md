@@ -5,6 +5,26 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 <!-- Der Abschnitt einer Version beginnt mit „## [x.y.z]“ und reicht bis zum nächsten „## [“.
      Der Release-Workflow übernimmt genau diesen Abschnitt als Text des GitHub-Releases. -->
 
+## [1.1.1] – 2026-11
+
+Mehr Platz für Ihre Inhalte: Die linke Seitenleiste lässt sich einklappen und in der Breite anpassen.
+
+### Neu
+- **Seitenleiste ein- und ausklappen:** Mit ◀ oben rechts in der Seitenleiste oder mit **Strg+B** wird sie ausgeblendet; die Reiter (Chat, Mindmap, Präsentation, Video usw.) nutzen dann die volle Breite. Eingeklappt bleibt eine schmale Leiste mit ▶ und der Anzahl aktiver Dokumente (z. B. „📄 1/2“ – der Tooltip nennt Profil und Dokumente, ein Klick klappt wieder auf).
+  - Strg+B wirkt nicht, während Sie in ein Eingabefeld schreiben, und nicht im Vortrags- oder Vollbildmodus.
+  - Der Zustand wird gemerkt und beim nächsten Start wiederhergestellt.
+  - Bei sehr schmalem Fenster (unter 900 Pixel) klappt die Seitenleiste automatisch ein; Ihre gewählte Einstellung bleibt dabei erhalten.
+- **Breite der Seitenleiste mit der Maus ziehen:** Am rechten Rand der Seitenleiste lässt sich die Breite verändern – z. B. um lange Dokumentnamen ganz zu lesen. Ein **Doppelklick** auf den Rand stellt die Standardbreite wieder her; wer sehr weit nach links zieht, klappt die Seitenleiste ein. Auch per Tastatur möglich (Rand mit Tab auswählen, dann ← → Pos1 Ende). Die Breite wird gemerkt.
+- **Voller Dokumentname als Tooltip:** Mit der Maus über einem Eintrag der Dokumentliste erscheint immer der vollständige Dateiname.
+
+### Interne Aufräumarbeiten
+- Automatische Prüfungen bei jeder Änderung (Build und alle Tests unter Windows und Linux) und automatisch gebaute Installationsdateien mit Prüfsummen.
+- Dauerhafte Download-Links, die immer auf die neueste Version zeigen (siehe README, Abschnitt „Download-Links“).
+- Kleinere Bereinigungen im Programmcode ohne Auswirkung auf die Bedienung.
+
+### Hinweis zum Update
+- Profile, Dokumente, Inhalte und Einstellungen bleiben erhalten. Einfach das neue Setup über die bestehende Installation ausführen.
+
 ## [1.1.0] – 2026-11
 
 Mit dieser Version macht StudyScope aus Ihren Unterlagen auch Tabellen, Hörbeiträge und vertonte Videos – und exportiert sie als Excel, Word, HTML, MP3 oder MP4.
