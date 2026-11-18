@@ -26,7 +26,7 @@ public interface IStorageService
     Task SaveAiConfigAsync(AiConfig config);
 
     // NEU: Profilspezifische KI-Konfiguration laden / speichern
-    Task<AiConfig> LoadAiConfigForProfileAsync(string profileName);
+    Task<AiConfig?> LoadAiConfigForProfileAsync(string profileName);
     Task SaveAiConfigForProfileAsync(string profileName, AiConfig config);
 
     // Sprachausgabe (Audio-Beiträge): je Profil, Rückfall auf die globale config.json, sonst Standard (Systemstimme)
