@@ -25,15 +25,27 @@ body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; b
 
 /* Linke Seitenleiste (SidebarPanel.razor): ein-/ausklappbar. Der Inhalt behält beim Animieren seine Breite und wird
    nur abgeschnitten – so bricht nichts um; der Inhaltsbereich rechts wächst per flex mit. */
-.ss-sidebar { position: relative; flex: 0 0 auto; width: 320px; height: 100%; overflow: hidden; border-right: 1px solid var(--ss-border-light); background: #fafafa; transition: width .18s ease; }
+.ss-sidebar { position: relative; flex: 0 0 auto; width: var(--ss-sidebar-width, 320px); height: 100%; overflow: hidden; border-right: 1px solid var(--ss-border-light); background: #fafafa; transition: width .18s ease; }
 .ss-sidebar.collapsed { width: 44px; }
-.ss-sidebar-inner { width: 320px; height: 100%; display: flex; flex-direction: column; padding: 10px; gap: 10px; transition: opacity .12s ease, visibility 0s linear 0s; }
+.ss-sidebar-inner { width: var(--ss-sidebar-width, 320px); height: 100%; display: flex; flex-direction: column; padding: 10px; gap: 10px; transition: opacity .12s ease, visibility 0s linear 0s; }
 .ss-sidebar.collapsed .ss-sidebar-inner { opacity: 0; visibility: hidden; transition: opacity .12s ease, visibility 0s linear .18s; }
 .ss-sidebar-rail { position: absolute; top: 0; left: 0; bottom: 0; width: 44px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; opacity: 0; visibility: hidden; transition: opacity .12s ease; }
 .ss-sidebar.collapsed .ss-sidebar-rail { opacity: 1; visibility: visible; transition: opacity .12s ease .08s; }
 .ss-rail-docs { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 38px; padding: 4px 0; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 11px; color: #495057; font-family: inherit; }
 .ss-rail-docs:hover { background: #f1f3f5; border-color: var(--ss-border-light); }
 .ss-rail-docs .ss-rail-icon { font-size: 15px; }
+/* Ziehbare Trennlinie am rechten Rand (Breite per Maus/Tastatur, Doppelklick: Standardbreite) */
+.ss-sidebar-resizer { position: absolute; top: 0; right: 0; bottom: 0; width: 6px; z-index: 3; cursor: col-resize; background: transparent; transition: background-color .12s ease; touch-action: none; }
+.ss-sidebar-resizer:hover, .ss-sidebar.ss-resizing .ss-sidebar-resizer { background: rgba(0, 123, 255, .28); }
+.ss-sidebar-resizer:focus-visible { outline: none; background: rgba(0, 123, 255, .45); }
+.ss-sidebar.collapsed .ss-sidebar-resizer { display: none; }
+.ss-sidebar.ss-resizing { transition: none; }
+.ss-sidebar.ss-collapse-hint .ss-sidebar-resizer { background: rgba(220, 53, 69, .55); }
+.ss-sidebar.ss-collapse-hint .ss-sidebar-inner { opacity: .45; }
+body.ss-resizing, body.ss-resizing * { cursor: col-resize !important; user-select: none !important; }
+/* Während des Ziehens über allem (auch über dem iframe des Berichts), damit keine Mausereignisse verloren gehen */
+.ss-resize-overlay { position: fixed; inset: 0; z-index: 9999; background: transparent; cursor: col-resize; }
+
 @media (prefers-reduced-motion: reduce) {
     .ss-sidebar, .ss-sidebar-inner, .ss-sidebar-rail, .ss-sidebar.collapsed .ss-sidebar-inner, .ss-sidebar.collapsed .ss-sidebar-rail { transition: none; }
 }
@@ -41,4 +53,5 @@ body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; b
    geschaltete schmale Leiste ist spezifischer und würde sonst mitgedruckt. */
 @media print {
     .ss-sidebar-rail, .ss-sidebar-rail * { visibility: hidden !important; }
+    .ss-sidebar-resizer, .ss-resize-overlay { display: none !important; }
 }
