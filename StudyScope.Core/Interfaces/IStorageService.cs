@@ -34,4 +34,10 @@ public interface IStorageService
 
     /// <summary>Speichert die Sprachausgabe im Profil (maßgeblich) und global (Rückfall); der Gemini-Schlüssel wird verschlüsselt.</summary>
     Task SaveSpeechSettingsAsync(string profileName, SpeechSettings settings);
+
+    /// <summary>Globale Export-Einstellungen (ffmpeg-Pfad) aus <c>config.json</c>; fehlt der Eintrag, Standardwerte.</summary>
+    Task<ExportSettings> LoadExportSettingsAsync();
+
+    /// <summary>Speichert die Export-Einstellungen in <c>config.json</c>, ohne KI-Konfiguration und Sprachausgabe zu verändern.</summary>
+    Task SaveExportSettingsAsync(ExportSettings settings);
 }

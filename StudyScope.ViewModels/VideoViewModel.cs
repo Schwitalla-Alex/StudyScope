@@ -81,9 +81,10 @@ public partial class VideoViewModel : INotifyPropertyChanged
     public VideoViewModel(IVideoScriptService videoService, IPresentationService presentationService, IDocumentService documentService,
         IStorageService storage, IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null,
         PlaybackCoordinator? coordinator = null, TimeProvider? timeProvider = null, Func<TimeSpan, CancellationToken, Task>? delay = null,
-        IAudioTranscoder? transcoder = null)
+        IAudioTranscoder? transcoder = null, IVideoMp4Exporter? mp4 = null)
     {
         _transcoder = transcoder;
+        _mp4 = mp4;
         _videoService = videoService;
         _presentationService = presentationService;
         _documentService = documentService;
@@ -301,7 +302,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
             SlideSource = DefaultSlideSource(documents);
         OnSpeechChanged();
         await RefreshAvailabilityAsync();
-        await RefreshMp3AvailabilityAsync();
+        await RefreshExportAvailabilityAsync();
     }
 
     /// <summary>
@@ -315,6 +316,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
             CurrentPresentation = await LoadPresentationSafeAsync(profileName);
             await _speech.ReloadAsync();
             await RefreshAvailabilityAsync();
+            await RefreshExportAvailabilityAsync();
             return;
         }
 

@@ -14,4 +14,14 @@ public interface IAudioTranscoder
 
     /// <summary>Liest eine WAV-Datei und liefert sie als MP3 (<see cref="Mp3Kbps"/> kbit/s, mono).</summary>
     Task<byte[]> ConvertToMp3Async(string wavPath, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Speichert eine WAV-Datei als MP3-Datei (temporär schreiben, dann umbenennen – bei Abbruch oder Fehler keine halbe
+    /// Datei). Fortschritt 0…1 bezogen auf <paramref name="durationSeconds"/>.
+    /// </summary>
+    Task ConvertToMp3FileAsync(string wavPath, string mp3Path, double durationSeconds, IProgress<double>? progress = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Warum MP3 nicht geht (deutscher Satz mit Installationshinweis) bzw. null, wenn möglich.</summary>
+    Task<string?> Mp3UnavailableReasonAsync(CancellationToken cancellationToken = default);
 }

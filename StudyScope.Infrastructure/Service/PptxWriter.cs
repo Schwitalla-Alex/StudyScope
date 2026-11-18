@@ -313,12 +313,18 @@ public static class PptxWriter
     /// Wählt die größte Schriftgröße, bei der alle Stichpunkte in das Inhaltsfeld passen.
     /// PowerPoint passt Text beim Öffnen nicht selbst an, daher wird hier vorab geschätzt.
     /// </summary>
+    /// <summary>Schriftgrößen (pt) der Stichpunkte, von groß nach klein – auch Leiter für die Folienbilder des MP4-Exports.</summary>
+    public static readonly IReadOnlyList<int> BulletSizeStepsPt = new[] { 28, 24, 22, 20, 18, 16, 14 };
+
+    /// <summary>Folienbreite in pt (16:9, 13,333 Zoll) – zum Umrechnen der pt-Stufen in Anteile der Folienbreite.</summary>
+    public const double SlideWidthPt = SlideWidth / 12700.0;
+
     public static int FitBulletSize(IReadOnlyCollection<string> bullets)
     {
         const double boxWidthPt = (SlideWidth - 2 * Margin - 342900) / 12700.0; // EMU → pt, abzüglich Einzug
         const double boxHeightPt = 4206240 / 12700.0;
 
-        foreach (var size in new[] { 28, 24, 22, 20, 18, 16, 14 })
+        foreach (var size in BulletSizeStepsPt)
         {
             var charsPerLine = Math.Max(10, (int)(boxWidthPt / (size * 0.52)));
             var lines = bullets.Sum(b => Math.Max(1, (int)Math.Ceiling(b.Length / (double)charsPerLine)));

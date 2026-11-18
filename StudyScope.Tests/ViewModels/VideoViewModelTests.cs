@@ -498,6 +498,121 @@ public class VideoViewModelTests
         Assert.That(await File.ReadAllTextAsync(Path.Combine(_tempDir, "x.html")), Does.Contain("class=\"ssv-audio\""));
     }
 
+    // ---------- MP4 und MP3-Tonspur ----------
+
+    private sealed class FakeMp4 : IVideoMp4Exporter
+    {
+        public Mp4Availability Availability { get; set; } = Mp4Availability.Ready("Bereit – ffmpeg Test.");
+        public Mp4ExportRequest? Request { get; private set; }
+        public bool Cancel { get; set; }
+
+        public Task<Mp4Availability> GetAvailabilityAsync(bool refresh = false, CancellationToken cancellationToken = default) => Task.FromResult(Availability);
+
+        public Mp4ExportEstimate Estimate(VideoDocument video, VideoTimeline timeline, bool withAudio) =>
+            new(42, timeline.Total, withAudio ? 2_400_000 : 1_200_000, 50);
+
+        public async Task<Mp4ExportResult> ExportAsync(Mp4ExportRequest request, IProgress<Mp4ExportProgress>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            Request = request;
+            progress?.Report(new Mp4ExportProgress(0.5, "Video wird kodiert (50 %) …"));
+            if (Cancel) throw new OperationCanceledException();
+            await File.WriteAllTextAsync(request.TargetPath, "mp4", cancellationToken);
+            return new Mp4ExportResult(request.TargetPath, 1_234_567, request.Timeline.Total, 42, request.AudioPath != null);
+        }
+    }
+
+    private VideoViewModel CreateExportVm(FakeMp4 mp4, IAudioTranscoder? transcoder = null) =>
+        new(_videoService, _presentationService, new FakeDocuments(), _storage,
+            new ITextToSpeechService[] { _live, _gemini }, _player, _coordinator, _time,
+            (span, _) => { _time.Advance(span.TotalSeconds); return Task.CompletedTask; }, transcoder, mp4);
+
+    [Test]
+    public async Task Mp4_Unavailable_DisabledWithReasonAndHint()
+    {
+        await CreateVideoAsync();
+        var mp4 = new FakeMp4 { Availability = Mp4Availability.Unavailable("ffmpeg wurde auf diesem Rechner nicht gefunden.", FfmpegInfo.InstallHint(false)) };
+        var vm = CreateExportVm(mp4);
+        await vm.LoadForProfileAsync(Profile);
+
+        Assert.That(vm.CanExportMp4, Is.False);
+        Assert.That(vm.Mp4DisabledReason, Does.Contain("nicht gefunden"));
+        Assert.That(vm.Mp4Hint, Does.Contain(FfmpegInfo.WindowsInstall));
+        Assert.That(await vm.ExportMp4Async(Path.Combine(_tempDir, "x.mp4")), Is.False);
+        Assert.That(_vm.CanExportMp4, Is.False, "ohne Exporter ebenfalls gesperrt");
+        Assert.That(_vm.Mp4DisabledReason, Does.Contain("nicht verfügbar"));
+    }
+
+    [Test]
+    public async Task Mp4_WithoutGeminiAudio_SilentFixedTimeline_EstimateShown()
+    {
+        var video = await CreateVideoAsync();
+        var mp4 = new FakeMp4();
+        var vm = CreateExportVm(mp4);
+        await vm.LoadForProfileAsync(Profile);
+
+        Assert.That(vm.CanExportMp4, Is.True, vm.Mp4DisabledReason);
+        Assert.That(vm.Mp4EstimateText, Does.Contain("3 Folien").And.Contain("Datei ca. 1,2 MB").And.Contain("Export dauert ca. 1 Min.").And.Contain("ohne Ton"));
+        var path = Path.Combine(_tempDir, "Video ä.mp4");
+
+        Assert.That(await vm.ExportMp4Async(path), Is.True, vm.StatusMessage);
+
+        Assert.That(mp4.Request!.AudioPath, Is.Null);
+        Assert.That(mp4.Request.Timeline.Total, Is.EqualTo(VideoTimeline.FromEstimates(video.Scenes, 1.0).Total).Within(0.001));
+        Assert.That(vm.StatusMessage, Does.Contain("MP4 gespeichert").And.Contain("ohne Ton"));
+        Assert.That(vm.IsBusy, Is.False);
+        Assert.That(vm.IsExportingMedia, Is.False);
+    }
+
+    [Test]
+    public async Task Mp4_WithGeminiAudio_UsesAudioFileAndExactStarts_Mp3TrackExport()
+    {
+        var video = await CreateVideoAsync(gemini: true);
+        await _vm.GenerateAudioAsync();
+        var mp4 = new FakeMp4();
+        var transcoder = new Services.VideoHtmlExporterTests.FakeTranscoder();
+        var vm = CreateExportVm(mp4, transcoder);
+        await vm.LoadForProfileAsync(Profile);
+
+        Assert.That(vm.Mp4EstimateText, Does.Contain("mit Ton (AAC)").And.Contain("ca. 2,4 MB"));
+        await vm.ExportMp4Async(Path.Combine(_tempDir, "mit Ton.mp4"));
+
+        Assert.That(mp4.Request!.AudioPath, Is.EqualTo(vm.SelectedAudioFilePath));
+        Assert.That(mp4.Request.Timeline.Starts, Is.EqualTo(video.AudioSceneStarts));
+        Assert.That(vm.StatusMessage, Does.Contain("mit Ton"));
+
+        Assert.That(vm.CanExportAudioTrackMp3, Is.True, vm.Mp3TrackDisabledReason);
+        var mp3 = Path.Combine(_tempDir, "Tonspur.mp3");
+        Assert.That(await vm.ExportAudioTrackMp3Async(mp3), Is.True, vm.StatusMessage);
+        Assert.That(File.Exists(mp3), Is.True);
+        Assert.That(transcoder.Converted.Last(), Is.EqualTo(vm.SelectedAudioFilePath));
+    }
+
+    [Test]
+    public async Task Mp4_Cancelled_StatusSaysNothingHalfSaved()
+    {
+        await CreateVideoAsync();
+        var vm = CreateExportVm(new FakeMp4 { Cancel = true });
+        await vm.LoadForProfileAsync(Profile);
+
+        Assert.That(await vm.ExportMp4Async(Path.Combine(_tempDir, "x.mp4")), Is.False);
+
+        Assert.That(vm.StatusMessage, Does.Contain("abgebrochen").And.Contain("keine halbe Datei"));
+        Assert.That(vm.IsError, Is.False);
+        Assert.That(vm.IsBusy, Is.False);
+    }
+
+    [Test]
+    public async Task Mp3Track_WithoutAudioOrFfmpeg_DisabledWithReason()
+    {
+        await CreateVideoAsync();
+        var vm = CreateExportVm(new FakeMp4(), new Services.VideoHtmlExporterTests.FakeTranscoder { Available = false });
+        await vm.LoadForProfileAsync(Profile);
+
+        Assert.That(vm.Mp3TrackDisabledReason, Does.Contain("Gemini TTS"));
+        Assert.That(vm.IsMp3Available, Is.False);
+    }
+
     // ---------- Aus dem Bericht abspielen ----------
 
     [Test]

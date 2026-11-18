@@ -391,6 +391,18 @@ public class ReportViewModelTests
     }
 
     [Test]
+    public async Task VideoPlayers_Mp3OptionAvailableWithTranscoder()
+    {
+        var vm = new ReportViewModel(new ReportService(_llm, _tempDir), new FakeDocumentService(), _studio, _studio, _studio, _studio,
+            new DataTableService(_llm, _tempDir), new AudioScriptService(_llm, _tempDir), new VideoScriptService(_llm, _tempDir),
+            new Services.VideoHtmlExporterTests.FakeTranscoder());
+        await vm.LoadForProfileAsync("Testprofil");
+
+        Assert.That(vm.IsMp3Available, Is.True);
+        Assert.That(_viewModel.IsMp3Available, Is.False, "ohne Transcoder");
+    }
+
+    [Test]
     public async Task VideoScripts_FormCheckboxCanSwitchThemOff()
     {
         var library = new VideoLibrary();

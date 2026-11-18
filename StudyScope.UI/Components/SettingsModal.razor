@@ -24,11 +24,16 @@
         <div style="display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid #dee2e6;">
             <button type="button" class="st-tab @(section == "ai" ? "active" : "")" @onclick='() => section = "ai"'>🤖 KI-Modell</button>
             <button type="button" class="st-tab @(section == "speech" ? "active" : "")" @onclick='() => section = "speech"'>🔊 Sprachausgabe</button>
+            <button type="button" class="st-tab @(section == "export" ? "active" : "")" @onclick='() => section = "export"'>🎞️ Export</button>
         </div>
 
         @if (section == "speech")
         {
             <SpeechSettingsSection OnClose="() => OnClose.InvokeAsync()" />
+        }
+        else if (section == "export")
+        {
+            <ExportSettingsSection OnClose="() => OnClose.InvokeAsync()" />
         }
         else
         {
@@ -188,12 +193,12 @@
 @code {
     [Parameter] public EventCallback OnClose { get; set; }
 
-    /// <summary>Abschnitt beim Öffnen: „ai“ (KI-Modell) oder „speech“ (Sprachausgabe).</summary>
+    /// <summary>Abschnitt beim Öffnen: „ai“ (KI-Modell), „speech“ (Sprachausgabe) oder „export“ (ffmpeg).</summary>
     [Parameter] public string InitialSection { get; set; } = "ai";
 
     private string section = "ai";
 
-    protected override void OnInitialized() => section = InitialSection == "speech" ? "speech" : "ai";
+    protected override void OnInitialized() => section = InitialSection is "speech" or "export" ? InitialSection : "ai";
 
     protected override Task OnInitializedAsync()
     {

@@ -25,7 +25,18 @@
         }
     </div>
 
-    @if (AuVm.IsGeneratingAudio)
+    @if (AuVm.IsExportingMp3)
+    {
+        <div class="au-info">
+            <div style="font-weight: 600; font-size: 13px;">🎵 MP3 wird gespeichert … @((int)(AuVm.Mp3Progress * 100)) %</div>
+            <div class="au-bar" style="margin-top: 8px;"><div class="au-bar-fill" style="width: @(Percent(AuVm.Mp3Progress))%;"></div></div>
+            <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
+                <span style="font-size: 11px; color: #6c757d;">Beim Abbrechen entsteht keine halbe Datei.</span>
+                <button type="button" class="au-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="AuVm.CancelMp3Export">Abbrechen</button>
+            </div>
+        </div>
+    }
+    else if (AuVm.IsGeneratingAudio)
     {
         <div class="au-info">
             <div style="font-weight: 600; font-size: 13px;">🎙️ @(AuVm.CurrentSpeechService?.DisplayName ?? "Sprachausgabe") erzeugt die Audiodatei … @AuVm.AudioProgressText</div>
@@ -521,6 +532,9 @@
 
     [Parameter] public EventCallback OnOpenSpeechSettings { get; set; }
 
+    /// <summary>Einstellungen im Abschnitt „Export“ (ffmpeg für MP3) öffnen.</summary>
+    [Parameter] public EventCallback OnOpenExportSettings { get; set; }
+
     private bool confirmGenerateAudio;
     private bool confirmDeleteAudio;
 
@@ -546,6 +560,8 @@
                     </span>
                     <span style="flex: 1;"></span>
                     <button type="button" class="au-btn" style="background: #198754;" disabled="@(!AuVm.CanExportAudio)" title="Audiodatei (WAV) speichern unter …" @onclick="ExportAudioAsync">💾 WAV exportieren</button>
+                    <button type="button" class="au-btn" style="background: #0d6efd;" disabled="@(!AuVm.CanExportMp3)"
+                            title="@(AuVm.Mp3DisabledReason ?? $"Als MP3 speichern – {AuVm.Mp3EstimateText}")" @onclick="ExportMp3Async">🎵 MP3 exportieren</button>
                     @if (confirmDeleteAudio)
                     {
                         <button type="button" class="au-btn" style="background: #dc3545;" @onclick="DeleteAudioFileAsync">Audiodatei löschen?</button>
@@ -556,6 +572,13 @@
                         <button class="au-icon" title="Nur die Audiodatei löschen (das Skript bleibt)" disabled="@AuVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
                     }
                 </div>
+                @if (exists && AuVm.Mp3DisabledReason is { } mp3Reason && !AuVm.IsBusy)
+                {
+                    <div class="au-meta" style="font-size: 11.5px; margin-top: 4px;">
+                        🎵 MP3: @mp3Reason
+                        <button type="button" class="au-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">⚙️ ffmpeg einrichten</button>
+                    </div>
+                }
                 @if (!exists)
                 {
                     <div class="au-hint">⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie sie bei Bedarf neu.</div>
@@ -642,6 +665,17 @@
         if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
             path += ".wav";
         await AuVm.ExportAudioAsync(path);
+    }
+
+    private async Task ExportMp3Async()
+    {
+        var path = await DesktopDialogs.SaveFileAsync(AuVm.SuggestFileName("mp3"), filterExtension: "mp3",
+            filterDescription: "MP3-Audiodatei (*.mp3)", title: "Als MP3 speichern unter...");
+        if (string.IsNullOrWhiteSpace(path))
+            return;
+        if (!path.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
+            path += ".mp3";
+        await AuVm.ExportMp3Async(path);
     }
 
     private string VoiceName(string id) =>

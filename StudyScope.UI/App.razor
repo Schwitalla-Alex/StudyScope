@@ -4,6 +4,7 @@
 @inject SettingsViewModel SettingsVm
 @inject AudioViewModel AuVm
 @inject VideoViewModel VdVm
+@inject ReportViewModel RepVm
 
 <!-- root-Komponente: Füllt 100vh aus -->
 <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #fff;">
@@ -86,11 +87,11 @@
                 }
                 else if (activeTab == "audio")
                 {
-                    <AudioView OnOpenSpeechSettings="OpenSpeechSettings" />
+                    <AudioView OnOpenSpeechSettings="OpenSpeechSettings" OnOpenExportSettings="OpenExportSettings" />
                 }
                 else if (activeTab == "video")
                 {
-                    <VideoView OnOpenSpeechSettings="OpenSpeechSettings" />
+                    <VideoView OnOpenSpeechSettings="OpenSpeechSettings" OnOpenExportSettings="OpenExportSettings" />
                 }
                 else
                 {
@@ -140,12 +141,22 @@
         showSettings = true;
     }
 
+    /// <summary>Aus dem Audio- bzw. Video-Reiter: Einstellungen im Abschnitt „Export“ (ffmpeg) öffnen.</summary>
+    private void OpenExportSettings()
+    {
+        settingsSection = "export";
+        showSettings = true;
+    }
+
     private async Task CloseSettingsModal()
     {
         showSettings = false;
-        // Schlüssel/Modell der Sprachausgabe oder die Chat-KI können sich geändert haben
+        // Schlüssel/Modell der Sprachausgabe, die Chat-KI oder der ffmpeg-Pfad können sich geändert haben
         await AuVm.ReloadSpeechSettingsAsync();
         await VdVm.ReloadSpeechSettingsAsync();
+        await AuVm.RefreshMp3AvailabilityAsync();
+        await VdVm.RefreshExportAvailabilityAsync(refresh: true);
+        await RepVm.RefreshMp3AvailabilityAsync();
     }
 
     /// <summary>

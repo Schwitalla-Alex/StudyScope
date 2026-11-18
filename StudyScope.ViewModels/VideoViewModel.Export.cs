@@ -1,3 +1,4 @@
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -80,20 +81,8 @@ public partial class VideoViewModel
         var temp = filePath + ".tmp";
         try
         {
-            if (NeedsOnlyAssembly && !_videoService.HasCurrentAudio(_profileName, video))
-            {
-                BusyText = "Audio wird zusammengesetzt …";
-                var assembly = await _videoService.AssembleAudioAsync(_profileName, video);
-                video.AudioFileName = assembly.FileName;
-                video.AudioDurationSeconds = assembly.DurationSeconds;
-                video.AudioSceneStarts = assembly.SceneStarts.ToList();
-                video.AudioCreatedAt = DateTime.Now;
-                if (string.IsNullOrWhiteSpace(video.AudioCreatedWith))
-                    video.AudioCreatedWith = "Gemini TTS";
-                video.AudioScenesHash = video.ComputeScenesHash();
-                await SaveAsync();
-                BusyText = "HTML-Datei wird erstellt …";
-            }
+            await AssembleIfNeededAsync(video);
+            BusyText = "HTML-Datei wird erstellt …";
 
             var mp3 = UseMp3 && _videoService.HasCurrentAudio(_profileName, video);
             if (mp3) BusyText = "Ton wird nach MP3 umgewandelt …";
@@ -126,6 +115,242 @@ public partial class VideoViewModel
             OnVideoChanged();
         }
     }
+
+    /// <summary>Sind alle Szenen vertont, fehlt aber die Gesamtdatei, wird sie kostenlos zusammengesetzt (vor HTML/MP4-Export).</summary>
+    private async Task AssembleIfNeededAsync(VideoDocument video)
+    {
+        if (!NeedsOnlyAssembly || _videoService.HasCurrentAudio(_profileName, video)) return;
+        BusyText = "Audio wird zusammengesetzt …";
+        var assembly = await _videoService.AssembleAudioAsync(_profileName, video);
+        video.AudioFileName = assembly.FileName;
+        video.AudioDurationSeconds = assembly.DurationSeconds;
+        video.AudioSceneStarts = assembly.SceneStarts.ToList();
+        video.AudioCreatedAt = DateTime.Now;
+        if (string.IsNullOrWhiteSpace(video.AudioCreatedWith))
+            video.AudioCreatedWith = "Gemini TTS";
+        video.AudioScenesHash = video.ComputeScenesHash();
+        await SaveAsync();
+    }
+
+    // ---------------- MP4 und MP3 (ffmpeg) ----------------
+
+    private readonly IVideoMp4Exporter? _mp4;
+
+    private Mp4Availability? _mp4Status;
+    /// <summary>Stand der MP4-Voraussetzungen (null = wird noch geprüft).</summary>
+    public Mp4Availability? Mp4Status
+    {
+        get => _mp4Status;
+        private set
+        {
+            _mp4Status = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(CanExportMp4));
+            OnPropertyChanged(nameof(Mp4DisabledReason));
+        }
+    }
+
+    private string? _mp3UnavailableReason = "ffmpeg wird gesucht …";
+
+    /// <summary>ffmpeg (neu) suchen: MP3 für HTML und Tonspur, MP4 samt Folienzeichner.</summary>
+    public async Task RefreshExportAvailabilityAsync(bool refresh = false)
+    {
+        await RefreshMp3AvailabilityAsync();
+        if (_transcoder == null)
+        {
+            _mp3UnavailableReason = "MP3-Export ist in dieser Umgebung nicht verfügbar.";
+        }
+        else
+        {
+            try { _mp3UnavailableReason = await _transcoder.Mp3UnavailableReasonAsync(); }
+            catch (Exception ex) { _mp3UnavailableReason = $"ffmpeg konnte nicht geprüft werden: {ex.Message}"; }
+        }
+        OnPropertyChanged(nameof(Mp3TrackDisabledReason));
+
+        if (_mp4 == null)
+        {
+            Mp4Status = Mp4Availability.Unavailable("Der MP4-Export ist in dieser Umgebung nicht verfügbar.", null);
+            return;
+        }
+        try { Mp4Status = await _mp4.GetAvailabilityAsync(refresh); }
+        catch (Exception ex) { Mp4Status = Mp4Availability.Unavailable($"Die Voraussetzungen für MP4 konnten nicht geprüft werden: {ex.Message}", null); }
+    }
+
+    /// <summary>Warum „🎞️ MP4“ gesperrt ist (null = möglich).</summary>
+    public string? Mp4DisabledReason
+    {
+        get
+        {
+            if (!HasVideo) return "Bitte zuerst ein Video erstellen oder auswählen.";
+            if (IsBusy) return "Bitte warten, bis der laufende Vorgang abgeschlossen ist.";
+            if (Mp4Status == null) return "ffmpeg wird gesucht …";
+            return Mp4Status.IsAvailable ? null : Mp4Status.Message;
+        }
+    }
+
+    public bool CanExportMp4 => Mp4DisabledReason == null;
+
+    /// <summary>Installations- bzw. Einrichtungshinweis, wenn MP4 nicht geht.</summary>
+    public string? Mp4Hint => Mp4Status is { IsAvailable: false } s ? s.Hint : null;
+
+    /// <summary>
+    /// Zeitachse für den Export: Zeitmarken der Audiodatei; fehlt nur das Zusammensetzen, aus den Szenen-Dauern
+    /// (wie <c>AssembleAudioAsync</c>: 0,6 s Pause, Szene ohne Text 3 s); sonst geschätzt bei Tempo 1.
+    /// </summary>
+    private VideoTimeline ExportTimeline(VideoDocument video)
+    {
+        if (_videoService.HasCurrentAudio(_profileName, video))
+            return VideoTimeline.FromStarts(video.AudioSceneStarts, video.AudioDurationSeconds, video.Scenes.Count);
+        if (NeedsOnlyAssembly)
+        {
+            var starts = new List<double>();
+            var t = 0.0;
+            for (var i = 0; i < video.Scenes.Count; i++)
+            {
+                if (i > 0) t += 0.6;
+                starts.Add(t);
+                t += video.Scenes[i].HasNarration ? video.Scenes[i].AudioDurationSeconds : VideoTimeline.MinSceneSeconds;
+            }
+            return VideoTimeline.FromStarts(starts, t, video.Scenes.Count);
+        }
+        return VideoTimeline.FromEstimates(video.Scenes, 1.0);
+    }
+
+    /// <summary>Schätzung vor dem MP4-Export (Bilder, Dauer, Größe, Exportdauer).</summary>
+    public Mp4ExportEstimate? Mp4Estimate =>
+        SelectedVideo is { } video && _mp4 != null ? _mp4.Estimate(video, ExportTimeline(video), HtmlExportHasAudio) : null;
+
+    /// <summary>„8 Folien · 3:12 Min. · Datei ca. 4,2 MB · Export dauert ca. 1 Min. · mit Ton (AAC)“</summary>
+    public string? Mp4EstimateText
+    {
+        get
+        {
+            if (SelectedVideo is not { } video || Mp4Estimate is not { } e) return null;
+            var seconds = Math.Max(0, (int)Math.Round(e.DurationSeconds));
+            return $"{video.Slides.Count} Folien · {seconds / 60}:{seconds % 60:00} Min. · Datei {e.SizeText} · Export dauert {e.ExportTimeText} · " +
+                   (HtmlExportHasAudio ? "mit Ton (AAC)" : "ohne Ton, fester Takt");
+        }
+    }
+
+    private bool _isExportingMedia;
+    /// <summary>MP4- bzw. MP3-Export läuft (Fortschrittsbalken mit Abbrechen).</summary>
+    public bool IsExportingMedia { get => _isExportingMedia; private set { _isExportingMedia = value; OnPropertyChanged(); } }
+
+    private double _exportProgress;
+    public double ExportProgress { get => _exportProgress; private set { _exportProgress = value; OnPropertyChanged(); } }
+
+    private string _exportProgressText = string.Empty;
+    public string ExportProgressText { get => _exportProgressText; private set { _exportProgressText = value; OnPropertyChanged(); } }
+
+    private CancellationTokenSource? _exportCts;
+    public void CancelMediaExport() => _exportCts?.Cancel();
+
+    /// <summary>
+    /// Exportiert das gewählte Video als MP4: mit Ton bei aktueller Gemini-Audiodatei (Zusammensetzen wird bei Bedarf
+    /// nachgeholt), sonst ohne Ton im festen Takt. Abbrechen beendet ffmpeg; keine halbe Datei.
+    /// </summary>
+    public async Task<bool> ExportMp4Async(string filePath)
+    {
+        if (!CanExportMp4 || SelectedVideo is not { } video || _mp4 == null) return false;
+        return await RunMediaExportAsync(async token =>
+        {
+            await AssembleIfNeededAsync(video);
+            var withAudio = _videoService.HasCurrentAudio(_profileName, video);
+            var request = new Mp4ExportRequest(video, ExportTimeline(video),
+                withAudio ? _videoService.GetAudioFilePath(_profileName, video) : null, filePath);
+            var result = await _mp4.ExportAsync(request, new SyncProgress<Mp4ExportProgress>(p =>
+            {
+                ExportProgress = p.Fraction;
+                ExportProgressText = p.Text;
+            }), token);
+            var mb = result.Bytes / 1_000_000.0;
+            ShowStatus(result.HasAudio
+                    ? $"✓ MP4 gespeichert ({FormatMb(mb)} MB, mit Ton): {filePath}"
+                    : $"✓ MP4 gespeichert ({FormatMb(mb)} MB, ohne Ton – die Folien laufen im festen Takt): {filePath}",
+                isError: false);
+        }, "MP4-Datei wird erstellt …");
+    }
+
+    /// <summary>Warum „Tonspur als MP3“ gesperrt ist (null = möglich).</summary>
+    public string? Mp3TrackDisabledReason
+    {
+        get
+        {
+            if (SelectedVideo is not { } video) return "Bitte zuerst ein Video auswählen.";
+            if (IsBusy) return "Bitte warten, bis der laufende Vorgang abgeschlossen ist.";
+            if (!_videoService.HasCurrentAudio(_profileName, video))
+                return NeedsOnlyAssembly ? "Bitte zuerst „Audio zusammensetzen“." : "Erst das Audio mit Gemini TTS erzeugen.";
+            return _mp3UnavailableReason;
+        }
+    }
+
+    public bool CanExportAudioTrackMp3 => Mp3TrackDisabledReason == null;
+
+    /// <summary>Speichert die Tonspur des Videos als MP3.</summary>
+    public async Task<bool> ExportAudioTrackMp3Async(string filePath)
+    {
+        if (!CanExportAudioTrackMp3 || SelectedVideo is not { } video || _transcoder == null) return false;
+        var source = _videoService.GetAudioFilePath(_profileName, video)!;
+        return await RunMediaExportAsync(async token =>
+        {
+            await _transcoder.ConvertToMp3FileAsync(source, filePath, video.AudioDurationSeconds,
+                new SyncProgress<double>(p => { ExportProgress = p; ExportProgressText = $"Tonspur wird umgewandelt ({(int)(p * 100)} %) …"; }), token);
+            ShowStatus($"✓ Tonspur als MP3 gespeichert: {filePath}", isError: false);
+        }, "Tonspur wird als MP3 gespeichert …");
+    }
+
+    private async Task<bool> RunMediaExportAsync(Func<CancellationToken, Task> work, string busyText)
+    {
+        await StopAsync();
+        IsBusy = true;
+        BusyText = busyText;
+        IsExportingMedia = true;
+        ExportProgress = 0;
+        ExportProgressText = busyText;
+        ClearStatus();
+        _exportCts = new CancellationTokenSource();
+        try
+        {
+            await work(_exportCts.Token);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            ShowStatus("Der Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert; temporäre Dateien wurden gelöscht.", isError: false);
+            return false;
+        }
+        catch (FfmpegException ex)
+        {
+            ShowStatus($"⚠️ {ex.Message}", isError: true, details: ex.Detail);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true, new[] { "Es wurde keine halbe Datei gespeichert." });
+            return false;
+        }
+        finally
+        {
+            _exportCts?.Dispose();
+            _exportCts = null;
+            IsExportingMedia = false;
+            ExportProgress = 0;
+            ExportProgressText = string.Empty;
+            IsBusy = false;
+            BusyText = string.Empty;
+            OnPropertyChanged(nameof(SelectedVideo));
+            OnVideoChanged();
+        }
+    }
+
+    /// <summary>Fortschritt direkt melden (die Oberfläche zeichnet über ihr PropertyChanged-Abo ohnehin im eigenen Kontext neu).</summary>
+    private sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
+    }
+
+    private static string FormatMb(double mb) =>
+        mb < 0.1 ? "unter 0,1" : mb.ToString(mb < 10 ? "0.0" : "0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
 
     // ---------------- Abspielen aus dem Bericht ----------------
 

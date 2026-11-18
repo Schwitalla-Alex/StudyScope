@@ -21,6 +21,14 @@
 		<ProjectReference Include="..\StudyScope.ViewModels\StudyScope.ViewModels.csproj" />
 	</ItemGroup>
 
+	<!-- Keine Debug-Symbole ausliefern: SkiaSharp.NativeAssets.Win32 bringt libSkiaSharp.pdb (~100 MB) mit,
+	     die DebugType=none nicht erfasst (sie ist ein natives Paket-Asset, kein eigenes Symbol) -->
+	<Target Name="StudyScopeRemovePdbsFromPublish" AfterTargets="ComputeResolvedFilesToPublishList">
+		<ItemGroup>
+			<ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(Extension)' == '.pdb'" />
+		</ItemGroup>
+	</Target>
+
 	<!-- Sorgt dafür, dass wwwroot und index.html ins Ausgabeverzeichnis kopiert werden -->
 	<ItemGroup>
 		<Content Update="wwwroot\**">

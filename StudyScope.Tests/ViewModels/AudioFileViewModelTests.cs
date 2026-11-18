@@ -54,6 +54,36 @@ public class AudioFileViewModelTests
     }
 
     [Test]
+    public async Task Mp3Export_OnlyWithAudioFileAndFfmpeg()
+    {
+        await CreateScriptAsync();
+        Assert.That(_viewModel.CanExportMp3, Is.False);
+        Assert.That(_viewModel.Mp3DisabledReason, Does.Contain("Audiodatei erzeugen"));
+        await _viewModel.GenerateAudioAsync();
+        Assert.That(_viewModel.Mp3DisabledReason, Does.Contain("nicht verfügbar"), "ohne Transcoder");
+
+        var missing = new AudioViewModel(_audioService, new FakeDocuments(), _storage, new ITextToSpeechService[] { _gemini }, _player,
+            transcoder: new Services.VideoHtmlExporterTests.FakeTranscoder { Available = false });
+        await missing.LoadForProfileAsync(Profile);
+        Assert.That(missing.CanExportMp3, Is.False);
+        Assert.That(missing.Mp3DisabledReason, Does.Contain("nicht gefunden"));
+
+        var transcoder = new Services.VideoHtmlExporterTests.FakeTranscoder();
+        var vm = new AudioViewModel(_audioService, new FakeDocuments(), _storage, new ITextToSpeechService[] { _gemini }, _player, transcoder: transcoder);
+        await vm.LoadForProfileAsync(Profile);
+        Assert.That(vm.CanExportMp3, Is.True, vm.Mp3DisabledReason);
+        Assert.That(vm.Mp3EstimateText, Does.Contain("MP3, 64 kbit/s"));
+        var target = Path.Combine(_tempDir, "Beitrag ä.mp3");
+
+        Assert.That(await vm.ExportMp3Async(target), Is.True, vm.StatusMessage);
+
+        Assert.That(File.ReadAllBytes(target), Is.EqualTo(Services.VideoHtmlExporterTests.FakeTranscoder.Bytes));
+        Assert.That(transcoder.Converted.Single(), Is.EqualTo(vm.SelectedAudioFilePath));
+        Assert.That(vm.StatusMessage, Does.Contain("MP3 exportiert"));
+        Assert.That(vm.IsBusy, Is.False);
+    }
+
+    [Test]
     public async Task BeforeGenerating_EstimateShown_PlayExplainsMissingFile()
     {
         await CreateScriptAsync();

@@ -42,6 +42,13 @@ class Program
         appBuilder.Services.AddSingleton<IAudioScriptService>(sp => new AudioScriptService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IVideoScriptService>(sp => new VideoScriptService(sp.GetRequiredService<ILlmService>()));
 
+        // Export über ein vorhandenes ffmpeg (optional, nicht mitgeliefert): MP3, MP4; SkiaSharp lädt erst beim MP4-Export
+        appBuilder.Services.AddSingleton<IFfmpegService>(sp => new FfmpegService(sp.GetRequiredService<IStorageService>()));
+        appBuilder.Services.AddSingleton<IAudioTranscoder>(sp => new FfmpegAudioTranscoder(sp.GetRequiredService<IFfmpegService>()));
+        appBuilder.Services.AddSingleton<IVideoMp4Exporter>(sp => new VideoMp4Exporter(sp.GetRequiredService<IFfmpegService>()));
+        appBuilder.Services.AddSingleton<ExportSettingsViewModel>(sp => new ExportSettingsViewModel(
+            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IFfmpegService>()));
+
         // Sprachausgabe: Systemstimme (Web Speech API der WebView) und Gemini TTS, im Reiter „Audio“ je Profil wählbar
         appBuilder.Services.AddSingleton<BrowserSpeechService>();
         appBuilder.Services.AddSingleton<ITextToSpeechService>(sp => sp.GetRequiredService<BrowserSpeechService>());
@@ -73,7 +80,8 @@ class Program
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>(),
             sp.GetRequiredService<IAudioFilePlayer>(),
-            sp.GetRequiredService<PlaybackCoordinator>()));
+            sp.GetRequiredService<PlaybackCoordinator>(),
+            sp.GetService<IAudioTranscoder>()));
         appBuilder.Services.AddSingleton<VideoViewModel>(sp => new VideoViewModel(
             sp.GetRequiredService<IVideoScriptService>(),
             sp.GetRequiredService<IPresentationService>(),
@@ -82,7 +90,8 @@ class Program
             sp.GetServices<ITextToSpeechService>(),
             sp.GetRequiredService<IAudioFilePlayer>(),
             sp.GetRequiredService<PlaybackCoordinator>(),
-            transcoder: sp.GetService<IAudioTranscoder>()));
+            transcoder: sp.GetService<IAudioTranscoder>(),
+            mp4: sp.GetService<IVideoMp4Exporter>()));
         appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>()));

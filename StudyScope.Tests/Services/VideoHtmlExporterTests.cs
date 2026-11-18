@@ -246,5 +246,17 @@ public class VideoHtmlExporterTests
             Converted.Add(wavPath);
             return Task.FromResult(Bytes);
         }
+
+        public async Task ConvertToMp3FileAsync(string wavPath, string mp3Path, double durationSeconds, IProgress<double>? progress = null,
+            CancellationToken cancellationToken = default)
+        {
+            Converted.Add(wavPath);
+            progress?.Report(0.5);
+            await File.WriteAllBytesAsync(mp3Path, Bytes, cancellationToken);
+            progress?.Report(1);
+        }
+
+        public Task<string?> Mp3UnavailableReasonAsync(CancellationToken cancellationToken = default) =>
+            Task.FromResult(Available ? null : "ffmpeg wurde auf diesem Rechner nicht gefunden (Test).");
     }
 }
