@@ -1,5 +1,7 @@
 ﻿# Erstellt den Text des GitHub-Releases: Abschnitt aus CHANGELOG.md, Installationshinweise (inkl. SmartScreen,
-# ffmpeg optional) und eine Tabelle mit Größe und SHA-256 der Pakete. Schreibt außerdem SHA256SUMS.txt in den Paketordner.
+# ffmpeg optional) und eine Tabelle mit Größe und SHA-256 der Pakete. Legt außerdem im Paketordner Kopien ohne
+# Versionsnummer an (StudyScope-Setup.exe, StudyScope-linux-x64.tar.gz – für dauerhafte Links über
+# …/releases/latest/download/<Datei>) und schreibt SHA256SUMS.txt für alle vier Dateien.
 # Aufruf: pwsh .github/scripts/release-notes.ps1 -Version 1.1.0 -PackageDirectory dist -OutFile release-notes.md
 param(
     [Parameter(Mandatory)][string]$Version,
@@ -11,6 +13,9 @@ $ErrorActionPreference = "Stop"
 $setup = "StudyScope-$Version-Setup.exe"
 $linux = "StudyScope-$Version-linux-x64.tar.gz"
 $folder = "StudyScope-$Version-linux-x64"
+# Kopien ohne Versionsnummer (inhaltlich identisch) für Links, die immer auf die neueste Version zeigen
+$stableSetup = "StudyScope-Setup.exe"
+$stableLinux = "StudyScope-linux-x64.tar.gz"
 
 foreach ($name in @($setup, $linux)) {
     if (-not (Test-Path -LiteralPath (Join-Path $PackageDirectory $name))) {
@@ -30,6 +35,12 @@ foreach ($name in @($setup, $linux)) {
     $size = ($file.Length / 1MB).ToString("N1", $de)
     $rows.Add("| ``$name`` | $size MB | ``$hash`` |")
     $sums.Add("$hash  $name")
+}
+foreach ($pair in @(@($setup, $stableSetup), @($linux, $stableLinux))) {
+    $source = Join-Path $PackageDirectory $pair[0]
+    $copy = Join-Path $PackageDirectory $pair[1]
+    Copy-Item -LiteralPath $source -Destination $copy -Force
+    $sums.Add("$((Get-FileHash -LiteralPath $copy -Algorithm SHA256).Hash.ToLowerInvariant())  $($pair[1])")
 }
 # Format wie sha256sum: „<hash>  <datei>“, LF – damit funktioniert „sha256sum -c SHA256SUMS.txt“
 [System.IO.File]::WriteAllText((Join-Path $PackageDirectory "SHA256SUMS.txt"), ($sums -join "`n") + "`n", [System.Text.UTF8Encoding]::new($false))
@@ -52,6 +63,8 @@ $changelog
 | Datei | Größe | SHA-256 |
 |---|---|---|
 $($rows -join "`n")
+
+``$stableSetup`` und ``$stableLinux`` sind inhaltlich identische Kopien ohne Versionsnummer (gleiche Prüfsumme) für dauerhafte Download-Links, die immer auf die neueste Version zeigen.
 
 So prüfen Sie, dass die heruntergeladene Datei unverändert ist – die angezeigte Prüfsumme muss mit der Tabelle übereinstimmen:
 - **Windows (PowerShell)** im Download-Ordner: ``Get-FileHash .\$setup -Algorithm SHA256``
