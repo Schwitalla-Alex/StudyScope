@@ -1,5 +1,5 @@
 using StudyScope.Core.Models;
-using StudyScope.ViewModels.Video;
+using StudyScope.Core.Common;
 
 namespace StudyScope.Tests.ViewModels;
 

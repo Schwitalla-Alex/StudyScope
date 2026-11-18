@@ -33,6 +33,9 @@ public class ReportViewModel : INotifyPropertyChanged
     /// <summary>Höchstzahl eingebetteter Audio-Skripte.</summary>
     public const int MaxEmbeddedAudioScripts = 3;
 
+    /// <summary>Höchstzahl eingebetteter Video-Skripte.</summary>
+    public const int MaxEmbeddedVideoScripts = 3;
+
     private readonly IReportService _reportService;
     private readonly IDocumentService _documentService;
     private readonly IMindmapService _mindmapService;
@@ -41,6 +44,8 @@ public class ReportViewModel : INotifyPropertyChanged
     private readonly IPresentationService _presentationService;
     private readonly IDataTableService _dataTableService;
     private readonly IAudioScriptService? _audioScriptService;
+    private readonly IVideoScriptService? _videoScriptService;
+    private readonly IAudioTranscoder? _transcoder;
     private CancellationTokenSource? _cts;
     private string _profileName = string.Empty;
 
@@ -51,6 +56,7 @@ public class ReportViewModel : INotifyPropertyChanged
     private PresentationDocument? _presentation;
     private DataTableLibrary _dataTables = new();
     private AudioLibrary _audio = new();
+    private VideoLibrary _videos = new();
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -62,8 +68,11 @@ public class ReportViewModel : INotifyPropertyChanged
         IQuizService quizService,
         IPresentationService presentationService,
         IDataTableService dataTableService,
-        IAudioScriptService? audioScriptService = null)
+        IAudioScriptService? audioScriptService = null,
+        IVideoScriptService? videoScriptService = null,
+        IAudioTranscoder? transcoder = null)
     {
+        _transcoder = transcoder;
         _reportService = reportService;
         _documentService = documentService;
         _mindmapService = mindmapService;
@@ -72,6 +81,7 @@ public class ReportViewModel : INotifyPropertyChanged
         _presentationService = presentationService;
         _dataTableService = dataTableService;
         _audioScriptService = audioScriptService;
+        _videoScriptService = videoScriptService;
     }
 
     // ---------------- Berichte ----------------
@@ -136,6 +146,9 @@ public class ReportViewModel : INotifyPropertyChanged
     /// <summary>Audio-Beiträge mit Skript (eingebettet wird der Text, nicht die Audiodatei).</summary>
     public int AudioScriptCount => _audio.Items.Count(a => a.Segments.Count > 0);
 
+    /// <summary>Videos mit Sprechtext (eingebettet wird der Text je Folie, nicht Folien oder Audio).</summary>
+    public int VideoScriptCount => _videos.Items.Count(ReportVideoScripts.HasNarration);
+
     // ---------------- Fortschritt und Status ----------------
 
     private bool _isBusy;
@@ -194,15 +207,17 @@ public class ReportViewModel : INotifyPropertyChanged
             Flashcards = FlashcardCount > 0,
             Quiz = QuizQuestionCount > 0,
             Presentation = PresentationSlideCount > 0,
-            // Neue Berichte betten Datentabellen und Audio-Skripte standardmäßig ein (auch später angelegte)
+            // Neue Berichte betten Datentabellen, Audio- und Video-Skripte standardmäßig ein (auch später angelegte)
             DataTables = true,
-            AudioScripts = true
+            AudioScripts = true,
+            VideoScripts = true
         };
 
         IsFormOpen = _library.Reports.Count == 0;
         OnPropertyChanged(nameof(Reports));
         OnPropertyChanged(nameof(NewEmbeds));
         SelectedReport = Reports.FirstOrDefault();
+        await RefreshMp3AvailabilityAsync();
     }
 
     private async Task LoadStudioContentAsync(string profileName)
@@ -216,6 +231,9 @@ public class ReportViewModel : INotifyPropertyChanged
         _audio = _audioScriptService == null
             ? new AudioLibrary()
             : await TryLoad(() => _audioScriptService.LoadLibraryAsync(profileName), new AudioLibrary()) ?? new AudioLibrary();
+        _videos = _videoScriptService == null
+            ? new VideoLibrary()
+            : await TryLoad(() => _videoScriptService.LoadLibraryAsync(profileName), new VideoLibrary()) ?? new VideoLibrary();
 
         OnPropertyChanged(nameof(HasMindmap));
         OnPropertyChanged(nameof(FlashcardCount));
@@ -223,6 +241,7 @@ public class ReportViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(PresentationSlideCount));
         OnPropertyChanged(nameof(DataTableCount));
         OnPropertyChanged(nameof(AudioScriptCount));
+        OnPropertyChanged(nameof(VideoScriptCount));
     }
 
     // T übernimmt die NULL-Zulässigkeit der Ladefunktion (z. B. MindmapDocument? oder List<Flashcard>),
@@ -269,6 +288,11 @@ public class ReportViewModel : INotifyPropertyChanged
         var scripts = withSegments.Where(a => a.SourceDocuments.Any(sources.Contains)).ToList();
         if (scripts.Count == 0) scripts = withSegments;
 
+        // Video-Skripte: ebenso bevorzugt aus denselben Dokumenten, neueste zuerst
+        var withNarration = _videos.Items.Where(ReportVideoScripts.HasNarration).ToList();
+        var videos = withNarration.Where(v => v.SourceDocuments.Any(sources.Contains)).ToList();
+        if (videos.Count == 0) videos = withNarration;
+
         return new ReportStudioContent
         {
             Mindmap = _mindmap,
@@ -283,6 +307,10 @@ public class ReportViewModel : INotifyPropertyChanged
             AudioScripts = scripts
                 .OrderByDescending(a => a.CreatedAt)
                 .Take(MaxEmbeddedAudioScripts)
+                .ToList(),
+            VideoScripts = videos
+                .OrderByDescending(v => v.CreatedAt)
+                .Take(MaxEmbeddedVideoScripts)
                 .ToList()
         };
     }
@@ -348,7 +376,8 @@ public class ReportViewModel : INotifyPropertyChanged
                 Quiz = NewEmbeds.Quiz,
                 Presentation = NewEmbeds.Presentation,
                 DataTables = NewEmbeds.IncludesDataTables,
-                AudioScripts = NewEmbeds.IncludesAudioScripts
+                AudioScripts = NewEmbeds.IncludesAudioScripts,
+                VideoScripts = NewEmbeds.IncludesVideoScripts
             };
 
             _library.Reports.Add(report);
@@ -447,11 +476,81 @@ public class ReportViewModel : INotifyPropertyChanged
             case "presentation": embeds.Presentation = !embeds.Presentation; break;
             case "datatables": embeds.DataTables = !embeds.IncludesDataTables; break;
             case "audio": embeds.AudioScripts = !embeds.IncludesAudioScripts; break;
+            case "video": embeds.VideoScripts = !embeds.IncludesVideoScripts; break;
         }
     }
 
-    private void RebuildHtml() =>
-        CurrentHtml = SelectedReport == null ? string.Empty : _reportService.ExportToHtml(SelectedReport, GetStudioContent(SelectedReport));
+    // In der App: Video-Abschnitt mit „▶ Video abspielen“ (keine eingebetteten Player – die Ansicht bleibt leicht)
+    private void RebuildHtml()
+    {
+        CurrentHtml = SelectedReport == null
+            ? string.Empty
+            : _reportService.ExportToHtml(SelectedReport, GetStudioContent(SelectedReport), new ReportHtmlOptions { InApp = true });
+        OnPropertyChanged(nameof(CanEmbedVideoPlayers));
+        OnPropertyChanged(nameof(VideoPlayersEstimateText));
+    }
+
+    // ---------------- Videos im HTML-Bericht ----------------
+
+    private bool _embedVideoPlayers;
+    /// <summary>Beim HTML-Export je Video einen Player mit Folien und Ton einbetten (Standard: aus – die Datei wird groß).</summary>
+    public bool EmbedVideoPlayers { get => _embedVideoPlayers; set { _embedVideoPlayers = value; OnPropertyChanged(); OnPropertyChanged(nameof(VideoPlayersEstimateText)); } }
+
+    private bool _htmlUseMp3 = true;
+    /// <summary>Tonspuren als MP3 einbetten (nur wirksam, wenn <see cref="IsMp3Available"/>).</summary>
+    public bool HtmlUseMp3 { get => _htmlUseMp3; set { _htmlUseMp3 = value; OnPropertyChanged(); OnPropertyChanged(nameof(VideoPlayersEstimateText)); } }
+
+    private bool _isMp3Available;
+    public bool IsMp3Available { get => _isMp3Available; private set { _isMp3Available = value; OnPropertyChanged(); OnPropertyChanged(nameof(VideoPlayersEstimateText)); } }
+
+    private bool UseMp3 => IsMp3Available && HtmlUseMp3 && _transcoder != null;
+
+    public async Task RefreshMp3AvailabilityAsync()
+    {
+        if (_transcoder == null) { IsMp3Available = false; return; }
+        try { IsMp3Available = await _transcoder.IsMp3AvailableAsync(); }
+        catch { IsMp3Available = false; }
+    }
+
+    /// <summary>Videos, die im gewählten Bericht eingebettet sind (Häkchen „Video-Skripte“ an, Video mit Sprechtext).</summary>
+    public IReadOnlyList<VideoDocument> EmbeddedVideos =>
+        SelectedReport == null ? Array.Empty<VideoDocument>() : GetStudioContent(SelectedReport).Filter(SelectedReport.Embeds).VideoScripts;
+
+    /// <summary>Das Häkchen „Videos im HTML-Bericht einbetten“ ist sinnvoll (Bericht enthält Video-Skripte).</summary>
+    public bool CanEmbedVideoPlayers => _videoScriptService != null && EmbeddedVideos.Count > 0;
+
+    /// <summary>„2 Videos · ca. 23 MB · 1 mit Ton (WAV), 1 ohne Ton (fester Takt)“ – nur bei gesetztem Häkchen.</summary>
+    public string? VideoPlayersEstimateText
+    {
+        get
+        {
+            if (!EmbedVideoPlayers || !CanEmbedVideoPlayers) return null;
+            var videos = EmbeddedVideos;
+            var e = _videoScriptService!.EstimateHtml(_profileName, videos, UseMp3);
+            var count = videos.Count == 1 ? "1 Video" : $"{videos.Count} Videos";
+            var silent = e.VideoCount - e.VideosWithAudio;
+            var audio = e.VideosWithAudio switch
+            {
+                0 => "ohne Ton (fester Takt)",
+                _ when silent == 0 => $"mit Ton ({(e.UsesMp3 ? "MP3" : "WAV")})",
+                _ => $"{e.VideosWithAudio} mit Ton ({(e.UsesMp3 ? "MP3" : "WAV")}), {silent} ohne Ton (fester Takt)"
+            };
+            return $"HTML-Datei {e.SizeText} · {count} {audio}";
+        }
+    }
+
+    /// <summary>Player-Daten der eingebetteten Videos für den HTML-Export (Ton nur bei aktueller Gemini-Audiodatei).</summary>
+    private async Task<ReportHtmlOptions> BuildHtmlExportOptionsAsync()
+    {
+        if (!EmbedVideoPlayers || !CanEmbedVideoPlayers) return ReportHtmlOptions.Default;
+        var players = new Dictionary<string, VideoPlayerData>();
+        foreach (var video in EmbeddedVideos)
+        {
+            var mp3 = UseMp3 && _videoScriptService!.HasCurrentAudio(_profileName, video) ? _transcoder : null;
+            players[video.Id] = await _videoScriptService!.BuildPlayerDataAsync(_profileName, video, mp3);
+        }
+        return new ReportHtmlOptions { VideoPlayers = players };
+    }
 
     // ---------------- Export ----------------
 
@@ -490,7 +589,24 @@ public class ReportViewModel : INotifyPropertyChanged
                     await File.WriteAllTextAsync(filePath, _reportService.ExportToPlainText(SelectedReport, studio));
                     break;
                 default:
-                    await File.WriteAllTextAsync(filePath, _reportService.ExportToHtml(SelectedReport, studio));
+                    var options = await BuildHtmlExportOptionsAsync();
+                    var html = _reportService.ExportToHtml(SelectedReport, studio, options);
+                    if (options.VideoPlayers.Count == 0)
+                    {
+                        await File.WriteAllTextAsync(filePath, html);
+                        break;
+                    }
+                    // Mit Videos kann die Datei groß werden: erst temporär schreiben, dann umbenennen
+                    var temp = filePath + ".tmp";
+                    try
+                    {
+                        await File.WriteAllTextAsync(temp, html, new System.Text.UTF8Encoding(false));
+                        File.Move(temp, filePath, overwrite: true);
+                    }
+                    finally
+                    {
+                        if (File.Exists(temp)) File.Delete(temp);
+                    }
                     break;
             }
 

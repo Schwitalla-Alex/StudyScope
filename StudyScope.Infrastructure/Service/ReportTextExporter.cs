@@ -147,6 +147,22 @@ public static class ReportTextExporter
                 sb.AppendLine();
             }
         }
+
+        foreach (var video in studio.VideoScripts.Where(ReportVideoScripts.HasNarration))
+        {
+            sb.AppendLine($"## 🎬 {video.Title}");
+            sb.AppendLine();
+            sb.AppendLine($"*{VideoMeta(video)}*");
+            sb.AppendLine();
+            for (var i = 0; i < video.Scenes.Count; i++)
+            {
+                if (!video.Scenes[i].HasNarration) continue;
+                sb.AppendLine($"**{ReportVideoScripts.SceneHeading(video, i)}**");
+                sb.AppendLine();
+                sb.AppendLine(video.Scenes[i].Narration.Trim());
+                sb.AppendLine();
+            }
+        }
     }
 
     private static void AppendTreeMarkdown(StringBuilder sb, MindmapNode node, int level)
@@ -278,6 +294,20 @@ public static class ReportTextExporter
             }
         }
 
+        foreach (var video in studio.VideoScripts.Where(ReportVideoScripts.HasNarration))
+        {
+            Heading(sb, $"Video-Skript – {video.Title}");
+            sb.AppendLine(VideoMeta(video));
+            sb.AppendLine();
+            for (var i = 0; i < video.Scenes.Count; i++)
+            {
+                if (!video.Scenes[i].HasNarration) continue;
+                sb.AppendLine(ReportVideoScripts.SceneHeading(video, i));
+                sb.AppendLine(video.Scenes[i].Narration.Trim());
+                sb.AppendLine();
+            }
+        }
+
         return sb.ToString().TrimEnd() + Environment.NewLine;
     }
 
@@ -326,6 +356,25 @@ public static class ReportTextExporter
             parts.Add($"Schwerpunkt: {audio.Topic}");
         if (audio.HasAudioFile)
             parts.Add($"Audiodatei: {audio.AudioFileName}");
+        return string.Join(" · ", parts);
+    }
+
+    /// <summary>
+    /// Kurzbeschreibung eines eingebetteten Video-Skripts: Folienzahl, Dauer (aus der aktuellen Audiodatei, sonst
+    /// geschätzt), Vertonung und der Hinweis „Video: Titel“ statt eingebetteter Folien bzw. Audiodatei.
+    /// </summary>
+    public static string VideoMeta(VideoDocument video)
+    {
+        var hasCurrentAudio = video.HasAudioFile && !video.IsAudioOutdated && video.AudioDurationSeconds > 0;
+        var minutes = hasCurrentAudio ? video.AudioDurationSeconds / 60 : AudioScriptFormats.EstimateMinutes(video.WordCount);
+        var parts = new List<string>
+        {
+            $"{video.Scenes.Count} {(video.Scenes.Count == 1 ? "Folie" : "Folien")}",
+            AudioScriptFormats.FormatMinutes(minutes)
+        };
+        if (hasCurrentAudio && !string.IsNullOrWhiteSpace(video.AudioCreatedWith))
+            parts.Add($"vertont mit {video.AudioCreatedWith}");
+        parts.Add($"Video: {video.Title} (abspielbar im Reiter „Video“)");
         return string.Join(" · ", parts);
     }
 

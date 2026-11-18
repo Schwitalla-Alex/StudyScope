@@ -332,6 +332,8 @@ public class ReportService : IReportService
                 report.Embeds.DataTables ??= false;
                 // … und vor den Audio-Beiträgen: keine Skripte einbetten
                 report.Embeds.AudioScripts ??= false;
+                // … und vor den Videos: keine Video-Skripte einbetten
+                report.Embeds.VideoScripts ??= false;
                 report.SourceDocuments ??= new List<string>();
                 foreach (var section in report.Sections)
                 {
@@ -387,4 +389,7 @@ public class ReportService : IReportService
 
     public string ExportToHtml(Report report, ReportStudioContent studio) =>
         ReportHtmlExporter.Export(report, studio.Filter(report.Embeds));
+
+    public string ExportToHtml(Report report, ReportStudioContent studio, ReportHtmlOptions options) =>
+        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds), options);
 }

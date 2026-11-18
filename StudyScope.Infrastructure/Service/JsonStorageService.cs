@@ -367,11 +367,44 @@ public class JsonStorageService : IStorageService
     {
         var node = JsonSerializer.SerializeToNode(EncryptedCopy(config), JsonOptions)!.AsObject();
 
-        // Die globale Sprachausgabe steht in derselben Datei und bleibt erhalten
+        // Sprachausgabe und Export-Einstellungen stehen in derselben Datei und bleiben erhalten
         var existing = await ReadConfigNodeAsync();
-        if (existing?[SpeechSettingsProperty] is JsonNode speech)
-            node[SpeechSettingsProperty] = speech.DeepClone();
+        foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty })
+        {
+            if (existing?[property] is JsonNode kept)
+                node[property] = kept.DeepClone();
+        }
 
+        await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    // ---------------- Export (ffmpeg) ----------------
+
+    private const string ExportSettingsProperty = "ExportSettings";
+
+    public async Task<ExportSettings> LoadExportSettingsAsync()
+    {
+        try
+        {
+            if ((await ReadConfigNodeAsync())?[ExportSettingsProperty] is JsonObject node &&
+                node.Deserialize<ExportSettings>(JsonOptions) is { } settings)
+            {
+                settings.FfmpegPath ??= string.Empty;
+                return settings;
+            }
+        }
+        catch
+        {
+            // defekter Eintrag → Standard
+        }
+        return new ExportSettings();
+    }
+
+    public async Task SaveExportSettingsAsync(ExportSettings settings)
+    {
+        Directory.CreateDirectory(_baseDirectory);
+        var node = await ReadConfigNodeAsync() ?? new JsonObject();
+        node[ExportSettingsProperty] = JsonSerializer.SerializeToNode(settings.Clone(), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
     }
 

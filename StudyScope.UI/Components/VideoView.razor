@@ -22,7 +22,18 @@
         </div>
     </div>
 
-    @if (VdVm.IsGeneratingAudio)
+    @if (VdVm.IsExportingMedia)
+    {
+        <div class="vd-info">
+            <div style="font-weight: 600; font-size: 13px;">🎞️ @VdVm.ExportProgressText</div>
+            <div class="vd-bar" style="margin-top: 8px;"><div class="vd-bar-fill" style="width: @(Percent(VdVm.ExportProgress))%;"></div></div>
+            <div style="margin-top: 8px; display: flex; justify-content: center; gap: 10px; align-items: center;">
+                <span style="font-size: 11px; color: #6c757d;">Beim Abbrechen wird ffmpeg beendet; es entsteht keine halbe Datei, temporäre Bilder werden gelöscht.</span>
+                <button type="button" class="vd-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="VdVm.CancelMediaExport">Abbrechen</button>
+            </div>
+        </div>
+    }
+    else if (VdVm.IsGeneratingAudio)
     {
         <div class="vd-info">
             <div style="font-weight: 600; font-size: 13px;">🎙️ @VdVm.AudioProgressText</div>
@@ -150,8 +161,75 @@
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button type="button" class="vd-btn" style="background: #495057;" title="Sprechtexte als Textdatei speichern" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Text)">📄 Text</button>
                             <button type="button" class="vd-btn" style="background: #17a2b8;" title="Sprechtexte als Markdown speichern" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Markdown)">📝 Markdown</button>
+                            <button type="button" class="vd-btn" style="background: #7048e8;" disabled="@(!VdVm.CanExportHtml)"
+                                    title="Als interaktive Webseite speichern – Folien, Stichpunkte und Ton laufen im Browser auch ohne StudyScope"
+                                    @onclick="() => { confirmHtmlExport = !confirmHtmlExport; confirmMp4Export = false; }">🌐 HTML</button>
+                            <button type="button" class="vd-btn" style="background: #d63384;" disabled="@(!VdVm.CanExportMp4)"
+                                    title="@(VdVm.Mp4DisabledReason ?? "Als MP4-Video speichern (1920 × 1080, H.264) – läuft auf jedem Gerät und lässt sich hochladen")"
+                                    @onclick="() => { confirmMp4Export = !confirmMp4Export; confirmHtmlExport = false; }">🎞️ MP4</button>
                         </div>
                     </div>
+
+                    @if (VdVm.Mp4DisabledReason is { } mp4Reason && VdVm.Mp4Status is { IsAvailable: false } && !VdVm.IsBusy)
+                    {
+                        <div class="vd-meta" style="margin-top: 6px; font-size: 11.5px;">
+                            🎞️ MP4: @mp4Reason
+                            @if (VdVm.Mp4Hint is { } mp4Hint) { <div>@mp4Hint</div> }
+                            <button type="button" class="vd-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">⚙️ ffmpeg einrichten</button>
+                        </div>
+                    }
+
+                    @if (confirmMp4Export && VdVm.HasVideo)
+                    {
+                        <div class="vd-confirm" style="margin-top: 10px;">
+                            <div style="font-weight: 600;">🎞️ Video als MP4 speichern (1920 × 1080)</div>
+                            <div class="vd-meta" style="margin-top: 4px;">@VdVm.Mp4EstimateText</div>
+                            @if (VdVm.HtmlExportNoAudioReason is { } mp4NoAudio)
+                            {
+                                <div class="vd-meta" style="margin-top: 4px; color: #856404;">🔇 @mp4NoAudio Für Ton erzeugen Sie zuerst das Audio mit Gemini TTS.</div>
+                            }
+                            <div class="vd-meta" style="margin-top: 4px;">Die Folien sehen aus wie hier im Reiter; Stichpunkte erscheinen nacheinander, zwischen den Folien wird übergeblendet. Die Zeit- und Größenangaben sind Schätzungen.</div>
+                            <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
+                                <button type="button" class="vd-btn" style="background: #d63384;" disabled="@(!VdVm.CanExportMp4)" @onclick="ExportMp4Async">💾 MP4 speichern …</button>
+                                @if (VdVm.HtmlExportHasAudio)
+                                {
+                                    <button type="button" class="vd-btn" style="background: #0d6efd;" disabled="@(!VdVm.CanExportAudioTrackMp3)"
+                                            title="@(VdVm.Mp3TrackDisabledReason ?? "Nur die Tonspur als MP3 speichern (64 kbit/s mono)")" @onclick="ExportAudioTrackMp3Async">🎵 Nur Tonspur (MP3) …</button>
+                                }
+                                <button type="button" class="vd-link" @onclick="() => confirmMp4Export = false">Abbrechen</button>
+                            </div>
+                        </div>
+                    }
+
+                    @if (confirmHtmlExport && VdVm.HasVideo)
+                    {
+                        <div class="vd-confirm" style="margin-top: 10px;">
+                            <div style="font-weight: 600;">🌐 Video als interaktive HTML-Datei speichern</div>
+                            <div class="vd-meta" style="margin-top: 4px;">Ungefähre Dateigröße: <b>@VdVm.HtmlExportEstimateText</b></div>
+                            @if (VdVm.HtmlExportNoAudioReason is { } noAudio)
+                            {
+                                <div class="vd-meta" style="margin-top: 4px; color: #856404;">🔇 @noAudio Für Ton erzeugen Sie zuerst das Audio mit Gemini TTS.</div>
+                            }
+                            @if (VdVm.HtmlExportHasAudio)
+                            {
+                                @if (VdVm.IsMp3Available)
+                                {
+                                    <label class="vd-meta" style="display: flex; gap: 6px; align-items: center; margin-top: 6px; cursor: pointer;">
+                                        <input type="checkbox" checked="@VdVm.HtmlUseMp3" @onchange="e => VdVm.HtmlUseMp3 = (bool)(e.Value ?? false)" />
+                                        Ton als MP3 einbetten (kleinere Datei, über ffmpeg)
+                                    </label>
+                                }
+                                else
+                                {
+                                    <div class="vd-meta" style="margin-top: 4px;">Der Ton wird als WAV eingebettet (≈ 3,9 MB je Minute). Mit ffmpeg wäre MP3 möglich (deutlich kleiner).</div>
+                                }
+                            }
+                            <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
+                                <button type="button" class="vd-btn" style="background: #7048e8;" disabled="@(!VdVm.CanExportHtml)" @onclick="ExportHtmlAsync">💾 Speichern …</button>
+                                <button type="button" class="vd-link" @onclick="() => confirmHtmlExport = false">Abbrechen</button>
+                            </div>
+                        </div>
+                    }
 
                     @if (VdVm.IsPresentationChanged)
                     {
@@ -361,6 +439,8 @@
     private string editText = string.Empty;
     private bool focusEditor;
     private bool confirmGenerateAudio;
+    private bool confirmHtmlExport;
+    private bool confirmMp4Export;
     private bool confirmGenerateAll;
     private bool confirmDeleteAudio;
     private int lastScrolledIndex = -1;
@@ -766,6 +846,9 @@
             if (!SystemSpeech.IsAttached)
                 SystemSpeech.Attach(JSRuntime);
             await VdVm.RefreshAvailabilityAsync();
+            // „▶ Video abspielen“ aus dem Bericht: erst jetzt sind Player und Systemstimme verbunden
+            if (VdVm.PendingPlaybackId != null)
+                await VdVm.StartPendingPlaybackAsync();
         }
 
         if (VdVm.IsPresenting != wasPresenting)
@@ -950,6 +1033,60 @@
             if (string.IsNullOrWhiteSpace(path)) return;
             if (!path.EndsWith("." + extension, StringComparison.OrdinalIgnoreCase)) path += "." + extension;
             await VdVm.ExportScriptAsync(format, path);
+        }
+        catch (Exception ex)
+        {
+            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+        }
+    }
+
+    /// <summary>Einstellungen im Abschnitt „Export“ (ffmpeg) öffnen.</summary>
+    [Parameter] public EventCallback OnOpenExportSettings { get; set; }
+
+    private async Task ExportMp4Async()
+    {
+        try
+        {
+            var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("mp4"), filterExtension: "mp4",
+                filterDescription: "MP4-Video (*.mp4)", title: "Video als MP4 speichern unter...");
+            if (string.IsNullOrWhiteSpace(path)) return;
+            if (!path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)) path += ".mp4";
+            confirmMp4Export = false;
+            await VdVm.ExportMp4Async(path);
+        }
+        catch (Exception ex)
+        {
+            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+        }
+    }
+
+    private async Task ExportAudioTrackMp3Async()
+    {
+        try
+        {
+            var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("mp3"), filterExtension: "mp3",
+                filterDescription: "MP3-Audiodatei (*.mp3)", title: "Tonspur als MP3 speichern unter...");
+            if (string.IsNullOrWhiteSpace(path)) return;
+            if (!path.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase)) path += ".mp3";
+            confirmMp4Export = false;
+            await VdVm.ExportAudioTrackMp3Async(path);
+        }
+        catch (Exception ex)
+        {
+            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+        }
+    }
+
+    private async Task ExportHtmlAsync()
+    {
+        try
+        {
+            var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("html"), filterExtension: "html",
+                filterDescription: "Interaktive Webseite (*.html)", title: "Video als HTML speichern unter...");
+            if (string.IsNullOrWhiteSpace(path)) return;
+            if (!path.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) path += ".html";
+            confirmHtmlExport = false;
+            await VdVm.ExportHtmlAsync(path);
         }
         catch (Exception ex)
         {

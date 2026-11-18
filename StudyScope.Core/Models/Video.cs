@@ -205,3 +205,41 @@ public static class VideoHashing
     public static string Hash(string text) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text ?? string.Empty)))[..16];
 }
+
+/// <summary>
+/// Daten eines eingebetteten Video-Players (HTML-Export des Videos und Video-Abschnitt im HTML-Bericht): Folien, Zeitachse
+/// und – nur bei aktueller Gemini-Audiodatei – die Tonspur. Ohne Ton laufen die Folien im festen Takt der geschätzten Dauer.
+/// </summary>
+public sealed class VideoPlayerData
+{
+    public required VideoDocument Video { get; init; }
+    public required StudyScope.Core.Common.VideoTimeline Timeline { get; init; }
+
+    /// <summary>Tonspur (WAV oder MP3) oder null = ohne Ton.</summary>
+    public byte[]? Audio { get; init; }
+
+    public string AudioMimeType { get; init; } = "audio/wav";
+
+    /// <summary>Warum es keinen Ton gibt (null = Ton vorhanden).</summary>
+    public string? NoAudioReason { get; init; }
+
+    public bool HasAudio => Audio is { Length: > 0 };
+}
+
+/// <summary>Ungefähre Größe eines HTML-Exports mit eingebetteten Videos.</summary>
+public sealed record VideoHtmlSizeEstimate(long TotalBytes, long AudioBytes, int VideoCount, int VideosWithAudio, bool UsesMp3)
+{
+    /// <summary>Megabyte (10^6 Byte, wie bei der Gemini-Schätzung).</summary>
+    public double Megabytes => TotalBytes / 1_000_000.0;
+
+    /// <summary>„ca. 12,3 MB“ (ab 10 MB ganzzahlig, sehr kleine Dateien „unter 0,1 MB“).</summary>
+    public string SizeText
+    {
+        get
+        {
+            var de = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
+            if (Megabytes < 0.1) return "unter 0,1 MB";
+            return Megabytes < 10 ? $"ca. {Megabytes.ToString("0.0", de)} MB" : $"ca. {Megabytes.ToString("0", de)} MB";
+        }
+    }
+}

@@ -113,6 +113,22 @@ if ! has_emoji_font; then
   echo
 fi
 
+# ------------------------------------------------------------------ Optionale Empfehlung: ffmpeg
+# Für den MP4-Export der Videos und den MP3-Export der Audio-Beiträge; StudyScope läuft auch ohne.
+if ! command -v ffmpeg >/dev/null 2>&1; then
+  FFMPEG_CMD=""
+  if command -v apt-get >/dev/null 2>&1; then FFMPEG_CMD="sudo apt install ffmpeg"
+  elif command -v dnf >/dev/null 2>&1; then FFMPEG_CMD="sudo dnf install ffmpeg"
+  elif command -v pacman >/dev/null 2>&1; then FFMPEG_CMD="sudo pacman -S ffmpeg"
+  elif command -v zypper >/dev/null 2>&1; then FFMPEG_CMD="sudo zypper install ffmpeg"
+  fi
+  echo
+  echo "Hinweis (optional): ffmpeg wurde nicht gefunden. Ohne ffmpeg funktioniert StudyScope vollständig,"
+  echo "nur der Export von Videos als MP4 und von Audio als MP3 ist dann gesperrt."
+  [ -n "$FFMPEG_CMD" ] && echo "Zum Nachinstallieren:  $FFMPEG_CMD"
+  echo
+fi
+
 if [ "${1:-}" = "--check" ]; then
   echo "Alle Voraussetzungen für StudyScope sind erfüllt."
   exit 0

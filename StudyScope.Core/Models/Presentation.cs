@@ -7,6 +7,42 @@ public enum SlideKind
     Content
 }
 
+/// <summary>Wie dicht eine Folie gefüllt ist – steuert die Schriftgröße in der Anzeige (CSS-Klassen „dense“/„very-dense“).</summary>
+public enum SlideDensity
+{
+    Normal,
+    Dense,
+    VeryDense
+}
+
+/// <summary>Gemeinsame Gestaltungsregeln der Folien (App, HTML-Player, Folienbilder des MP4-Exports).</summary>
+public static class SlideLayout
+{
+    /// <summary>Dichte einer Folie anhand der Textmenge.</summary>
+    public static SlideDensity GetDensity(PresentationSlide slide)
+    {
+        var amount = slide.Bullets.Sum(b => b.Length + 25);
+        return amount switch
+        {
+            <= 330 => SlideDensity.Normal,
+            <= 560 => SlideDensity.Dense,
+            _ => SlideDensity.VeryDense
+        };
+    }
+
+    /// <summary>CSS-Klassen der Folie wie in <c>SlideView.razor</c> („pp-slide title“, „pp-slide dense“ …).</summary>
+    public static string CssClass(PresentationSlide slide)
+    {
+        if (slide.Kind == SlideKind.Title) return "pp-slide title";
+        return GetDensity(slide) switch
+        {
+            SlideDensity.VeryDense => "pp-slide very-dense",
+            SlideDensity.Dense => "pp-slide dense",
+            _ => "pp-slide"
+        };
+    }
+}
+
 /// <summary>Woraus die Präsentation entstanden ist.</summary>
 public enum PresentationOrigin
 {

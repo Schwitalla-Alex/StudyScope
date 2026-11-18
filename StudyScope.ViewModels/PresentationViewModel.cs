@@ -6,14 +6,6 @@ using StudyScope.ViewModels.Mindmap;
 
 namespace StudyScope.ViewModels;
 
-/// <summary>Wie dicht eine Folie gefüllt ist – steuert die Schriftgröße in der Anzeige.</summary>
-public enum SlideDensity
-{
-    Normal,
-    Dense,
-    VeryDense
-}
-
 /// <summary>
 /// Steuert den Reiter „Präsentation“: Erstellen (per KI aus Dokumenten oder aus der Mindmap),
 /// Blättern, Vortragsmodus, PowerPoint-Export und Speichern je Profil.
@@ -360,17 +352,8 @@ public class PresentationViewModel : INotifyPropertyChanged
         }
     }
 
-    /// <summary>Dichte einer Folie anhand der Textmenge – die Anzeige verkleinert dann die Schrift.</summary>
-    public static SlideDensity GetDensity(PresentationSlide slide)
-    {
-        var amount = slide.Bullets.Sum(b => b.Length + 25);
-        return amount switch
-        {
-            <= 330 => SlideDensity.Normal,
-            <= 560 => SlideDensity.Dense,
-            _ => SlideDensity.VeryDense
-        };
-    }
+    /// <summary>Dichte einer Folie anhand der Textmenge – die Anzeige verkleinert dann die Schrift (siehe <see cref="SlideLayout"/>).</summary>
+    public static SlideDensity GetDensity(PresentationSlide slide) => SlideLayout.GetDensity(slide);
 
     private void NotifyNavigation()
     {

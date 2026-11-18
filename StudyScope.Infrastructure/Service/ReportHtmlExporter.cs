@@ -15,13 +15,19 @@ namespace StudyScope.Infrastructure.Services;
 /// </summary>
 public static class ReportHtmlExporter
 {
-    public static string Export(Report report, ReportStudioContent studio)
+    public static string Export(Report report, ReportStudioContent studio, ReportHtmlOptions? options = null)
     {
+        options ??= ReportHtmlOptions.Default;
+        var videoScripts = studio.VideoScripts.Where(ReportVideoScripts.HasNarration).ToList();
+        var withPlayers = videoScripts.Any(v => options.VideoPlayers.ContainsKey(v.Id));
+
         var sb = new StringBuilder();
         sb.Append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\">\n");
         sb.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
         sb.Append($"<meta name=\"generator\" content=\"StudyScope\">\n<title>{H(report.Title)}</title>\n");
-        sb.Append("<style>\n").Append(Css).Append("\n</style>\n</head>\n<body>\n<main class=\"report\">\n");
+        sb.Append("<style>\n").Append(Css);
+        if (withPlayers) sb.Append('\n').Append(VideoPlayerHtml.Css);
+        sb.Append("\n</style>\n</head>\n<body>\n<main class=\"report\">\n");
 
         // Kopf
         sb.Append("<header class=\"head\">");
@@ -47,6 +53,7 @@ public static class ReportHtmlExporter
         if (dataTables.Count > 0) toc.Add(("datentabellen", dataTables.Count == 1 ? "📊 Datentabelle" : "📊 Datentabellen"));
         var audioScripts = studio.AudioScripts.Where(a => a.Segments.Count > 0).ToList();
         if (audioScripts.Count > 0) toc.Add(("audio", audioScripts.Count == 1 ? "🎧 Audio-Skript" : "🎧 Audio-Skripte"));
+        if (videoScripts.Count > 0) toc.Add(("video", videoScripts.Count == 1 ? "🎬 Video-Skript" : "🎬 Video-Skripte"));
 
         if (toc.Count > 1)
         {
@@ -67,9 +74,12 @@ public static class ReportHtmlExporter
         if (studio.Presentation is { Slides.Count: > 0 } presentation) AppendPresentation(sb, presentation);
         if (dataTables.Count > 0) AppendDataTables(sb, dataTables);
         if (audioScripts.Count > 0) AppendAudioScripts(sb, audioScripts);
+        if (videoScripts.Count > 0) AppendVideoScripts(sb, videoScripts, options);
 
         sb.Append("<footer class=\"foot\">Erstellt mit StudyScope</footer>\n");
-        sb.Append("</main>\n<script>\n").Append(Script).Append("\n</script>\n</body>\n</html>\n");
+        sb.Append("</main>\n<script>\n").Append(Script);
+        if (withPlayers) sb.Append('\n').Append(VideoPlayerHtml.Script);
+        sb.Append("\n</script>\n</body>\n</html>\n");
         return sb.ToString();
     }
 
@@ -284,6 +294,45 @@ public static class ReportHtmlExporter
         sb.Append("</section>\n");
     }
 
+    /// <summary>
+    /// Sprechtexte der Videos als einklappbare Blöcke, je Folie ein Absatz. Mit eingebettetem Player (Häkchen beim
+    /// HTML-Export) steht er über dem Skript; in der App gibt es den Knopf „▶ Video abspielen“ (Wechsel in den Reiter „Video“).
+    /// </summary>
+    private static void AppendVideoScripts(StringBuilder sb, IReadOnlyList<VideoDocument> videos, ReportHtmlOptions options)
+    {
+        var anyPlayer = videos.Any(v => options.VideoPlayers.ContainsKey(v.Id));
+        sb.Append($"<section class=\"section studio\" id=\"video\"><h2>🎬 {(videos.Count == 1 ? (anyPlayer ? "Video" : "Video-Skript") : (anyPlayer ? "Videos" : "Video-Skripte"))}</h2>");
+        sb.Append(anyPlayer
+            ? "<div class=\"hint\">Mit ▶ abspielen; der Sprechtext je Folie steht darunter zum Aufklappen.</div>"
+            : "<div class=\"hint\">Sprechtext der Videos je Folie – zum Aufklappen anklicken.</div>");
+        foreach (var video in videos)
+        {
+            if (options.VideoPlayers.TryGetValue(video.Id, out var player))
+            {
+                sb.Append($"<div class=\"video-player-wrap\"><div class=\"video-player-title\">{H(video.Title)}</div>");
+                VideoPlayerHtml.AppendPlayer(sb, player);
+                sb.Append("</div>");
+            }
+
+            sb.Append("<details class=\"audio-script video-script\"><summary>");
+            sb.Append($"<span class=\"audio-title\">{H(video.Title)}</span><span class=\"meta-small\">{H(ReportTextExporter.VideoMeta(video))}</span>");
+            if (options.InApp)
+            {
+                sb.Append($"<span><button type=\"button\" class=\"video-play\" data-video-id=\"{H(video.Id)}\" title=\"Wechselt in den Reiter „Video“ und spielt dieses Video ab\" ");
+                sb.Append("onclick=\"event.preventDefault();event.stopPropagation();window.parent.postMessage({type:'studyscope-play-video',id:this.dataset.videoId},'*');\">▶ Video abspielen</button></span>");
+            }
+            sb.Append("</summary>");
+            sb.Append("<div class=\"audio-body\">");
+            for (var i = 0; i < video.Scenes.Count; i++)
+            {
+                if (!video.Scenes[i].HasNarration) continue;
+                sb.Append($"<p><b class=\"video-scene\">{H(ReportVideoScripts.SceneHeading(video, i))}</b><br>{Text(video.Scenes[i].Narration.Trim())}</p>");
+            }
+            sb.Append("</div></details>");
+        }
+        sb.Append("</section>\n");
+    }
+
     // ---------------- Hilfen ----------------
 
     private static string H(string? text) => WebUtility.HtmlEncode(text ?? string.Empty);
@@ -391,6 +440,11 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .audio-body { padding: 0 16px 8px; border-top: 1px solid var(--line); }
 .audio-body p { margin: 8px 0; }
 .audio-speaker { color: var(--accent); }
+.video-scene { color: var(--accent); }
+.video-play { margin-top: 6px; background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.video-play:hover { background: #0069d9; }
+.video-player-wrap { margin: 12px 0 6px; }
+.video-player-title { font-weight: 600; margin-bottom: 6px; }
 .dtable { margin: 18px 0 26px; }
 .dtable h3 { font-size: 16px; margin: 0 0 2px; }
 .meta-small { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
@@ -412,7 +466,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
   @page { size: A4; margin: 18mm 16mm; }
   body { background: #fff; font-size: 11pt; }
   .report { border: none; margin: 0; padding: 0; max-width: none; }
-  .hint, .quiz-actions, .deck-nav, .link, .toc { display: none !important; }
+  .hint, .quiz-actions, .deck-nav, .link, .toc, .video-play, .video-player-wrap { display: none !important; }
   .section { break-inside: auto; }
   h2 { break-after: avoid; }
   .faq details, .quiz, .terms dl, .takeaway { break-inside: avoid; }

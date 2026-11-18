@@ -29,4 +29,7 @@ public interface IReportService
 
     /// <summary>Eigenständige, interaktive HTML-Datei (funktioniert ohne StudyScope und ohne Internet).</summary>
     string ExportToHtml(Report report, ReportStudioContent studio);
+
+    /// <summary>HTML mit zusätzlichen Angaben (Knopf „▶ Video abspielen“ in der App, eingebettete Video-Player).</summary>
+    string ExportToHtml(Report report, ReportStudioContent studio, ReportHtmlOptions options);
 }

@@ -41,19 +41,5 @@
     /// <summary>Anzahl sichtbarer Stichpunkte (null = alle); weitere werden ausgeblendet und sanft eingeblendet.</summary>
     [Parameter] public int? VisibleBullets { get; set; }
 
-    private string CssClass
-    {
-        get
-        {
-            if (Slide.Kind == SlideKind.Title)
-                return "pp-slide title";
-
-            return PresentationViewModel.GetDensity(Slide) switch
-            {
-                SlideDensity.VeryDense => "pp-slide very-dense",
-                SlideDensity.Dense => "pp-slide dense",
-                _ => "pp-slide"
-            };
-        }
-    }
+    private string CssClass => SlideLayout.CssClass(Slide);
 }

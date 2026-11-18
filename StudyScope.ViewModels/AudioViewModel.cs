@@ -22,7 +22,7 @@ public enum AudioScriptExportFormat
 /// Chat-KI) samt Verfügbarkeitsprüfung, und das Skript segmentweise vorlesen (Abspielen/Pause, Vor/Zurück, Tempo).
 /// Knöpfe werden vorab deaktiviert und begründet – keine Fehlermeldung erst nach dem Klick.
 /// </summary>
-public class AudioViewModel : INotifyPropertyChanged
+public partial class AudioViewModel : INotifyPropertyChanged
 {
     public const string LocalAiHint = SpeechProviderState.LocalAiHint;
     public const string GeminiPrivacyHint = SpeechProviderState.GeminiPrivacyHint;
@@ -44,8 +44,10 @@ public class AudioViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public AudioViewModel(IAudioScriptService audioService, IDocumentService documentService, IStorageService storage,
-        IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null, PlaybackCoordinator? coordinator = null)
+        IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null, PlaybackCoordinator? coordinator = null,
+        IAudioTranscoder? transcoder = null)
     {
+        UseTranscoder(transcoder);
         _audioService = audioService;
         _documentService = documentService;
         _speech = new SpeechProviderState(storage, speechServices);
@@ -240,6 +242,7 @@ public class AudioViewModel : INotifyPropertyChanged
     {
         await _speech.RefreshAvailabilityAsync();
         OnSpeechChanged();
+        await RefreshMp3AvailabilityAsync();
     }
 
     public async Task SetProviderAsync(SpeechProviderType provider)
