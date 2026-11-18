@@ -367,9 +367,9 @@ public class JsonStorageService : IStorageService
     {
         var node = JsonSerializer.SerializeToNode(EncryptedCopy(config), JsonOptions)!.AsObject();
 
-        // Sprachausgabe und Export-Einstellungen stehen in derselben Datei und bleiben erhalten
+        // Sprachausgabe, Export- und Oberflächen-Einstellungen stehen in derselben Datei und bleiben erhalten
         var existing = await ReadConfigNodeAsync();
-        foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty })
+        foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty, UiSettingsProperty })
         {
             if (existing?[property] is JsonNode kept)
                 node[property] = kept.DeepClone();
@@ -405,6 +405,35 @@ public class JsonStorageService : IStorageService
         Directory.CreateDirectory(_baseDirectory);
         var node = await ReadConfigNodeAsync() ?? new JsonObject();
         node[ExportSettingsProperty] = JsonSerializer.SerializeToNode(settings.Clone(), JsonOptions);
+        await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    // ---------------- Oberfläche ----------------
+
+    private const string UiSettingsProperty = "UiSettings";
+
+    public async Task<UiSettings> LoadUiSettingsAsync()
+    {
+        try
+        {
+            if ((await ReadConfigNodeAsync())?[UiSettingsProperty] is JsonObject node &&
+                node.Deserialize<UiSettings>(JsonOptions) is { } settings)
+            {
+                return settings;
+            }
+        }
+        catch
+        {
+            // defekter Eintrag → Standard
+        }
+        return new UiSettings();
+    }
+
+    public async Task SaveUiSettingsAsync(UiSettings settings)
+    {
+        Directory.CreateDirectory(_baseDirectory);
+        var node = await ReadConfigNodeAsync() ?? new JsonObject();
+        node[UiSettingsProperty] = JsonSerializer.SerializeToNode(settings.Clone(), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
     }
 
