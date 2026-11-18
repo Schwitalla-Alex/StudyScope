@@ -12,7 +12,7 @@ public class ChatViewModelTests
     private Mock<ILlmService> _llmServiceMock;
     private Mock<IStorageService> _storageServiceMock;
 
-    private Mock<IDocumentService>? _pdfServiceMock;
+    private Mock<IDocumentService> _pdfServiceMock;
     private DocumentListViewModel _documentListViewModel;
 
     [SetUp]

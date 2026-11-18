@@ -132,8 +132,8 @@ public class JsonStorageServiceTests
         var loadedB = await _storageService.LoadAiConfigForProfileAsync(profileB);
 
         // Assert
-        Assert.That(loadedA.SelectedModelName, Is.EqualTo("gpt-4o-mini"));
-        Assert.That(loadedB.SelectedModelName, Is.EqualTo("llama3.2:latest"));
+        Assert.That(loadedA?.SelectedModelName, Is.EqualTo("gpt-4o-mini"));
+        Assert.That(loadedB?.SelectedModelName, Is.EqualTo("llama3.2:latest"));
     }
 
     [Test]
