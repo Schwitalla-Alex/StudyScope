@@ -107,8 +107,9 @@ jobs:
 
   packages:
     name: Installationspaket
-    # Nicht bei jedem Pull Request – nur nach dem Merge auf master und auf Knopfdruck
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Nicht bei jedem Pull Request – nur nach dem Merge auf master, auf Knopfdruck, beim Release (Tag) und in
+    # Pull Requests von release/*-Branches (damit die Pakete vor dem Tag einmal echt gebaut werden)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/')
     needs: test
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30

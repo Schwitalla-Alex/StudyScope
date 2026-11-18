@@ -30,6 +30,8 @@ $root = Split-Path -Parent $PSScriptRoot
 $artifacts = if ($OutputDirectory) { [System.IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $root "artifacts" }
 New-Item -ItemType Directory -Force $artifacts | Out-Null
 
+# Argumente der Form -p:Name=Wert immer in Anführungszeichen übergeben: PowerShell 7 zerlegt ein
+# ungequotetes -p:DebugType=none beim Weiterreichen über @args in "-p:" und "DebugType=none" (MSB1008).
 function Invoke-Dotnet {
     & dotnet @args
     if ($LASTEXITCODE -ne 0) { throw "dotnet $($args -join ' ') ist fehlgeschlagen (Exitcode $LASTEXITCODE)." }
@@ -51,15 +53,15 @@ foreach ($rid in $runtimes) {
 
     Write-Host "[1/4] StudyScope.UI veröffentlichen"
     Invoke-Dotnet publish (Join-Path $root "StudyScope.UI\StudyScope.UI.csproj") -c $Configuration -r $rid --self-contained `
-        -p:DebugType=none -o $appDir --nologo -v quiet
+        "-p:DebugType=none" -o $appDir --nologo -v quiet
 
     Write-Host "[2/4] Installationspaket packen"
-    Invoke-Dotnet msbuild (Join-Path $PSScriptRoot "Zip.proj") "-p:SourceDirectory=$appDir" "-p:DestinationFile=$payload" -nologo -v:quiet
+    Invoke-Dotnet msbuild (Join-Path $PSScriptRoot "Zip.proj") "-p:SourceDirectory=$appDir" "-p:DestinationFile=$payload" -nologo "-v:quiet"
 
     Write-Host "[3/4] Setup als Single-File veröffentlichen"
     Invoke-Dotnet publish (Join-Path $root "StudyScope.Setup\StudyScope.Setup.csproj") -c $Configuration -r $rid --self-contained `
-        -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true `
-        -p:DebugType=none "-p:PayloadZip=$payload" -o $setupDir --nologo -v quiet
+        "-p:PublishSingleFile=true" "-p:IncludeNativeLibrariesForSelfExtract=true" "-p:EnableCompressionInSingleFile=true" `
+        "-p:DebugType=none" "-p:PayloadZip=$payload" -o $setupDir --nologo -v quiet
 
     Write-Host "[4/4] Auslieferung erstellen"
     if ($rid -like "win-*") {
