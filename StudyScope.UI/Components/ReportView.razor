@@ -186,9 +186,30 @@
                             <button type="button" class="rp-btn" style="background: #6c757d;" title="Drucken oder als PDF speichern (alles aufgeklappt, mit Lösungen)" @onclick="PrintAsync">🖨️ PDF</button>
                             <button type="button" class="rp-btn" style="background: #17a2b8;" title="Als Markdown-Datei speichern" @onclick="() => ExportAsync(ReportExportFormat.Markdown)">📄 Markdown</button>
                             <button type="button" class="rp-btn" style="background: #495057;" title="Als reine Textdatei speichern" @onclick="() => ExportAsync(ReportExportFormat.Text)">🗒️ Text</button>
-                            <button type="button" class="rp-btn" style="background: #7048e8;" title="Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope" @onclick="() => ExportAsync(ReportExportFormat.Html)">🌐 HTML</button>
+                            <button type="button" class="rp-btn" style="background: #7048e8;" disabled="@RepVm.IsBusy" title="Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope" @onclick="() => ExportAsync(ReportExportFormat.Html)">🌐 HTML</button>
                         </div>
                     </div>
+                    @if (RepVm.CanEmbedVideoPlayers)
+                    {
+                        <div style="margin-top: 8px; font-size: 12px; color: #495057; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                            <label style="display: flex; gap: 6px; align-items: center; cursor: pointer;"
+                                   title="Nur für „🌐 HTML“: je Video ein Player mit Folien, Stichpunkten und Ton. Ton nur bei aktueller Gemini-Audiodatei, sonst stumm im festen Takt.">
+                                <input type="checkbox" checked="@RepVm.EmbedVideoPlayers" @onchange="e => RepVm.EmbedVideoPlayers = (bool)(e.Value ?? false)" />
+                                🎬 Videos im HTML-Bericht einbetten (Player mit Folien und Ton)
+                            </label>
+                            @if (RepVm.EmbedVideoPlayers && RepVm.IsMp3Available)
+                            {
+                                <label style="display: flex; gap: 6px; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" checked="@RepVm.HtmlUseMp3" @onchange="e => RepVm.HtmlUseMp3 = (bool)(e.Value ?? false)" />
+                                    Ton als MP3 (kleiner)
+                                </label>
+                            }
+                            @if (RepVm.VideoPlayersEstimateText is { } estimate)
+                            {
+                                <span class="rp-meta">📦 @estimate</span>
+                            }
+                        </div>
+                    }
                 </div>
                 <iframe id="rp-frame" class="rp-frame" title="Bericht" srcdoc="@RepVm.CurrentHtml"></iframe>
             }
@@ -271,6 +292,22 @@
             <span class="rp-meta">(@info)</span>
         }
     </label>;
+
+    /// <summary>„▶ Video abspielen“ im Video-Abschnitt: App.razor wechselt in den Reiter „Video“ und startet das Video.</summary>
+    [Parameter] public EventCallback<string> OnPlayVideo { get; set; }
+
+    private DotNetObjectReference<ReportView>? selfRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selfRef = DotNetObjectReference.Create(this);
+        try { await JSRuntime.InvokeVoidAsync("studyScopeReport.listen", selfRef); }
+        catch (JSException) { /* Skript fehlt – Knopf ohne Wirkung */ }
+    }
+
+    [JSInvokable]
+    public Task PlayVideoFromReport(string videoId) => InvokeAsync(() => OnPlayVideo.InvokeAsync(videoId));
 
     protected override async Task OnInitializedAsync()
     {
@@ -372,6 +409,8 @@
 
     public void Dispose()
     {
+        _ = JSRuntime.InvokeVoidAsync("studyScopeReport.stop").AsTask().ContinueWith(_ => { }, TaskScheduler.Default);
+        selfRef?.Dispose();
         RepVm.PropertyChanged -= OnVmChanged;
         DocVm.PropertyChanged -= OnDocVmChanged;
         DocVm.Documents.CollectionChanged -= OnDocumentsChanged;

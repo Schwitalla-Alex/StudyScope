@@ -1,11 +1,12 @@
 using StudyScope.Core.Models;
 
-namespace StudyScope.ViewModels.Video;
+namespace StudyScope.Core.Common;
 
 /// <summary>
 /// Zeitachse eines Videos ohne Oberfläche: Startzeit und Dauer je Szene, Szene zu einer Position, Fortschritt und
 /// Einblendzeitpunkte der Stichpunkte. Bei der Systemstimme werden die Dauern geschätzt (Wörter ÷ Sprechtempo) und nach
 /// jeder gesprochenen Szene durch die gemessene Dauer ersetzt; bei einer Audiodatei gelten die exakten Zeitmarken.
+/// Liegt in Core, weil Wiedergabe (ViewModel), HTML-Player und MP4-Export dieselbe Zeitachse nutzen.
 /// </summary>
 public sealed class VideoTimeline
 {

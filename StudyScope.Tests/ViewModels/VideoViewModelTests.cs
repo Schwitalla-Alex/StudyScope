@@ -424,6 +424,127 @@ public class VideoViewModelTests
         Assert.That(_vm.StatusDetails, Is.EqualTo("RESOURCE_EXHAUSTED"));
     }
 
+    // ---------- HTML-Export ----------
+
+    private VideoViewModel CreateVmWithTranscoder(IAudioTranscoder transcoder) =>
+        new(_videoService, _presentationService, new FakeDocuments(), _storage,
+            new ITextToSpeechService[] { _live, _gemini }, _player, _coordinator, _time,
+            (span, _) => { _time.Advance(span.TotalSeconds); return Task.CompletedTask; }, transcoder);
+
+    [Test]
+    public async Task HtmlExport_WithoutGeminiAudio_HintAndSilentPlayer_NoTempFileLeft()
+    {
+        await CreateVideoAsync();
+        var path = Path.Combine(_tempDir, "Zellen erklärt – Video.html");
+
+        Assert.That(_vm.CanExportHtml, Is.True);
+        Assert.That(_vm.HtmlExportHasAudio, Is.False);
+        Assert.That(_vm.HtmlExportNoAudioReason, Does.Contain("festen Takt"));
+        Assert.That(_vm.HtmlExportEstimateText, Does.EndWith("ohne Ton"));
+        Assert.That(_vm.IsMp3Available, Is.False, "ohne Transcoder kein MP3");
+
+        Assert.That(await _vm.ExportHtmlAsync(path), Is.True, _vm.StatusMessage);
+
+        var html = await File.ReadAllTextAsync(path);
+        Assert.That(html, Does.Contain("class=\"ssv-player\"").And.Not.Contain("class=\"ssv-audio\""));
+        Assert.That(File.Exists(path + ".tmp"), Is.False);
+        Assert.That(_vm.StatusMessage, Does.Contain("ohne Ton"));
+        Assert.That(_vm.IsBusy, Is.False);
+    }
+
+    [Test]
+    public async Task HtmlExport_WithGeminiAudio_EmbedsWav_OrMp3WhenAvailable()
+    {
+        await CreateVideoAsync(gemini: true);
+        await _vm.GenerateAudioAsync();
+        Assert.That(_vm.HtmlExportHasAudio, Is.True);
+        Assert.That(_vm.HtmlExportEstimateText, Does.Contain("mit Ton (WAV)"));
+
+        var wavPath = Path.Combine(_tempDir, "wav.html");
+        await _vm.ExportHtmlAsync(wavPath);
+        Assert.That(await File.ReadAllTextAsync(wavPath), Does.Contain("data-mime=\"audio/wav\">UklGR"));
+
+        var transcoder = new Services.VideoHtmlExporterTests.FakeTranscoder();
+        var vm = CreateVmWithTranscoder(transcoder);
+        await vm.LoadForProfileAsync(Profile);
+        Assert.That(vm.IsMp3Available, Is.True);
+        Assert.That(vm.HtmlExportEstimateText, Does.Contain("mit Ton (MP3)"));
+        var mp3Path = Path.Combine(_tempDir, "mp3.html");
+        await vm.ExportHtmlAsync(mp3Path);
+        Assert.That(await File.ReadAllTextAsync(mp3Path), Does.Contain("data-mime=\"audio/mpeg\">"));
+        Assert.That(transcoder.Converted, Has.Count.EqualTo(1));
+        Assert.That(new FileInfo(mp3Path).Length, Is.LessThan(new FileInfo(wavPath).Length));
+
+        vm.HtmlUseMp3 = false;
+        Assert.That(vm.HtmlExportEstimateText, Does.Contain("mit Ton (WAV)"), "MP3 abwählbar");
+    }
+
+    [Test]
+    public async Task HtmlExport_SceneAudioReady_CombinedFileMissing_AssemblesFirst()
+    {
+        var video = await CreateVideoAsync(gemini: true);
+        await _vm.GenerateAudioAsync();
+        File.Delete(_vm.SelectedAudioFilePath!);
+        Assert.That(_vm.NeedsOnlyAssembly, Is.True);
+        Assert.That(_vm.HtmlExportHasAudio, Is.True);
+        Assert.That(_vm.HtmlExportEstimateText, Does.Contain("kostenlos zusammengesetzt"));
+        var calls = _gemini.Texts.Count;
+
+        await _vm.ExportHtmlAsync(Path.Combine(_tempDir, "x.html"));
+
+        Assert.That(_gemini.Texts, Has.Count.EqualTo(calls), "keine neue Gemini-Anfrage");
+        Assert.That(File.Exists(_vm.SelectedAudioFilePath), Is.True);
+        Assert.That(video.IsAudioOutdated, Is.False);
+        Assert.That(await File.ReadAllTextAsync(Path.Combine(_tempDir, "x.html")), Does.Contain("class=\"ssv-audio\""));
+    }
+
+    // ---------- Aus dem Bericht abspielen ----------
+
+    [Test]
+    public async Task PendingPlayback_SelectsVideo_PlaysFromStart()
+    {
+        var first = await CreateVideoAsync();
+        _vm.OpenForm();
+        await _vm.GenerateAsync(Array.Empty<DocumentItem>());
+        var second = _vm.SelectedVideo!;
+        Assert.That(second.Id, Is.Not.EqualTo(first.Id));
+        _vm.SelectVideo(first.Id);
+
+        _vm.RequestPlayback(second.Id);
+        Assert.That(_vm.PendingPlaybackId, Is.EqualTo(second.Id));
+        await _vm.StartPendingPlaybackAsync();
+
+        Assert.That(_vm.PendingPlaybackId, Is.Null);
+        Assert.That(_vm.SelectedVideo!.Id, Is.EqualTo(second.Id));
+        Assert.That(_vm.IsFormOpen, Is.False);
+        Assert.That(_live.Spoken.First().Text, Is.EqualTo(second.Scenes[0].Narration));
+    }
+
+    [Test]
+    public async Task PendingPlayback_UnknownVideo_Warns_NothingPlays()
+    {
+        await CreateVideoAsync();
+        _vm.RequestPlayback("gibt-es-nicht");
+
+        await _vm.StartPendingPlaybackAsync();
+
+        Assert.That(_vm.IsWarning, Is.True);
+        Assert.That(_vm.StatusMessage, Does.Contain("gibt es nicht mehr"));
+        Assert.That(_live.Spoken, Is.Empty);
+    }
+
+    [Test]
+    public async Task PendingPlayback_GeminiWithoutAudio_ShowsReason()
+    {
+        var video = await CreateVideoAsync(gemini: true);
+        _vm.RequestPlayback(video.Id);
+
+        await _vm.StartPendingPlaybackAsync(maxWaitSteps: 2);
+
+        Assert.That(_vm.IsPlaying, Is.False);
+        Assert.That(_vm.StatusMessage, Does.Contain("erzeugen Sie zuerst das Audio"));
+    }
+
     [Test]
     public async Task SystemVoice_GenerateAudioDisabled_WithHint()
     {

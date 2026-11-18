@@ -6,7 +6,6 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Audio;
 using StudyScope.ViewModels.Mindmap;
-using StudyScope.ViewModels.Video;
 
 namespace StudyScope.ViewModels;
 
@@ -53,7 +52,7 @@ public enum VideoScriptExportFormat
 /// geänderte Szenen werden neu erzeugt) und Wiedergabe wie ein Video: Zeitsteuerung, Sprünge, Stichpunkte nacheinander.
 /// Die Zeitsteuerung läuft ohne Oberfläche (über <see cref="TimeProvider"/> und <see cref="Tick"/>), damit sie testbar ist.
 /// </summary>
-public class VideoViewModel : INotifyPropertyChanged
+public partial class VideoViewModel : INotifyPropertyChanged
 {
     public const int DefaultSlideCount = 6;
 
@@ -81,8 +80,10 @@ public class VideoViewModel : INotifyPropertyChanged
     /// <param name="delay">Warten bei Szenen ohne Sprechtext (Tests: sofort).</param>
     public VideoViewModel(IVideoScriptService videoService, IPresentationService presentationService, IDocumentService documentService,
         IStorageService storage, IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null,
-        PlaybackCoordinator? coordinator = null, TimeProvider? timeProvider = null, Func<TimeSpan, CancellationToken, Task>? delay = null)
+        PlaybackCoordinator? coordinator = null, TimeProvider? timeProvider = null, Func<TimeSpan, CancellationToken, Task>? delay = null,
+        IAudioTranscoder? transcoder = null)
     {
+        _transcoder = transcoder;
         _videoService = videoService;
         _presentationService = presentationService;
         _documentService = documentService;
@@ -300,6 +301,7 @@ public class VideoViewModel : INotifyPropertyChanged
             SlideSource = DefaultSlideSource(documents);
         OnSpeechChanged();
         await RefreshAvailabilityAsync();
+        await RefreshMp3AvailabilityAsync();
     }
 
     /// <summary>

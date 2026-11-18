@@ -52,4 +52,22 @@ public interface IVideoScriptService
     /// <summary>Sprechtexte als Text bzw. Markdown (je Folie).</summary>
     string ExportToText(VideoDocument video);
     string ExportToMarkdown(VideoDocument video);
+
+    // ---------------- HTML-Player (Video-Export und Bericht) ----------------
+
+    /// <summary>Die zusammengesetzte Audiodatei ist vorhanden und aktuell (dann wird sie als Ton eingebettet).</summary>
+    bool HasCurrentAudio(string profileName, VideoDocument video);
+
+    /// <summary>Hinweis, warum ein Player ohne Ton läuft (null = mit Ton).</summary>
+    string? NoAudioReason(string profileName, VideoDocument video);
+
+    /// <summary>Ungefähre Größe eines HTML-Exports mit diesen Videos (WAV bzw. MP3 als base64).</summary>
+    VideoHtmlSizeEstimate EstimateHtml(string profileName, IReadOnlyList<VideoDocument> videos, bool mp3);
+
+    /// <summary>Player-Daten: Folien, Zeitachse und – bei aktueller Audiodatei – der Ton (MP3 über <paramref name="mp3"/>, sonst WAV).</summary>
+    Task<VideoPlayerData> BuildPlayerDataAsync(string profileName, VideoDocument video, IAudioTranscoder? mp3 = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>Eigenständige HTML-Seite mit Player und Sprechtexten.</summary>
+    string ExportToHtml(VideoPlayerData data);
 }

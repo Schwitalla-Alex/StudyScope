@@ -170,6 +170,21 @@ public sealed record ReportDataTable(DataTableDocument Table, IReadOnlyList<Data
     public bool IsTruncated => Rows.Count < TotalRows;
 }
 
+/// <summary>Zusätzliche Angaben für die HTML-Fassung eines Berichts.</summary>
+public sealed class ReportHtmlOptions
+{
+    /// <summary>
+    /// Ansicht in der App: Im Video-Abschnitt erscheint „▶ Video abspielen“; der Knopf meldet sich per
+    /// <c>postMessage({type: "studyscope-play-video", id})</c> beim Fenster der App (Wechsel in den Reiter „Video“).
+    /// </summary>
+    public bool InApp { get; init; }
+
+    /// <summary>Eingebettete Video-Player je Video-Kennung (nur beim HTML-Export mit Häkchen „Videos einbetten“).</summary>
+    public IReadOnlyDictionary<string, VideoPlayerData> VideoPlayers { get; init; } = new Dictionary<string, VideoPlayerData>();
+
+    public static ReportHtmlOptions Default { get; } = new();
+}
+
 /// <summary>Hilfen für eingebettete Video-Skripte.</summary>
 public static class ReportVideoScripts
 {

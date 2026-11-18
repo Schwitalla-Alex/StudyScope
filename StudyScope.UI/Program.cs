@@ -81,7 +81,8 @@ class Program
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>(),
             sp.GetRequiredService<IAudioFilePlayer>(),
-            sp.GetRequiredService<PlaybackCoordinator>()));
+            sp.GetRequiredService<PlaybackCoordinator>(),
+            transcoder: sp.GetService<IAudioTranscoder>()));
         appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>()));
@@ -94,7 +95,8 @@ class Program
             sp.GetRequiredService<IPresentationService>(),
             sp.GetRequiredService<IDataTableService>(),
             sp.GetRequiredService<IAudioScriptService>(),
-            sp.GetRequiredService<IVideoScriptService>()));
+            sp.GetRequiredService<IVideoScriptService>(),
+            sp.GetService<IAudioTranscoder>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

@@ -11,6 +11,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Folien-CSS der App für den HTML-Video-Player (VideoPlayerHtml) – eine Quelle, gleiches Aussehen -->
+    <EmbeddedResource Include="..\StudyScope.UI\wwwroot\css\studyscope-slides.css" Link="Resources\studyscope-slides.css" LogicalName="StudyScope.Infrastructure.studyscope-slides.css" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
   </ItemGroup>
 

@@ -356,6 +356,41 @@ public class ReportViewModelTests
     }
 
     [Test]
+    public async Task VideoPlayers_InAppPlayButton_HtmlExportOnlyWithCheckbox_EstimateShown()
+    {
+        var video = Services.ReportVideoEmbedTests.Video();
+        video.SourceDocuments = new List<string> { "skript.txt" };
+        var library = new VideoLibrary();
+        library.Items.Add(video);
+        await new VideoScriptService(_llm, _tempDir).SaveLibraryAsync("Testprofil", library);
+        await _viewModel.LoadForProfileAsync("Testprofil");
+        _llm.Response = null;
+        await _viewModel.GenerateAsync(Documents());
+
+        Assert.That(_viewModel.CurrentHtml, Does.Contain($"data-video-id=\"{video.Id}\""), "Knopf „▶ Video abspielen“ in der App");
+        Assert.That(_viewModel.CurrentHtml, Does.Not.Contain("class=\"ssv-player\""), "App-Ansicht ohne eingebettete Player");
+        Assert.That(_viewModel.CanEmbedVideoPlayers, Is.True);
+        Assert.That(_viewModel.EmbedVideoPlayers, Is.False, "standardmäßig aus");
+        Assert.That(_viewModel.VideoPlayersEstimateText, Is.Null);
+
+        var plain = Path.Combine(_tempDir, "ohne.html");
+        await _viewModel.ExportAsync(ReportExportFormat.Html, plain);
+        var plainHtml = await File.ReadAllTextAsync(plain);
+        Assert.That(plainHtml, Does.Not.Contain("class=\"ssv-player\"").And.Not.Contain("data-video-id"));
+
+        _viewModel.EmbedVideoPlayers = true;
+        Assert.That(_viewModel.VideoPlayersEstimateText, Does.Contain("1 Video ohne Ton (fester Takt)").And.Contain("MB"));
+        var withPlayer = Path.Combine(_tempDir, "mit.html");
+        Assert.That(await _viewModel.ExportAsync(ReportExportFormat.Html, withPlayer), Is.True, _viewModel.StatusMessage);
+        var html = await File.ReadAllTextAsync(withPlayer);
+        Assert.That(html, Does.Contain("class=\"ssv-player\"").And.Contain("<div class=\"ssv-hint\">").And.Not.Contain("data-video-id"));
+        Assert.That(File.Exists(withPlayer + ".tmp"), Is.False);
+
+        await _viewModel.ToggleEmbedAsync("video");
+        Assert.That(_viewModel.CanEmbedVideoPlayers, Is.False, "ohne Video-Skripte kein Player");
+    }
+
+    [Test]
     public async Task VideoScripts_FormCheckboxCanSwitchThemOff()
     {
         var library = new VideoLibrary();

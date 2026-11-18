@@ -94,7 +94,7 @@
                 }
                 else
                 {
-                    <ReportView />
+                    <ReportView OnPlayVideo="PlayVideoFromReport" />
                 }
             </div>
         </div>
@@ -164,6 +164,17 @@
         ChatVm.CurrentInputPrompt = question;
         StateHasChanged();
         await ChatVm.SendPromptAsync();
+    }
+
+    /// <summary>
+    /// „▶ Video abspielen“ im Bericht: Video vormerken und in den Reiter „Video“ wechseln; der Reiter startet die
+    /// Wiedergabe nach dem ersten Zeichnen (erst dann sind Player und Systemstimme verbunden).
+    /// </summary>
+    private void PlayVideoFromReport(string videoId)
+    {
+        VdVm.RequestPlayback(videoId);
+        activeTab = "video";
+        StateHasChanged();
     }
 
     private void OpenAboutModal() => showAbout = true;

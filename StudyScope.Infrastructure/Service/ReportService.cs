@@ -389,4 +389,7 @@ public class ReportService : IReportService
 
     public string ExportToHtml(Report report, ReportStudioContent studio) =>
         ReportHtmlExporter.Export(report, studio.Filter(report.Embeds));
+
+    public string ExportToHtml(Report report, ReportStudioContent studio, ReportHtmlOptions options) =>
+        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds), options);
 }
