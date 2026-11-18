@@ -8,6 +8,8 @@ on:
   push:
     branches: [master]
   workflow_dispatch:
+  # Aufruf aus release.yml: dort ist das Ereignis ein Push (des Tags), daher entstehen auch die Pakete
+  workflow_call:
 
 # Ein neuer Push in denselben Pull Request bricht den alten Lauf ab; Läufe auf master laufen immer zu Ende.
 concurrency:
@@ -38,6 +40,9 @@ jobs:
     env:
       # ffmpeg- und SkiaSharp-Tests dürfen hier nicht still übersprungen werden (siehe IntegrationRequirement)
       STUDYSCOPE_REQUIRE_INTEGRATION: "1"
+      # ffmpeg für Windows (Gyan-Build aus GitHub-Releases); beim Anheben Version und SHA-256 zusammen ändern
+      FFMPEG_WINDOWS_VERSION: "9.0.2"
+      FFMPEG_WINDOWS_SHA256: "4705843ccaaf54257c16ad90f3e952ece33c17df964ecf7bfdbb0f49c7171077"
     steps:
       - name: Quellcode holen
         uses: actions/checkout@v7
@@ -64,15 +69,46 @@ jobs:
           ffmpeg -hide_banner -version | head -n 1
           fc-list | wc -l
 
-      # Windows: ffmpeg über Chocolatey (auf den GitHub-Runnern vorinstalliert, Paket mit Gyan-Build inkl. ffprobe)
+      # Windows: fest versionierter Gyan-Build (essentials: libx264, AAC, libmp3lame, ffprobe) aus GitHub-Releases,
+      # mit SHA-256-Prüfung und Cache. Chocolatey nur als Rückfall – dessen Server lieferte schon 504 (Gateway Timeout).
+      - name: ffmpeg-Cache (Windows)
+        if: runner.os == 'Windows'
+        id: ffmpeg-cache
+        uses: actions/cache@v6
+        with:
+          path: C:\ffmpeg-ci
+          key: ffmpeg-windows-${{ env.FFMPEG_WINDOWS_VERSION }}-essentials
+
       - name: ffmpeg installieren (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          choco install ffmpeg -y --no-progress
-          if ($LASTEXITCODE -ne 0) { throw "ffmpeg konnte nicht installiert werden." }
+          $target = "C:\ffmpeg-ci"
+          $exe = Join-Path $target "bin\ffmpeg.exe"
+          if (-not (Test-Path $exe)) {
+            $name = "ffmpeg-$env:FFMPEG_WINDOWS_VERSION-essentials_build"
+            $url = "https://github.com/GyanD/codexffmpeg/releases/download/$env:FFMPEG_WINDOWS_VERSION/$name.7z"
+            $archive = Join-Path $env:RUNNER_TEMP "$name.7z"
+            try {
+              Invoke-WebRequest $url -OutFile $archive -MaximumRetryCount 3 -RetryIntervalSec 15
+              $hash = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+              if ($hash -ne $env:FFMPEG_WINDOWS_SHA256) { throw "Prüfsumme von $name.7z stimmt nicht ($hash)." }
+              7z x $archive "-o$env:RUNNER_TEMP" -y | Out-Null
+              if ($LASTEXITCODE -ne 0) { throw "Entpacken von $name.7z fehlgeschlagen." }
+              New-Item -ItemType Directory -Force $target | Out-Null
+              Move-Item (Join-Path $env:RUNNER_TEMP "$name\bin") (Join-Path $target "bin")
+            }
+            catch {
+              Write-Output "::warning::ffmpeg aus GitHub-Releases nicht verfügbar ($_) – Rückfall auf Chocolatey."
+              choco install ffmpeg -y --no-progress
+              if ($LASTEXITCODE -ne 0) { throw "ffmpeg konnte weder aus GitHub-Releases noch über Chocolatey installiert werden." }
+            }
+          }
+          if (Test-Path $exe) { Add-Content -LiteralPath $env:GITHUB_PATH -Value (Split-Path $exe) ; $env:PATH = "$(Split-Path $exe);$env:PATH" }
           ffmpeg -hide_banner -version | Select-Object -First 1
           Get-Command ffmpeg, ffprobe | Format-Table Name, Source
+          $encoders = (ffmpeg -hide_banner -encoders) -join "`n"
+          foreach ($enc in "libx264", "aac", "libmp3lame") { if ($encoders -notmatch "\b$enc\b") { throw "ffmpeg ohne Encoder $enc." } }
 
       - name: Pakete wiederherstellen
         run: dotnet restore StudyScope.slnx
@@ -105,8 +141,9 @@ jobs:
 
   packages:
     name: Installationspaket
-    # Nicht bei jedem Pull Request – nur nach dem Merge auf master und auf Knopfdruck
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    # Nicht bei jedem Pull Request – nur nach dem Merge auf master, auf Knopfdruck, beim Release (Tag) und in
+    # Pull Requests von release/*-Branches (damit die Pakete vor dem Tag einmal echt gebaut werden)
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/')
     needs: test
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30

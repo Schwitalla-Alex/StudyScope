@@ -34,7 +34,7 @@
 
 ## 🚀 Download & Installation
 
-Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich. Die Installationsprogramme finden Sie im Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**.
+Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools erforderlich. Die Installationsprogramme finden Sie im Bereich **[Releases](https://github.com/Schwitalla-Alex/StudyScope/releases)**, was sich in den einzelnen Versionen geändert hat, im **[CHANGELOG](CHANGELOG.md)**.
 
 ### Windows
 1. Laden Sie `StudyScope-<Version>-Setup.exe` herunter und starten Sie die Datei.
@@ -43,7 +43,7 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 
 Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinstalliert). Fehlt sie, weist das Setup darauf hin.
 
-> **Hinweis zur SmartScreen-Warnung:** Die `setup.exe` ist (noch) nicht digital signiert. Windows zeigt deshalb beim ersten Start „Der Computer wurde durch Windows geschützt“ an. Klicken Sie auf **Weitere Informationen** und dann auf **Trotzdem ausführen**. Wer sichergehen will, vergleicht vorher die SHA256-Prüfsumme aus den Release-Notes, z. B. in PowerShell mit `Get-FileHash .\StudyScope-<Version>-Setup.exe`.
+> **Hinweis zur SmartScreen-Warnung:** Die `setup.exe` ist (noch) nicht digital signiert. Windows zeigt deshalb beim ersten Start „Der Computer wurde durch Windows geschützt“ an. Klicken Sie auf **Weitere Informationen** und dann auf **Trotzdem ausführen**. Wer sichergehen will, prüft vorher die SHA-256-Prüfsumme (siehe [Download prüfen](#download-prüfen-sha-256)).
 
 ### Linux
 1. `StudyScope-<Version>-linux-x64.tar.gz` herunterladen.
@@ -56,6 +56,21 @@ Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinsta
 3. Fehlen Systembibliotheken, nennt das Skript den passenden Befehl (z. B. `sudo apt install …`). Diesen ausführen und danach erneut `bash install.sh` starten.
 
 `install.sh` prüft die benötigten Systembibliotheken (WebKitGTK 4.1, GTK 3, libnotify, ICU), nennt bei Bedarf den passenden Installationsbefehl Ihrer Distribution und startet dann den Setup-Assistenten. Installiert wird nach `~/.local/share/StudyScope`, mit Eintrag im Anwendungsmenü. Deinstallation über den Menüeintrag (Rechtsklick ➔ „StudyScope deinstallieren“) oder mit `bash install.sh --uninstall`.
+
+### Download prüfen (SHA-256)
+Zu jedem Release stehen in der Beschreibung die SHA-256-Prüfsummen der Dateien, zusätzlich liegt die Datei `SHA256SUMS.txt` bei. Stimmt die Prüfsumme Ihrer heruntergeladenen Datei mit der angegebenen überein, ist die Datei vollständig und unverändert.
+
+- **Windows (PowerShell)** im Download-Ordner:
+  ```powershell
+  Get-FileHash .\StudyScope-<Version>-Setup.exe -Algorithm SHA256
+  ```
+  Den angezeigten Wert (`Hash`) mit der Tabelle im Release vergleichen (Groß-/Kleinschreibung spielt keine Rolle).
+- **Linux** im Download-Ordner:
+  ```bash
+  sha256sum StudyScope-<Version>-linux-x64.tar.gz
+  # oder automatisch gegen die mitgelieferte Liste:
+  sha256sum -c --ignore-missing SHA256SUMS.txt
+  ```
 
 Ihre Profile und Einstellungen (Windows: `%APPDATA%\StudyScope`, Linux: `~/.config/StudyScope`) bleiben bei Updates erhalten und werden bei der Deinstallation nur auf ausdrücklichen Wunsch gelöscht.
 
@@ -119,3 +134,6 @@ Mit `-OutputDirectory <ordner>` (PowerShell) bzw. der Umgebungsvariable `STUDYSC
 
 ### Automatische Prüfungen (CI)
 Jeder Pull Request nach `master` und jeder Push auf `master` wird mit GitHub Actions unter Windows und Linux gebaut und getestet (inklusive der Tests mit echtem ffmpeg und SkiaSharp). Nach dem Merge auf `master` entstehen zusätzlich die Installationspakete als Download (Reiter **Actions** › Lauf › *Artifacts*, 7 Tage aufbewahrt).
+
+### Release erstellen
+Version in `Directory.Build.props` anheben und den Abschnitt `## [<Version>]` in `CHANGELOG.md` ergänzen (per Pull Request). Nach dem Merge auf `master` einen Tag `v<Version>` setzen und pushen – der Workflow `release.yml` prüft Tag, Version und CHANGELOG, baut und testet, erzeugt setup.exe, linux-x64.tar.gz und Prüfsummen und legt ein GitHub-Release als **Entwurf** an, das von Hand veröffentlicht wird.
