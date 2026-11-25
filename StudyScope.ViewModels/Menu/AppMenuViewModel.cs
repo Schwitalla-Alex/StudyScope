@@ -23,8 +23,8 @@ public class AppMenuViewModel
     /// <summary>Präfix für Einstellungen-Einträge; der Rest ist der Abschnitt im Einstellungsdialog.</summary>
     public const string SettingsPrefix = "settings:";
 
-    /// <summary>Abschnitt „Darstellung“ im Einstellungsdialog (kommt mit Phase 2).</summary>
-    public static bool AppearanceSettingsAvailable => false;
+    /// <summary>Abschnitt „Darstellung“ im Einstellungsdialog ist vorhanden.</summary>
+    public static bool AppearanceSettingsAvailable => true;
 
     public MenuNavigator Navigator { get; } = new("ss-appmenu");
 

@@ -123,8 +123,14 @@ public class LayoutViewModel : INotifyPropertyChanged
             : DefaultSidebarWidth;
     }
 
-    private Task SaveAsync() =>
-        _storage.SaveUiSettingsAsync(new UiSettings { SidebarCollapsed = UserCollapsed, SidebarWidth = SavedSidebarWidth });
+    /// <summary>Zustand und Breite speichern; die übrigen Oberflächen-Einstellungen (z. B. Farbschema) bleiben erhalten.</summary>
+    private async Task SaveAsync()
+    {
+        var settings = await _storage.LoadUiSettingsAsync();
+        settings.SidebarCollapsed = UserCollapsed;
+        settings.SidebarWidth = SavedSidebarWidth;
+        await _storage.SaveUiSettingsAsync(settings);
+    }
 
     /// <summary>
     /// Ende des Ziehens an der Trennlinie: unter <see cref="CollapseDragWidth"/> losgelassen → einklappen (die gespeicherte

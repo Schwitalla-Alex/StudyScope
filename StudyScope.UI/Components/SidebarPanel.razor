@@ -40,7 +40,7 @@
     <!-- 1. Profil-Kopfbereich -->
     <div style="margin-bottom: 5px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-            <label style="font-weight: bold; font-size: 13px; color: #495057;">Profil / Thema:</label>
+            <label style="font-weight: bold; font-size: 13px; color: var(--ss-text-2);">Profil / Thema:</label>
             <button type="button" class="ss-icon-btn" title="@LayoutVm.ToggleTooltip" aria-label="Seitenleiste ausblenden"
                     @onclick="LayoutVm.ToggleAsync">◀</button>
         </div>
@@ -49,7 +49,7 @@
             <!-- Profil-Dropdown -->
             <select value="@DocVm.CurrentProfile"
                     @onchange="OnProfileChangedAsync"
-                    style="flex: 1; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; font-weight: bold; background: white; outline: none; box-sizing: border-box;">
+                    style="flex: 1; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--ss-border); font-size: 13px; font-weight: bold; background: var(--ss-surface); outline: none; box-sizing: border-box;">
                 @foreach (var profile in DocVm.AvailableProfiles)
                 {
                     <option value="@profile">@profile</option>
@@ -58,7 +58,7 @@
 
             <!-- Button: Neues Profil erstellen (öffnet den modalen Dialog) -->
             <button type="button"
-                    style="width: 32px; height: 32px; padding: 0; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 19px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
+                    style="width: 32px; height: 32px; padding: 0; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 19px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
                     title="Neues Profil erstellen"
                     @onclick="OpenCreateProfileModal">
                 +
@@ -68,7 +68,7 @@
             @if (!DocVm.CurrentProfile.Equals("Standard", StringComparison.OrdinalIgnoreCase))
             {
                 <button type="button"
-                        style="width: 32px; height: 32px; padding: 0; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
+                        style="width: 32px; height: 32px; padding: 0; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
                         title="Aktuelles Profil löschen"
                         @onclick="DeleteCurrentProfileAsync">
                     🗑️
@@ -78,11 +78,11 @@
     </div>
 
     <!-- 2. Bereich: Volltextsuche / Filter -->
-    <div style="display: flex; align-items: center; border: 1px solid #ced4da; border-radius: 4px; background: #fff; padding: 4px 8px;">
-        <span style="margin-right: 5px; color: #888;">🔍</span>
+    <div style="display: flex; align-items: center; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); padding: 4px 8px;">
+        <span style="margin-right: 5px; color: var(--ss-text-muted);">🔍</span>
         <input type="text"
                placeholder="Dokumente durchsuchen..."
-               style="border: none; outline: none; width: 100%; font-size: 13px;"
+               style="border: none; outline: none; width: 100%; font-size: 13px; background: transparent; color: var(--ss-text);"
                @bind="DocVm.SearchText"
                @bind:event="oninput" />
     </div>
@@ -90,13 +90,13 @@
     <!-- 3. Bereich: Steuerbuttons (Alle an / Alle aus) -->
     <div style="display: flex; gap: 6px;">
         <button type="button"
-                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #ffffff; background: #007bff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: var(--ss-on-accent); background: var(--ss-primary); border: 1px solid var(--ss-primary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente für Abfragen aktivieren"
                 @onclick="DocVm.SelectAllAsync">
             ✓ Alle an
         </button>
         <button type="button"
-                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: #007bff; background: #ffffff; border: 1px solid #007bff; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
+                style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: var(--ss-link); background: var(--ss-surface); border: 1px solid var(--ss-primary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
                 title="Alle Dokumente deaktivieren"
                 @onclick="DocVm.DeselectAllAsync">
             ✕ Alle aus
@@ -104,10 +104,10 @@
     </div>
 
     <!-- 4. Bereich: Dokumentenliste -->
-    <div style="flex: 1; overflow-y: auto; border: 1px solid #e9ecef; background: #fff; border-radius: 4px; padding: 6px;">
+    <div style="flex: 1; overflow-y: auto; border: 1px solid var(--ss-border-faint); background: var(--ss-surface); border-radius: 4px; padding: 6px;">
         @if (!DocVm.FilteredDocuments.Any())
         {
-            <div style="font-size: 12px; color: #888; text-align: center; margin-top: 20px;">
+            <div style="font-size: 12px; color: var(--ss-text-muted); text-align: center; margin-top: 20px;">
                 @(DocVm.Documents.Any() ? $"Keine Treffer für „{DocVm.SearchText}“" : "Keine Dokumente geladen")
             </div>
         }
@@ -115,7 +115,7 @@
         {
             @foreach (var doc in DocVm.FilteredDocuments)
             {
-                <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid #f1f3f5; font-size: 13px; user-select: none;"
+                <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid var(--ss-border-faint); font-size: 13px; user-select: none;"
                      title="Doppelklick zum Öffnen: @doc.FilePath">
 
                     <input type="checkbox" checked="@doc.IsSelected" @onchange="e => DocVm.SetDocumentSelectedAsync(doc, e.Value is true)" />
@@ -129,7 +129,7 @@
                     </span>
 
                     <button type="button"
-                            style="background: none; border: none; cursor: pointer; color: #dc3545; font-size: 13px; padding: 0 4px;"
+                            style="background: none; border: none; cursor: pointer; color: var(--ss-danger-fg); font-size: 13px; padding: 0 4px;"
                             @onclick="() => DocVm.RemoveDocumentAsync(doc)"
                             title="Entfernen">
                         ✕
@@ -141,7 +141,7 @@
 
     <!-- 5. Bereich: Hinzufügen-Aktion -->
     <button type="button"
-            style="padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;"
+            style="padding: 10px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;"
             @onclick="AddDocumentFromDialogAsync">
         + Dokument hinzufügen
     </button>
@@ -151,15 +151,15 @@
 <!-- Modal-Dialog: Neues Profil anlegen -->
 @if (showCreateModal)
 {
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; z-index: 2000;">
-        <div style="background: white; border-radius: 8px; width: 340px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 12px; font-family: Segoe UI, sans-serif;">
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+        <div style="background: var(--ss-surface); border-radius: 8px; width: 340px; padding: 20px; box-shadow: var(--ss-dialog-shadow); display: flex; flex-direction: column; gap: 12px; font-family: Segoe UI, sans-serif;">
 
-            <h4 style="margin: 0; font-size: 15px; color: #212529;">Neues Profil anlegen</h4>
-            <span style="font-size: 12px; color: #6c757d;">Geben Sie einen Namen für das neue Themengebiet ein:</span>
+            <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">Neues Profil anlegen</h4>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">Geben Sie einen Namen für das neue Themengebiet ein:</span>
 
             <input type="text"
                    placeholder="z. B. BGB, Steuerrecht, Projekt..."
-                   style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid @(profileNameError == null ? "#007bff" : "#dc3545"); border-radius: 4px; outline: none; box-sizing: border-box;"
+                   style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid @(profileNameError == null ? "var(--ss-primary)" : "var(--ss-danger)"); border-radius: 4px; outline: none; box-sizing: border-box;"
                    @bind="newProfileName"
                    @bind:event="oninput"
                    @bind:after="UpdateProfileNameError"
@@ -168,17 +168,17 @@
 
             @if (profileNameError != null)
             {
-                <span id="profile-name-error" style="font-size: 12px; color: #dc3545; margin-top: -6px;">@profileNameError</span>
+                <span id="profile-name-error" style="font-size: 12px; color: var(--ss-danger-fg); margin-top: -6px;">@profileNameError</span>
             }
 
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
                 <button type="button"
-                        style="padding: 6px 14px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                        style="padding: 6px 14px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
                         @onclick="CancelCreateProfile">
                     Abbrechen
                 </button>
                 <button type="button"
-                        style="padding: 6px 16px; background: #28a745; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(CanCreateProfile ? "pointer" : "not-allowed"); opacity: @(CanCreateProfile ? "1" : "0.6"); font-size: 12px;"
+                        style="padding: 6px 16px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(CanCreateProfile ? "pointer" : "not-allowed"); opacity: @(CanCreateProfile ? "1" : "0.6"); font-size: 12px;"
                         disabled="@(!CanCreateProfile)"
                         @onclick="ConfirmCreateProfileAsync">
                     Erstellen & Konfigurieren

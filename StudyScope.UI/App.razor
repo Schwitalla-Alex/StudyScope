@@ -9,12 +9,13 @@
 @inject LayoutViewModel LayoutVm
 @inject PresentationViewModel PresVm
 @inject AppMenuViewModel MenuVm
+@inject AppearanceViewModel AppearanceVm
 @inject IJSRuntime JS
 @using StudyScope.ViewModels.Menu
 @implements IDisposable
 
 <!-- root-Komponente: Füllt 100vh aus -->
-<div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: #fff;">
+<div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--ss-surface); color: var(--ss-text);">
     <!-- 1. Kopfzeile: ☰ ganz links (Datei, Einstellungen, Hilfe), daneben die einzeilige Reiterleiste -->
     <div class="ss-topbar">
         @if (AppMenuViewModel.IsAvailable(IsPresenting))
@@ -33,7 +34,8 @@
         <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
 
             <!-- Aktiver Arbeitsbereich -->
-            <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <!-- Noch nicht auf das Farbschema umgestellte Reiter bleiben bis Phase 2b hell (.ss-legacy-light) -->
+            <div class="@(ThemedTabs.Contains(activeTab) ? "" : "ss-legacy-light")" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
                 @if (activeTab == "chat")
                 {
                     <ChatArea />
@@ -98,12 +100,16 @@
     /// <summary>Vortrag (Präsentation) oder Vollbild-Wiedergabe (Video): kein Menü, kein Strg+B.</summary>
     private bool IsPresenting => PresVm.IsPresenting || VdVm.IsPresenting;
 
+    /// <summary>Reiter, deren Farben schon auf die Variablen des Farbschemas umgestellt sind (die übrigen bleiben hell).</summary>
+    private static readonly HashSet<string> ThemedTabs = ["chat"];
+
     protected override async Task OnInitializedAsync()
     {
         PresVm.PropertyChanged += OnPresentingChanged;
         VdVm.PropertyChanged += OnPresentingChanged;
         // Zuerst den gemerkten Zustand der Seitenleiste, damit sie nicht sichtbar auf- und zuklappt
         await LayoutVm.LoadAsync();
+        await AppearanceVm.LoadAsync();
         await DocVm.InitializeAsync();
         await SettingsVm.InitializeAsync();
     }
@@ -112,6 +118,12 @@
     {
         if (!firstRender) return;
         selfRef = DotNetObjectReference.Create(this);
+        try
+        {
+            // Farbschema aus config.json anwenden und den Startspiegel (localStorage) angleichen
+            await JS.InvokeAsync<string>("studyScopeTheme.apply", AppearanceViewModel.ThemeAttribute(AppearanceVm.SavedTheme), true);
+        }
+        catch (JSException) { /* Skript fehlt: helle Darstellung */ }
         try
         {
             var width = await JS.InvokeAsync<double>("studyScopeLayout.attach", selfRef);

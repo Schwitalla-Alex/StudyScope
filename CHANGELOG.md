@@ -14,6 +14,9 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 - **Reiter immer in einer Zeile:** Bei schmalem Fenster brechen die Reiter nicht mehr auf zwei Zeilen um. Was nicht passt, steht unter „» Mehr“; der gerade geöffnete Reiter bleibt immer sichtbar.
 - **StudyScope unterstützen:** Unter ☰ › Hilfe gibt es einen kurzen Spendenaufruf für das Open-Source-Projekt. Der Knopf öffnet die Spendenseite (PayPal) in Ihrem Browser.
 - **Über StudyScope:** Lizenz und Quellcode auf GitHub lassen sich direkt im Browser öffnen.
+- **Dunkle Darstellung (Teil 1):** Unter ☰ › Einstellungen › 🎨 Darstellung wählen Sie „Hell“, „Dunkel“ oder „Wie System“. Bei „Wie System“ folgt StudyScope der Einstellung von Windows bzw. Linux, auch wenn Sie sie während des Betriebs ändern. Die Auswahl wirkt sofort als Vorschau und gilt nach „Speichern“ für alle Profile; beim nächsten Start erscheint StudyScope gleich in der gewählten Darstellung.
+  - Dunkel dargestellt werden bereits Menü, Reiterleiste, Seitenleiste, Statusleiste, der Chat und alle Dialoge. Die übrigen Reiter (Karteikarten, Mindmap, Präsentation, Quiz, Datentabelle, Audio, Video, Berichte) folgen in einem nächsten Schritt und bleiben bis dahin hell.
+  - Druck/PDF bleibt immer hell.
 
 ## [1.1.1] – 2026-11
 
