@@ -63,6 +63,7 @@ class Program
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
         appBuilder.Services.AddSingleton<LayoutViewModel>();
         appBuilder.Services.AddSingleton<StudyScope.ViewModels.Menu.AppMenuViewModel>();
+        appBuilder.Services.AddSingleton<AppearanceViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
         new ChatViewModel(

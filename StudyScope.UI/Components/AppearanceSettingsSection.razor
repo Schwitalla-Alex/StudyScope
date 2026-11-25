@@ -1,0 +1,137 @@
+@using Microsoft.JSInterop
+@using StudyScope.Core.Models
+@inject AppearanceViewModel AppearanceVm
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* Einstellungen › 🎨 Darstellung: Farbschema. Die Auswahl wirkt sofort als Vorschau (studyScopeTheme.apply),
+   gespeichert wird erst mit „Speichern“; Schließen ohne Speichern stellt den gespeicherten Stand wieder her. *@
+<div style="display: flex; flex-direction: column; gap: 14px;">
+    <div>
+        <span class="ap-label" id="ap-theme-label">Farbschema</span>
+        <div class="ap-options" role="radiogroup" aria-labelledby="ap-theme-label">
+            @foreach (var option in AppearanceViewModel.Options)
+            {
+                var selected = AppearanceVm.SelectedTheme == option.Mode;
+                <label class="ap-option @(selected ? "selected" : "")">
+                    <input type="radio" name="ap-theme" checked="@selected" @onchange="() => SelectAsync(option.Mode)" />
+                    <span class="ap-swatch ap-swatch-@AppearanceViewModel.ThemeAttribute(option.Mode)" aria-hidden="true"></span>
+                    <span class="ap-text">
+                        <span class="ap-name">@option.Label</span>
+                        <span class="ap-hint">
+                            @option.Hint
+                            @if (option.Mode == ThemeMode.System && systemDark is bool dark)
+                            {
+                                <text> Zurzeit: <b>@(dark ? "Dunkel" : "Hell")</b>.</text>
+                            }
+                        </span>
+                    </span>
+                </label>
+            }
+        </div>
+    </div>
+
+    <div class="ap-note">
+        Die Darstellung gilt für alle Profile. Folien, Druck/PDF und alle Exporte (HTML, Word, PowerPoint, MP4)
+        bleiben immer hell.
+    </div>
+
+    @if (!string.IsNullOrEmpty(AppearanceVm.StatusMessage))
+    {
+        <div role="status" style="font-size: 12px; padding: 7px 10px; border-radius: 4px; background: var(--ss-success-bg); color: var(--ss-success-text); border: 1px solid var(--ss-success-border);">
+            @AppearanceVm.StatusMessage
+        </div>
+    }
+
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+        <button type="button" class="ap-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">Schließen</button>
+        <button type="button" class="ap-btn" style="background: var(--ss-primary);" disabled="@(!AppearanceVm.IsDirty)" @onclick="SaveAsync">Speichern</button>
+    </div>
+</div>
+
+<style>
+    .ap-label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 6px; color: var(--ss-text-2); }
+    .ap-options { display: flex; flex-direction: column; gap: 6px; }
+    .ap-option { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--ss-border-light); border-radius: 6px; cursor: pointer; background: var(--ss-surface); }
+    .ap-option:hover { background: var(--ss-hover); }
+    .ap-option.selected { border-color: var(--ss-primary); box-shadow: 0 0 0 1px var(--ss-primary) inset; }
+    .ap-option input { margin: 0; }
+    .ap-swatch { width: 34px; height: 24px; border-radius: 4px; border: 1px solid var(--ss-border); flex: 0 0 auto; }
+    /* Vorschaufarben der Muster sind absichtlich fest: Sie zeigen das jeweilige Schema, unabhängig vom aktuellen */
+    .ap-swatch-light { background: linear-gradient(135deg, #ffffff 50%, #e9ecef 50%); }  /* ss:feste-farbe */
+    .ap-swatch-dark { background: linear-gradient(135deg, #1e2126 50%, #2a2e35 50%); }  /* ss:feste-farbe */
+    .ap-swatch-system { background: linear-gradient(135deg, #ffffff 50%, #1e2126 50%); }  /* ss:feste-farbe */
+    .ap-text { display: flex; flex-direction: column; gap: 1px; }
+    .ap-name { font-size: 13px; font-weight: 600; color: var(--ss-text); }
+    .ap-hint { font-size: 11.5px; color: var(--ss-text-muted); line-height: 1.4; }
+    .ap-note { font-size: 11.5px; padding: 7px 10px; border-radius: 4px; background: var(--ss-hover); color: var(--ss-text-2); border: 1px solid var(--ss-border-light); }
+    .ap-btn { padding: 7px 14px; color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
+    .ap-btn:disabled { opacity: .55; cursor: not-allowed; }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private DotNetObjectReference<AppearanceSettingsSection>? selfRef;
+    private bool? systemDark;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AppearanceVm.PropertyChanged += OnVmChanged;
+        await AppearanceVm.LoadAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selfRef = DotNetObjectReference.Create(this);
+        try { await JS.InvokeVoidAsync("studyScopeTheme.listen", selfRef); }
+        catch (JSException) { }
+    }
+
+    /// <summary>Vom Skript: Farbschema des Systems bzw. die wirksame Darstellung hat sich geändert.</summary>
+    [JSInvokable]
+    public void OnThemeChanged(string effective, bool isSystemDark)
+    {
+        if (systemDark == isSystemDark) return;
+        systemDark = isSystemDark;
+        StateHasChanged();
+    }
+
+    private async Task SelectAsync(ThemeMode mode)
+    {
+        AppearanceVm.SelectedTheme = mode;
+        await ApplyAsync(mode, persist: false);
+    }
+
+    private async Task SaveAsync()
+    {
+        await AppearanceVm.SaveAsync();
+        await ApplyAsync(AppearanceVm.SavedTheme, persist: true);
+    }
+
+    private async Task ApplyAsync(ThemeMode mode, bool persist)
+    {
+        try { await JS.InvokeAsync<string>("studyScopeTheme.apply", AppearanceViewModel.ThemeAttribute(mode), persist); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+    }
+
+    private void OnVmChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    public async ValueTask DisposeAsync()
+    {
+        AppearanceVm.PropertyChanged -= OnVmChanged;
+        // Schließen bzw. anderer Abschnitt ohne Speichern: Vorschau verwerfen
+        if (AppearanceVm.IsDirty)
+        {
+            AppearanceVm.Revert();
+            await ApplyAsync(AppearanceVm.SavedTheme, persist: false);
+        }
+        try { await JS.InvokeVoidAsync("studyScopeTheme.unlisten"); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        selfRef?.Dispose();
+    }
+}

@@ -1,41 +1,127 @@
 /* Gemeinsame Grundgestaltung von StudyScope und StudyScope.Setup.
    Liegt in StudyScope.UI und wird vom Setup per <EmbeddedResource Link=...> eingebettet – nur hier ändern. */
-:root {
+/* Farbschema (Einstellungen › Darstellung): Hell ist der Standard. Komponenten verwenden nur diese Variablen, keine
+   festen Farben. .ss-legacy-light setzt für noch nicht umgestellte Bereiche die hellen Werte. Das Setup setzt kein
+   data-theme-effective und bleibt hell. */
+:root, .ss-legacy-light {
+    color-scheme: light;
+    /* Flächen */
+    --ss-background: #f5f5f5;
+    --ss-surface: #fff;               /* Inhalt, Dialoge, Eingabefelder */
+    --ss-panel: #e9ecef;              /* Kopfzeile, Statusleiste, deaktivierte Felder */
+    --ss-panel-light: #f8f9fa;        /* Kopf-/Fußzeilen von Dialogen, Ladeanzeige */
+    --ss-sidebar-bg: #fafafa;
+    --ss-hover: #f1f3f5;              /* Hervorhebung, Antworten im Chat */
+    --ss-overlay: rgba(0, 0, 0, .45);
+    /* Text */
+    --ss-text: #212529;
+    --ss-text-2: #495057;             /* Beschriftungen */
+    --ss-text-muted: #6c757d;
+    --ss-text-faint: #adb5bd;         /* Platzhalter, Leerzustände */
+    --ss-link: #007bff;
+    --ss-on-accent: #fff;             /* Text auf farbigen Knöpfen */
+    /* Rahmen */
+    --ss-border: #ced4da;
+    --ss-border-light: #dee2e6;
+    --ss-border-faint: #e9ecef;
+    /* Akzente (Knopfflächen mit weißem Text) */
     --ss-primary: #007bff;
     --ss-success: #28a745;
     --ss-danger: #dc3545;
+    --ss-info: #17a2b8;
+    --ss-secondary: #6c757d;
+    --ss-donate: #d63384;
+    /* Signalfarben als Text auf normaler Fläche */
+    --ss-danger-fg: #dc3545;
+    --ss-success-fg: #28a745;
+    /* Hinweisboxen */
     --ss-warning-bg: #fff3cd;
+    --ss-warning-border: #ffeeba;
     --ss-warning-text: #856404;
-    --ss-text: #212529;
-    --ss-text-muted: #6c757d;
-    --ss-border: #ced4da;
-    --ss-border-light: #dee2e6;
-    --ss-panel: #e9ecef;
-    --ss-panel-light: #f8f9fa;
-    --ss-background: #f5f5f5;
-    --ss-surface: #fff;
-    --ss-hover: #f1f3f5;
+    --ss-success-bg: #d4edda;
+    --ss-success-border: #c3e6cb;
+    --ss-success-text: #155724;
+    --ss-danger-bg: #f8d7da;
+    --ss-danger-border: #f5c6cb;
+    --ss-danger-text: #721c24;
+    --ss-neutral-bg: #e2e3e5;
+    --ss-neutral-text: #383d41;
+    /* Schatten */
     --ss-menu-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+    --ss-dialog-shadow: 0 4px 20px rgba(0, 0, 0, .25);
+    --ss-tab-hover: rgba(255, 255, 255, .55);
+}
+
+/* Dunkel nur am Bildschirm – Druck und PDF bleiben hell. */
+@media screen {
+    :root[data-theme-effective="dark"] {
+        color-scheme: dark;
+        --ss-background: #15171a;
+        --ss-surface: #1e2126;
+        --ss-panel: #2a2e35;
+        --ss-panel-light: #24282e;
+        --ss-sidebar-bg: #1a1d21;
+        --ss-hover: #2f343c;
+        --ss-overlay: rgba(0, 0, 0, .62);
+        --ss-text: #e6e8eb;
+        --ss-text-2: #c4c9d0;
+        --ss-text-muted: #9aa3ad;
+        --ss-text-faint: #8b949e;
+        --ss-link: #6cb2ff;
+        --ss-on-accent: #fff;
+        --ss-border: #4a515b;
+        --ss-border-light: #3b414a;
+        --ss-border-faint: #2e333a;
+        --ss-primary: #1f6feb;
+        --ss-success: #238636;
+        --ss-danger: #c93a3a;
+        --ss-info: #167a8c;
+        --ss-secondary: #565e68;
+        --ss-donate: #c2286f;
+        --ss-danger-fg: #ff8a80;
+        --ss-success-fg: #56d364;
+        --ss-warning-bg: #3a2f10;
+        --ss-warning-border: #6b5a1e;
+        --ss-warning-text: #f2cc60;
+        --ss-success-bg: #12301c;
+        --ss-success-border: #2a6a3c;
+        --ss-success-text: #7ee2a0;
+        --ss-danger-bg: #3c1618;
+        --ss-danger-border: #7a2a2e;
+        --ss-danger-text: #ffa198;
+        --ss-neutral-bg: #2c3138;
+        --ss-neutral-text: #c4c9d0;
+        --ss-menu-shadow: 0 6px 18px rgba(0, 0, 0, .55);
+        --ss-dialog-shadow: 0 6px 24px rgba(0, 0, 0, .6);
+        --ss-tab-hover: rgba(255, 255, 255, .07);
+    }
+    /* Eingabefelder ohne eigene Farbe: Fläche und Text des Schemas statt der Standardfarben der WebView
+       (eine Farbe im style-Attribut hat Vorrang, z. B. das durchsichtige Suchfeld der Seitenleiste) */
+    :root[data-theme-effective="dark"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select) {
+        background-color: var(--ss-surface); color: var(--ss-text);
+    }
+    /* Noch nicht umgestellte Bereiche (bis Phase 2b): helle Werte und helle Steuerelemente */
+    :root[data-theme-effective="dark"] .ss-legacy-light { color-scheme: light; background: #fff; color: #212529; }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-color: var(--ss-background); }
 
 /* Kleine Symbol-Knöpfe (◀ ▶) zum Ein-/Ausklappen – Seitenleiste und Tabellenliste der Datentabelle */
-.ss-icon-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; line-height: 1.2; padding: 2px 5px; color: #495057; font-family: inherit; }
-.ss-icon-btn:hover { background: #f1f3f5; border-color: var(--ss-border-light); }
+.ss-icon-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; line-height: 1.2; padding: 2px 5px; color: var(--ss-text-2); font-family: inherit; }
+.ss-icon-btn:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
 .ss-icon-btn:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: 1px; }
 
 /* Linke Seitenleiste (SidebarPanel.razor): ein-/ausklappbar. Der Inhalt behält beim Animieren seine Breite und wird
    nur abgeschnitten – so bricht nichts um; der Inhaltsbereich rechts wächst per flex mit. */
-.ss-sidebar { position: relative; flex: 0 0 auto; width: var(--ss-sidebar-width, 320px); height: 100%; overflow: hidden; border-right: 1px solid var(--ss-border-light); background: #fafafa; transition: width .18s ease; }
+.ss-sidebar { position: relative; flex: 0 0 auto; width: var(--ss-sidebar-width, 320px); height: 100%; overflow: hidden; border-right: 1px solid var(--ss-border-light); background: var(--ss-sidebar-bg); transition: width .18s ease; }
 .ss-sidebar.collapsed { width: 44px; }
 .ss-sidebar-inner { width: var(--ss-sidebar-width, 320px); height: 100%; display: flex; flex-direction: column; padding: 10px; gap: 10px; transition: opacity .12s ease, visibility 0s linear 0s; }
 .ss-sidebar.collapsed .ss-sidebar-inner { opacity: 0; visibility: hidden; transition: opacity .12s ease, visibility 0s linear .18s; }
 .ss-sidebar-rail { position: absolute; top: 0; left: 0; bottom: 0; width: 44px; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; opacity: 0; visibility: hidden; transition: opacity .12s ease; }
 .ss-sidebar.collapsed .ss-sidebar-rail { opacity: 1; visibility: visible; transition: opacity .12s ease .08s; }
-.ss-rail-docs { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 38px; padding: 4px 0; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 11px; color: #495057; font-family: inherit; }
-.ss-rail-docs:hover { background: #f1f3f5; border-color: var(--ss-border-light); }
+.ss-rail-docs { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 38px; padding: 4px 0; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--ss-text-2); font-family: inherit; }
+.ss-rail-docs:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
 .ss-rail-docs .ss-rail-icon { font-size: 15px; }
 /* Ziehbare Trennlinie am rechten Rand (Breite per Maus/Tastatur, Doppelklick: Standardbreite) */
 .ss-sidebar-resizer { position: absolute; top: 0; right: 0; bottom: 0; width: 6px; z-index: 3; cursor: col-resize; background: transparent; transition: background-color .12s ease; touch-action: none; }
@@ -51,13 +137,13 @@ body.ss-resizing, body.ss-resizing * { cursor: col-resize !important; user-selec
 
 /* Kopfzeile (App.razor): ☰ ganz links, daneben die einzeilige Reiterleiste (TabBar.razor) – ersetzt die frühere Menüleiste */
 .ss-topbar { display: flex; align-items: flex-end; gap: 4px; background: var(--ss-panel); border-bottom: 1px solid var(--ss-border); padding: 3px 6px 0 6px; flex: 0 0 auto; }
-.ss-hamburger { display: flex; align-items: center; justify-content: center; width: 32px; height: 28px; margin-bottom: 2px; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 17px; line-height: 1; color: #343a40; font-family: inherit; }
+.ss-hamburger { display: flex; align-items: center; justify-content: center; width: 32px; height: 28px; margin-bottom: 2px; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 17px; line-height: 1; color: var(--ss-text); font-family: inherit; }
 .ss-hamburger:hover, .ss-dropdown[data-open="true"] > .ss-hamburger { background: var(--ss-border-light); border-color: var(--ss-border); }
 .ss-hamburger:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: 1px; }
 
 .ss-tabs { position: relative; flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: nowrap; align-items: flex-end; gap: 4px; padding-left: 4px; }  /* kein overflow:hidden – das Menü „» Mehr“ klappt darüber hinaus */
 .ss-tab { display: inline-flex; flex-direction: column; align-items: center; flex: 0 0 auto; padding: 6px 16px; white-space: nowrap; border: 1px solid transparent; border-bottom: none; background: transparent; border-top-left-radius: 4px; border-top-right-radius: 4px; cursor: pointer; font-size: 13px; font-family: inherit; color: var(--ss-text); }
-.ss-tab:hover { background: rgba(255, 255, 255, .55); }
+.ss-tab:hover { background: var(--ss-tab-hover); }
 .ss-tab.active { border-color: var(--ss-border); background: var(--ss-surface); font-weight: bold; }
 .ss-tab:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: -2px; }
 /* Fette Fassung des Texts unsichtbar mitreservieren: Der aktive (fette) Reiter ist nicht breiter als im Normalzustand */
@@ -88,8 +174,8 @@ body.ss-resizing, body.ss-resizing * { cursor: col-resize !important; user-selec
 .ss-link-btn:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: 1px; }
 
 /* Einfache Dialoge (Neues Profil, StudyScope unterstützen) */
-.ss-dialog-overlay { position: fixed; inset: 0; background: rgba(0, 0, 0, .4); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.ss-dialog { background: var(--ss-surface); border-radius: 8px; max-width: 92vw; padding: 18px; box-shadow: 0 10px 25px rgba(0, 0, 0, .2); }
+.ss-dialog-overlay { position: fixed; inset: 0; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000; }
+.ss-dialog { background: var(--ss-surface); border-radius: 8px; max-width: 92vw; padding: 18px; box-shadow: var(--ss-dialog-shadow); color: var(--ss-text); }
 
 @media (prefers-reduced-motion: reduce) {
     .ss-sidebar, .ss-sidebar-inner, .ss-sidebar-rail, .ss-sidebar.collapsed .ss-sidebar-inner, .ss-sidebar.collapsed .ss-sidebar-rail { transition: none; }
