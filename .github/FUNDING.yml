@@ -1,0 +1,7 @@
+# Spendenknopf („Sponsor“) auf der GitHub-Seite des Repositorys.
+# Dieselbe Adresse steht in AppInfo.DonationUrl (Hilfe › „StudyScope unterstützen“) und in der README.
+custom: ["https://www.paypal.com/ncp/payment/JS8K7QTNVQGN8"]
+
+# GitHub Sponsors erst einkommentieren, wenn das Sponsors-Profil freigeschaltet ist –
+# sonst zeigt der Knopf „Invalid GitHub Sponsors user“.
+# github: Schwitalla-Alex

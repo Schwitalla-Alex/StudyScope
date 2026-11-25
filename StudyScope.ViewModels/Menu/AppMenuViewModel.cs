@@ -1,0 +1,80 @@
+using StudyScope.Core.Common;
+
+namespace StudyScope.ViewModels.Menu;
+
+/// <summary>
+/// Hamburger-Menü (☰) oben links: Einträge und Zustand. Die Kennungen werden in <c>AppMenu.razor</c> ausgewertet.
+/// Im Vortrags-/Vollbildmodus gibt es kein Menü (<see cref="IsAvailable"/>).
+/// </summary>
+public class AppMenuViewModel
+{
+    public const string OpenFile = "open-file";
+    public const string NewProfile = "new-profile";
+    public const string Settings = "settings";
+    public const string SettingsAi = "settings:ai";
+    public const string SettingsSpeech = "settings:speech";
+    public const string SettingsExport = "settings:export";
+    public const string SettingsAppearance = "settings:appearance";
+    public const string Help = "help";
+    public const string About = "about";
+    public const string Support = "support";
+    public const string Exit = "exit";
+
+    /// <summary>Präfix für Einstellungen-Einträge; der Rest ist der Abschnitt im Einstellungsdialog.</summary>
+    public const string SettingsPrefix = "settings:";
+
+    /// <summary>Abschnitt „Darstellung“ im Einstellungsdialog (kommt mit Phase 2).</summary>
+    public static bool AppearanceSettingsAvailable => false;
+
+    public MenuNavigator Navigator { get; } = new("ss-appmenu");
+
+    /// <summary>Menü „» Mehr“ der Reiterleiste (Reiter, die nicht in die Zeile passen).</summary>
+    public MenuNavigator OverflowNavigator { get; } = new("ss-tabmore");
+
+    /// <summary>Ist eines der Menüs offen? Dann wirkt Strg+B nicht.</summary>
+    public bool IsAnyMenuOpen => Navigator.IsOpen || OverflowNavigator.IsOpen;
+
+    /// <summary>Beide Menüs schließen (z. B. beim Start des Vortrags).</summary>
+    public void CloseAll()
+    {
+        Navigator.Close();
+        OverflowNavigator.Close();
+    }
+
+    public AppMenuViewModel() =>
+        Navigator.SetItems(BuildItems(AppInfo.IsValidDonationUrl(AppInfo.DonationUrl), AppearanceSettingsAvailable));
+
+    /// <summary>Menü nur außerhalb von Vortrag und Vollbild.</summary>
+    public static bool IsAvailable(bool isPresenting) => !isPresenting;
+
+    /// <summary>
+    /// Einträge des Menüs. „StudyScope unterstützen“ nur mit gültiger Spenden-URL, „Darstellung“ erst, wenn der
+    /// Abschnitt im Einstellungsdialog vorhanden ist.
+    /// </summary>
+    public static IReadOnlyList<MenuEntry> BuildItems(bool donationAvailable, bool appearanceAvailable)
+    {
+        var settings = new List<MenuEntry>
+        {
+            new(SettingsAi, "KI-Modell", "🤖"),
+            new(SettingsSpeech, "Sprachausgabe", "🔊"),
+            new(SettingsExport, "Export", "🎞️"),
+        };
+        if (appearanceAvailable) settings.Add(new(SettingsAppearance, "Darstellung", "🎨"));
+
+        var help = new List<MenuEntry> { new(About, "Über StudyScope", "ℹ️") };
+        if (donationAvailable) help.Add(new(Support, "StudyScope unterstützen ❤", "🤝"));
+
+        return
+        [
+            new(OpenFile, "Datei öffnen…", "📂"),
+            new(NewProfile, "Neues Profil…", "➕"),
+            new(Settings, "Einstellungen", "⚙️", settings, SeparatorBefore: true),
+            new(Help, "Hilfe", "❓", help),
+            new(Exit, "Anwendung schließen", "✕", SeparatorBefore: true, IsDanger: true),
+        ];
+    }
+
+    /// <summary>Abschnitt im Einstellungsdialog zu einer Kennung („settings:speech“ → „speech“), sonst null.</summary>
+    public static string? SettingsSectionOf(string id) =>
+        id.StartsWith(SettingsPrefix, StringComparison.Ordinal) ? id[SettingsPrefix.Length..] : null;
+}

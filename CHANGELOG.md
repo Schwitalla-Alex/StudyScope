@@ -5,6 +5,16 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 <!-- Der Abschnitt einer Version beginnt mit „## [x.y.z]“ und reicht bis zum nächsten „## [“.
      Der Release-Workflow übernimmt genau diesen Abschnitt als Text des GitHub-Releases. -->
 
+## [Unveröffentlicht]
+
+### Neu
+- **Menü ☰ oben links statt Menüleiste:** Datei öffnen, neues Profil, Einstellungen und Hilfe stecken jetzt in einem Menü ganz oben links. Unter „Einstellungen“ führt jeder Eintrag direkt in den passenden Bereich (KI-Modell, Sprachausgabe, Export). Die frühere Menüzeile entfällt – Ihre Inhalte bekommen mehr Höhe.
+  - Bedienung auch per Tastatur: Pfeiltasten, Pos1/Ende, Enter oder Leertaste, ← bzw. Esc schließt; danach steht der Fokus wieder auf ☰. Ein Klick daneben schließt das Menü.
+  - Im Vortrags- und Vollbildmodus ist das Menü ausgeblendet; Strg+B wirkt bei offenem Menü nicht.
+- **Reiter immer in einer Zeile:** Bei schmalem Fenster brechen die Reiter nicht mehr auf zwei Zeilen um. Was nicht passt, steht unter „» Mehr“; der gerade geöffnete Reiter bleibt immer sichtbar.
+- **StudyScope unterstützen:** Unter ☰ › Hilfe gibt es einen kurzen Spendenaufruf für das Open-Source-Projekt. Der Knopf öffnet die Spendenseite (PayPal) in Ihrem Browser.
+- **Über StudyScope:** Lizenz und Quellcode auf GitHub lassen sich direkt im Browser öffnen.
+
 ## [1.1.1] – 2026-11
 
 Mehr Platz für Ihre Inhalte: Die linke Seitenleiste lässt sich einklappen und in der Breite anpassen.

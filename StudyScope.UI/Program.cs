@@ -32,6 +32,7 @@ class Program
         });
 
         appBuilder.Services.AddSingleton<IFileOpenerService, FileOpenerService>();
+        appBuilder.Services.AddSingleton<IExternalLinkOpener, ExternalLinkOpener>();
         appBuilder.Services.AddSingleton<IFlashcardService, FlashcardService>();
         appBuilder.Services.AddSingleton<IMindmapService>(sp => new MindmapService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IPresentationService>(sp => new PresentationService(sp.GetRequiredService<ILlmService>()));
@@ -61,6 +62,7 @@ class Program
         appBuilder.Services.AddSingleton<PlaybackCoordinator>();
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
         appBuilder.Services.AddSingleton<LayoutViewModel>();
+        appBuilder.Services.AddSingleton<StudyScope.ViewModels.Menu.AppMenuViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
         new ChatViewModel(

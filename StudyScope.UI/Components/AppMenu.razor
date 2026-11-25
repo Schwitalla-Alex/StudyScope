@@ -1,0 +1,71 @@
+@using Microsoft.JSInterop
+@using StudyScope.UI.Services
+@using StudyScope.ViewModels.Menu
+@inject DocumentListViewModel DocVm
+@inject AppMenuViewModel MenuVm
+@inject IJSRuntime JS
+
+@* Hamburger-Menü oben links (ersetzt die frühere Menüleiste). Einträge: AppMenuViewModel.BuildItems. *@
+<DropdownMenu Navigator="MenuVm.Navigator" TriggerId="@TriggerId" MenuId="ss-appmenu-list"
+              TriggerClass="ss-hamburger" TriggerLabel="Menü" TriggerTitle="Menü (Datei, Einstellungen, Hilfe)"
+              OnActivate="HandleAsync">
+    <TriggerContent><span aria-hidden="true">☰</span></TriggerContent>
+</DropdownMenu>
+
+@if (showNewProfile)
+{
+    <NewProfileDialog OnClose="CloseDialogs" />
+}
+
+@if (showSupport)
+{
+    <SupportDialog OnClose="CloseDialogs" />
+}
+
+@code {
+    private const string TriggerId = "ss-appmenu-trigger";
+
+    /// <summary>Einstellungsdialog im genannten Abschnitt öffnen („ai“, „speech“, „export“).</summary>
+    [Parameter] public EventCallback<string> OnOpenSettings { get; set; }
+    [Parameter] public EventCallback OnShowAbout { get; set; }
+
+    private bool showNewProfile;
+    private bool showSupport;
+
+    private async Task HandleAsync(string id)
+    {
+        if (AppMenuViewModel.SettingsSectionOf(id) is { } section)
+        {
+            await OnOpenSettings.InvokeAsync(section);
+            return;
+        }
+
+        switch (id)
+        {
+            case AppMenuViewModel.OpenFile:
+                var path = await DesktopDialogs.OpenPdfAsync();
+                if (!string.IsNullOrWhiteSpace(path)) await DocVm.AddDocumentAsync(path);
+                break;
+            case AppMenuViewModel.NewProfile:
+                showNewProfile = true;
+                break;
+            case AppMenuViewModel.About:
+                await OnShowAbout.InvokeAsync();
+                break;
+            case AppMenuViewModel.Support:
+                showSupport = true;
+                break;
+            case AppMenuViewModel.Exit:
+                DesktopDialogs.MainWindow?.Close();
+                break;
+        }
+    }
+
+    private async Task CloseDialogs()
+    {
+        showNewProfile = false;
+        showSupport = false;
+        try { await JS.InvokeVoidAsync("studyScopeLayout.focusElementLater", TriggerId); }
+        catch (JSException) { }
+    }
+}
