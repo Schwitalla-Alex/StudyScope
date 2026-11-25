@@ -25,6 +25,7 @@
 - 📁 **Unterstützte Formate:** Volle Unterstützung für `.pdf`, `.txt` und `.csv`.
 - 🗂️ **Profilverwaltung:** Strukturieren Sie Unterlagen nach Semestern, Schulfächern oder Themengebieten.
 - ◀ **Mehr Platz:** Die linke Seitenleiste lässt sich mit ◀ bzw. **Strg+B** einklappen; eingeklappt bleibt eine schmale Leiste mit ▶ und der Anzahl aktiver Dokumente (z. B. „📄 1/2“). Der Zustand wird gemerkt, bei sehr schmalem Fenster (unter 900 px) klappt sie automatisch ein. Die Breite lässt sich an der Trennlinie mit der Maus ziehen (oder per Tastatur mit ← → Pos1 Ende), Doppelklick stellt die Standardbreite wieder her; lange Dokumentnamen zeigen den vollen Namen als Tooltip.
+- ☰ **Aufgeräumte Oberfläche:** Datei öffnen, neues Profil, Einstellungen (direkt im passenden Bereich) und Hilfe liegen im Menü ☰ oben links – mit Maus oder Tastatur bedienbar (Pfeiltasten, Enter, Esc). Die Reiter bleiben immer einzeilig; was bei schmalem Fenster nicht mehr passt, steht unter „» Mehr“.
 - 🔒 **Volle Datenkontrolle & Flexibilität:**
   - **Lokale KI:** Nutzen Sie lokale Sprachmodelle via **Ollama** oder **LM Studio** ganz ohne Internetverbindung und API-Kosten.
   - **Cloud-KI:** Anbindung an **Google Gemini**, **OpenAI (GPT-4)** und **Mistral AI**. „Speichern & Verbinden“ prüft den API-Schlüssel über die kostenlose Modellliste.
@@ -94,13 +95,13 @@ StudyScope funktioniert vollständig ohne ffmpeg. Nur für den Export von Videos
 - Windows: `winget install Gyan.FFmpeg` in der Eingabeaufforderung, danach StudyScope neu starten.
 - Linux: `sudo apt install ffmpeg` (Fedora: `sudo dnf install ffmpeg`).
 
-StudyScope sucht ffmpeg automatisch (PATH, unter Windows auch im WinGet-Ordner). Wird es nicht gefunden, lässt sich der Pfad unter **Einstellungen ➔ 🎞️ Export** eintragen und mit „ffmpeg suchen/testen“ prüfen. Ohne ffmpeg sind die Knöpfe ausgegraut und nennen den Grund.
+StudyScope sucht ffmpeg automatisch (PATH, unter Windows auch im WinGet-Ordner). Wird es nicht gefunden, lässt sich der Pfad unter **☰ ➔ Einstellungen ➔ Export** eintragen und mit „ffmpeg suchen/testen“ prüfen. Ohne ffmpeg sind die Knöpfe ausgegraut und nennen den Grund.
 
 ---
 
 ## ⚙️ KI-Einrichtung
 
-Öffnen Sie in StudyScope oben die Menüleiste über **Einstellungen ➔ KI-Konfiguration**:
+Öffnen Sie in StudyScope oben links das Menü **☰ ➔ Einstellungen ➔ KI-Modell**:
 
 - **Lokale Modelle (Ollama / LM Studio):**
   Starten Sie Ihre lokale Instanz (z. B. Port `11434` oder `1234`), wählen Sie im Menü den entsprechenden Provider und klicken Sie auf *Modelle suchen*.
@@ -108,6 +109,16 @@ StudyScope sucht ffmpeg automatisch (PATH, unter Windows auch im WinGet-Ordner).
   Wählen Sie den Anbieter aus, tragen Sie Ihren API-Schlüssel ein, rufen Sie die Modelle online ab und wählen Sie eines aus. „Speichern & Verbinden“ meldet einen abgelehnten Schlüssel oder eine Störung des Dienstes.
 - **Benutzerdefiniert:**
   Geben Sie Ihre individuelle Base-URL (z. B. `https://api.groq.com/openai/v1`), den Modellnamen und optional Ihren Bearer-Token/API-Key ein.
+
+---
+
+## ❤️ StudyScope unterstützen
+
+StudyScope ist freie Open-Source-Software unter der [Apache License 2.0](LICENSE) und bleibt kostenlos – ohne Werbung, ohne Abo und ohne Funktionen, die erst nach einer Spende freigeschaltet werden. Wenn Ihnen StudyScope beim Lernen hilft, freue ich mich über eine freiwillige Unterstützung:
+
+**[❤ Spenden über PayPal](https://www.paypal.com/ncp/payment/JS8K7QTNVQGN8)**
+
+In der App finden Sie denselben Link unter **☰ ➔ Hilfe ➔ StudyScope unterstützen**. Genauso willkommen sind Fehlerberichte und Ideen über die [Issues](https://github.com/Schwitalla-Alex/StudyScope/issues).
 
 ---
 

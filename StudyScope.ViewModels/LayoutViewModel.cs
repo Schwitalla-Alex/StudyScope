@@ -201,11 +201,12 @@ public class LayoutViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Soll dieser Tastendruck die Seitenleiste umschalten? Nur Strg+B ohne Alt/Umschalt/Win, nicht gehalten, nicht
-    /// während in ein Eingabefeld/Textbereich geschrieben wird und nicht im Vortrags-/Vollbildmodus.
+    /// während in ein Eingabefeld/Textbereich geschrieben wird, nicht im Vortrags-/Vollbildmodus und nicht bei offenem
+    /// Menü (☰ oder „» Mehr“).
     /// </summary>
-    public static bool IsToggleShortcut(ShortcutKey key, bool isPresenting)
+    public static bool IsToggleShortcut(ShortcutKey key, bool isPresenting, bool menuOpen = false)
     {
-        if (isPresenting) return false;
+        if (isPresenting || menuOpen) return false;
         if (!key.Ctrl || key.Alt || key.Shift || key.Meta || key.Repeat) return false;
         if (!string.Equals(key.Key, "b", StringComparison.OrdinalIgnoreCase)) return false;
         return !IsTextEntry(key);
@@ -223,9 +224,9 @@ public class LayoutViewModel : INotifyPropertyChanged
     }
 
     /// <summary>Strg+B auswerten: schaltet um und meldet true, wenn der Tastendruck verarbeitet wurde.</summary>
-    public async Task<bool> HandleShortcutAsync(ShortcutKey key, bool isPresenting)
+    public async Task<bool> HandleShortcutAsync(ShortcutKey key, bool isPresenting, bool menuOpen = false)
     {
-        if (!IsToggleShortcut(key, isPresenting)) return false;
+        if (!IsToggleShortcut(key, isPresenting, menuOpen)) return false;
         await ToggleAsync();
         return true;
     }

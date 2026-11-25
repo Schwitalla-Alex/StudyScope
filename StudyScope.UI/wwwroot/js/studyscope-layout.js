@@ -48,6 +48,89 @@ window.studyScopeLayout = (function () {
             resizeHandler = null;
         },
 
+        // Ausklappmenüs (DropdownMenu.razor: ☰ und „» Mehr“). Die Logik liegt in MenuNavigator (.NET); hier nur:
+        // Tasten abfangen (bei offenem Menü ohne Standardaktion und ohne Weitergabe – Strg+B u. a. laufen weiter),
+        // Klick außerhalb melden und den Fokus setzen.
+        attachMenu: function (wrapper, dotnetRef) {
+            if (!wrapper || wrapper.__ssMenu) return;
+            var menuKeys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', 'Enter', ' ', 'Escape'];
+            var onKey = function (e) {
+                if (e.ctrlKey || e.altKey || e.metaKey) return;
+                var open = wrapper.getAttribute('data-open') === 'true';
+                var trigger = wrapper.querySelector('[data-menu-trigger]');
+                if (!open) {
+                    if (e.target === trigger && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+                        e.preventDefault();
+                        dotnetRef.invokeMethodAsync('OnMenuKey', e.key);
+                    }
+                    return;
+                }
+                if (e.key === 'Tab') { dotnetRef.invokeMethodAsync('OnMenuKey', 'Tab'); return; }
+                if (menuKeys.indexOf(e.key) < 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                dotnetRef.invokeMethodAsync('OnMenuKey', e.key);
+            };
+            var onPointer = function (e) {
+                if (wrapper.getAttribute('data-open') !== 'true' || wrapper.contains(e.target)) return;
+                dotnetRef.invokeMethodAsync('OnMenuOutside');
+            };
+            var onBlur = function () {
+                if (wrapper.getAttribute('data-open') === 'true') dotnetRef.invokeMethodAsync('OnMenuOutside');
+            };
+            wrapper.addEventListener('keydown', onKey);
+            document.addEventListener('pointerdown', onPointer, true);
+            window.addEventListener('blur', onBlur);
+            wrapper.__ssMenu = function () {
+                wrapper.removeEventListener('keydown', onKey);
+                document.removeEventListener('pointerdown', onPointer, true);
+                window.removeEventListener('blur', onBlur);
+            };
+        },
+        detachMenu: function (wrapper) {
+            if (wrapper && wrapper.__ssMenu) { wrapper.__ssMenu(); wrapper.__ssMenu = null; }
+        },
+        focusElement: function (id) {
+            var el = document.getElementById(id);
+            if (el) el.focus({ preventScroll: true });
+        },
+        // Für Dialoge: erst nach dem Zeichnen fokussieren (das Menü gibt den Fokus beim Schließen an ☰ zurück)
+        focusElementLater: function (id) {
+            requestAnimationFrame(function () { requestAnimationFrame(function () {
+                var el = document.getElementById(id);
+                if (el) { el.focus({ preventScroll: true }); if (el.select) el.select(); }
+            }); });
+        },
+
+        // Reiterleiste (TabBar.razor): Breiten aller Reiter (auch der ausgeblendeten), verfügbare Breite und Breite
+        // von „» Mehr“ an .NET melden – beim Start und bei jeder Größenänderung. Die Aufteilung rechnet TabOverflow.
+        attachTabs: function (container, dotnetRef) {
+            if (!container || container.__ssTabs) return;
+            var frame = 0;
+            var measure = function () {
+                frame = 0;
+                var gap = parseFloat(getComputedStyle(container).columnGap) || 0;
+                var tabs = container.querySelectorAll('[data-tab]');
+                var widths = [];
+                for (var i = 0; i < tabs.length; i++) widths.push(Math.ceil(tabs[i].getBoundingClientRect().width) + gap);
+                var more = container.querySelector('[data-tab-more]');
+                var moreWidth = more ? Math.ceil(more.getBoundingClientRect().width) + gap : 0;
+                dotnetRef.invokeMethodAsync('OnTabsMeasured', widths, Math.floor(container.clientWidth), moreWidth);
+            };
+            var schedule = function () { if (!frame) frame = requestAnimationFrame(measure); };
+            var observer = new ResizeObserver(schedule);
+            observer.observe(container);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(schedule);
+            container.__ssTabs = { observer: observer, schedule: schedule };
+            schedule();
+        },
+        remeasureTabs: function (container) {
+            if (container && container.__ssTabs) container.__ssTabs.schedule();
+        },
+        detachTabs: function (container) {
+            if (container && container.__ssTabs) { container.__ssTabs.observer.disconnect(); container.__ssTabs = null; }
+        },
+
         // Ziehbare Trennlinie der Seitenleiste (SidebarPanel.razor). Während des Ziehens setzt das Skript nur die
         // CSS-Variable --ss-sidebar-width (höchstens einmal je Bild, ohne Blazor); erst beim Loslassen entscheidet
         // LayoutViewModel (EndSidebarResize: begrenzen, speichern oder einklappen) und liefert die angezeigte Breite.

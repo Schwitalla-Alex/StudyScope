@@ -1,4 +1,6 @@
 ﻿@using StudyScope.Core.Common
+@using StudyScope.Core.Interfaces
+@inject IExternalLinkOpener LinkOpener
 
 <!-- Hintergrund-Overlay -->
 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.45); display: flex; justify-content: center; align-items: center; z-index: 1050;"
@@ -42,7 +44,12 @@
             <!-- Lizenz & Kontaktbereich -->
             <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px; color: #495057;">
                 <div>
-                    <b>Lizenz:</b> Lizenziert unter der <span style="color: #007bff; font-weight: 500;">Apache License 2.0</span>
+                    <b>Lizenz:</b> Lizenziert unter der
+                    <button type="button" class="ss-link-btn" title="@AppInfo.LicenseUrl" @onclick="() => Open(AppInfo.LicenseUrl)">Apache License 2.0</button>
+                </div>
+                <div>
+                    <b>Quellcode:</b>
+                    <button type="button" class="ss-link-btn" title="@AppInfo.RepositoryUrl" @onclick="() => Open(AppInfo.RepositoryUrl)">github.com/Schwitalla-Alex/StudyScope</button>
                 </div>
                 <div>
                     <b>Kontakt / Feedback:</b>
@@ -67,6 +74,9 @@
 @code {
     [Parameter]
     public EventCallback OnClose { get; set; }
+
+    /// <summary>Links öffnen im System-Browser, nie in der WebView der App.</summary>
+    private void Open(string url) => LinkOpener.OpenUrl(url);
 
     private async Task Close()
     {

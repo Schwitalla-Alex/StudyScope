@@ -1,0 +1,57 @@
+@using Microsoft.JSInterop
+@inject DocumentListViewModel DocVm
+@inject SettingsViewModel SettingsVm
+@inject IJSRuntime JS
+
+@* „Neues Profil…“ aus dem Hamburger-Menü (früher in MenuBar.razor). Prüfung des Namens: DocumentListViewModel. *@
+<div class="ss-dialog-overlay" @onclick="CloseAsync">
+    <div class="ss-dialog" style="width: 340px;" role="dialog" aria-modal="true" aria-labelledby="ss-newprofile-title"
+         @onclick:stopPropagation="true" @onkeydown="KeyAsync">
+        <h4 id="ss-newprofile-title" style="margin: 0 0 10px 0; font-size: 14px; color: #212529;">Neues Profil anlegen</h4>
+        <p style="font-size: 12px; color: #6c757d; margin: 0 0 10px 0;">Geben Sie einen Namen für das neue Themengebiet ein:</p>
+
+        <input id="ss-newprofile-input" type="text" placeholder="z. B. BGB, Steuerrecht, Physik..."
+               style="width: 100%; padding: 7px 10px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; box-sizing: border-box; margin-bottom: 14px;"
+               @bind="name" @bind:event="oninput" />
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px;">
+            <button type="button" style="padding: 5px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+                    @onclick="CloseAsync">
+                Abbrechen
+            </button>
+            <button type="button" style="padding: 5px 14px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;"
+                    @onclick="ConfirmAsync">
+                Erstellen
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string name = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try { await JS.InvokeVoidAsync("studyScopeLayout.focusElementLater", "ss-newprofile-input"); }
+        catch (JSException) { }
+    }
+
+    private async Task KeyAsync(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") await ConfirmAsync();
+        else if (e.Key == "Escape") await CloseAsync();
+    }
+
+    private async Task ConfirmAsync()
+    {
+        if (string.IsNullOrWhiteSpace(name)) return;
+        await DocVm.CreateNewProfileAsync(name.Trim());
+        SettingsVm.ResetForm(); // Maske leeren
+        await CloseAsync();
+    }
+
+    private Task CloseAsync() => OnClose.InvokeAsync();
+}

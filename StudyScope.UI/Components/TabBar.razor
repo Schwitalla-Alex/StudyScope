@@ -1,0 +1,93 @@
+@using Microsoft.JSInterop
+@using StudyScope.ViewModels.Menu
+@inject AppMenuViewModel MenuVm
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* Reiterleiste, immer einzeilig: Reiter, die nicht passen, stehen im Menü „» Mehr“ (Aufteilung: TabOverflow).
+   Alle Reiter werden gezeichnet (ausgeblendete unsichtbar), damit das Skript ihre Breiten messen kann. *@
+<div class="ss-tabs" role="tablist" aria-label="Bereiche" @ref="container">
+    @for (var i = 0; i < AppTabs.All.Count; i++)
+    {
+        var tab = AppTabs.All[i];
+        var hidden = layout.Overflow.Contains(i);
+        var active = tab.Id == ActiveTab;
+        <button type="button" role="tab" data-tab="@tab.Id" data-label="@tab.Text"
+                class="ss-tab @(active ? "active" : "") @(hidden ? "ss-tab-hidden" : "")"
+                aria-selected="@(active ? "true" : "false")" aria-hidden="@(hidden ? "true" : null)"
+                tabindex="@(hidden ? -1 : 0)"
+                @onclick="() => SelectAsync(tab.Id)">
+            @tab.Text
+        </button>
+    }
+
+    <DropdownMenu Navigator="MenuVm.OverflowNavigator" TriggerId="ss-tabmore-trigger" MenuId="ss-tabmore-list"
+                  Class="@(layout.HasOverflow ? "ss-tabmore" : "ss-tabmore ss-tab-hidden")"
+                  TriggerClass="ss-tab ss-tabmore-btn" TriggerLabel="Weitere Bereiche"
+                  TriggerTitle="Weitere Bereiche" AlignRight="true" OnActivate="SelectAsync"
+                  data-tab-more="true">
+        <TriggerContent>» Mehr</TriggerContent>
+    </DropdownMenu>
+</div>
+
+@code {
+    [Parameter] public string ActiveTab { get; set; } = AppTabs.Chat;
+    [Parameter] public EventCallback<string> ActiveTabChanged { get; set; }
+
+    private ElementReference container;
+    private DotNetObjectReference<TabBar>? selfRef;
+    private double[] widths = [];
+    private double available;
+    private double moreWidth;
+    private TabLayout layout = TabLayout.AllVisible(AppTabs.All.Count);
+
+    protected override void OnParametersSet() => Recompute();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        selfRef = DotNetObjectReference.Create(this);
+        try { await JS.InvokeVoidAsync("studyScopeLayout.attachTabs", container, selfRef); }
+        catch (JSException) { /* Skript fehlt: alle Reiter bleiben sichtbar */ }
+    }
+
+    [JSInvokable]
+    public void OnTabsMeasured(double[] tabWidths, double availableWidth, double moreButtonWidth)
+    {
+        widths = tabWidths;
+        available = availableWidth;
+        moreWidth = moreButtonWidth;
+        if (Recompute()) StateHasChanged();
+    }
+
+    /// <summary>Aufteilung neu berechnen; true, wenn sie sich geändert hat.</summary>
+    private bool Recompute()
+    {
+        var next = widths.Length == AppTabs.All.Count
+            ? TabOverflow.Compute(widths, available, moreWidth, AppTabs.IndexOf(ActiveTab))
+            : TabLayout.AllVisible(AppTabs.All.Count);
+        var changed = !next.Visible.SequenceEqual(layout.Visible);
+        layout = next;
+        MenuVm.OverflowNavigator.SetItems(next.Overflow
+            .Select(i => AppTabs.All[i])
+            .Select(t => new MenuEntry(t.Id, t.Label, t.Icon))
+            .ToList());
+        if (!next.HasOverflow) MenuVm.OverflowNavigator.Close();
+        return changed;
+    }
+
+    private async Task SelectAsync(string id)
+    {
+        if (id == ActiveTab) return;
+        await ActiveTabChanged.InvokeAsync(id);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try { await JS.InvokeVoidAsync("studyScopeLayout.detachTabs", container); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        selfRef?.Dispose();
+    }
+}

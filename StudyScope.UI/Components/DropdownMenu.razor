@@ -1,0 +1,192 @@
+@using System.ComponentModel
+@using Microsoft.JSInterop
+@using StudyScope.ViewModels.Menu
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+@* Ausklappmenü mit höchstens einer Untermenü-Ebene (☰ und „» Mehr“). Zustand und Tastaturlogik: MenuNavigator.
+   Das Skript (studyScopeLayout.attachMenu) fängt die Tasten ab, meldet Klicks außerhalb und setzt den Fokus. *@
+<div class="ss-dropdown @Class" @ref="wrapper" data-open="@(Navigator.IsOpen ? "true" : "false")" @attributes="AdditionalAttributes">
+    <button id="@TriggerId" type="button" class="@TriggerClass" data-menu-trigger
+            aria-haspopup="menu" aria-expanded="@(Navigator.IsOpen ? "true" : "false")" aria-controls="@MenuId"
+            aria-label="@TriggerLabel" title="@TriggerTitle"
+            @onclick="ToggleAsync">
+        @TriggerContent
+    </button>
+
+    @if (Navigator.IsOpen)
+    {
+        <div id="@MenuId" class="ss-menu @(AlignRight ? "ss-menu-right" : "")" role="menu" aria-label="@TriggerLabel">
+            @for (var i = 0; i < Navigator.Items.Count; i++)
+            {
+                var index = i;
+                var item = Navigator.Items[index];
+                var active = Navigator.ActiveIndex == index;
+                var subOpen = Navigator.SubmenuIndex == index;
+                if (item.SeparatorBefore)
+                {
+                    <div class="ss-menu-sep" role="separator"></div>
+                }
+                <div class="ss-menu-entry">
+                    <button id="@Navigator.ItemElementId(index)" type="button" role="menuitem"
+                            tabindex="@(active ? 0 : -1)"
+                            class="ss-menu-item @(active ? "active" : "") @(item.IsDanger ? "danger" : "") @(item.IsCurrent ? "current" : "")"
+                            aria-haspopup="@(item.HasChildren ? "menu" : null)"
+                            aria-expanded="@(item.HasChildren ? (subOpen ? "true" : "false") : null)"
+                            @onclick="() => ClickAsync(index)"
+                            @onmouseenter="() => Navigator.Hover(index)">
+                        <span class="ss-menu-icon" aria-hidden="true">@item.Icon</span>
+                        <span class="ss-menu-text">@item.Text</span>
+                        @if (item.HasChildren)
+                        {
+                            <span class="ss-menu-arrow" aria-hidden="true">▸</span>
+                        }
+                    </button>
+
+                    @if (subOpen && item.Children is { } children)
+                    {
+                        <div class="ss-menu ss-submenu" role="menu" aria-label="@item.Text">
+                            @for (var j = 0; j < children.Count; j++)
+                            {
+                                var subIndex = j;
+                                var child = children[subIndex];
+                                var subActive = Navigator.SubActiveIndex == subIndex;
+                                if (child.SeparatorBefore)
+                                {
+                                    <div class="ss-menu-sep" role="separator"></div>
+                                }
+                                <button id="@Navigator.SubItemElementId(index, subIndex)" type="button" role="menuitem"
+                                        tabindex="@(subActive ? 0 : -1)"
+                                        class="ss-menu-item @(subActive ? "active" : "") @(child.IsDanger ? "danger" : "")"
+                                        @onclick="() => ClickSubAsync(index, subIndex)"
+                                        @onmouseenter="() => Navigator.HoverSub(subIndex)">
+                                    <span class="ss-menu-icon" aria-hidden="true">@child.Icon</span>
+                                    <span class="ss-menu-text">@child.Text</span>
+                                </button>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired] public MenuNavigator Navigator { get; set; } = null!;
+    [Parameter, EditorRequired] public string TriggerId { get; set; } = "";
+    [Parameter, EditorRequired] public string MenuId { get; set; } = "";
+    [Parameter] public string TriggerClass { get; set; } = "";
+    [Parameter] public string TriggerLabel { get; set; } = "";
+    [Parameter] public string? TriggerTitle { get; set; }
+    [Parameter] public string Class { get; set; } = "";
+    /// <summary>Menü rechtsbündig unter dem Knopf aufklappen („» Mehr“ am rechten Rand).</summary>
+    [Parameter] public bool AlignRight { get; set; }
+    [Parameter] public RenderFragment? TriggerContent { get; set; }
+    /// <summary>Ausgelöster Eintrag (Kennung); das Menü ist dann bereits geschlossen.</summary>
+    [Parameter] public EventCallback<string> OnActivate { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private ElementReference wrapper;
+    private DotNetObjectReference<DropdownMenu>? selfRef;
+    private MenuNavigator? subscribed;
+    private string? lastFocused;
+    private bool returnFocus;
+
+    protected override void OnParametersSet()
+    {
+        if (ReferenceEquals(subscribed, Navigator)) return;
+        if (subscribed is not null) subscribed.PropertyChanged -= OnNavigatorChanged;
+        subscribed = Navigator;
+        Navigator.PropertyChanged += OnNavigatorChanged;
+    }
+
+    private void OnNavigatorChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MenuNavigator.FocusedElementId)) InvokeAsync(StateHasChanged);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                selfRef = DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("studyScopeLayout.attachMenu", wrapper, selfRef);
+            }
+
+            var focus = Navigator.FocusedElementId;
+            if (focus is not null && focus != lastFocused)
+            {
+                lastFocused = focus;
+                await JS.InvokeVoidAsync("studyScopeLayout.focusElement", focus);
+            }
+            else if (focus is null)
+            {
+                lastFocused = null;
+                if (returnFocus)
+                {
+                    returnFocus = false;
+                    await JS.InvokeVoidAsync("studyScopeLayout.focusElement", TriggerId);
+                }
+            }
+        }
+        catch (JSException) { /* Skript nicht geladen – Maus funktioniert weiter */ }
+        catch (JSDisconnectedException) { }
+    }
+
+    private void ToggleAsync() => Navigator.Toggle();
+
+    private async Task ClickAsync(int index)
+    {
+        var id = Navigator.Click(index);
+        if (id is not null) await ActivateAsync(id);
+    }
+
+    private async Task ClickSubAsync(int parent, int index)
+    {
+        var id = Navigator.ClickSub(parent, index);
+        if (id is not null) await ActivateAsync(id);
+    }
+
+    private async Task ActivateAsync(string id)
+    {
+        returnFocus = true;
+        await OnActivate.InvokeAsync(id);
+    }
+
+    [JSInvokable]
+    public async Task OnMenuKey(string key)
+    {
+        if (!Navigator.IsOpen)
+        {
+            if (key == "ArrowDown") Navigator.Open();
+            else if (key == "ArrowUp") Navigator.Open(focusLast: true);
+            StateHasChanged();
+            return;
+        }
+
+        var result = Navigator.HandleKey(key);
+        if (result.ReturnFocus) returnFocus = true;
+        StateHasChanged();
+        if (result.ActivatedId is { } id) await OnActivate.InvokeAsync(id);
+    }
+
+    [JSInvokable]
+    public void OnMenuOutside()
+    {
+        Navigator.Close();
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (subscribed is not null) subscribed.PropertyChanged -= OnNavigatorChanged;
+        try { await JS.InvokeVoidAsync("studyScopeLayout.detachMenu", wrapper); }
+        catch (JSException) { }
+        catch (JSDisconnectedException) { }
+        catch (InvalidOperationException) { }
+        selfRef?.Dispose();
+    }
+}
