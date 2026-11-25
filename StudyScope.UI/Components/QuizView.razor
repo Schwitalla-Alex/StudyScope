@@ -8,16 +8,16 @@
     <!-- Kopfzeile -->
     <div class="qz-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Quiz: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Quiz: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(QuizVm.Topics.Count == 0 ? "Noch keine Themen angelegt" : $"{Count(QuizVm.Topics.Count, "Thema", "Themen")} · {Count(QuizVm.Topics.Sum(t => t.Questions.Count), "Frage", "Fragen")} im Pool · {Count(QuizVm.History.Count, "Durchgang", "Durchgänge")} im Verlauf")
             </span>
         </div>
         @if (QuizVm.Screen == QuizScreen.Library && !QuizVm.IsBusy)
         {
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" class="qz-btn" style="background: #007bff;" title="Eigenes Thema mit Dokumenten anlegen" @onclick="OpenNewTopic">➕ Neues Thema</button>
-                <button type="button" class="qz-btn" style="background: #7048e8;" title="Die KI schlägt Themen aus den links aktivierten Dokumenten vor" @onclick="SuggestAsync">✨ Themen vorschlagen</button>
+                <button type="button" class="qz-btn" style="background: var(--ss-primary);" title="Eigenes Thema mit Dokumenten anlegen" @onclick="OpenNewTopic">➕ Neues Thema</button>
+                <button type="button" class="qz-btn" style="background: var(--ss-purple);" title="Die KI schlägt Themen aus den links aktivierten Dokumenten vor" @onclick="SuggestAsync">✨ Themen vorschlagen</button>
             </div>
         }
     </div>
@@ -28,8 +28,8 @@
             <div style="font-weight: 600; font-size: 13px;">@QuizVm.ProgressText</div>
             <div class="qz-progress"><div class="qz-progress-fill" style="width: @Css(Math.Max(4, QuizVm.ProgressPercent))%;"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: #6c757d;">Einmal erzeugte Fragen werden gespeichert und in späteren Quizrunden wiederverwendet.</span>
-                <button type="button" class="qz-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="QuizVm.Cancel">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">Einmal erzeugte Fragen werden gespeichert und in späteren Quizrunden wiederverwendet.</span>
+                <button type="button" class="qz-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="QuizVm.Cancel">Abbrechen</button>
             </div>
         </div>
     }
@@ -37,8 +37,8 @@
     @if (!string.IsNullOrEmpty(QuizVm.StatusMessage))
     {
         var (statusBg, statusBorder, statusText) = QuizVm.IsError
-            ? ("#f8d7da", "#f5c6cb", "#721c24")
-            : QuizVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+            ? ("var(--ss-danger-bg)", "var(--ss-danger-border)", "var(--ss-danger-text)")
+            : QuizVm.IsWarning ? ("var(--ss-warning-bg)", "var(--ss-warning-border)", "var(--ss-warning-text)") : ("var(--ss-success-bg)", "var(--ss-success-border)", "var(--ss-success-text)");
 
         <div class="qz-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
             <div style="flex: 1; min-width: 0;">
@@ -80,82 +80,82 @@
     </div>
 
     <style>
-        .qz-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
-        .qz-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
-        .qz-btn { padding: 7px 12px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .qz-root { flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
+        .qz-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px; }
+        .qz-btn { padding: 7px 12px; color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
         .qz-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .qz-btn-outline { padding: 6px 12px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
-        .qz-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
+        .qz-btn-outline { padding: 6px 12px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .qz-btn-outline:hover:not(:disabled) { background: var(--ss-hover); }
         .qz-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
         .qz-icon-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 14px; padding: 2px 6px; }
-        .qz-icon-btn:hover { background: #f1f3f5; border-color: #dee2e6; }
-        .qz-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
-        .qz-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
-        .qz-progress { width: 100%; max-width: 520px; height: 8px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; }
-        .qz-progress-fill { height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; transition: width 0.3s; }
+        .qz-icon-btn:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
+        .qz-link { background: none; border: none; color: var(--ss-link); cursor: pointer; font-size: 12px; padding: 0; }
+        .qz-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
+        .qz-progress { width: 100%; max-width: 520px; height: 8px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; }
+        .qz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; transition: width 0.3s; }
         .qz-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .qz-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .qz-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .qz-body { flex: 1; min-height: 0; margin-top: 16px; display: flex; flex-direction: column; overflow-y: auto; }
 
         .qz-grid { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
         .qz-col-main { flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
         .qz-col-side { flex: 0 1 380px; min-width: 300px; display: flex; flex-direction: column; gap: 12px; }
-        .qz-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
-        .qz-card h4 { margin: 0 0 10px 0; font-size: 14px; color: #212529; }
-        .qz-label { font-size: 12px; font-weight: 600; color: #495057; margin: 10px 0 4px 0; display: block; }
-        .qz-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .qz-card { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; padding: 14px 16px; }
+        .qz-card h4 { margin: 0 0 10px 0; font-size: 14px; color: var(--ss-text); }
+        .qz-label { font-size: 12px; font-weight: 600; color: var(--ss-text-2); margin: 10px 0 4px 0; display: block; }
+        .qz-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; font-family: inherit; }
         .qz-check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; padding: 3px 0; cursor: pointer; }
-        .qz-topic { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid #f1f3f5; align-items: flex-start; }
+        .qz-topic { display: flex; gap: 10px; padding: 10px 0; border-top: 1px solid var(--ss-border-faint); align-items: flex-start; }
         .qz-topic:first-of-type { border-top: none; }
         .qz-topic input[type=checkbox] { margin-top: 3px; width: 16px; height: 16px; cursor: pointer; }
         .qz-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 8px; margin-left: 6px; vertical-align: middle; }
-        .qz-meta { font-size: 11px; color: #6c757d; margin-top: 3px; }
-        .qz-empty { text-align: center; color: #6c757d; padding: 26px 10px; font-size: 13px; line-height: 1.5; }
+        .qz-meta { font-size: 11px; color: var(--ss-text-muted); margin-top: 3px; }
+        .qz-empty { text-align: center; color: var(--ss-text-muted); padding: 26px 10px; font-size: 13px; line-height: 1.5; }
         .qz-mode { display: flex; gap: 8px; }
-        .qz-mode-option { flex: 1; border: 2px solid #dee2e6; border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 12px; color: #495057; background: #fff; text-align: left; }
-        .qz-mode-option.active { border-color: #007bff; background: #f0f7ff; }
-        .qz-mode-option b { display: block; font-size: 13px; color: #212529; margin-bottom: 2px; }
-        .qz-history-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid #f1f3f5; font-size: 12px; }
-        .qz-bar { height: 6px; background: #e9ecef; border-radius: 3px; overflow: hidden; }
+        .qz-mode-option { flex: 1; border: 2px solid var(--ss-border-light); border-radius: 6px; padding: 8px 10px; cursor: pointer; font-size: 12px; color: var(--ss-text-2); background: var(--ss-surface); text-align: left; }
+        .qz-mode-option.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
+        .qz-mode-option b { display: block; font-size: 13px; color: var(--ss-text); margin-bottom: 2px; }
+        .qz-history-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; border-top: 1px solid var(--ss-border-faint); font-size: 12px; }
+        .qz-bar { height: 6px; background: var(--ss-panel); border-radius: 3px; overflow: hidden; }
         .qz-bar > div { height: 100%; border-radius: 3px; }
 
         .qz-run { max-width: 860px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
         .qz-run-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-        .qz-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: #e9ecef; color: #495057; margin-right: 6px; }
+        .qz-chip { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--ss-panel); color: var(--ss-text-2); margin-right: 6px; }
         .qz-nav-dots { display: flex; flex-wrap: wrap; gap: 4px; }
-        .qz-dot { width: 26px; height: 26px; border-radius: 50%; border: 1px solid #ced4da; background: #fff; font-size: 11px; cursor: pointer; color: #495057; }
-        .qz-dot.answered { background: #cfe2ff; border-color: #9ec5fe; }
-        .qz-dot.current { border: 2px solid #007bff; font-weight: 700; }
-        .qz-dot.correct { background: #d1e7dd; border-color: #a3cfbb; }
-        .qz-dot.wrong { background: #f8d7da; border-color: #f1aeb5; }
-        .qz-question { font-size: 17px; font-weight: 600; color: #212529; line-height: 1.45; margin: 4px 0 2px 0; }
-        .qz-hint { font-size: 12px; color: #6c757d; }
+        .qz-dot { width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--ss-border); background: var(--ss-surface); font-size: 11px; cursor: pointer; color: var(--ss-text-2); }
+        .qz-dot.answered { background: var(--ss-info-bg-strong); border-color: var(--ss-selected-border); }
+        .qz-dot.current { border: 2px solid var(--ss-primary); font-weight: 700; }
+        .qz-dot.correct { background: var(--ss-success-bg); border-color: var(--ss-success-border); }
+        .qz-dot.wrong { background: var(--ss-danger-bg); border-color: var(--ss-danger-border); }
+        .qz-question { font-size: 17px; font-weight: 600; color: var(--ss-text); line-height: 1.45; margin: 4px 0 2px 0; }
+        .qz-hint { font-size: 12px; color: var(--ss-text-muted); }
         .qz-options { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
-        .qz-option { display: flex; gap: 12px; align-items: center; text-align: left; padding: 11px 14px; border: 2px solid #dee2e6; border-radius: 8px; background: #fff; cursor: pointer; font-size: 14px; color: #212529; font-family: inherit; }
-        .qz-option:hover:not(:disabled) { border-color: #9ec5fe; }
+        .qz-option { display: flex; gap: 12px; align-items: center; text-align: left; padding: 11px 14px; border: 2px solid var(--ss-border-light); border-radius: 8px; background: var(--ss-surface); cursor: pointer; font-size: 14px; color: var(--ss-text); font-family: inherit; }
+        .qz-option:hover:not(:disabled) { border-color: var(--ss-selected-border); }
         .qz-option:disabled { cursor: default; }
-        .qz-option.selected { border-color: #007bff; background: #f0f7ff; }
-        .qz-option.correct { border-color: #28a745; background: #e9f7ef; }
-        .qz-option.wrong { border-color: #dc3545; background: #fdecee; }
-        .qz-option.missed { border-color: #28a745; border-style: dashed; }
-        .qz-marker { width: 22px; height: 22px; flex-shrink: 0; border: 2px solid #adb5bd; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #6c757d; }
+        .qz-option.selected { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
+        .qz-option.correct { border-color: var(--ss-success); background: var(--ss-success-bg); }
+        .qz-option.wrong { border-color: var(--ss-danger); background: var(--ss-danger-bg); }
+        .qz-option.missed { border-color: var(--ss-success); border-style: dashed; }
+        .qz-marker { width: 22px; height: 22px; flex-shrink: 0; border: 2px solid var(--ss-border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: var(--ss-text-muted); }
         .qz-marker.round { border-radius: 50%; }
         .qz-marker.square { border-radius: 4px; }
-        .qz-option.selected .qz-marker { background: #007bff; border-color: #007bff; color: #fff; }
-        .qz-option.correct .qz-marker { background: #28a745; border-color: #28a745; color: #fff; }
-        .qz-option.wrong .qz-marker { background: #dc3545; border-color: #dc3545; color: #fff; }
+        .qz-option.selected .qz-marker { background: var(--ss-primary); border-color: var(--ss-primary); color: var(--ss-on-accent); }
+        .qz-option.correct .qz-marker { background: var(--ss-success); border-color: var(--ss-success); color: var(--ss-on-accent); }
+        .qz-option.wrong .qz-marker { background: var(--ss-danger); border-color: var(--ss-danger); color: var(--ss-on-accent); }
         .qz-feedback { border-radius: 8px; padding: 10px 14px; font-size: 13px; line-height: 1.5; }
         .qz-actions { display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; align-items: center; }
 
         .qz-score { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
         .qz-ring { width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .qz-ring-inner { width: 94px; height: 94px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .qz-review { border-top: 1px solid #f1f3f5; padding: 12px 0; }
-        .qz-review-option { font-size: 13px; padding: 2px 0 2px 22px; position: relative; color: #495057; }
+        .qz-ring-inner { width: 94px; height: 94px; border-radius: 50%; background: var(--ss-surface); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .qz-review { border-top: 1px solid var(--ss-border-faint); padding: 12px 0; }
+        .qz-review-option { font-size: 13px; padding: 2px 0 2px 22px; position: relative; color: var(--ss-text-2); }
         .qz-review-option::before { position: absolute; left: 0; }
-        .qz-review-option.correct { color: #1e7b34; font-weight: 600; }
+        .qz-review-option.correct { color: var(--ss-success-text); font-weight: 600; }
         .qz-review-option.correct::before { content: "✓"; }
-        .qz-review-option.wrong { color: #b02a37; text-decoration: line-through; }
+        .qz-review-option.wrong { color: var(--ss-danger-fg); text-decoration: line-through; }
         .qz-review-option.wrong::before { content: "✗"; text-decoration: none; }
     </style>
 </div>
@@ -176,7 +176,7 @@
     private static string Percent(double value) => value.ToString("0.#", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
     private static string Letter(int index) => ((char)('A' + index)).ToString();
     private static string Count(int n, string singular, string plural) => $"{n} {(n == 1 ? singular : plural)}";
-    private static string ScoreColor(double percent) => percent >= 75 ? "#28a745" : percent >= 50 ? "#f0ad4e" : "#dc3545";
+    private static string ScoreColor(double percent) => percent >= 75 ? "var(--ss-success-fg)" : percent >= 50 ? "var(--ss-amber)" : "var(--ss-danger-fg)";
 
     // ---------------- Übersicht: Themen, Start, Verlauf ----------------
 
@@ -185,11 +185,11 @@
 
             @if (QuizVm.IsTopicFormOpen)
             {
-                <div class="qz-card" style="border-color: #9ec5fe;">
+                <div class="qz-card" style="border-color: var(--ss-selected-border);">
                     <h4>@(QuizVm.IsEditingTopic ? "✏️ Thema bearbeiten" : "➕ Neues Thema")</h4>
                     <label class="qz-label">Name</label>
                     <input class="qz-input" placeholder="z. B. Einkommensteuer" @bind="QuizVm.FormName" @bind:event="oninput" />
-                    <label class="qz-label">Worum geht es? <span style="font-weight: normal; color: #6c757d;">(optional – hilft der KI, passende Textstellen zu finden)</span></label>
+                    <label class="qz-label">Worum geht es? <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – hilft der KI, passende Textstellen zu finden)</span></label>
                     <textarea class="qz-input" rows="2" placeholder="z. B. Tarif, Freibeträge und Splittingverfahren" @bind="QuizVm.FormDescription" @bind:event="oninput"></textarea>
                     <label class="qz-label">Dokumente, aus denen die Fragen stammen</label>
                     @if (DocVm.Documents.Count == 0)
@@ -199,17 +199,17 @@
                     @foreach (var doc in DocVm.Documents)
                     {
                         var path = doc.FilePath;
-                        <label class="qz-check" style="@(doc.IsMissing ? "opacity: 0.5;" : "")">
+                        <label class="qz-check" style="@(doc.IsMissing ? "color: var(--ss-text-muted);" : "")">
                             <input type="checkbox" checked="@QuizVm.IsFormDocumentSelected(path)" disabled="@doc.IsMissing" @onchange="() => QuizVm.ToggleFormDocument(path)" />
                             <span>@doc.FileName @(doc.IsMissing ? "(nicht gefunden)" : "")</span>
                         </label>
                     }
                     @if (!string.IsNullOrEmpty(QuizVm.FormError))
                     {
-                        <div style="color: #b02a37; font-size: 12px; margin-top: 6px;">@QuizVm.FormError</div>
+                        <div style="color: var(--ss-danger-fg); font-size: 12px; margin-top: 6px;">@QuizVm.FormError</div>
                     }
                     <div style="display: flex; gap: 8px; margin-top: 12px;">
-                        <button type="button" class="qz-btn" style="background: #28a745;" @onclick="SaveTopicAsync">Speichern</button>
+                        <button type="button" class="qz-btn" style="background: var(--ss-success);" @onclick="SaveTopicAsync">Speichern</button>
                         <button type="button" class="qz-btn-outline" @onclick="QuizVm.CloseTopicForm">Abbrechen</button>
                     </div>
                 </div>
@@ -217,7 +217,7 @@
 
             @if (QuizVm.Suggestions.Count > 0)
             {
-                <div class="qz-card" style="border-color: #c5b3f6;">
+                <div class="qz-card" style="border-color: var(--ss-purple-border);">
                     <h4>✨ Themenvorschläge der KI</h4>
                     <div class="qz-meta" style="margin-bottom: 6px;">Haken Sie die Themen an, die Sie übernehmen möchten. Sie beruhen auf den gerade aktivierten Dokumenten.</div>
                     @foreach (var item in QuizVm.Suggestions)
@@ -229,7 +229,7 @@
                         </label>
                     }
                     <div style="display: flex; gap: 8px; margin-top: 10px;">
-                        <button type="button" class="qz-btn" style="background: #7048e8;" @onclick="QuizVm.AcceptSuggestionsAsync">Ausgewählte übernehmen</button>
+                        <button type="button" class="qz-btn" style="background: var(--ss-purple);" @onclick="QuizVm.AcceptSuggestionsAsync">Ausgewählte übernehmen</button>
                         <button type="button" class="qz-btn-outline" @onclick="QuizVm.DismissSuggestions">Verwerfen</button>
                     </div>
                 </div>
@@ -264,16 +264,16 @@
                     <div class="qz-topic">
                         <input type="checkbox" checked="@QuizVm.IsTopicSelected(t.Id)" title="Für das Quiz auswählen" @onchange="() => QuizVm.ToggleTopic(t.Id)" />
                         <div style="flex: 1; min-width: 0; cursor: pointer;" @onclick="() => QuizVm.ToggleTopic(t.Id)">
-                            <div style="font-size: 14px; font-weight: 600; color: #212529;">
+                            <div style="font-size: 14px; font-weight: 600; color: var(--ss-text);">
                                 @t.Name
                                 @if (t.Origin == StudyScope.Core.Models.QuizTopicOrigin.Ai)
                                 {
-                                    <span class="qz-badge" style="background: #efe9fd; color: #5f3dc4;">KI</span>
+                                    <span class="qz-badge" style="background: var(--ss-purple-bg); color: var(--ss-purple-text);">KI</span>
                                 }
                             </div>
                             @if (!string.IsNullOrWhiteSpace(t.Description))
                             {
-                                <div style="font-size: 12px; color: #495057; margin-top: 2px;">@t.Description</div>
+                                <div style="font-size: 12px; color: var(--ss-text-2); margin-top: 2px;">@t.Description</div>
                             }
                             <div class="qz-meta">
                                 📄 @string.Join(", ", t.Documents.Select(d => d.FileName))
@@ -287,7 +287,7 @@
                         <div style="display: flex; gap: 2px; flex-shrink: 0;">
                             @if (confirmDeleteTopicId == t.Id)
                             {
-                                <button class="qz-btn" style="background: #dc3545; padding: 3px 8px; font-size: 12px;" @onclick="() => DeleteTopicAsync(t.Id)">Löschen?</button>
+                                <button class="qz-btn" style="background: var(--ss-danger); padding: 3px 8px; font-size: 12px;" @onclick="() => DeleteTopicAsync(t.Id)">Löschen?</button>
                                 <button class="qz-icon-btn" title="Nicht löschen" @onclick="() => confirmDeleteTopicId = null">✕</button>
                             }
                             else
@@ -305,7 +305,7 @@
         <div class="qz-col-side">
             <div class="qz-card">
                 <h4>▶ Quiz starten</h4>
-                <div style="font-size: 13px; color: #495057;">
+                <div style="font-size: 13px; color: var(--ss-text-2);">
                     Ausgewählte Themen: <b>@QuizVm.SelectedTopicCount</b> von @QuizVm.Topics.Count
                 </div>
 
@@ -336,7 +336,7 @@
                     </label>
                 }
 
-                <button type="button" class="qz-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 10px;"
+                <button type="button" class="qz-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 10px;"
                         disabled="@(QuizVm.IsBusy || QuizVm.SelectedTopicCount == 0)" @onclick="StartAsync">
                     ▶ Quiz mit @QuizVm.QuestionCount Fragen starten
                 </button>
@@ -354,7 +354,7 @@
                         @if (confirmClearHistory)
                         {
                             <span style="font-size: 12px;">
-                                <button class="qz-link" style="color: #dc3545; font-weight: 600;" @onclick="ClearHistoryAsync">Wirklich löschen</button> ·
+                                <button class="qz-link" style="color: var(--ss-danger-fg); font-weight: 600;" @onclick="ClearHistoryAsync">Wirklich löschen</button> ·
                                 <button class="qz-link" @onclick="() => confirmClearHistory = false">Nein</button>
                             </span>
                         }
@@ -371,7 +371,7 @@
                 @foreach (var result in QuizVm.History.Take(showAllHistory ? QuizViewModel.MaxHistoryEntries : 8))
                 {
                     <div class="qz-history-row">
-                        <div style="width: 74px; color: #6c757d; flex-shrink: 0;">@result.CompletedAt.ToString("dd.MM. HH:mm")</div>
+                        <div style="width: 74px; color: var(--ss-text-muted); flex-shrink: 0;">@result.CompletedAt.ToString("dd.MM. HH:mm")</div>
                         <div style="flex: 1; min-width: 0;">
                             <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="@string.Join(", ", result.TopicNames)">
                                 @(result.Mode == StudyScope.Core.Models.QuizMode.Learn ? "🎓" : "📝") @string.Join(", ", result.TopicNames)
@@ -409,19 +409,19 @@
             <div class="qz-card">
                 <div class="qz-run-head">
                     <div>
-                        <span style="font-size: 15px; font-weight: 700; color: #212529; margin-right: 10px;">Frage @(session.CurrentIndex + 1) von @session.Count</span>
+                        <span style="font-size: 15px; font-weight: 700; color: var(--ss-text); margin-right: 10px;">Frage @(session.CurrentIndex + 1) von @session.Count</span>
                         <span class="qz-chip">@item.TopicName</span>
                         <span class="qz-chip">@(isLearn ? "🎓 Lernmodus" : "📝 Prüfungsmodus")</span>
                         @if (isLearn && session.CheckedCount > 0)
                         {
-                            <span class="qz-chip" style="background: #d1e7dd; color: #0f5132;">@session.CorrectCount von @session.CheckedCount richtig</span>
+                            <span class="qz-chip" style="background: var(--ss-success-bg); color: var(--ss-success-text);">@session.CorrectCount von @session.CheckedCount richtig</span>
                         }
                     </div>
                     @if (confirmAbort)
                     {
                         <span style="font-size: 12px;">
                             Quiz abbrechen? Das Ergebnis wird nicht gespeichert.
-                            <button class="qz-link" style="color: #dc3545; font-weight: 600;" @onclick="AbortQuiz">Ja, abbrechen</button> ·
+                            <button class="qz-link" style="color: var(--ss-danger-fg); font-weight: 600;" @onclick="AbortQuiz">Ja, abbrechen</button> ·
                             <button class="qz-link" @onclick="() => confirmAbort = false">Weiterspielen</button>
                         </span>
                     }
@@ -431,7 +431,7 @@
                     }
                 </div>
                 <div class="qz-bar" style="margin-top: 10px;">
-                    <div style="width: @Css(100.0 * (isLearn ? session.CheckedCount : session.AnsweredCount) / session.Count)%; background: #007bff;"></div>
+                    <div style="width: @Css(100.0 * (isLearn ? session.CheckedCount : session.AnsweredCount) / session.Count)%; background: var(--ss-primary);"></div>
                 </div>
                 @if (!isLearn)
                 {
@@ -477,11 +477,11 @@
 
             @if (showSolution)
             {
-                <div class="qz-feedback" style="background: @(item.IsCorrect ? "#d1e7dd" : "#f8d7da"); color: @(item.IsCorrect ? "#0f5132" : "#842029");">
+                <div class="qz-feedback" style="background: @(item.IsCorrect ? "var(--ss-success-bg)" : "var(--ss-danger-bg)"); color: @(item.IsCorrect ? "var(--ss-success-text)" : "var(--ss-danger-fg)");">
                     <b>@(item.IsCorrect ? "✓ Richtig!" : item.IsAnswered ? "✗ Leider falsch." : "✗ Nicht beantwortet.")</b>
                     @if (!string.IsNullOrWhiteSpace(question.Explanation))
                     {
-                        <div style="margin-top: 4px; color: #212529;">@question.Explanation</div>
+                        <div style="margin-top: 4px; color: var(--ss-text);">@question.Explanation</div>
                     }
                 </div>
             }
@@ -494,32 +494,32 @@
                     {
                         @if (!item.IsChecked)
                         {
-                            <button type="button" class="qz-btn" style="background: #007bff;" disabled="@(!session.CanCheck)" @onclick="Check">Antwort prüfen</button>
+                            <button type="button" class="qz-btn" style="background: var(--ss-primary);" disabled="@(!session.CanCheck)" @onclick="Check">Antwort prüfen</button>
                         }
                         else if (!session.IsLastQuestion)
                         {
-                            <button type="button" class="qz-btn" style="background: #007bff;" @onclick="Next">Weiter ▶</button>
+                            <button type="button" class="qz-btn" style="background: var(--ss-primary);" @onclick="Next">Weiter ▶</button>
                         }
                         else
                         {
-                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="FinishAsync">Ergebnis anzeigen</button>
+                            <button type="button" class="qz-btn" style="background: var(--ss-success);" @onclick="FinishAsync">Ergebnis anzeigen</button>
                         }
                     }
                     else
                     {
                         @if (confirmSubmit)
                         {
-                            <span style="font-size: 12px; color: #856404;">@session.UnansweredCount Frage(n) unbeantwortet – zählen als falsch.</span>
-                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="FinishAsync">Trotzdem abgeben</button>
+                            <span style="font-size: 12px; color: var(--ss-warning-text);">@session.UnansweredCount Frage(n) unbeantwortet – zählen als falsch.</span>
+                            <button type="button" class="qz-btn" style="background: var(--ss-success);" @onclick="FinishAsync">Trotzdem abgeben</button>
                             <button class="qz-link" @onclick="() => confirmSubmit = false">Zurück</button>
                         }
                         else
                         {
                             @if (!session.IsLastQuestion)
                             {
-                                <button type="button" class="qz-btn" style="background: #007bff;" @onclick="Next">Weiter ▶</button>
+                                <button type="button" class="qz-btn" style="background: var(--ss-primary);" @onclick="Next">Weiter ▶</button>
                             }
-                            <button type="button" class="qz-btn" style="background: #28a745;" @onclick="SubmitExam">✔ Abgeben</button>
+                            <button type="button" class="qz-btn" style="background: var(--ss-success);" @onclick="SubmitExam">✔ Abgeben</button>
                         }
                     }
                 </div>
@@ -537,14 +537,14 @@
 
             <div class="qz-card">
                 <div class="qz-score">
-                    <div class="qz-ring" style="background: conic-gradient(@color @Css(result.Percent * 3.6)deg, #e9ecef 0deg);">
+                    <div class="qz-ring" style="background: conic-gradient(@color @Css(result.Percent * 3.6)deg, var(--ss-panel) 0deg);">
                         <div class="qz-ring-inner">
                             <div style="font-size: 24px; font-weight: 800; color: @color;">@Percent(result.Percent) %</div>
-                            <div style="font-size: 11px; color: #6c757d;">@result.Correct von @result.Total</div>
+                            <div style="font-size: 11px; color: var(--ss-text-muted);">@result.Correct von @result.Total</div>
                         </div>
                     </div>
                     <div style="flex: 1; min-width: 220px;">
-                        <div style="font-size: 18px; font-weight: 700; color: #212529;">@QuizViewModel.Verdict(result.Percent)</div>
+                        <div style="font-size: 18px; font-weight: 700; color: var(--ss-text);">@QuizViewModel.Verdict(result.Percent)</div>
                         <div class="qz-meta" style="font-size: 12px;">
                             @(result.Mode == StudyScope.Core.Models.QuizMode.Learn ? "🎓 Lernmodus" : "📝 Prüfungsmodus") · @string.Join(", ", result.TopicNames)
                         </div>
@@ -566,9 +566,9 @@
                         <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
                             @if (QuizVm.WrongCount > 0)
                             {
-                                <button type="button" class="qz-btn" style="background: #f76707;" @onclick="RepeatWrong">🔁 Falsche wiederholen (@QuizVm.WrongCount)</button>
+                                <button type="button" class="qz-btn" style="background: var(--ss-orange);" @onclick="RepeatWrong">🔁 Falsche wiederholen (@QuizVm.WrongCount)</button>
                             }
-                            <button type="button" class="qz-btn" style="background: #007bff;" @onclick="QuizVm.BackToLibrary">Zur Übersicht / neues Quiz</button>
+                            <button type="button" class="qz-btn" style="background: var(--ss-primary);" @onclick="QuizVm.BackToLibrary">Zur Übersicht / neues Quiz</button>
                         </div>
                     </div>
                 </div>
@@ -587,8 +587,8 @@
                         if (onlyWrong && entry.IsCorrect) continue;
                         var number = i + 1;
                         <div class="qz-review">
-                            <div style="font-size: 13px; font-weight: 600; color: #212529;">
-                                <span style="color: @(entry.IsCorrect ? "#1e7b34" : "#b02a37");">@(entry.IsCorrect ? "✓" : "✗")</span>
+                            <div style="font-size: 13px; font-weight: 600; color: var(--ss-text);">
+                                <span style="color: @(entry.IsCorrect ? "var(--ss-success-text)" : "var(--ss-danger-fg)");">@(entry.IsCorrect ? "✓" : "✗")</span>
                                 @number. @entry.Question.Text <span class="qz-chip" style="font-weight: normal;">@entry.TopicName</span>
                             </div>
                             <div style="margin-top: 4px;">
@@ -603,7 +603,7 @@
                             </div>
                             @if (!string.IsNullOrWhiteSpace(entry.Question.Explanation))
                             {
-                                <div style="font-size: 12px; color: #495057; margin-top: 4px; background: #f8f9fa; padding: 6px 10px; border-radius: 4px;">💡 @entry.Question.Explanation</div>
+                                <div style="font-size: 12px; color: var(--ss-text-2); margin-top: 4px; background: var(--ss-panel-light); padding: 6px 10px; border-radius: 4px;">💡 @entry.Question.Explanation</div>
                             }
                         </div>
                     }

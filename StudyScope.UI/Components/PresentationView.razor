@@ -10,8 +10,8 @@
     <!-- Obere Steuerleiste -->
     <div class="pp-toolbar">
         <div style="min-width: 0;">
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Präsentation: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Präsentation: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(PresVm.HasPresentation ? PresVm.SourceInfoText : "Noch keine Präsentation für dieses Profil")
             </span>
         </div>
@@ -19,37 +19,37 @@
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             @if (PresVm.IsGenerating)
             {
-                <button type="button" class="pp-btn" style="background: #6c757d;" @onclick="PresVm.CancelGeneration">
+                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" @onclick="PresVm.CancelGeneration">
                     <span class="pp-spinner"></span> Abbrechen
                 </button>
             }
             else if (pendingReplace != null)
             {
                 <!-- Rückfrage: Eine vorhandene Präsentation würde ersetzt -->
-                <span style="font-size: 13px; color: #856404; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; padding: 5px 10px;">
+                <span style="font-size: 13px; color: var(--ss-warning-text); background: var(--ss-warning-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; padding: 5px 10px;">
                     Die vorhandene Präsentation wird ersetzt.
                 </span>
-                <button type="button" class="pp-btn" style="background: #dc3545;" @onclick="ConfirmReplaceAsync">Ersetzen</button>
-                <button type="button" class="pp-btn" style="background: #6c757d;" @onclick="() => pendingReplace = null">Abbrechen</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-danger);" @onclick="ConfirmReplaceAsync">Ersetzen</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" @onclick="() => pendingReplace = null">Abbrechen</button>
             }
             else
             {
-                <label style="font-size: 13px; color: #495057;" title="Anzahl der Inhaltsfolien bei „Mit KI erstellen“">Folien:</label>
+                <label style="font-size: 13px; color: var(--ss-text-2);" title="Anzahl der Inhaltsfolien bei „Mit KI erstellen“">Folien:</label>
                 <input type="number" min="3" max="20" class="pp-number" @bind="PresVm.SlideCount" />
-                <button type="button" class="pp-btn" style="background: #007bff;"
+                <button type="button" class="pp-btn" style="background: var(--ss-primary);"
                         title="Die KI erstellt Folien mit Stichpunkten und Sprechernotizen aus den links aktivierten Dokumenten"
                         @onclick="GenerateAsync">✨ Mit KI erstellen</button>
-                <button type="button" class="pp-btn" style="background: #7048e8;"
+                <button type="button" class="pp-btn" style="background: var(--ss-purple);"
                         title="Folien aus der Mindmap dieses Profils ableiten (ohne KI, sofort)"
                         @onclick="FromMindmapAsync">🧠 Aus Mindmap</button>
             }
 
             @if (PresVm.HasPresentation && !PresVm.IsGenerating)
             {
-                <button type="button" class="pp-btn" style="background: #28a745;" title="Vortrag ab der ersten Folie starten (Esc beendet)" @onclick="() => StartPresentingAsync(true)">▶ Vortragen</button>
-                <button type="button" class="pp-btn" style="background: #6c757d;" title="Folien drucken oder als PDF speichern (eine Folie pro Seite)" @onclick="PrintAsync">🖨️ Drucken / PDF</button>
-                <button type="button" class="pp-btn" style="background: #d24726;" title="Als PowerPoint-Datei (.pptx) speichern – mit Sprechernotizen" @onclick="ExportPptxAsync">📊 PowerPoint</button>
-                <button type="button" class="pp-btn" style="background: #dc3545;" title="Präsentation dieses Profils löschen" @onclick="DeleteAsync">🗑️</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-success);" title="Vortrag ab der ersten Folie starten (Esc beendet)" @onclick="() => StartPresentingAsync(true)">▶ Vortragen</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" title="Folien drucken oder als PDF speichern (eine Folie pro Seite)" @onclick="PrintAsync">🖨️ Drucken / PDF</button>
+                <button type="button" class="pp-btn" style="background: #d24726;" title="Als PowerPoint-Datei (.pptx) speichern – mit Sprechernotizen" @onclick="ExportPptxAsync">📊 PowerPoint</button> @* ss:feste-farbe – PowerPoint-Markenfarbe *@
+                <button type="button" class="pp-btn" style="background: var(--ss-danger);" title="Präsentation dieses Profils löschen" @onclick="DeleteAsync">🗑️</button>
             }
         </div>
     </div>
@@ -59,15 +59,15 @@
         <div class="pp-info">
             <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📽️ KI gliedert die Inhalte und formuliert die Folien ...</div>
             <div class="pp-progress"><div class="pp-progress-bar"></div></div>
-            <div style="font-size: 11px; margin-top: 6px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
+            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
         </div>
     }
 
     @if (!string.IsNullOrEmpty(PresVm.StatusMessage))
     {
         var (statusBg, statusBorder, statusText) = PresVm.IsError
-            ? ("#f8d7da", "#f5c6cb", "#721c24")
-            : PresVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+            ? ("var(--ss-danger-bg)", "var(--ss-danger-border)", "var(--ss-danger-text)")
+            : PresVm.IsWarning ? ("var(--ss-warning-bg)", "var(--ss-warning-border)", "var(--ss-warning-text)") : ("var(--ss-success-bg)", "var(--ss-success-border)", "var(--ss-success-text)");
 
         <div class="pp-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
             <div style="flex: 1; min-width: 0;">
@@ -100,7 +100,7 @@
         {
             <div class="pp-empty">
                 <div style="font-size: 34px; margin-bottom: 10px;">📽️</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch keine Präsentation vorhanden.</p>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Präsentation vorhanden.</p>
                 <span style="font-size: 12px; line-height: 1.5; display: block;">
                     <b>✨ Mit KI erstellen:</b> Die KI formuliert aus den links aktivierten Dokumenten Folien mit Stichpunkten und Sprechernotizen.<br />
                     <b>🧠 Aus Mindmap:</b> Die Mindmap dieses Profils wird sofort in Folien umgewandelt – jeder Hauptast wird zu einer Folie.
@@ -133,14 +133,14 @@
 
                     <div class="pp-nav">
                         <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasPrevious)" @onclick="PreviousAsync">◀ Zurück</button>
-                        <span style="font-size: 13px; color: #495057; min-width: 70px; text-align: center;">Folie @PresVm.ProgressText</span>
+                        <span style="font-size: 13px; color: var(--ss-text-2); min-width: 70px; text-align: center;">Folie @PresVm.ProgressText</span>
                         <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasNext)" @onclick="NextAsync">Weiter ▶</button>
                         <button type="button" class="pp-btn-outline" title="Vortrag ab dieser Folie starten" @onclick="() => StartPresentingAsync(false)">▶ Ab hier vortragen</button>
                     </div>
 
                     <div class="pp-notes">
-                        <div style="font-size: 11px; font-weight: 600; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Sprechernotizen</div>
-                        <div style="font-size: 13px; line-height: 1.5; color: #343a40; white-space: pre-wrap;">
+                        <div style="font-size: 11px; font-weight: 600; color: var(--ss-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Sprechernotizen</div>
+                        <div style="font-size: 13px; line-height: 1.5; color: var(--ss-text); white-space: pre-wrap;">
                             @(string.IsNullOrWhiteSpace(current.Notes) ? "Keine Notizen zu dieser Folie." : current.Notes)
                         </div>
                     </div>
@@ -174,43 +174,43 @@
     }
 
     <style>
-        .pp-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
-        .pp-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
-        .pp-btn { padding: 7px 12px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
-        .pp-btn-outline { padding: 6px 12px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
-        .pp-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
+        .pp-root { flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; outline: none; }
+        .pp-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px; }
+        .pp-btn { padding: 7px 12px; color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .pp-btn-outline { padding: 6px 12px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .pp-btn-outline:hover:not(:disabled) { background: var(--ss-hover); }
         .pp-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
-        .pp-number { width: 52px; padding: 5px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; text-align: center; }
-        .pp-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .pp-number { width: 52px; padding: 5px; border-radius: 4px; border: 1px solid var(--ss-border); font-size: 13px; text-align: center; }
+        .pp-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
         .pp-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .pp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .pp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .pp-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
-        .pp-empty { margin: auto; text-align: center; color: #6c757d; max-width: 520px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+        .pp-empty { margin: auto; text-align: center; color: var(--ss-text-muted); max-width: 520px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border); }
 
         .pp-thumbs { width: 190px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
         .pp-thumb { display: flex; gap: 6px; align-items: flex-start; cursor: pointer; }
-        .pp-thumb-number { width: 18px; font-size: 11px; color: #6c757d; text-align: right; padding-top: 2px; }
+        .pp-thumb-number { width: 18px; font-size: 11px; color: var(--ss-text-muted); text-align: right; padding-top: 2px; }
         .pp-thumb-slide { flex: 1; border: 2px solid transparent; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
-        .pp-thumb.active .pp-thumb-slide { border-color: #007bff; }
-        .pp-thumb:hover .pp-thumb-slide { border-color: #9ec5fe; }
+        .pp-thumb.active .pp-thumb-slide { border-color: var(--ss-primary); }
+        .pp-thumb:hover .pp-thumb-slide { border-color: var(--ss-selected-border); }
 
         .pp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
         .pp-stage { display: flex; justify-content: center; }
-        .pp-stage-slide { width: 100%; max-width: 960px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-radius: 6px; overflow: hidden; border: 1px solid #dee2e6; }
+        .pp-stage-slide { width: 100%; max-width: 960px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); border-radius: 6px; overflow: hidden; border: 1px solid var(--ss-border-light); }
         .pp-nav { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
-        .pp-notes { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px 16px; max-width: 960px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+        .pp-notes { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; padding: 12px 16px; max-width: 960px; width: 100%; margin: 0 auto; box-sizing: border-box; }
 
         /* Folien-Stil (.pp-slide …) steht in wwwroot/css/studyscope-slides.css (gemeinsam mit dem Video) */
 
-        .pp-present { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; outline: none; cursor: pointer; }
+        .pp-present { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; outline: none; cursor: pointer; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .pp-present-slide { width: min(100vw, calc(100vh * 16 / 9)); }
-        .pp-present-hint { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.45); padding: 3px 10px; border-radius: 12px; user-select: none; opacity: 0.35; transition: opacity 0.2s; }
+        .pp-present-hint { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.85); background: var(--ss-overlay); padding: 3px 10px; border-radius: 12px; user-select: none; opacity: 0.35; transition: opacity 0.2s; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .pp-present:hover .pp-present-hint { opacity: 1; }
 
-        .pp-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-radius: 50%; border-top-color: #fff; animation: pp-spin 0.8s linear infinite; }
+        .pp-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35) /* ss:feste-farbe – Ladekreis auf farbigem Knopf */; border-radius: 50%; border-top-color: var(--ss-on-accent); animation: pp-spin 0.8s linear infinite; }
         @@keyframes pp-spin { to { transform: rotate(360deg); } }
-        .pp-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
-        .pp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: pp-slide 1.4s ease-in-out infinite; }
+        .pp-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .pp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: pp-slide 1.4s ease-in-out infinite; }
         @@keyframes pp-slide { 0% { left: -40%; } 100% { left: 100%; } }
 
         .pp-print-only { display: none; }

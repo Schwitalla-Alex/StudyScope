@@ -11,29 +11,29 @@
 <div @ref="cardContainerRef"
      tabindex="0"
      @onkeydown="HandleKeyDownAsync"
-     style="flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; box-sizing: border-box; outline: none;">
+     style="flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; box-sizing: border-box; outline: none;">
 
     <!-- Obere Steuerleiste: Profil, Fortschritt und zentrale Aktionsbuttons -->
-    <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px;">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Lernkarteikarten: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Lernkarteikarten: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @FlashVm.Flashcards.Count Karte(n) vorhanden | Karte @FlashVm.ProgressText
             </span>
         </div>
 
         <div style="display: flex; gap: 8px; align-items: center;">
-            <label style="font-size: 13px; color: #495057;">Anzahl:</label>
+            <label style="font-size: 13px; color: var(--ss-text-2);">Anzahl:</label>
             <input type="number"
                    min="1"
                    max="50"
                    disabled="@FlashVm.IsGenerating"
-                   style="width: 55px; padding: 5px; border-radius: 4px; border: 1px solid #ced4da; font-size: 13px; text-align: center;"
+                   style="width: 55px; padding: 5px; border-radius: 4px; border: 1px solid var(--ss-border); font-size: 13px; text-align: center;"
                    @bind="selectedCardCount" />
 
             <!-- Neue Karten erstellen -->
             <button type="button"
-                    style="padding: 7px 14px; background: @(FlashVm.IsGenerating ? "#6c757d" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px; display: flex; align-items: center; gap: 8px;"
+                    style="padding: 7px 14px; background: @(FlashVm.IsGenerating ? "var(--ss-secondary)" : "var(--ss-primary)"); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px; display: flex; align-items: center; gap: 8px;"
                     disabled="@FlashVm.IsGenerating"
                     @onclick="GenerateCardsAsync">
                 @if (FlashVm.IsGenerating)
@@ -51,14 +51,14 @@
             @if (FlashVm.Flashcards.Any())
             {
                 <button type="button"
-                        style="padding: 7px 12px; background: #6c757d; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
+                        style="padding: 7px 12px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
                         disabled="@FlashVm.IsGenerating"
                         title="Drucken oder als PDF speichern"
                         @onclick="PrintCardsAsync">
                     🖨️ Drucken / PDF
                 </button>
                 <button type="button"
-                        style="padding: 7px 12px; background: #17a2b8; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
+                        style="padding: 7px 12px; background: var(--ss-info); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
                         disabled="@FlashVm.IsGenerating"
                         title="Als Markdown exportieren"
                         @onclick="ExportMarkdownAsync">
@@ -69,7 +69,7 @@
             @if (FlashVm.Flashcards.Any())
             {
                 <button type="button"
-                        style="padding: 7px 12px; background: #dc3545; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
+                        style="padding: 7px 12px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
                         title="Alle Karten dieses Profils löschen"
                         @onclick="ClearCardsAsync">
                     🗑️ Alle löschen
@@ -84,8 +84,8 @@
     {
         <div class="flash-mode-backdrop" @onclick="CancelModeDialog">
             <div class="flash-mode-dialog" role="dialog" aria-modal="true" aria-labelledby="flash-mode-title" @onclick:stopPropagation="true">
-                <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: #212529;">Neue Karten erstellen</h4>
-                <p style="margin: 0 0 14px 0; font-size: 13px; color: #495057;">
+                <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: var(--ss-text);">Neue Karten erstellen</h4>
+                <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--ss-text-2);">
                     Es sind bereits @FlashVm.Flashcards.Count Karte(n) vorhanden. Wie sollen die @selectedCardCount neuen Karten übernommen werden?
                 </p>
 
@@ -111,7 +111,7 @@
 
                 @if (generationMode == FlashcardGenerationMode.Replace)
                 {
-                    <div id="flash-mode-warning" role="alert" style="margin-top: 10px; padding: 8px 12px; background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; border-radius: 4px; font-size: 12px;">
+                    <div id="flash-mode-warning" role="alert" style="margin-top: 10px; padding: 8px 12px; background: var(--ss-danger-bg); border: 1px solid var(--ss-danger-border); color: var(--ss-danger-text); border-radius: 4px; font-size: 12px;">
                         ⚠️ Achtung: Die @FlashVm.Flashcards.Count vorhandenen Karten werden gelöscht – samt Lernstand
                         (@FlashVm.KnownCount gelernt, @FlashVm.DifficultCount zum Wiederholen). Das lässt sich nicht rückgängig machen.
                     </div>
@@ -119,12 +119,12 @@
 
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
                     <button type="button" id="flash-mode-cancel"
-                            style="padding: 7px 14px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; cursor: pointer; font-size: 13px;"
+                            style="padding: 7px 14px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; cursor: pointer; font-size: 13px;"
                             @onclick="CancelModeDialog">
                         Abbrechen
                     </button>
                     <button type="button" id="flash-mode-confirm"
-                            style="padding: 7px 14px; background: @(generationMode == FlashcardGenerationMode.Replace ? "#dc3545" : "#007bff"); color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
+                            style="padding: 7px 14px; background: @(generationMode == FlashcardGenerationMode.Replace ? "var(--ss-danger)" : "var(--ss-primary)"); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
                             @onclick="ConfirmModeDialogAsync">
                         @(generationMode == FlashcardGenerationMode.Replace ? "Stapel ersetzen" : "Karten hinzufügen")
                     </button>
@@ -136,7 +136,7 @@
     <!-- Visuelles Feedback während der KI-Generierung inkl. animiertem Fortschrittsbalken -->
     @if (FlashVm.IsGenerating)
     {
-        <div style="margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085;">
+        <div style="margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text);">
             <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">
                 🧠 KI analysiert Textstellen und formuliert Lernkarten...
             </div>
@@ -146,7 +146,7 @@
                 <div class="progress-bar-indeterminate"></div>
             </div>
 
-            <div style="font-size: 11px; margin-top: 6px; color: #6c757d;">
+            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">
                 Dies kann je nach Hardware und Kontextgröße einige Sekunden dauern.
             </div>
         </div>
@@ -155,7 +155,7 @@
     <!-- Statusmeldung bei Export oder Hinweisen -->
     @if (!string.IsNullOrEmpty(statusMessage))
     {
-        <div style="margin-top: 12px; padding: 8px 12px; background: @(isErrorMessage ? "#f8d7da" : "#d4edda"); border: 1px solid @(isErrorMessage ? "#f5c6cb" : "#c3e6cb"); color: @(isErrorMessage ? "#721c24" : "#155724"); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="margin-top: 12px; padding: 8px 12px; background: @(isErrorMessage ? "var(--ss-danger-bg)" : "var(--ss-success-bg)"); border: 1px solid @(isErrorMessage ? "var(--ss-danger-border)" : "var(--ss-success-border)"); color: @(isErrorMessage ? "var(--ss-danger-text)" : "var(--ss-success-text)"); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
             <span>@statusMessage</span>
             <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px;" @onclick="() => statusMessage = null">✕</button>
         </div>
@@ -164,25 +164,25 @@
     <!-- Filterleiste -->
     <div style="display: flex; gap: 8px; margin: 18px 0 16px 0; flex-wrap: wrap;">
         <button type="button"
-                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #ced4da; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "#212529" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "#fff" : "#212529"); font-weight: bold;"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-border); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "var(--ss-chip-active-bg)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "var(--ss-chip-active-text)" : "var(--ss-text)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.All)">
             Alle (@FlashVm.TotalCount)
         </button>
 
         <button type="button"
-                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #dc3545; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "#dc3545" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "#fff" : "#dc3545"); font-weight: bold;"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-danger); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "var(--ss-danger)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "var(--ss-on-accent)" : "var(--ss-danger-fg)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.DifficultOnly)">
             🔴 Wiederholen (@FlashVm.DifficultCount)
         </button>
 
         <button type="button"
-                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #6c757d; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "#6c757d" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "#fff" : "#6c757d"); font-weight: bold;"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-secondary); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "var(--ss-secondary)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "var(--ss-on-accent)" : "var(--ss-text-muted)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.NewOnly)">
             ⚪ Neu (@FlashVm.NewCount)
         </button>
 
         <button type="button"
-                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid #28a745; cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "#28a745" : "#fff"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "#fff" : "#28a745"); font-weight: bold;"
+                style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-success); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "var(--ss-success)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "var(--ss-on-accent)" : "var(--ss-success-fg)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.KnownOnly)">
             🟢 Gelernt (@FlashVm.KnownCount)
         </button>
@@ -192,10 +192,10 @@
     <div style="flex: 1; display: flex; justify-content: center; align-items: center; min-height: 280px;">
         @if (FlashVm.CurrentCard == null && !FlashVm.IsGenerating)
         {
-            <div style="text-align: center; color: #6c757d; max-width: 420px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da;">
+            <div style="text-align: center; color: var(--ss-text-muted); max-width: 420px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border);">
                 <div style="font-size: 34px; margin-bottom: 10px;">🎴</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Keine passenden Karteikarten vorhanden.</p>
-                <span style="font-size: 12px; color: #6c757d; line-height: 1.4; display: block;">
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Keine passenden Karteikarten vorhanden.</p>
+                <span style="font-size: 12px; color: var(--ss-text-muted); line-height: 1.4; display: block;">
                     Aktivieren Sie links mindestens ein PDF-Dokument und klicken Sie oben auf „✨ Neue Karten erstellen“.
                 </span>
             </div>
@@ -203,12 +203,12 @@
         else if (FlashVm.CurrentCard != null)
         {
             <!-- Interaktive Karteikarte -->
-            <div style="width: 100%; max-width: 600px; min-height: 280px; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 2px solid @(FlashVm.IsAnswerRevealed ? "#28a745" : "#007bff"); display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;"
+            <div style="width: 100%; max-width: 600px; min-height: 280px; background: var(--ss-surface); border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); border: 2px solid @(FlashVm.IsAnswerRevealed ? "var(--ss-success)" : "var(--ss-primary)"); display: flex; flex-direction: column; cursor: pointer; user-select: none; transition: border-color 0.2s ease, box-shadow 0.2s ease;"
                  @onclick="FlipCardAsync">
 
                 <!-- Karten-Kopfzeile -->
-                <div style="padding: 12px 18px; border-bottom: 1px solid #f1f3f5; display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #6c757d; background: #fafafa; border-top-left-radius: 10px; border-top-right-radius: 10px;">
-                    <span style="font-weight: bold; letter-spacing: 0.5px; color: @(FlashVm.IsAnswerRevealed ? "#28a745" : "#007bff");">
+                <div style="padding: 12px 18px; border-bottom: 1px solid var(--ss-border-faint); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ss-text-muted); background: var(--ss-sidebar-bg); border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                    <span style="font-weight: bold; letter-spacing: 0.5px; color: @(FlashVm.IsAnswerRevealed ? "var(--ss-success-fg)" : "var(--ss-link)");">
                         @(FlashVm.IsAnswerRevealed ? "ANTWORT" : "FRAGE")
                     </span>
                     <span>Status: @GetStatusLabel(FlashVm.CurrentCard.Status)</span>
@@ -216,13 +216,13 @@
 
                 <!-- Karten-Inhalt -->
                 <div style="flex: 1; padding: 28px 24px; display: flex; justify-content: center; align-items: center; text-align: center;">
-                    <p style="font-size: 17px; line-height: 1.6; color: #212529; margin: 0; white-space: pre-wrap;">
+                    <p style="font-size: 17px; line-height: 1.6; color: var(--ss-text); margin: 0; white-space: pre-wrap;">
                         @(FlashVm.IsAnswerRevealed ? FlashVm.CurrentCard.Answer : FlashVm.CurrentCard.Question)
                     </p>
                 </div>
 
                 <!-- Interaktiver Hinweis unten -->
-                <div style="padding: 10px; text-align: center; font-size: 11px; color: #adb5bd; border-top: 1px solid #f8f9fa;">
+                <div style="padding: 10px; text-align: center; font-size: 11px; color: var(--ss-text-faint); border-top: 1px solid var(--ss-border-faint);">
                     Klicken oder [Leertaste] zum Umdrehen
                 </div>
             </div>
@@ -237,12 +237,12 @@
               
                 <!-- Button: Zurück (Modernes Outline-Design mit Status) -->
                 <button type="button"
-                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: #495057; background: #ffffff; border: 1px solid #ced4da; border-radius: 6px; cursor: @(!FlashVm.HasPreviousCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasPreviousCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
+                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--ss-text-2); background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 6px; cursor: @(!FlashVm.HasPreviousCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasPreviousCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
                         disabled="@(!FlashVm.HasPreviousCard)"
                         @onclick="PreviousCardAsync">
                     <span>◀</span>
                     <span>Zurück</span>
-                    <span style="font-size: 11px; color: #6c757d; font-weight: normal;">[←]</span>
+                    <span style="font-size: 11px; color: var(--ss-text-muted); font-weight: normal;">[←]</span>
                 </button>
 
                 <!-- Bewertungstasten / Hauptaktion -->
@@ -250,12 +250,12 @@
                     @if (FlashVm.IsAnswerRevealed)
                     {
                         <button type="button"
-                                style="padding: 9px 18px; background: #dc3545; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(220,53,69,0.25);"
+                                style="padding: 9px 18px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(220,53,69,0.25);"
                                 @onclick="() => RateAsync(FlashcardStatus.Difficult)">
                             ✕ Nicht gewusst [1]
                         </button>
                         <button type="button"
-                                style="padding: 9px 18px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(40,167,69,0.25);"
+                                style="padding: 9px 18px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(40,167,69,0.25);"
                                 @onclick="() => RateAsync(FlashcardStatus.Known)">
                             ✓ Gewusst [2]
                         </button>
@@ -263,7 +263,7 @@
                     else
                     {
                         <button type="button"
-                                style="padding: 9px 24px; background: #17a2b8; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(23,162,184,0.25);"
+                                style="padding: 9px 24px; background: var(--ss-info); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(23,162,184,0.25);"
                                 @onclick="FlipCardAsync">
                             Aufdecken [Leertaste]
                         </button>
@@ -272,16 +272,16 @@
 
                 <!-- Button: Weiter (Modernes Outline-Design mit Status) -->
                 <button type="button"
-                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: #495057; background: #ffffff; border: 1px solid #ced4da; border-radius: 6px; cursor: @(!FlashVm.HasNextCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasNextCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
+                        style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--ss-text-2); background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 6px; cursor: @(!FlashVm.HasNextCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasNextCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
                         disabled="@(!FlashVm.HasNextCard)"
                         @onclick="NextCardAsync">
                     <span>Weiter</span>
-                    <span style="font-size: 11px; color: #6c757d; font-weight: normal;">[→]</span>
+                    <span style="font-size: 11px; color: var(--ss-text-muted); font-weight: normal;">[→]</span>
                     <span>▶</span>
                 </button>
             </div>
 
-            <div style="text-align: center; font-size: 11px; color: #868e96;">
+            <div style="text-align: center; font-size: 11px; color: var(--ss-text-muted);">
                 Tastaturnavigation aktiv: <b>Leertaste</b>: Drehen | <b>← / →</b>: Vor/Zurück | <b>1</b>: Nicht gewusst | <b>2</b>: Gewusst
             </div>
         </div>
@@ -313,9 +313,9 @@
                 display: inline-block;
                 width: 14px;
                 height: 14px;
-                border: 2px solid rgba(255, 255, 255, 0.35);
+                border: 2px solid rgba(255, 255, 255, 0.35);  /* ss:feste-farbe – Ladekreis auf farbigem Knopf */
                 border-radius: 50%;
-                border-top-color: #ffffff;
+                border-top-color: var(--ss-on-accent);
                 animation: spin 0.8s linear infinite;
             }
 
@@ -334,7 +334,7 @@
                 width: 100%;
                 max-width: 480px;
                 height: 6px;
-                background-color: #cce5ff;
+                background-color: var(--ss-info-bg-strong);
                 border-radius: 4px;
                 margin: 10px auto 4px auto;
                 overflow: hidden;
@@ -344,7 +344,7 @@
             .progress-bar-indeterminate {
                 width: 40%;
                 height: 100%;
-                background: linear-gradient(90deg, #007bff, #0056b3);
+                background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover));
                 border-radius: 4px;
                 position: absolute;
                 animation: progress-slide 1.4s ease-in-out infinite;
@@ -370,7 +370,7 @@
             .flash-mode-backdrop {
                 position: fixed;
                 inset: 0;
-                background: rgba(33, 37, 41, 0.45);
+                background: var(--ss-overlay);
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -378,7 +378,7 @@
             }
 
             .flash-mode-dialog {
-                background: #fff;
+                background: var(--ss-surface);
                 border-radius: 8px;
                 padding: 18px 20px;
                 width: min(460px, calc(100vw - 32px));
@@ -390,26 +390,26 @@
                 gap: 10px;
                 align-items: flex-start;
                 padding: 10px 12px;
-                border: 1px solid #dee2e6;
+                border: 1px solid var(--ss-border-light);
                 border-radius: 6px;
                 margin-bottom: 8px;
                 cursor: pointer;
                 font-size: 13px;
-                color: #212529;
+                color: var(--ss-text);
             }
 
             .flash-mode-option small {
-                color: #6c757d;
+                color: var(--ss-text-muted);
             }
 
             .flash-mode-option.selected {
-                border-color: #007bff;
-                background: #f1f7ff;
+                border-color: var(--ss-primary);
+                background: var(--ss-selected-bg);
             }
 
             .flash-mode-option.selected.danger {
-                border-color: #dc3545;
-                background: #fff5f5;
+                border-color: var(--ss-danger);
+                background: var(--ss-danger-bg);
             }
 
             /* Druckbereich für DIN-A4 */
@@ -441,11 +441,11 @@
                 }
 
                 .print-card {
-                    border: 1px dashed #666;
+                    border: 1px dashed var(--ss-border-strong);
                     border-radius: 6px;
                     padding: 12px;
                     page-break-inside: avoid;
-                    background: #fff;
+                    background: var(--ss-surface);
                     font-size: 13px;
                     display: flex;
                     flex-direction: column;
@@ -453,7 +453,7 @@
                 }
 
                 .print-question {
-                    border-bottom: 1px solid #ddd;
+                    border-bottom: 1px solid var(--ss-border-light);
                     padding-bottom: 6px;
                 }
             }

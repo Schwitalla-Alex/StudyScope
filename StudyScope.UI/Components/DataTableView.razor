@@ -10,15 +10,15 @@
 
     <div class="dt-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Datentabellen: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Datentabellen: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(DtVm.Tables.Count == 0 ? "Noch keine Tabellen" : DtVm.Tables.Count == 1 ? "1 Tabelle" : $"{DtVm.Tables.Count} Tabellen")
                 · Grundlage: @ActiveDocumentsText
             </span>
         </div>
         @if (!DtVm.IsFormOpen && !DtVm.IsBusy)
         {
-            <button type="button" class="dt-btn" style="background: #007bff;" @onclick="DtVm.OpenForm">➕ Neue Tabelle</button>
+            <button type="button" class="dt-btn" style="background: var(--ss-primary);" @onclick="DtVm.OpenForm">➕ Neue Tabelle</button>
         }
     </div>
 
@@ -32,8 +32,8 @@
             </div>
             <div class="dt-progress"><div class="dt-progress-bar"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
-                <button type="button" class="dt-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="DtVm.Cancel">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
+                <button type="button" class="dt-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="DtVm.Cancel">Abbrechen</button>
             </div>
         </div>
     }
@@ -41,8 +41,8 @@
     @if (!string.IsNullOrEmpty(DtVm.StatusMessage))
     {
         var (statusBg, statusBorder, statusText) = DtVm.IsError
-            ? ("#f8d7da", "#f5c6cb", "#721c24")
-            : DtVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+            ? ("var(--ss-danger-bg)", "var(--ss-danger-border)", "var(--ss-danger-text)")
+            : DtVm.IsWarning ? ("var(--ss-warning-bg)", "var(--ss-warning-border)", "var(--ss-warning-text)") : ("var(--ss-success-bg)", "var(--ss-success-border)", "var(--ss-success-text)");
 
         <div class="dt-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
             <div style="flex: 1; min-width: 0;">
@@ -73,7 +73,7 @@
         <div class="dt-side" style="@(sideCollapsed && !DtVm.IsFormOpen ? "display: none;" : "")">
             @if (DtVm.IsFormOpen)
             {
-                <div class="dt-card" style="border-color: #9ec5fe;">
+                <div class="dt-card" style="border-color: var(--ss-selected-border);">
                     <h4>➕ Neue Datentabelle</h4>
 
                     <label class="dt-label">Vorlage</label>
@@ -101,24 +101,24 @@
                         <textarea class="dt-input" rows="3" placeholder="z. B. Alle Steuerarten mit Steuersatz, Bemessungsgrundlage und Beispiel" @bind="DtVm.CustomInstruction" @bind:event="oninput"></textarea>
                     }
 
-                    <label class="dt-label">Spalten <span style="font-weight: normal; color: #6c757d;">(optional – durch Komma getrennt)</span></label>
+                    <label class="dt-label">Spalten <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – durch Komma getrennt)</span></label>
                     <input class="dt-input" placeholder="@ColumnsPlaceholder" @bind="DtVm.CustomColumns" @bind:event="oninput" />
                     <div class="dt-meta" style="margin-top: 3px;">Leer lassen, dann schlägt die KI passende Spalten vor. Die Spalte „Quelle“ kommt immer automatisch dazu.</div>
 
-                    <label class="dt-label">Thema / Suchbegriff <span style="font-weight: normal; color: #6c757d;">(optional)</span></label>
+                    <label class="dt-label">Thema / Suchbegriff <span style="font-weight: normal; color: var(--ss-text-muted);">(optional)</span></label>
                     <input class="dt-input" placeholder="z. B. Photosynthese" @bind="DtVm.Topic" @bind:event="oninput" />
                     <div class="dt-meta" style="margin-top: 3px;">Grenzt die Tabelle auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</div>
 
-                    <label class="dt-label">Titel <span style="font-weight: normal; color: #6c757d;">(optional – sonst wählt die KI einen)</span></label>
+                    <label class="dt-label">Titel <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – sonst wählt die KI einen)</span></label>
                     <input class="dt-input" @bind="DtVm.CustomTitle" @bind:event="oninput" />
 
-                    <button type="button" class="dt-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
+                    <button type="button" class="dt-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(DtVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
                         ✨ Tabelle erstellen
                     </button>
                     @if (ActiveDocumentCount == 0)
                     {
-                        <div class="dt-meta" style="color: #b02a37; margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                        <div class="dt-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
                     }
                     @if (DtVm.Tables.Count > 0 && !DtVm.IsBusy)
                     {
@@ -157,7 +157,7 @@
                                 }
                                 else if (confirmDeleteId == t.Id)
                                 {
-                                    <button class="dt-btn" style="background: #dc3545; padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(t.Id)">Löschen?</button>
+                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(t.Id)">Löschen?</button>
                                     <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
                                 }
                                 else
@@ -183,7 +183,7 @@
                         <div style="min-width: 0; display: flex; gap: 8px; align-items: flex-start;">
                             <button class="ss-icon-btn" title="@(sideCollapsed ? "Tabellenliste einblenden" : "Tabellenliste ausblenden – mehr Platz für die Tabelle")" @onclick="() => sideCollapsed = !sideCollapsed">@(sideCollapsed ? "▶" : "◀")</button>
                             <div style="min-width: 0;">
-                            <div style="font-size: 15px; font-weight: 700; color: #212529;">@selected.Title</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@selected.Title</div>
                             <div class="dt-meta">
                                 @DataTableTemplates.DisplayName(selected.Template)
                                 @if (!string.IsNullOrWhiteSpace(selected.Topic))
@@ -199,11 +199,11 @@
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="dt-btn" style="background: #28a745;" disabled="@(!DtVm.CanAddMoreRows)"
+                            <button type="button" class="dt-btn" style="background: var(--ss-success);" disabled="@(!DtVm.CanAddMoreRows)"
                                     title="@(DtVm.IsAtRowLimit ? DtVm.RowLimitHint : "Die KI sucht in den Dokumenten weitere Zeilen; Wiederholungen werden weggelassen")"
                                     @onclick="GenerateMoreRowsAsync">✨ Weitere Zeilen ergänzen</button>
-                            <button type="button" class="dt-btn" style="background: #007bff;" disabled="@(DtVm.IsBusy || DtVm.IsAtRowLimit)" title="Leere Zeile anhängen" @onclick="AddRowAsync">➕ Zeile</button>
-                            <button type="button" class="dt-btn" style="background: #007bff;" disabled="@(DtVm.IsBusy || selected.Columns.Count >= DataTableDocument.MaxColumns)" title="Spalte hinzufügen" @onclick="StartAddColumn">➕ Spalte</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || DtVm.IsAtRowLimit)" title="Leere Zeile anhängen" @onclick="AddRowAsync">➕ Zeile</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || selected.Columns.Count >= DataTableDocument.MaxColumns)" title="Spalte hinzufügen" @onclick="StartAddColumn">➕ Spalte</button>
                         </div>
                     </div>
 
@@ -216,7 +216,7 @@
                     {
                         <div style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
                             <input id="dt-newcol" class="dt-input" style="max-width: 260px;" placeholder="Name der neuen Spalte" @bind="newColumnName" @bind:event="oninput" @onkeydown="AddColumnKeyAsync" />
-                            <button class="dt-btn" style="background: #28a745;" @onclick="AddColumnAsync">Hinzufügen</button>
+                            <button class="dt-btn" style="background: var(--ss-success);" @onclick="AddColumnAsync">Hinzufügen</button>
                             <button class="dt-icon" title="Abbrechen" @onclick="() => addingColumn = false">✕</button>
                         </div>
                     }
@@ -239,10 +239,10 @@
                             }
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="dt-btn" style="background: #1d6f42;" title="Als Excel-Arbeitsmappe speichern" @onclick="() => ExportAsync(DataTableExportFormat.Excel)">📗 Excel</button>
-                            <button type="button" class="dt-btn" style="background: #495057;" title="Als CSV-Datei speichern (Semikolon, für Excel)" @onclick="() => ExportAsync(DataTableExportFormat.Csv)">🧾 CSV</button>
-                            <button type="button" class="dt-btn" style="background: #17a2b8;" title="Als Markdown-Tabelle speichern" @onclick="() => ExportAsync(DataTableExportFormat.Markdown)">📄 Markdown</button>
-                            <button type="button" class="dt-btn" style="background: #6c757d;" title="Drucken oder als PDF speichern (aktuelle Ansicht)" @onclick="PrintAsync">🖨️ PDF</button>
+                            <button type="button" class="dt-btn" style="background: #1d6f42;" title="Als Excel-Arbeitsmappe speichern" @onclick="() => ExportAsync(DataTableExportFormat.Excel)">📗 Excel</button> @* ss:feste-farbe – Excel-Markenfarbe *@
+                            <button type="button" class="dt-btn" style="background: var(--ss-strong);" title="Als CSV-Datei speichern (Semikolon, für Excel)" @onclick="() => ExportAsync(DataTableExportFormat.Csv)">🧾 CSV</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-info);" title="Als Markdown-Tabelle speichern" @onclick="() => ExportAsync(DataTableExportFormat.Markdown)">📄 Markdown</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-secondary);" title="Drucken oder als PDF speichern (aktuelle Ansicht)" @onclick="PrintAsync">🖨️ PDF</button>
                         </div>
                     </div>
                 </div>
@@ -250,7 +250,7 @@
                 <div class="dt-print-area">
                     <div class="dt-print-header">
                         <div style="font-size: 16pt; font-weight: bold;">@selected.Title</div>
-                        <div style="font-size: 9pt; color: #555;">
+                        <div style="font-size: 9pt; color: var(--ss-text-muted);">
                             @DataTableTemplates.DisplayName(selected.Template) · @visible.Count Zeilen · StudyScope, @DateTime.Now.ToString("dd.MM.yyyy")
                         </div>
                     </div>
@@ -274,7 +274,7 @@
                                             else if (confirmDeleteColumn == col)
                                             {
                                                 <div style="display: flex; gap: 3px; align-items: center;">
-                                                    <button class="dt-btn" style="background: #dc3545; padding: 2px 8px; font-size: 11px;" @onclick="() => DeleteColumnAsync(col)">„@selected.Columns[col]“ löschen?</button>
+                                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 11px;" @onclick="() => DeleteColumnAsync(col)">„@selected.Columns[col]“ löschen?</button>
                                                     <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteColumn = null">✕</button>
                                                 </div>
                                             }
@@ -314,7 +314,7 @@
                                         <td class="dt-actions dt-noprint">
                                             @if (confirmDeleteRowId == r.Id)
                                             {
-                                                <button class="dt-btn" style="background: #dc3545; padding: 2px 6px; font-size: 11px;" @onclick="() => DeleteRowAsync(r.Id)">Löschen?</button>
+                                                <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 6px; font-size: 11px;" @onclick="() => DeleteRowAsync(r.Id)">Löschen?</button>
                                                 <button class="dt-icon small" title="Nicht löschen" @onclick="() => confirmDeleteRowId = null">✕</button>
                                             }
                                             else
@@ -342,7 +342,7 @@
             {
                 <div class="dt-empty">
                     <div style="font-size: 34px; margin-bottom: 10px;">📊</div>
-                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch keine Tabelle ausgewählt.</p>
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Tabelle ausgewählt.</p>
                     <span style="font-size: 12px; line-height: 1.5; display: block;">
                         Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Tabelle erstellen“.
                         Die KI sucht die Angaben aus Ihren Unterlagen heraus – jede Zeile mit ihrer Quelle. Die Tabelle lässt sich
@@ -354,59 +354,59 @@
     </div>
 
     <style>
-        .dt-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
-        .dt-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
-        .dt-btn { padding: 6px 11px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+        .dt-root { flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
+        .dt-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px; }
+        .dt-btn { padding: 6px 11px; color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
         .dt-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .dt-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
+        .dt-link { background: none; border: none; color: var(--ss-link); cursor: pointer; font-size: 12px; padding: 0; }
         .dt-icon { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; padding: 2px 5px; }
         .dt-icon.small { font-size: 11px; padding: 1px 3px; }
-        .dt-icon:hover { background: #f1f3f5; border-color: #dee2e6; }
-        .dt-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
-        .dt-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
-        .dt-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: dt-slide 1.4s ease-in-out infinite; }
+        .dt-icon:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
+        .dt-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
+        .dt-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .dt-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: dt-slide 1.4s ease-in-out infinite; }
         @@keyframes dt-slide { 0% { left: -40%; } 100% { left: 100%; } }
         .dt-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .dt-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .dt-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .dt-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
         .dt-side { width: 320px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .dt-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow-y: auto; }
-        .dt-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
-        .dt-card h4 { margin: 0 0 8px 0; font-size: 14px; color: #212529; }
+        .dt-card { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; padding: 14px 16px; }
+        .dt-card h4 { margin: 0 0 8px 0; font-size: 14px; color: var(--ss-text); }
         .dt-head { padding: 10px 14px; }
-        .dt-limit { margin-top: 8px; padding: 6px 10px; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; border-radius: 4px; font-size: 12px; }
-        .dt-label { font-size: 12px; font-weight: 600; color: #495057; margin: 12px 0 4px 0; display: block; }
-        .dt-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .dt-limit { margin-top: 8px; padding: 6px 10px; background: var(--ss-warning-bg); border: 1px solid var(--ss-warning-border); color: var(--ss-warning-text); border-radius: 4px; font-size: 12px; }
+        .dt-label { font-size: 12px; font-weight: 600; color: var(--ss-text-2); margin: 12px 0 4px 0; display: block; }
+        .dt-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; font-family: inherit; }
         .dt-templates { display: flex; flex-direction: column; gap: 6px; }
-        .dt-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid #dee2e6; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; color: #212529; font-family: inherit; }
-        .dt-template.active { border-color: #007bff; background: #f0f7ff; }
+        .dt-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
+        .dt-template.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .dt-template b { display: block; }
-        .dt-desc { display: block; font-size: 11.5px; color: #6c757d; line-height: 1.35; }
-        .dt-check { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; cursor: pointer; color: #495057; }
-        .dt-meta { font-size: 11px; color: #6c757d; }
+        .dt-desc { display: block; font-size: 11.5px; color: var(--ss-text-muted); line-height: 1.35; }
+        .dt-check { display: inline-flex; gap: 5px; align-items: center; font-size: 12px; cursor: pointer; color: var(--ss-text-2); }
+        .dt-meta { font-size: 11px; color: var(--ss-text-muted); }
         .dt-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
-        .dt-item:hover { background: #f8f9fa; }
-        .dt-item.active { background: #f0f7ff; border-color: #9ec5fe; }
-        .dt-item-title { font-size: 13px; font-weight: 600; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .dt-item:hover { background: var(--ss-panel-light); }
+        .dt-item.active { background: var(--ss-selected-bg); border-color: var(--ss-selected-border); }
+        .dt-item-title { font-size: 13px; font-weight: 600; color: var(--ss-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .dt-print-area { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; }
         .dt-print-header { display: none; }
-        .dt-scroll { flex: 1 1 auto; min-height: 340px; max-height: calc(100vh - 160px); overflow: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; }
+        .dt-scroll { flex: 1 1 auto; min-height: 340px; max-height: calc(100vh - 160px); overflow: auto; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; }
         .dt-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
-        .dt-table th { position: sticky; top: 0; z-index: 1; background: #e9f2ff; color: #212529; text-align: left; padding: 6px 8px; border-bottom: 2px solid #9ec5fe; border-right: 1px solid #dee2e6; vertical-align: top; min-width: 90px; }
-        .dt-table td { padding: 5px 8px; border-bottom: 1px solid #edf0f2; border-right: 1px solid #f1f3f5; vertical-align: top; white-space: pre-wrap; word-break: break-word; cursor: text; min-width: 60px; }
-        .dt-table tbody tr:nth-child(even) td { background: #fafbfc; }
-        .dt-table tbody tr:hover td { background: #f0f7ff; }
-        .dt-table td.dt-source, .dt-table th.dt-source-col { color: #6c757d; font-size: 11.5px; min-width: 110px; }
+        .dt-table th { position: sticky; top: 0; z-index: 1; background: var(--ss-selected-bg); color: var(--ss-text); text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--ss-selected-border); border-right: 1px solid var(--ss-border-light); vertical-align: top; min-width: 90px; }
+        .dt-table td { padding: 5px 8px; border-bottom: 1px solid var(--ss-border-faint); border-right: 1px solid var(--ss-border-faint); vertical-align: top; white-space: pre-wrap; word-break: break-word; cursor: text; min-width: 60px; }
+        .dt-table tbody tr:nth-child(even) td { background: var(--ss-panel-light); }
+        .dt-table tbody tr:hover td { background: var(--ss-selected-bg); }
+        .dt-table td.dt-source, .dt-table th.dt-source-col { color: var(--ss-text-muted); font-size: 11.5px; min-width: 110px; }
         .dt-table .dt-actions { width: 1%; white-space: nowrap; min-width: 0; text-align: right; cursor: default; }
-        .dt-table td.editing { padding: 2px 4px; background: #fffbe6 !important; }
-        .dt-cell-input { width: 100%; box-sizing: border-box; min-width: 120px; padding: 3px 5px; border: 1px solid #007bff; border-radius: 3px; font-size: 12.5px; font-family: inherit; }
+        .dt-table td.editing { padding: 2px 4px; background: var(--ss-highlight-bg) !important; }
+        .dt-cell-input { width: 100%; box-sizing: border-box; min-width: 120px; padding: 3px 5px; border: 1px solid var(--ss-primary); border-radius: 3px; font-size: 12.5px; font-family: inherit; }
         .dt-th { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; }
         .dt-sort { background: none; border: none; padding: 0; font-weight: 700; font-size: 12.5px; cursor: pointer; text-align: left; color: inherit; font-family: inherit; }
-        .dt-arrow { color: #007bff; font-size: 11px; }
+        .dt-arrow { color: var(--ss-link); font-size: 11px; }
         .dt-th-tools { display: inline-flex; opacity: 0.35; flex-shrink: 0; }
         .dt-table th:hover .dt-th-tools { opacity: 1; }
-        .dt-empty-row { text-align: center; color: #6c757d; padding: 20px !important; cursor: default !important; }
-        .dt-empty { margin: auto; text-align: center; color: #6c757d; max-width: 480px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+        .dt-empty-row { text-align: center; color: var(--ss-text-muted); padding: 20px !important; cursor: default !important; }
+        .dt-empty { margin: auto; text-align: center; color: var(--ss-text-muted); max-width: 480px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border); }
 
         @@media print {
             @@page { size: A4 landscape; margin: 12mm; }
@@ -416,12 +416,12 @@
             .dt-print-header { display: block; margin-bottom: 5mm; }
             .dt-noprint, .dt-noprint * { display: none !important; }
             .dt-scroll { overflow: visible !important; max-height: none !important; min-height: 0 !important; border: none; border-radius: 0; }
-            .dt-root, .dt-main, .dt-body { background: #fff !important; overflow: visible !important; }
+            .dt-root, .dt-main, .dt-body { background: var(--ss-surface) !important; overflow: visible !important; }
             .dt-table { font-size: 9pt; }
-            .dt-table th { position: static; background: #e9f2ff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .dt-table th { position: static; background: var(--ss-selected-bg) !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .dt-table thead { display: table-header-group; }
             .dt-table tr { page-break-inside: avoid; break-inside: avoid; }
-            .dt-table th, .dt-table td { border: 1px solid #bbb; }
+            .dt-table th, .dt-table td { border: 1px solid var(--ss-border-strong); }
         }
     </style>
 </div>

@@ -34,8 +34,7 @@
         <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
 
             <!-- Aktiver Arbeitsbereich -->
-            <!-- Noch nicht auf das Farbschema umgestellte Reiter bleiben bis Phase 2b hell (.ss-legacy-light) -->
-            <div class="@(ThemedTabs.Contains(activeTab) ? "" : "ss-legacy-light")" style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
+            <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
                 @if (activeTab == "chat")
                 {
                     <ChatArea />
@@ -100,8 +99,6 @@
     /// <summary>Vortrag (Präsentation) oder Vollbild-Wiedergabe (Video): kein Menü, kein Strg+B.</summary>
     private bool IsPresenting => PresVm.IsPresenting || VdVm.IsPresenting;
 
-    /// <summary>Reiter, deren Farben schon auf die Variablen des Farbschemas umgestellt sind (die übrigen bleiben hell).</summary>
-    private static readonly HashSet<string> ThemedTabs = ["chat"];
 
     protected override async Task OnInitializedAsync()
     {

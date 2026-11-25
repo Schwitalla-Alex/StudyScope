@@ -27,7 +27,11 @@ public static class ReportHtmlExporter
         sb.Append($"<meta name=\"generator\" content=\"StudyScope\">\n<title>{H(report.Title)}</title>\n");
         sb.Append("<style>\n").Append(Css);
         if (withPlayers) sb.Append('\n').Append(VideoPlayerHtml.Css);
-        sb.Append("\n</style>\n</head>\n<body>\n<main class=\"report\">\n");
+        if (options.InApp) sb.Append('\n').Append(AppDarkCss);
+        sb.Append("\n</style>\n");
+        // Nur in der App: Farbschema der App übernehmen (auch bei Wechsel zur Laufzeit); exportierte Dateien bleiben hell
+        if (options.InApp) sb.Append("<script>").Append(AppThemeScript).Append("</script>\n");
+        sb.Append("</head>\n<body>\n<main class=\"report\">\n");
 
         // Kopf
         sb.Append("<header class=\"head\">");
@@ -488,6 +492,59 @@ table.dt .src { color: var(--muted); font-size: 12px; }
   table.dt th, table.dt tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .slide-notes { display: block; position: absolute; left: 6%; right: 6%; bottom: 7%; font-size: 1.6cqw; color: var(--muted); }
   .mm-node.d0 > summary, .card-face.back, .takeaway, .terms dt { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+""";
+
+    /// <summary>
+    /// Ansicht in der App (<see cref="ReportHtmlOptions.InApp"/>): übernimmt <c>data-theme-effective</c> vom Fenster der
+    /// App (das <c>srcdoc</c>-iframe hat dieselbe Herkunft) und beobachtet Änderungen.
+    /// </summary>
+    public const string AppThemeScript = """
+(function () {
+  var root = document.documentElement;
+  function sync() {
+    try { root.setAttribute('data-theme-effective', parent.document.documentElement.getAttribute('data-theme-effective') === 'dark' ? 'dark' : 'light'); }
+    catch (e) { root.setAttribute('data-theme-effective', 'light'); }
+  }
+  sync();
+  try { new MutationObserver(sync).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme-effective'] }); } catch (e) { }
+})();
+""";
+
+    /// <summary>
+    /// Dunkle Darstellung des Berichts in der App – nur am Bildschirm (Druck/PDF hell). Folien bleiben hell wie in der App.
+    /// </summary>
+    public const string AppDarkCss = """
+@media screen {
+:root[data-theme-effective="dark"] { color-scheme: dark; --accent: #6cb2ff; --text: #e6e8eb; --muted: #9aa3ad; --line: #3b414a; --soft: #24282e; }
+:root[data-theme-effective="dark"] body { background: #15171a; }
+:root[data-theme-effective="dark"] .report,
+:root[data-theme-effective="dark"] .faq details,
+:root[data-theme-effective="dark"] .mm-node > summary,
+:root[data-theme-effective="dark"] .mm-node.leaf,
+:root[data-theme-effective="dark"] .card-face,
+:root[data-theme-effective="dark"] .audio-script { background: #1e2126; }
+:root[data-theme-effective="dark"] .badge { background: #1b2a3d; color: #9cc7ff; }
+:root[data-theme-effective="dark"] .takeaway { background: #14283a; }
+:root[data-theme-effective="dark"] .btn { background: #1f6feb; }
+:root[data-theme-effective="dark"] .btn.light { background: #1e2126; color: #c4c9d0; border-color: #4a525c; }
+:root[data-theme-effective="dark"] .mm-node.d0 > summary { background: #4a525c; border-color: #4a525c; }
+:root[data-theme-effective="dark"] .mm-node.d0.b0 > summary { border-color: #4a525c; }
+:root[data-theme-effective="dark"] .card-face.back { background: #12301c; border-color: #2a6a3c; }
+:root[data-theme-effective="dark"] .card:focus-visible .card-face { box-shadow: 0 0 0 3px #2f5f9e; }
+:root[data-theme-effective="dark"] .quiz-opt:hover { border-color: #2f5f9e; }
+:root[data-theme-effective="dark"] .quiz-opt.correct { background: #12301c; border-color: #3fb950; }
+:root[data-theme-effective="dark"] .quiz-opt.wrong { background: #3c1618; border-color: #f85149; }
+:root[data-theme-effective="dark"] .quiz-opt.missed { border-color: #3fb950; }
+:root[data-theme-effective="dark"] .quiz-result.ok { color: #7ee2a0; }
+:root[data-theme-effective="dark"] .quiz-result.no { color: #ffa198; }
+:root[data-theme-effective="dark"] .quiz-nr, :root[data-theme-effective="dark"] .video-play { background: #1f6feb; }
+:root[data-theme-effective="dark"] .video-play:hover { background: #1158c7; }
+:root[data-theme-effective="dark"] table.dt th { background: #1b2a3d; border-bottom-color: #2f5f9e; }
+:root[data-theme-effective="dark"] table.dt th:hover { background: #1a3552; }
+/* Folien und eingebettete Player bleiben hell (wie in der App und in den Exporten) */
+:root[data-theme-effective="dark"] .slide { --text: #212529; --muted: #6c757d; --line: #dee2e6; --accent: #007bff; color: #212529; color-scheme: light; }
+:root[data-theme-effective="dark"] .slide.title-slide { color: #fff; }
 }
 """;
 

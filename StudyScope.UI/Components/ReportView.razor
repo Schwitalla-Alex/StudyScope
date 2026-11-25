@@ -9,15 +9,15 @@
 
     <div class="rp-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Berichte: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Berichte: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(RepVm.Reports.Count == 0 ? "Noch keine Berichte" : RepVm.Reports.Count == 1 ? "1 Bericht" : $"{RepVm.Reports.Count} Berichte")
                 · Grundlage: @ActiveDocumentsText
             </span>
         </div>
         @if (!RepVm.IsFormOpen && !RepVm.IsBusy)
         {
-            <button type="button" class="rp-btn" style="background: #007bff;" @onclick="RepVm.OpenForm">➕ Neuer Bericht</button>
+            <button type="button" class="rp-btn" style="background: var(--ss-primary);" @onclick="RepVm.OpenForm">➕ Neuer Bericht</button>
         }
     </div>
 
@@ -27,8 +27,8 @@
             <div style="font-weight: 600; font-size: 13px;">📑 KI liest die Dokumente und schreibt den Bericht (@ReportTemplates.DisplayName(RepVm.Template)) ...</div>
             <div class="rp-progress"><div class="rp-progress-bar"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
-                <button type="button" class="rp-btn" style="background: #6c757d; padding: 4px 10px;" @onclick="RepVm.Cancel">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
+                <button type="button" class="rp-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="RepVm.Cancel">Abbrechen</button>
             </div>
         </div>
     }
@@ -36,8 +36,8 @@
     @if (!string.IsNullOrEmpty(RepVm.StatusMessage))
     {
         var (statusBg, statusBorder, statusText) = RepVm.IsError
-            ? ("#f8d7da", "#f5c6cb", "#721c24")
-            : RepVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+            ? ("var(--ss-danger-bg)", "var(--ss-danger-border)", "var(--ss-danger-text)")
+            : RepVm.IsWarning ? ("var(--ss-warning-bg)", "var(--ss-warning-border)", "var(--ss-warning-text)") : ("var(--ss-success-bg)", "var(--ss-success-border)", "var(--ss-success-text)");
 
         <div class="rp-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
             <div style="flex: 1; min-width: 0;">
@@ -68,7 +68,7 @@
         <div class="rp-side">
             @if (RepVm.IsFormOpen)
             {
-                <div class="rp-card" style="border-color: #9ec5fe;">
+                <div class="rp-card" style="border-color: var(--ss-selected-border);">
                     <h4>➕ Neuer Bericht</h4>
 
                     <label class="rp-label">Vorlage</label>
@@ -92,7 +92,7 @@
                         <textarea class="rp-input" rows="3" placeholder="z. B. Vergleiche die Steuerarten in einer Übersicht mit Vor- und Nachteilen" @bind="RepVm.CustomInstruction" @bind:event="oninput"></textarea>
                     }
 
-                    <label class="rp-label">Titel <span style="font-weight: normal; color: #6c757d;">(optional – sonst wählt die KI einen)</span></label>
+                    <label class="rp-label">Titel <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – sonst wählt die KI einen)</span></label>
                     <input class="rp-input" @bind="RepVm.CustomTitle" @bind:event="oninput" />
 
                     <label class="rp-label">Studio-Inhalte einbetten</label>
@@ -105,13 +105,13 @@
                     @EmbedCheckbox("video", "🎬 Video-Skripte (Text)", RepVm.NewEmbeds.IncludesVideoScripts, RepVm.VideoScriptCount > 0, $"{RepVm.VideoScriptCount}", true)
                     <div class="rp-meta" style="margin-top: 4px;">Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz, Präsentation, Datentabelle, Audio und Video.</div>
 
-                    <button type="button" class="rp-btn" style="background: #28a745; width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
+                    <button type="button" class="rp-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(RepVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
                         ✨ Bericht erstellen
                     </button>
                     @if (ActiveDocumentCount == 0)
                     {
-                        <div class="rp-meta" style="color: #b02a37; margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                        <div class="rp-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
                     }
                     @if (RepVm.Reports.Count > 0 && !RepVm.IsBusy)
                     {
@@ -150,7 +150,7 @@
                                 }
                                 else if (confirmDeleteId == r.Id)
                                 {
-                                    <button class="rp-btn" style="background: #dc3545; padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(r.Id)">Löschen?</button>
+                                    <button class="rp-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(r.Id)">Löschen?</button>
                                     <button class="rp-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
                                 }
                                 else
@@ -171,7 +171,7 @@
             {
                 <div class="rp-card rp-viewer-head">
                     <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center;">
-                        <div style="font-size: 12px; color: #495057; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                        <div style="font-size: 12px; color: var(--ss-text-2); display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                             <b>Eingebettet:</b>
                             @EmbedCheckbox("mindmap", "Mindmap", selected.Embeds.Mindmap, RepVm.HasMindmap, null, false)
                             @EmbedCheckbox("flashcards", "Karteikarten", selected.Embeds.Flashcards, RepVm.FlashcardCount > 0, null, false)
@@ -182,16 +182,16 @@
                             @EmbedCheckbox("video", "Video-Skripte", selected.Embeds.IncludesVideoScripts, RepVm.VideoScriptCount > 0, null, false)
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="rp-btn" style="background: #2b579a;" title="Als Word-Dokument speichern" @onclick="() => ExportAsync(ReportExportFormat.Word)">📝 Word</button>
-                            <button type="button" class="rp-btn" style="background: #6c757d;" title="Drucken oder als PDF speichern (alles aufgeklappt, mit Lösungen)" @onclick="PrintAsync">🖨️ PDF</button>
-                            <button type="button" class="rp-btn" style="background: #17a2b8;" title="Als Markdown-Datei speichern" @onclick="() => ExportAsync(ReportExportFormat.Markdown)">📄 Markdown</button>
-                            <button type="button" class="rp-btn" style="background: #495057;" title="Als reine Textdatei speichern" @onclick="() => ExportAsync(ReportExportFormat.Text)">🗒️ Text</button>
-                            <button type="button" class="rp-btn" style="background: #7048e8;" disabled="@RepVm.IsBusy" title="Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope" @onclick="() => ExportAsync(ReportExportFormat.Html)">🌐 HTML</button>
+                            <button type="button" class="rp-btn" style="background: #2b579a;" title="Als Word-Dokument speichern" @onclick="() => ExportAsync(ReportExportFormat.Word)">📝 Word</button> @* ss:feste-farbe – Word-Markenfarbe *@
+                            <button type="button" class="rp-btn" style="background: var(--ss-secondary);" title="Drucken oder als PDF speichern (alles aufgeklappt, mit Lösungen)" @onclick="PrintAsync">🖨️ PDF</button>
+                            <button type="button" class="rp-btn" style="background: var(--ss-info);" title="Als Markdown-Datei speichern" @onclick="() => ExportAsync(ReportExportFormat.Markdown)">📄 Markdown</button>
+                            <button type="button" class="rp-btn" style="background: var(--ss-strong);" title="Als reine Textdatei speichern" @onclick="() => ExportAsync(ReportExportFormat.Text)">🗒️ Text</button>
+                            <button type="button" class="rp-btn" style="background: var(--ss-purple);" disabled="@RepVm.IsBusy" title="Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope" @onclick="() => ExportAsync(ReportExportFormat.Html)">🌐 HTML</button>
                         </div>
                     </div>
                     @if (RepVm.CanEmbedVideoPlayers)
                     {
-                        <div style="margin-top: 8px; font-size: 12px; color: #495057; display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                        <div style="margin-top: 8px; font-size: 12px; color: var(--ss-text-2); display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
                             <label style="display: flex; gap: 6px; align-items: center; cursor: pointer;"
                                    title="Nur für „🌐 HTML“: je Video ein Player mit Folien, Stichpunkten und Ton. Ton nur bei aktueller Gemini-Audiodatei, sonst stumm im festen Takt.">
                                 <input type="checkbox" checked="@RepVm.EmbedVideoPlayers" @onchange="e => RepVm.EmbedVideoPlayers = (bool)(e.Value ?? false)" />
@@ -217,7 +217,7 @@
             {
                 <div class="rp-empty">
                     <div style="font-size: 34px; margin-bottom: 10px;">📑</div>
-                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch kein Bericht ausgewählt.</p>
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch kein Bericht ausgewählt.</p>
                     <span style="font-size: 12px; line-height: 1.5; display: block;">
                         Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Bericht erstellen“.
                         Der Bericht wird interaktiv angezeigt – mit Mindmap, Karteikarten, Selbsttest, Folien und Datentabellen – und lässt sich als
@@ -229,42 +229,44 @@
     </div>
 
     <style>
-        .rp-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
-        .rp-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
-        .rp-btn { padding: 6px 11px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
+        .rp-root { flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; }
+        .rp-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px; }
+        .rp-btn { padding: 6px 11px; color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12.5px; display: inline-flex; align-items: center; gap: 5px; }
         .rp-btn:disabled { opacity: 0.45; cursor: not-allowed; }
-        .rp-link { background: none; border: none; color: #007bff; cursor: pointer; font-size: 12px; padding: 0; }
+        .rp-link { background: none; border: none; color: var(--ss-link); cursor: pointer; font-size: 12px; padding: 0; }
         .rp-icon { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; padding: 2px 5px; }
-        .rp-icon:hover { background: #f1f3f5; border-color: #dee2e6; }
-        .rp-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
-        .rp-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
-        .rp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: rp-slide 1.4s ease-in-out infinite; }
+        .rp-icon:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
+        .rp-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
+        .rp-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .rp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: rp-slide 1.4s ease-in-out infinite; }
         @@keyframes rp-slide { 0% { left: -40%; } 100% { left: 100%; } }
         .rp-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .rp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .rp-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .rp-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
         .rp-side { width: 340px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
         .rp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; min-height: 0; }
-        .rp-card { background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px; }
-        .rp-card h4 { margin: 0 0 8px 0; font-size: 14px; color: #212529; }
+        .rp-card { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; padding: 14px 16px; }
+        .rp-card h4 { margin: 0 0 8px 0; font-size: 14px; color: var(--ss-text); }
         .rp-viewer-head { padding: 10px 14px; }
-        .rp-label { font-size: 12px; font-weight: 600; color: #495057; margin: 12px 0 4px 0; display: block; }
-        .rp-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 13px; font-family: inherit; }
+        .rp-label { font-size: 12px; font-weight: 600; color: var(--ss-text-2); margin: 12px 0 4px 0; display: block; }
+        .rp-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; font-family: inherit; }
         .rp-templates { display: flex; flex-direction: column; gap: 6px; }
-        .rp-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid #dee2e6; border-radius: 6px; background: #fff; cursor: pointer; font-size: 13px; color: #212529; font-family: inherit; }
-        .rp-template.active { border-color: #007bff; background: #f0f7ff; }
+        .rp-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
+        .rp-template.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .rp-template b { display: block; }
-        .rp-desc { display: block; font-size: 11.5px; color: #6c757d; line-height: 1.35; }
+        .rp-desc { display: block; font-size: 11.5px; color: var(--ss-text-muted); line-height: 1.35; }
         .rp-check { display: flex; gap: 8px; align-items: center; font-size: 13px; padding: 2px 0; cursor: pointer; }
         .rp-check.inline { display: inline-flex; font-size: 12px; gap: 4px; }
-        .rp-check.unavailable { opacity: 0.5; cursor: default; }
-        .rp-meta { font-size: 11px; color: #6c757d; }
+        /* Nicht verfügbar: gedämpfte Textfarbe statt Deckkraft – bleibt in Hell und Dunkel lesbar (≥ 4,5:1) */
+        .rp-check.unavailable { color: var(--ss-text-muted); cursor: default; }
+        .rp-check.unavailable input { opacity: .55; }
+        .rp-meta { font-size: 11px; color: var(--ss-text-muted); }
         .rp-item { display: flex; gap: 8px; align-items: flex-start; padding: 8px 6px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
-        .rp-item:hover { background: #f8f9fa; }
-        .rp-item.active { background: #f0f7ff; border-color: #9ec5fe; }
-        .rp-item-title { font-size: 13px; font-weight: 600; color: #212529; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .rp-frame { flex: 1; min-height: 300px; width: 100%; border: 1px solid #dee2e6; border-radius: 8px; background: #f1f3f5; }
-        .rp-empty { margin: auto; text-align: center; color: #6c757d; max-width: 480px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
+        .rp-item:hover { background: var(--ss-panel-light); }
+        .rp-item.active { background: var(--ss-selected-bg); border-color: var(--ss-selected-border); }
+        .rp-item-title { font-size: 13px; font-weight: 600; color: var(--ss-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .rp-frame { flex: 1; min-height: 300px; width: 100%; border: 1px solid var(--ss-border-light); border-radius: 8px; background: var(--ss-hover); }
+        .rp-empty { margin: auto; text-align: center; color: var(--ss-text-muted); max-width: 480px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border); }
     </style>
 </div>
 
