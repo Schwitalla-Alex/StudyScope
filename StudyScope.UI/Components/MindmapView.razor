@@ -12,8 +12,8 @@
     <!-- Obere Steuerleiste -->
     <div class="mm-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: #212529;">Mindmap: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: #6c757d;">
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Mindmap: @DocVm.CurrentProfile</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(MapVm.HasMindmap ? MapVm.SourceInfoText : "Noch keine Mindmap für dieses Profil")
             </span>
         </div>
@@ -21,13 +21,13 @@
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
             @if (MapVm.IsGenerating)
             {
-                <button type="button" class="mm-btn" style="background: #6c757d;" @onclick="MapVm.CancelGeneration">
+                <button type="button" class="mm-btn" style="background: var(--ss-secondary);" @onclick="MapVm.CancelGeneration">
                     <span class="mm-spinner"></span> Abbrechen
                 </button>
             }
             else
             {
-                <button type="button" class="mm-btn" style="background: #007bff;"
+                <button type="button" class="mm-btn" style="background: var(--ss-primary);"
                         title="Mindmap aus den links aktivierten Dokumenten erstellen"
                         @onclick="GenerateAsync">
                     ✨ @(MapVm.HasMindmap ? "Neu erstellen" : "Mindmap erstellen")
@@ -47,11 +47,11 @@
                     <button type="button" class="mm-btn-outline" title="Vergrößern" disabled="@(MapVm.Zoom >= MindmapViewModel.MaxZoom)" @onclick="MapVm.ZoomIn">+</button>
                 </span>
 
-                <button type="button" class="mm-btn" style="background: #6c757d;"
+                <button type="button" class="mm-btn" style="background: var(--ss-secondary);"
                         title="Mindmap als Grafik drucken oder als PDF speichern (gedruckt wird die aktuelle Ansicht – vorher ggf. „Alle auf“ klicken)"
                         @onclick="PrintAsync">🖨️ Drucken / PDF</button>
-                <button type="button" class="mm-btn" style="background: #17a2b8;" title="Als Markdown-Gliederung exportieren" @onclick="ExportMarkdownAsync">📄 Export (.md)</button>
-                <button type="button" class="mm-btn" style="background: #dc3545;" title="Mindmap dieses Profils löschen" @onclick="DeleteAsync">🗑️ Löschen</button>
+                <button type="button" class="mm-btn" style="background: var(--ss-info);" title="Als Markdown-Gliederung exportieren" @onclick="ExportMarkdownAsync">📄 Export (.md)</button>
+                <button type="button" class="mm-btn" style="background: var(--ss-danger);" title="Mindmap dieses Profils löschen" @onclick="DeleteAsync">🗑️ Löschen</button>
             }
         </div>
     </div>
@@ -61,15 +61,15 @@
         <div class="mm-info">
             <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">🧠 KI analysiert die Dokumente und ordnet die Themen ...</div>
             <div class="mm-progress"><div class="mm-progress-bar"></div></div>
-            <div style="font-size: 11px; margin-top: 6px; color: #6c757d;">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
+            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
         </div>
     }
 
     @if (!string.IsNullOrEmpty(MapVm.StatusMessage))
     {
         var (statusBg, statusBorder, statusText) = MapVm.IsError
-            ? ("#f8d7da", "#f5c6cb", "#721c24")
-            : MapVm.IsWarning ? ("#fff3cd", "#ffeeba", "#856404") : ("#d4edda", "#c3e6cb", "#155724");
+            ? ("var(--ss-danger-bg)", "var(--ss-danger-border)", "var(--ss-danger-text)")
+            : MapVm.IsWarning ? ("var(--ss-warning-bg)", "var(--ss-warning-border)", "var(--ss-warning-text)") : ("var(--ss-success-bg)", "var(--ss-success-border)", "var(--ss-success-text)");
 
         <div class="mm-status" style="background: @statusBg; border-color: @statusBorder; color: @statusText;">
             <div style="flex: 1; min-width: 0;">
@@ -104,7 +104,7 @@
         {
             <div class="mm-empty">
                 <div style="font-size: 34px; margin-bottom: 10px;">🧠</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #343a40;">Noch keine Mindmap vorhanden.</p>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Mindmap vorhanden.</p>
                 <span style="font-size: 12px; line-height: 1.4; display: block;">
                     Aktivieren Sie links ein oder mehrere Dokumente und klicken Sie oben auf „✨ Mindmap erstellen“.
                     Die KI ordnet die Inhalte dann als Themenbaum an.
@@ -118,7 +118,7 @@
                 <!-- Kopfzeile nur für Druck/PDF -->
                 <div class="mm-print-header">
                     <div style="font-size: 16pt; font-weight: 600;">Mindmap: @MapVm.Mindmap!.Root.Title</div>
-                    <div style="font-size: 9pt; color: #555;">@MapVm.SourceInfoText · Profil: @DocVm.CurrentProfile</div>
+                    <div style="font-size: 9pt; color: var(--ss-text-muted);">@MapVm.SourceInfoText · Profil: @DocVm.CurrentProfile</div>
                 </div>
                 <svg width="@F(layout.Width * MapVm.Zoom)" height="@F(layout.Height * MapVm.Zoom)"
                      viewBox="0 0 @F(layout.Width) @F(layout.Height)" xmlns="http://www.w3.org/2000/svg">
@@ -128,7 +128,7 @@
                     {
                         var midX = (edge.FromX + edge.ToX) / 2;
                         <path d="M @F(edge.FromX + ToggleRadius * 2) @F(edge.FromY) C @F(midX) @F(edge.FromY), @F(midX) @F(edge.ToY), @F(edge.ToX) @F(edge.ToY)"
-                              fill="none" stroke="@BranchColor(edge.BranchIndex)" stroke-width="2" stroke-opacity="0.55" />
+                              fill="none" style="stroke: @BranchColor(edge.BranchIndex);" stroke-width="2" stroke-opacity="0.55" />
                     }
 
                     <!-- Knoten -->
@@ -143,12 +143,11 @@
                            @ondblclick="() => MapVm.ToggleNode(node.Id)">
                             <title>@Tooltip(node)</title>
                             <rect x="@F(item.X)" y="@F(item.Y)" width="@F(item.Width)" height="@F(item.Height)" rx="10" ry="10"
-                                  fill="@(isRoot ? "#343a40" : Tint(item.BranchIndex))"
-                                  stroke="@(isSelected ? "#212529" : (isRoot ? "#343a40" : color))"
+                                  style="fill: @(isRoot ? "var(--ss-mm-root)" : Tint(item.BranchIndex)); stroke: @(isSelected ? "var(--ss-text)" : (isRoot ? "var(--ss-mm-root)" : color));"
                                   stroke-width="@(isSelected ? "2.5" : "1.5")" />
                             <text x="@F(item.X + 14)" y="@F(item.CenterY)" dominant-baseline="central"
                                   font-size="13" font-weight="@(item.Depth <= 1 ? "600" : "400")"
-                                  fill="@(isRoot ? "#ffffff" : "#212529")">@item.DisplayTitle</text>
+                                  style="fill: @(isRoot ? "var(--ss-on-accent)" : "var(--ss-text)");">@item.DisplayTitle</text>
                         </g>
 
                         @if (item.HasChildren)
@@ -156,9 +155,9 @@
                             <g class="mm-toggle" @onclick="() => MapVm.ToggleNode(node.Id)" @onclick:stopPropagation="true">
                                 <title>@(item.IsExpanded ? "Zuklappen" : $"{node.Children.Count} Unterthemen aufklappen")</title>
                                 <circle cx="@F(item.Right + ToggleRadius)" cy="@F(item.CenterY)" r="@F(ToggleRadius)"
-                                        fill="#ffffff" stroke="@(isRoot ? "#343a40" : color)" stroke-width="1.5" />
+                                        style="fill: var(--ss-surface); stroke: @(isRoot ? "var(--ss-mm-root)" : color);" stroke-width="1.5" />
                                 <text x="@F(item.Right + ToggleRadius)" y="@F(item.CenterY)" text-anchor="middle" dominant-baseline="central"
-                                      font-size="@(item.IsExpanded ? "13" : "10")" font-weight="700" fill="@(isRoot ? "#343a40" : color)">
+                                      font-size="@(item.IsExpanded ? "13" : "10")" font-weight="700" style="fill: @(isRoot ? "var(--ss-mm-root)" : color);">
                                     @(item.IsExpanded ? "‹" : node.Children.Count.ToString())
                                 </text>
                             </g>
@@ -170,31 +169,31 @@
             @if (MapVm.SelectedNode is { } selected)
             {
                 <aside class="mm-details">
-                    <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px; line-height: 1.4;">
+                    <div style="font-size: 11px; color: var(--ss-text-muted); margin-bottom: 6px; line-height: 1.4;">
                         @string.Join(" › ", MapVm.SelectedPath.Select(n => n.Title))
                     </div>
-                    <h4 style="margin: 0 0 8px 0; font-size: 15px; color: #212529;">@selected.Title</h4>
-                    <p style="font-size: 13px; line-height: 1.5; color: #343a40; white-space: pre-wrap;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 15px; color: var(--ss-text);">@selected.Title</h4>
+                    <p style="font-size: 13px; line-height: 1.5; color: var(--ss-text); white-space: pre-wrap;">
                         @(string.IsNullOrWhiteSpace(selected.Summary) ? "Keine Kurzbeschreibung vorhanden." : selected.Summary)
                     </p>
 
                     @if (selected.Children.Count > 0)
                     {
-                        <div style="font-size: 12px; color: #6c757d; margin-top: 12px;">Unterthemen:</div>
-                        <ul style="margin: 4px 0 0 18px; font-size: 12px; color: #343a40; line-height: 1.6;">
+                        <div style="font-size: 12px; color: var(--ss-text-muted); margin-top: 12px;">Unterthemen:</div>
+                        <ul style="margin: 4px 0 0 18px; font-size: 12px; color: var(--ss-text); line-height: 1.6;">
                             @foreach (var child in selected.Children)
                             {
-                                <li><a href="javascript:void(0)" style="color: #007bff; text-decoration: none;" @onclick="() => MapVm.SelectNode(child.Id)">@child.Title</a></li>
+                                <li><a href="javascript:void(0)" style="color: var(--ss-link); text-decoration: none;" @onclick="() => MapVm.SelectNode(child.Id)">@child.Title</a></li>
                             }
                         </ul>
                     }
 
-                    <button type="button" class="mm-btn" style="background: #28a745; width: 100%; margin-top: 16px; justify-content: center;"
+                    <button type="button" class="mm-btn" style="background: var(--ss-success); width: 100%; margin-top: 16px; justify-content: center;"
                             title="Frage zu diesem Thema im Chat stellen (mit Ihren Unterlagen als Grundlage)"
                             @onclick="() => AskInChatAsync(selected)">
                         💬 Im Chat erklären lassen
                     </button>
-                    <div style="font-size: 11px; color: #868e96; margin-top: 10px; line-height: 1.4;">
+                    <div style="font-size: 11px; color: var(--ss-text-muted); margin-top: 10px; line-height: 1.4;">
                         Tipp: Doppelklick auf ein Thema klappt es auf oder zu.
                     </div>
                 </aside>
@@ -203,29 +202,30 @@
     </div>
 
     <style>
-        .mm-root { flex: 1; display: flex; flex-direction: column; background: #f8f9fa; padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; overflow-y: auto; }
-        .mm-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 18px; border-radius: 8px; border: 1px solid #dee2e6; flex-wrap: wrap; gap: 12px; }
+        @TintCss
+        .mm-root { flex: 1; display: flex; flex-direction: column; background: var(--ss-panel-light); padding: 20px; height: 100%; min-height: 0; box-sizing: border-box; overflow-y: auto; }
+        .mm-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px; }
         .mm-group { display: inline-flex; gap: 2px; }
-        .mm-btn { padding: 7px 12px; color: #fff; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
-        .mm-btn-outline { padding: 6px 10px; background: #fff; color: #495057; border: 1px solid #ced4da; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
-        .mm-btn-outline:hover:not(:disabled) { background: #f1f3f5; }
+        .mm-btn { padding: 7px 12px; color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .mm-btn-outline { padding: 6px 10px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 13px; }
+        .mm-btn-outline:hover:not(:disabled) { background: var(--ss-hover); }
         .mm-btn-outline:disabled { opacity: 0.45; cursor: not-allowed; }
-        .mm-info { margin-top: 14px; padding: 14px 20px; background: #e8f4fd; border: 1px solid #b8daff; border-radius: 8px; text-align: center; color: #004085; }
+        .mm-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
         .mm-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-        .mm-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: rgba(255,255,255,0.6); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: #343a40; }
+        .mm-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .mm-body { flex: 1; min-height: 320px; /* Zeichenfläche bleibt auch bei Statusmeldung und kleinem Fenster nutzbar */ display: flex; gap: 14px; margin-top: 16px; }
-        .mm-canvas { flex: 1; min-width: 0; overflow: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; }
+        .mm-canvas { flex: 1; min-width: 0; overflow: auto; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; }
         .mm-canvas svg { display: block; user-select: none; }
         .mm-node { cursor: pointer; }
         .mm-node:hover rect { filter: brightness(0.96); }
         .mm-toggle { cursor: pointer; }
-        .mm-toggle:hover circle { fill: #f1f3f5; }
-        .mm-details { width: 300px; flex-shrink: 0; overflow-y: auto; background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px; }
-        .mm-empty { margin: auto; text-align: center; color: #6c757d; max-width: 440px; background: #fff; padding: 30px; border-radius: 8px; border: 1px dashed #ced4da; }
-        .mm-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-radius: 50%; border-top-color: #fff; animation: mm-spin 0.8s linear infinite; }
+        .mm-toggle:hover circle { fill: var(--ss-hover) !important; }
+        .mm-details { width: 300px; flex-shrink: 0; overflow-y: auto; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; padding: 16px; }
+        .mm-empty { margin: auto; text-align: center; color: var(--ss-text-muted); max-width: 440px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border); }
+        .mm-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35); border-radius: 50%; border-top-color: var(--ss-on-accent); animation: mm-spin 0.8s linear infinite; }  /* ss:feste-farbe – Ladekreis auf farbigem Knopf */
         @@keyframes mm-spin { to { transform: rotate(360deg); } }
-        .mm-progress { width: 100%; max-width: 480px; height: 6px; background: #cce5ff; border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
-        .mm-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, #007bff, #0056b3); border-radius: 4px; position: absolute; animation: mm-slide 1.4s ease-in-out infinite; }
+        .mm-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
+        .mm-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: mm-slide 1.4s ease-in-out infinite; }
         @@keyframes mm-slide { 0% { left: -40%; } 100% { left: 100%; } }
         .mm-print-header { display: none; }
 
@@ -254,12 +254,19 @@
 
     private const double ToggleRadius = 10;
 
-    // Farben der Hauptäste (Rand/Linie) und passende helle Füllung
-    private static readonly string[] BranchColors = { "#4c6ef5", "#12b886", "#f76707", "#ae3ec9", "#e64980", "#2f9e44", "#e8a900", "#1c7ed6" };
-    private static readonly string[] BranchTints = { "#edf2ff", "#e6fcf5", "#fff4e6", "#f8f0fc", "#fff0f6", "#ebfbee", "#fff9db", "#e7f5ff" };
+    // Farben der Hauptäste (Rand/Linie) und passende helle Füllung. Beide Paletten gelten für Hell und Dunkel;
+    // im Dunkelmodus entsteht die Füllung aus Astfarbe und dunkler Fläche (TintCss). Druck: immer die helle Füllung.
+    private static readonly string[] BranchColors = { "#4c6ef5", "#12b886", "#f76707", "#ae3ec9", "#e64980", "#2f9e44", "#e8a900", "#1c7ed6" };  // ss:feste-farbe
+    private static readonly string[] BranchTints = { "#edf2ff", "#e6fcf5", "#fff4e6", "#f8f0fc", "#fff0f6", "#ebfbee", "#fff9db", "#e7f5ff" };  // ss:feste-farbe
 
-    private static string BranchColor(int index) => index < 0 ? "#343a40" : BranchColors[index % BranchColors.Length];
-    private static string Tint(int index) => index < 0 ? "#f1f3f5" : BranchTints[index % BranchTints.Length];
+    private static string BranchColor(int index) => index < 0 ? "var(--ss-mm-root)" : BranchColors[index % BranchColors.Length];
+    private static string Tint(int index) => index < 0 ? "var(--ss-hover)" : $"var(--mm-tint-{index % BranchTints.Length})";
+
+    /// <summary>Füllungen je Ast als CSS-Variablen: hell aus <see cref="BranchTints"/>, dunkel per color-mix (nur am Bildschirm).</summary>
+    private static readonly string TintCss =
+        ".mm-canvas { " + string.Concat(BranchTints.Select((t, i) => $"--mm-tint-{i}: {t}; ")) + "} " +
+        "@media screen { :root[data-theme-effective='dark'] .mm-canvas { " +
+        string.Concat(BranchColors.Select((c, i) => $"--mm-tint-{i}: color-mix(in srgb, {c} 24%, var(--ss-surface)); ")) + "} }";
 
     /// <summary>SVG-Zahlen immer mit Punkt als Dezimaltrenner (deutsche Kultur würde ein Komma schreiben).</summary>
     private static string F(double value) => value.ToString("0.##", CultureInfo.InvariantCulture);

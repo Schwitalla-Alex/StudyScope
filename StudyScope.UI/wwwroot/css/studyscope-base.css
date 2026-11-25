@@ -1,9 +1,9 @@
 /* Gemeinsame Grundgestaltung von StudyScope und StudyScope.Setup.
    Liegt in StudyScope.UI und wird vom Setup per <EmbeddedResource Link=...> eingebettet – nur hier ändern. */
 /* Farbschema (Einstellungen › Darstellung): Hell ist der Standard. Komponenten verwenden nur diese Variablen, keine
-   festen Farben. .ss-legacy-light setzt für noch nicht umgestellte Bereiche die hellen Werte. Das Setup setzt kein
+   festen Farben (Ausnahmen mit dem Kommentar „ss:feste-farbe“, siehe ThemeColorsTests). Das Setup setzt kein
    data-theme-effective und bleibt hell. */
-:root, .ss-legacy-light {
+:root {
     color-scheme: light;
     /* Flächen */
     --ss-background: #f5f5f5;
@@ -50,6 +50,30 @@
     --ss-menu-shadow: 0 6px 18px rgba(0, 0, 0, .16);
     --ss-dialog-shadow: 0 4px 20px rgba(0, 0, 0, .25);
     --ss-tab-hover: rgba(255, 255, 255, .55);
+    /* Weitere Signal- und Akzentfarben (Reiter) */
+    --ss-selected-bg: #f0f7ff;               /* Ausgewählte Karte/Zeile */
+    --ss-selected-border: #9ec5fe;
+    --ss-info-bg: #e8f4fd;               /* Info-Hinweise (blau) */
+    --ss-info-bg-strong: #cce5ff;
+    --ss-info-border: #b8daff;
+    --ss-info-text: #004085;
+    --ss-primary-hover: #0056b3;
+    --ss-purple: #7048e8;               /* Lila Knopffläche (KI-Aktionen) */
+    --ss-purple-bg: #f3f0ff;
+    --ss-purple-border: #d0bfff;
+    --ss-purple-text: #5f3dc4;
+    --ss-orange: #fd7e14;
+    --ss-orange-bg: #ffe3cc;
+    --ss-orange-text: #a14800;
+    --ss-highlight-bg: #fff9db;               /* Gerade gesprochener Abschnitt / aktuelle Szene */
+    --ss-highlight-border: #fcc419;
+    --ss-amber: #f59f00;
+    --ss-strong: #495057;               /* Dunkelgraue Knopffläche */
+    --ss-border-strong: #adb5bd;
+    --ss-raw-bg: rgba(255, 255, 255, .6);               /* Rohe KI-Antwort in Statusboxen */
+    --ss-chip-active-bg: #212529;        /* Aktiver Filter-Chip (umgekehrt) */
+    --ss-chip-active-text: #fff;
+    --ss-mm-root: #343a40;               /* Mindmap: Wurzelknoten */
 }
 
 /* Dunkel nur am Bildschirm – Druck und PDF bleiben hell. */
@@ -94,14 +118,36 @@
         --ss-menu-shadow: 0 6px 18px rgba(0, 0, 0, .55);
         --ss-dialog-shadow: 0 6px 24px rgba(0, 0, 0, .6);
         --ss-tab-hover: rgba(255, 255, 255, .07);
+
+        --ss-selected-bg: #1b2a3d;
+        --ss-selected-border: #2f5f9e;
+        --ss-info-bg: #14283a;
+        --ss-info-bg-strong: #1a3552;
+        --ss-info-border: #2b4f75;
+        --ss-info-text: #9cc7ff;
+        --ss-primary-hover: #1158c7;
+        --ss-purple: #6e40c9;
+        --ss-purple-bg: #2a2340;
+        --ss-purple-border: #4b3a80;
+        --ss-purple-text: #c3b1ff;
+        --ss-orange: #c75a0a;
+        --ss-orange-bg: #3d2a17;
+        --ss-orange-text: #ffb070;
+        --ss-highlight-bg: #3a3416;
+        --ss-highlight-border: #a17d0a;
+        --ss-amber: #f59f00;
+        --ss-strong: #5c6570;
+        --ss-border-strong: #5d6672;
+        --ss-raw-bg: rgba(0, 0, 0, .28);
+        --ss-chip-active-bg: #e6e8eb;
+        --ss-chip-active-text: #1e2126;
+        --ss-mm-root: #4a525c;
     }
     /* Eingabefelder ohne eigene Farbe: Fläche und Text des Schemas statt der Standardfarben der WebView
        (eine Farbe im style-Attribut hat Vorrang, z. B. das durchsichtige Suchfeld der Seitenleiste) */
     :root[data-theme-effective="dark"] :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select) {
         background-color: var(--ss-surface); color: var(--ss-text);
     }
-    /* Noch nicht umgestellte Bereiche (bis Phase 2b): helle Werte und helle Steuerelemente */
-    :root[data-theme-effective="dark"] .ss-legacy-light { color-scheme: light; background: #fff; color: #212529; }
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
