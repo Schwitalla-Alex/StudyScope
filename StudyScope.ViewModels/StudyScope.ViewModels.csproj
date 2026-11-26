@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -8,6 +8,17 @@
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+  </ItemGroup>
+
+  <!-- Texte der Oberfläche: neutrale Sprache Deutsch, typisierte Klasse VmStrings wird beim Bauen erzeugt -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\VmStrings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>StudyScope.ViewModels.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>VmStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)VmStrings.Designer.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

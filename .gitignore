@@ -68,6 +68,8 @@ last_profile.txt
 *.pdf
 *.csv
 *.txt
+# Ausnahme: sprachabhängige Daten der App (Stoppwörter usw.), keine Benutzerdaten
+!StudyScope.Core/Languages/**/*.txt
 .env
 # Alte Release-Ausgabe (Builds landen in artifacts/)
 /publish/

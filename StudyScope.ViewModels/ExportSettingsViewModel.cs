@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
@@ -67,7 +69,7 @@ public class ExportSettingsViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            ShowMessage($"⚠️ Die Prüfung ist fehlgeschlagen: {ex.Message}", success: false);
+            ShowMessage(Loc.Format(VmStrings.Export_CheckFailed, ("error", ex.Message)), success: false);
         }
         finally
         {
@@ -82,12 +84,12 @@ public class ExportSettingsViewModel : INotifyPropertyChanged
         {
             await _storage.SaveExportSettingsAsync(new ExportSettings { FfmpegPath = FfmpegPath.Trim().Trim('"') });
             Status = await _ffmpeg.GetStatusAsync(refresh: true);
-            ShowMessage(Status.IsAvailable ? "✓ Gespeichert. " + Status.Message : "Gespeichert – ffmpeg wurde aber nicht gefunden.", Status.IsAvailable);
+            ShowMessage(Status.IsAvailable ? Loc.Format(VmStrings.Export_Saved, ("status", Status.Message)) : VmStrings.Export_SavedNotFound, Status.IsAvailable);
             return true;
         }
         catch (Exception ex)
         {
-            ShowMessage($"⚠️ Speichern fehlgeschlagen: {ex.Message}", success: false);
+            ShowMessage(Loc.Format(VmStrings.Common_SaveFailed, ("error", ex.Message)), success: false);
             return false;
         }
     }

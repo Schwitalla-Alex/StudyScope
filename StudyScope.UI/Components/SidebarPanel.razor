@@ -18,17 +18,17 @@
 
 <!-- Ziehbare Trennlinie: Maus (Pointer Events, studyscope-layout.js), Doppelklick = Standardbreite, Tastatur ← → Pos1 Ende -->
 <div @ref="resizerRef" class="ss-sidebar-resizer" role="separator" aria-orientation="vertical"
-     aria-label="Breite der Seitenleiste" title="Ziehen zum Ändern der Breite, Doppelklick: Standardbreite"
+     aria-label="@UiStrings.Sidebar_ResizerLabel" title="@UiStrings.Sidebar_ResizerTitle"
      aria-valuemin="@Px(LayoutViewModel.MinSidebarWidth)" aria-valuemax="@Px(LayoutVm.MaxSidebarWidthNow)" aria-valuenow="@Px(LayoutVm.EffectiveSidebarWidth)"
      tabindex="@(LayoutVm.IsSidebarCollapsed ? "-1" : "0")"
      @ondblclick="LayoutVm.ResetWidthAsync"></div>
 
 <!-- Eingeklappt: schmale Leiste mit ▶ und Hinweis auf die aktiven Dokumente -->
 <div class="ss-sidebar-rail" aria-hidden="@(LayoutVm.IsSidebarCollapsed ? "false" : "true")">
-    <button type="button" class="ss-icon-btn" title="@LayoutVm.ToggleTooltip" aria-label="Seitenleiste einblenden"
+    <button type="button" class="ss-icon-btn ss-flip-rtl" title="@LayoutVm.ToggleTooltip" aria-label="@UiStrings.Sidebar_Show"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">▶</button>
     <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfile, DocVm.Documents)"
-            aria-label="Aktive Dokumente – Seitenleiste einblenden"
+            aria-label="@UiStrings.Sidebar_ActiveDocsShow"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">
         <span class="ss-rail-icon">📄</span>
         <span>@LayoutViewModel.DocumentCount(DocVm.Documents)</span>
@@ -40,8 +40,8 @@
     <!-- 1. Profil-Kopfbereich -->
     <div style="margin-bottom: 5px;">
         <div style="display: flex; align-items: center; justify-content: space-between;">
-            <label style="font-weight: bold; font-size: 13px; color: var(--ss-text-2);">Profil / Thema:</label>
-            <button type="button" class="ss-icon-btn" title="@LayoutVm.ToggleTooltip" aria-label="Seitenleiste ausblenden"
+            <label style="font-weight: bold; font-size: 13px; color: var(--ss-text-2);">@UiStrings.Sidebar_ProfileLabel</label>
+            <button type="button" class="ss-icon-btn ss-flip-rtl" title="@LayoutVm.ToggleTooltip" aria-label="@UiStrings.Sidebar_Hide"
                     @onclick="LayoutVm.ToggleAsync">◀</button>
         </div>
 
@@ -59,7 +59,7 @@
             <!-- Button: Neues Profil erstellen (öffnet den modalen Dialog) -->
             <button type="button"
                     style="width: 32px; height: 32px; padding: 0; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 19px; font-weight: bold; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
-                    title="Neues Profil erstellen"
+                    title="@UiStrings.Sidebar_NewProfile"
                     @onclick="OpenCreateProfileModal">
                 +
             </button>
@@ -69,7 +69,7 @@
             {
                 <button type="button"
                         style="width: 32px; height: 32px; padding: 0; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
-                        title="Aktuelles Profil löschen"
+                        title="@UiStrings.Sidebar_DeleteProfile"
                         @onclick="DeleteCurrentProfileAsync">
                     🗑️
                 </button>
@@ -79,9 +79,9 @@
 
     <!-- 2. Bereich: Volltextsuche / Filter -->
     <div style="display: flex; align-items: center; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); padding: 4px 8px;">
-        <span style="margin-right: 5px; color: var(--ss-text-muted);">🔍</span>
+        <span style="margin-inline-end: 5px; color: var(--ss-text-muted);">🔍</span>
         <input type="text"
-               placeholder="Dokumente durchsuchen..."
+               placeholder="@UiStrings.Sidebar_SearchPlaceholder"
                style="border: none; outline: none; width: 100%; font-size: 13px; background: transparent; color: var(--ss-text);"
                @bind="DocVm.SearchText"
                @bind:event="oninput" />
@@ -91,15 +91,15 @@
     <div style="display: flex; gap: 6px;">
         <button type="button"
                 style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: var(--ss-on-accent); background: var(--ss-primary); border: 1px solid var(--ss-primary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                title="Alle Dokumente für Abfragen aktivieren"
+                title="@UiStrings.Sidebar_SelectAllTitle"
                 @onclick="DocVm.SelectAllAsync">
-            ✓ Alle an
+            @UiStrings.Sidebar_SelectAll
         </button>
         <button type="button"
                 style="flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 600; color: var(--ss-link); background: var(--ss-surface); border: 1px solid var(--ss-primary); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;"
-                title="Alle Dokumente deaktivieren"
+                title="@UiStrings.Sidebar_DeselectAllTitle"
                 @onclick="DocVm.DeselectAllAsync">
-            ✕ Alle aus
+            @UiStrings.Sidebar_DeselectAll
         </button>
     </div>
 
@@ -108,7 +108,7 @@
         @if (!DocVm.FilteredDocuments.Any())
         {
             <div style="font-size: 12px; color: var(--ss-text-muted); text-align: center; margin-top: 20px;">
-                @(DocVm.Documents.Any() ? $"Keine Treffer für „{DocVm.SearchText}“" : "Keine Dokumente geladen")
+                @(DocVm.Documents.Any() ? Loc.Format(UiStrings.Sidebar_NoMatches, ("search", DocVm.SearchText)) : UiStrings.Sidebar_NoDocuments)
             </div>
         }
         else
@@ -116,7 +116,7 @@
             @foreach (var doc in DocVm.FilteredDocuments)
             {
                 <div style="display: flex; align-items: center; gap: 8px; padding: 6px; border-bottom: 1px solid var(--ss-border-faint); font-size: 13px; user-select: none;"
-                     title="Doppelklick zum Öffnen: @doc.FilePath">
+                     title="@Loc.Format(UiStrings.Sidebar_OpenHint, ("path", doc.FilePath))">
 
                     <input type="checkbox" checked="@doc.IsSelected" @onchange="e => DocVm.SetDocumentSelectedAsync(doc, e.Value is true)" />
 
@@ -131,7 +131,7 @@
                     <button type="button"
                             style="background: none; border: none; cursor: pointer; color: var(--ss-danger-fg); font-size: 13px; padding: 0 4px;"
                             @onclick="() => DocVm.RemoveDocumentAsync(doc)"
-                            title="Entfernen">
+                            title="@UiStrings.Sidebar_Remove">
                         ✕
                     </button>
                 </div>
@@ -143,7 +143,7 @@
     <button type="button"
             style="padding: 10px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px;"
             @onclick="AddDocumentFromDialogAsync">
-        + Dokument hinzufügen
+        @UiStrings.Sidebar_AddDocument
     </button>
 </div>
 </div>
@@ -151,14 +151,14 @@
 <!-- Modal-Dialog: Neues Profil anlegen -->
 @if (showCreateModal)
 {
-    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+    <div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000;">
         <div style="background: var(--ss-surface); border-radius: 8px; width: 340px; padding: 20px; box-shadow: var(--ss-dialog-shadow); display: flex; flex-direction: column; gap: 12px; font-family: Segoe UI, sans-serif;">
 
-            <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">Neues Profil anlegen</h4>
-            <span style="font-size: 12px; color: var(--ss-text-muted);">Geben Sie einen Namen für das neue Themengebiet ein:</span>
+            <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.NewProfile_Title</h4>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">@UiStrings.NewProfile_Prompt</span>
 
             <input type="text"
-                   placeholder="z. B. BGB, Steuerrecht, Projekt..."
+                   placeholder="@UiStrings.Sidebar_NewProfilePlaceholder"
                    style="width: 100%; padding: 8px 10px; font-size: 13px; border: 1px solid @(profileNameError == null ? "var(--ss-primary)" : "var(--ss-danger)"); border-radius: 4px; outline: none; box-sizing: border-box;"
                    @bind="newProfileName"
                    @bind:event="oninput"
@@ -175,13 +175,13 @@
                 <button type="button"
                         style="padding: 6px 14px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
                         @onclick="CancelCreateProfile">
-                    Abbrechen
+                    @UiStrings.Common_Cancel
                 </button>
                 <button type="button"
                         style="padding: 6px 16px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(CanCreateProfile ? "pointer" : "not-allowed"); opacity: @(CanCreateProfile ? "1" : "0.6"); font-size: 12px;"
                         disabled="@(!CanCreateProfile)"
                         @onclick="ConfirmCreateProfileAsync">
-                    Erstellen & Konfigurieren
+                    @UiStrings.Sidebar_CreateAndConfigure
                 </button>
             </div>
         </div>

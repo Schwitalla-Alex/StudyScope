@@ -1,0 +1,93 @@
+# Stop words for the keyword search in the chat (one word per line, lowercase; lines starting with # are comments).
+# The lists of all languages apply together, because documents and questions can be mixed.
+# Words with at most two letters are filtered by the search anyway.
+# Question words
+who
+whom
+whose
+what
+which
+when
+where
+why
+how
+# Articles, conjunctions, prepositions
+the
+and
+but
+for
+nor
+not
+from
+with
+without
+into
+onto
+about
+above
+below
+between
+during
+after
+before
+than
+then
+that
+this
+these
+those
+there
+here
+also
+# Pronouns
+you
+your
+yours
+she
+her
+his
+him
+its
+they
+them
+their
+our
+ours
+mine
+myself
+# Auxiliary and modal verbs
+are
+was
+were
+been
+being
+has
+have
+had
+does
+did
+can
+could
+will
+would
+shall
+should
+may
+might
+must
+# Instructions and references to the materials
+please
+explain
+describe
+tell
+give
+list
+name
+show
+based
+context
+connection
+materials
+document
+documents
+text

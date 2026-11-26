@@ -20,5 +20,8 @@ public class AiConfig
     public string ApiKey { get; set; } = string.Empty;
     public string ModelName { get; set; } = "llama3.2:latest";
     public string LocalEndpointUrl { get; set; } = "http://localhost:11434"; // Default für Ollama
-    public string SelectedModelName { get; set; } = "Fake-KI (Testmodus)";
+    /// <summary>Gespeicherter Modellname der Fake-KI (Daten, bleibt deutsch; angezeigt wird ein übersetzter Name).</summary>
+    public const string FakeModelName = "Fake-KI (Testmodus)";
+
+    public string SelectedModelName { get; set; } = FakeModelName;
 }

@@ -6,7 +6,7 @@
 
 @* Reiterleiste, immer einzeilig: Reiter, die nicht passen, stehen im Menü „» Mehr“ (Aufteilung: TabOverflow).
    Alle Reiter werden gezeichnet (ausgeblendete unsichtbar), damit das Skript ihre Breiten messen kann. *@
-<div class="ss-tabs" role="tablist" aria-label="Bereiche" @ref="container">
+<div class="ss-tabs" role="tablist" aria-label="@UiStrings.Tabs_Label" @ref="container">
     @for (var i = 0; i < AppTabs.All.Count; i++)
     {
         var tab = AppTabs.All[i];
@@ -23,10 +23,10 @@
 
     <DropdownMenu Navigator="MenuVm.OverflowNavigator" TriggerId="ss-tabmore-trigger" MenuId="ss-tabmore-list"
                   Class="@(layout.HasOverflow ? "ss-tabmore" : "ss-tabmore ss-tab-hidden")"
-                  TriggerClass="ss-tab ss-tabmore-btn" TriggerLabel="Weitere Bereiche"
-                  TriggerTitle="Weitere Bereiche" AlignRight="true" OnActivate="SelectAsync"
+                  TriggerClass="ss-tab ss-tabmore-btn" TriggerLabel="@UiStrings.Tabs_MoreLabel"
+                  TriggerTitle="@UiStrings.Tabs_MoreLabel" AlignRight="true" OnActivate="SelectAsync"
                   data-tab-more="true">
-        <TriggerContent>» Mehr</TriggerContent>
+        <TriggerContent>@UiStrings.Tabs_More</TriggerContent>
     </DropdownMenu>
 </div>
 

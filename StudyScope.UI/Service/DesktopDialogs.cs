@@ -1,5 +1,6 @@
 ﻿using Photino.NET;
 using StudyScope.Infrastructure.Services;
+using StudyScope.UI.Resources;
 
 namespace StudyScope.UI.Services;
 
@@ -21,8 +22,8 @@ public static class DesktopDialogs
     public static Task<string?> SaveFileAsync(
         string defaultName,
         string filterExtension = "md",
-        string filterDescription = "Markdown-Dateien (*.md)",
-        string title = "Exportieren als...")
+        string? filterDescription = null,
+        string? title = null)
     {
         return Task.Run(() =>
         {
@@ -34,12 +35,12 @@ public static class DesktopDialogs
 
                 var filters = FileDialogFilters.ForPhotino(new (string, string[])[]
                 {
-                    (filterDescription, new[] { $"*.{filterExtension}" }),
-                    ("Alle Dateien (*.*)", new[] { "*.*" })
+                    (filterDescription ?? UiStrings.Dialog_MarkdownFiles, new[] { $"*.{filterExtension}" }),
+                    (UiStrings.Dialog_AllFiles, new[] { "*.*" })
                 }, OperatingSystem.IsLinux());
 
                 var selectedFile = MainWindow.ShowSaveFile(
-                    title,
+                    title ?? UiStrings.Dialog_ExportAs,
                     defaultDirectory,
                     filters);
 
@@ -74,14 +75,14 @@ public static class DesktopDialogs
                 // Unter Linux umgeht FileDialogFilters einen Photino-Fehler bei Filtern mit mehreren Endungen
                 var filters = FileDialogFilters.ForPhotino(new (string, string[])[]
                 {
-                    ("Unterstützte Dokumente (*.pdf, *.txt, *.csv)", new[] { "*.pdf", "*.txt", "*.csv" }),
-                    ("PDF-Dokumente (*.pdf)", new[] { "*.pdf" }),
-                    ("Textdateien (*.txt)", new[] { "*.txt" }),
-                    ("CSV-Dateien (*.csv)", new[] { "*.csv" }),
-                    ("Alle Dateien (*.*)", new[] { "*.*" })
+                    (UiStrings.Dialog_SupportedDocuments, new[] { "*.pdf", "*.txt", "*.csv" }),
+                    (UiStrings.Dialog_PdfFiles, new[] { "*.pdf" }),
+                    (UiStrings.Dialog_TextFiles, new[] { "*.txt" }),
+                    (UiStrings.Dialog_CsvFiles, new[] { "*.csv" }),
+                    (UiStrings.Dialog_AllFiles, new[] { "*.*" })
                 }, OperatingSystem.IsLinux());
 
-                var files = MainWindow.ShowOpenFile("Dokument auswählen", defaultDirectory, multiSelect: false, filters: filters);
+                var files = MainWindow.ShowOpenFile(UiStrings.Dialog_SelectDocument, defaultDirectory, multiSelect: false, filters: filters);
                 return files?.FirstOrDefault();
             }
             catch (Exception)

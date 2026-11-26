@@ -1,8 +1,12 @@
+using StudyScope.ViewModels.Resources;
+
 namespace StudyScope.ViewModels.Menu;
 
-/// <summary>Reiter der Hauptansicht.</summary>
-public sealed record AppTab(string Id, string Icon, string Label)
+/// <summary>Reiter der Hauptansicht. Die Beschriftung wird bei jedem Zugriff in der aktuellen Oberflächensprache gelesen.</summary>
+/// <param name="LabelKey">Schlüssel in <see cref="VmStrings"/>.</param>
+public sealed record AppTab(string Id, string Icon, string LabelKey)
 {
+    public string Label => VmStrings.ResourceManager.GetString(LabelKey, VmStrings.Culture) ?? LabelKey;
     public string Text => $"{Icon} {Label}";
 }
 
@@ -21,15 +25,15 @@ public static class AppTabs
 
     public static IReadOnlyList<AppTab> All { get; } =
     [
-        new(Chat, "💬", "Chat & Fragen"),
-        new(Cards, "🎴", "Lernkarteikarten"),
-        new(Mindmap, "🧠", "Mindmap"),
-        new(Presentation, "📽️", "Präsentation"),
-        new(Quiz, "❓", "Quiz"),
-        new(Tables, "📊", "Datentabelle"),
-        new(Audio, "🎧", "Audio"),
-        new(Video, "🎬", "Video"),
-        new(Reports, "📑", "Berichte"),
+        new(Chat, "💬", nameof(VmStrings.Tab_Chat)),
+        new(Cards, "🎴", nameof(VmStrings.Tab_Cards)),
+        new(Mindmap, "🧠", nameof(VmStrings.Tab_Mindmap)),
+        new(Presentation, "📽️", nameof(VmStrings.Tab_Presentation)),
+        new(Quiz, "❓", nameof(VmStrings.Tab_Quiz)),
+        new(Tables, "📊", nameof(VmStrings.Tab_Tables)),
+        new(Audio, "🎧", nameof(VmStrings.Tab_Audio)),
+        new(Video, "🎬", nameof(VmStrings.Tab_Video)),
+        new(Reports, "📑", nameof(VmStrings.Tab_Reports)),
     ];
 
     public static int IndexOf(string id)

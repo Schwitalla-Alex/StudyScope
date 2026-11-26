@@ -4,17 +4,18 @@
 @inject DocumentListViewModel DocVm
 @implements IDisposable
 
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+<div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 1000;">
     <div style="background: var(--ss-surface); border-radius: 8px; width: 500px; padding: 22px; box-shadow: var(--ss-dialog-shadow); display: flex; flex-direction: column; font-family: Segoe UI, sans-serif;">
 
         <!-- Header mit Anzeige des Zielprofils -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ss-border-light); padding-bottom: 10px; margin-bottom: 15px;">
             <div>
-                <h3 style="margin: 0; font-size: 17px; color: var(--ss-text);">⚙️ Einstellungen</h3>
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Profil: <strong>@DocVm.CurrentProfile</strong></span>
+                <h3 style="margin: 0; font-size: 17px; color: var(--ss-text);">@UiStrings.Settings_Title</h3>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Settings_Profile <strong>@DocVm.CurrentProfile</strong></span>
             </div>
             <button type="button"
                     style="border: none; background: transparent; font-size: 16px; cursor: pointer; color: var(--ss-text-muted);"
+                    aria-label="@UiStrings.Common_Close" title="@UiStrings.Common_Close"
                     @onclick="() => OnClose.InvokeAsync()">
                 ✕
             </button>
@@ -22,10 +23,10 @@
 
         <!-- Abschnitte: KI-Modell (Chat/Skripte) und Sprachausgabe (Audio) -->
         <div style="display: flex; gap: 4px; margin-bottom: 14px; border-bottom: 1px solid var(--ss-border-light);">
-            <button type="button" class="st-tab @(section == "ai" ? "active" : "")" @onclick='() => section = "ai"'>🤖 KI-Modell</button>
-            <button type="button" class="st-tab @(section == "speech" ? "active" : "")" @onclick='() => section = "speech"'>🔊 Sprachausgabe</button>
-            <button type="button" class="st-tab @(section == "export" ? "active" : "")" @onclick='() => section = "export"'>🎞️ Export</button>
-            <button type="button" class="st-tab @(section == "appearance" ? "active" : "")" @onclick='() => section = "appearance"'>🎨 Darstellung</button>
+            <button type="button" class="st-tab @(section == "ai" ? "active" : "")" @onclick='() => section = "ai"'>@UiStrings.Settings_Tab_Ai</button>
+            <button type="button" class="st-tab @(section == "speech" ? "active" : "")" @onclick='() => section = "speech"'>@UiStrings.Settings_Tab_Speech</button>
+            <button type="button" class="st-tab @(section == "export" ? "active" : "")" @onclick='() => section = "export"'>@UiStrings.Settings_Tab_Export</button>
+            <button type="button" class="st-tab @(section == "appearance" ? "active" : "")" @onclick='() => section = "appearance"'>@UiStrings.Settings_Tab_Appearance</button>
         </div>
 
         @if (section == "appearance")
@@ -47,17 +48,17 @@
             <!-- 1. KI-Provider Auswahl -->
             <div>
                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                    1. KI-Modell / Provider:
+                    @UiStrings.Settings_Provider
                 </label>
                 <select style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); font-size: 13px;"
                         @bind="SettingsVm.SelectedProvider">
-                    <option value="@AiProviderType.FakeAi">Fake-KI (Testmodus)</option>
-                    <option value="@AiProviderType.OllamaLocal">Ollama (Lokal)</option>
-                    <option value="@AiProviderType.LmStudioLocal">LM Studio (Lokal)</option>
+                    <option value="@AiProviderType.FakeAi">@UiStrings.Settings_Provider_FakeAi</option>
+                    <option value="@AiProviderType.OllamaLocal">@UiStrings.Settings_Provider_Ollama</option>
+                    <option value="@AiProviderType.LmStudioLocal">@UiStrings.Settings_Provider_LmStudio</option>
                     <option value="@AiProviderType.GoogleGemini">Google Gemini</option>
                     <option value="@AiProviderType.OpenAiGpt4">OpenAI (GPT-4)</option>
-                    <option value="@AiProviderType.MistralAi">Mistral AI (Cloud)</option>
-                    <option value="@AiProviderType.CustomOpenAi">Benutzerdefiniert (OpenAI-kompatibel)</option>
+                    <option value="@AiProviderType.MistralAi">@UiStrings.Settings_Provider_Mistral</option>
+                    <option value="@AiProviderType.CustomOpenAi">@UiStrings.Settings_Provider_Custom</option>
                 </select>
             </div>
 
@@ -66,11 +67,11 @@
             {
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                        @(SettingsVm.IsCustomProvider ? "2. Server-Adresse (Basis-URL, OpenAI-kompatibel):" : "2. Server-Adresse (URL):")
+                        @(SettingsVm.IsCustomProvider ? UiStrings.Settings_ServerCustom : UiStrings.Settings_Server)
                     </label>
                     <div style="display: flex; gap: 6px;">
                         <input type="text"
-                               placeholder="@(SettingsVm.IsCustomProvider ? "z. B. https://api.groq.com/openai/v1" : "http://localhost:11434")"
+                               placeholder="@(SettingsVm.IsCustomProvider ? UiStrings.Settings_ServerCustomPlaceholder : "http://localhost:11434")"
                                style="flex: 1; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; box-sizing: border-box;"
                                @bind="SettingsVm.LocalEndpointUrl"
                                @bind:event="oninput" />
@@ -79,7 +80,7 @@
                                 style="padding: 7px 12px; background: var(--ss-info); color: var(--ss-on-accent); border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; white-space: nowrap;"
                                 disabled="@(string.IsNullOrWhiteSpace(SettingsVm.LocalEndpointUrl) || SettingsVm.IsTestingConnection)"
                                 @onclick="SettingsVm.TestConnectionAndFetchModelsAsync">
-                            @(SettingsVm.IsTestingConnection ? "Prüfe..." : "🔍 Modelle suchen")
+                            @(SettingsVm.IsTestingConnection ? UiStrings.Settings_Checking : UiStrings.Settings_FindModels)
                         </button>
                     </div>
                 </div>
@@ -90,11 +91,11 @@
             {
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text);">
-                        @(SettingsVm.IsCustomProvider ? "API-Schlüssel (optional, z. B. bei lokalen Servern nicht nötig):" : $"2. API-Schlüssel ({SettingsVm.SelectedModelDisplayName}):")
+                        @(SettingsVm.IsCustomProvider ? UiStrings.Settings_ApiKeyOptional : Loc.Format(UiStrings.Settings_ApiKey, ("provider", SettingsVm.SelectedModelDisplayName)))
                     </label>
                     <div style="display: flex; gap: 6px;">
                         <input type="password"
-                               placeholder="API-Schlüssel hier eingeben..."
+                               placeholder="@UiStrings.Settings_ApiKeyPlaceholder"
                                style="flex: 1; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; box-sizing: border-box; background-color: var(--ss-surface); font-size: 13px;"
                                @bind="SettingsVm.ApiKey"
                                @bind:event="oninput" />
@@ -105,7 +106,7 @@
                                     style="padding: 7px 12px; background: @(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) ? "var(--ss-secondary)" : "var(--ss-info)"); color: var(--ss-on-accent); border: none; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: @(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) ? "not-allowed" : "pointer"); white-space: nowrap;"
                                     disabled="@(string.IsNullOrWhiteSpace(SettingsVm.ApiKey) || SettingsVm.IsTestingConnection)"
                                     @onclick="SettingsVm.TestConnectionAndFetchModelsAsync">
-                                @(SettingsVm.IsTestingConnection ? "Prüfe..." : "🔄 Modelle online abrufen")
+                                @(SettingsVm.IsTestingConnection ? UiStrings.Settings_Checking : UiStrings.Settings_FetchModels)
                             </button>
                         }
                     </div>
@@ -115,7 +116,7 @@
             <!-- 4. Modell-Auswahl -->
             <div>
                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                    3. Modell auswählen:
+                    @UiStrings.Settings_Model
                 </label>
 
                 @if (SettingsVm.AvailableModels.Any())
@@ -124,18 +125,19 @@
                             @bind="SettingsVm.SelectedModelName">
                         @foreach (var model in SettingsVm.AvailableModels)
                         {
-                            <option value="@model">@model</option>
+                            @* Die Fake-KI speichert einen deutschen Modellnamen; angezeigt wird der übersetzte *@
+                            <option value="@model">@(model == AiConfig.FakeModelName ? UiStrings.Settings_Provider_FakeAi : model)</option>
                         }
                     </select>
                 }
                 else if (SettingsVm.SelectedProvider == AiProviderType.FakeAi)
                 {
-                    <input type="text" disabled value="Fake-KI (Testmodus)" style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; background: var(--ss-panel); box-sizing: border-box;" />
+                    <input type="text" disabled value="@UiStrings.Settings_Provider_FakeAi" style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; background: var(--ss-panel); box-sizing: border-box;" />
                 }
                 else if (SettingsVm.IsCustomProvider)
                 {
                     <input type="text"
-                           placeholder="z. B. llama-3.3-70b-versatile, deepseek-chat..."
+                           placeholder="@UiStrings.Settings_ModelCustomPlaceholder"
                            style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; box-sizing: border-box;"
                            @bind="SettingsVm.SelectedModelName"
                            @bind:event="oninput" />
@@ -143,13 +145,13 @@
                 else if (SettingsVm.IsLocalProvider)
                 {
                     <div style="padding: 8px 12px; background: var(--ss-warning-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; font-size: 12px; color: var(--ss-warning-text);">
-                        ℹ️ Bitte stellen Sie sicher, dass @SettingsVm.SelectedModelDisplayName läuft, und klicken Sie oben auf <strong>„Modelle suchen“</strong>.
+                        @LocHtml.Format(UiStrings.Settings_LocalHint, ("provider", SettingsVm.SelectedModelDisplayName))
                     </div>
                 }
                 else
                 {
                     <div style="padding: 8px 12px; background: var(--ss-warning-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; font-size: 12px; color: var(--ss-warning-text);">
-                        ⚠️ Bitte zuerst den API-Schlüssel eingeben und oben auf <strong>„Modelle online abrufen“</strong> klicken.
+                        @LocHtml.Format(UiStrings.Settings_CloudHint)
                     </div>
                 }
             </div>
@@ -167,22 +169,22 @@
         <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
             <button type="button"
                     style="padding: 7px 12px; background: var(--ss-surface); color: var(--ss-danger-fg); border: 1px solid var(--ss-danger); border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 500;"
-                    title="Alle Felder zurücksetzen"
+                    title="@UiStrings.Settings_ResetTitle"
                     @onclick="SettingsVm.ResetForm">
-                🗑 Maske leeren
+                @UiStrings.Settings_Reset
             </button>
 
             <div style="display: flex; gap: 8px;">
                 <button type="button"
                         style="padding: 7px 14px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 13px;"
                         @onclick="() => OnClose.InvokeAsync()">
-                    Schließen
+                    @UiStrings.Common_Close
                 </button>
                 <button type="button"
                         style="padding: 7px 16px; background: @(SettingsVm.CanSaveAndConnect ? "var(--ss-primary)" : "var(--ss-secondary)"); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(SettingsVm.CanSaveAndConnect ? "pointer" : "not-allowed"); font-size: 13px;"
                         disabled="@(!SettingsVm.CanSaveAndConnect)"
                         @onclick="HandleSaveAndCloseAsync">
-                    @(SettingsVm.IsSaving ? "Verbinde..." : "Speichern & Verbinden")
+                    @(SettingsVm.IsSaving ? UiStrings.Settings_Connecting : UiStrings.Settings_SaveConnect)
                 </button>
             </div>
         </div>
@@ -191,7 +193,7 @@
 </div>
 
 <style>
-    .st-tab { border: 1px solid transparent; border-bottom: none; background: transparent; padding: 6px 12px; font-size: 13px; cursor: pointer; border-top-left-radius: 4px; border-top-right-radius: 4px; color: var(--ss-text-2); margin-bottom: -1px; }
+    .st-tab { border: 1px solid transparent; border-bottom: none; background: transparent; padding: 6px 12px; font-size: 13px; cursor: pointer; border-start-start-radius: 4px; border-start-end-radius: 4px; color: var(--ss-text-2); margin-bottom: -1px; }
     .st-tab.active { background: var(--ss-surface); border-color: var(--ss-border-light); font-weight: bold; color: var(--ss-text); }
 </style>
 

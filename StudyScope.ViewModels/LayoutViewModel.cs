@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
@@ -109,8 +111,8 @@ public class LayoutViewModel : INotifyPropertyChanged
     public bool IsAutoCollapsed => IsSidebarCollapsed && !UserCollapsed;
 
     public string ToggleTooltip => IsSidebarCollapsed
-        ? IsAutoCollapsed ? "Seitenleiste einblenden (Strg+B) – bei schmalem Fenster automatisch ausgeblendet" : "Seitenleiste einblenden (Strg+B)"
-        : "Seitenleiste ausblenden (Strg+B)";
+        ? IsAutoCollapsed ? VmStrings.Layout_ShowSidebarAuto : VmStrings.Layout_ShowSidebar
+        : VmStrings.Layout_HideSidebar;
 
     /// <summary>Gemerkten Zustand laden (beim Start).</summary>
     public async Task LoadAsync()
@@ -248,19 +250,19 @@ public class LayoutViewModel : INotifyPropertyChanged
     public static string DocumentBadgeTooltip(string profile, IReadOnlyCollection<DocumentItem> documents)
     {
         var active = ActiveDocuments(documents).Select(d => d.FileName).ToList();
-        var lines = new List<string> { $"Profil: {profile}" };
+        var lines = new List<string> { Loc.Format(VmStrings.Layout_Badge_Profile, ("profile", profile)) };
         if (documents.Count == 0)
-            lines.Add("Keine Dokumente geladen");
+            lines.Add(VmStrings.Layout_Badge_NoDocuments);
         else if (active.Count == 0)
-            lines.Add($"Keines von {documents.Count} Dokumenten aktiv");
+            lines.Add(Loc.Format(VmStrings.Layout_Badge_NoneActive, ("total", documents.Count)));
         else
         {
-            lines.Add($"Aktiv ({active.Count} von {documents.Count}):");
+            lines.Add(Loc.Format(VmStrings.Layout_Badge_Active, ("active", active.Count), ("total", documents.Count)));
             lines.AddRange(active.Take(MaxTooltipDocuments).Select(name => "• " + name));
             if (active.Count > MaxTooltipDocuments)
-                lines.Add($"… und {active.Count - MaxTooltipDocuments} weitere");
+                lines.Add(Loc.Format(VmStrings.Layout_Badge_More, ("count", active.Count - MaxTooltipDocuments)));
         }
-        lines.Add("Klicken zum Einblenden");
+        lines.Add(VmStrings.Layout_Badge_ClickToShow);
         return string.Join("\n", lines);
     }
 

@@ -396,7 +396,7 @@ public class LayoutViewModelTests
     {
         Assert.That(LayoutViewModel.DocumentBadge(Array.Empty<DocumentItem>()), Is.EqualTo("📄 0/0"));
         Assert.That(LayoutViewModel.DocumentBadgeTooltip("Testprofil", Array.Empty<DocumentItem>()), Does.Contain("Keine Dokumente geladen"));
-        Assert.That(LayoutViewModel.DocumentBadgeTooltip("Testprofil", new[] { Doc("a.pdf", selected: false) }), Does.Contain("Keines von 1 Dokumenten aktiv"));
+        Assert.That(LayoutViewModel.DocumentBadgeTooltip("Testprofil", new[] { Doc("a.pdf", selected: false) }), Does.Contain("Das einzige Dokument ist nicht aktiv"));
     }
 
     [Test]

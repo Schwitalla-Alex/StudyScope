@@ -15,6 +15,17 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
 	</ItemGroup>
 
+	<!-- Texte der Oberfläche: neutrale Sprache Deutsch, Übersetzungen in UiStrings.<kultur>.resx,
+	     die typisierte Klasse UiStrings wird beim Bauen erzeugt -->
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\UiStrings.resx">
+			<StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+			<StronglyTypedNamespace>StudyScope.UI.Resources</StronglyTypedNamespace>
+			<StronglyTypedClassName>UiStrings</StronglyTypedClassName>
+			<StronglyTypedFileName>$(IntermediateOutputPath)UiStrings.Designer.cs</StronglyTypedFileName>
+		</EmbeddedResource>
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
 		<ProjectReference Include="..\StudyScope.Infrastructure\StudyScope.Infrastructure.csproj" />

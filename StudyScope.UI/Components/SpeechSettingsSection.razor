@@ -5,30 +5,29 @@
 
 <div style="display: flex; flex-direction: column; gap: 14px;">
     <div style="font-size: 12px; color: var(--ss-text-2); line-height: 1.5;">
-        Gemini TTS erzeugt aus dem Sprechskript eine Audiodatei (WAV), beim Podcast mit zwei Stimmen. Das Skript selbst schreibt weiterhin
-        die KI aus „🤖 KI-Modell“ – auch eine lokale KI. Welche Sprachausgabe verwendet wird, wählen Sie im Reiter „🎧 Audio“.
+        @UiStrings.Speech_Intro
     </div>
 
     <div>
-        <label class="ss-label">1. Gemini-API-Schlüssel für die Sprachausgabe:</label>
-        <input type="password" class="ss-input" placeholder="@(SpeechVm.ChatProvidesGeminiKey ? "nicht nötig – Schlüssel der Chat-KI wird verwendet" : "API-Schlüssel aus Google AI Studio …")"
+        <label class="ss-label">@UiStrings.Speech_KeyLabel</label>
+        <input type="password" class="ss-input" placeholder="@(SpeechVm.ChatProvidesGeminiKey ? UiStrings.Speech_KeyNotNeeded : UiStrings.Speech_KeyPlaceholder)"
                @bind="SpeechVm.GeminiApiKey" @bind:event="oninput" />
         <div class="ss-hint">@SpeechVm.KeySourceText</div>
     </div>
 
     <div>
-        <label class="ss-label">2. Modell:</label>
+        <label class="ss-label">@UiStrings.Speech_ModelLabel</label>
         <div style="display: flex; gap: 6px;">
             <input type="text" class="ss-input" style="flex: 1;" @bind="SpeechVm.GeminiModel" @bind:event="oninput" />
-            <button type="button" class="ss-btn" style="background: var(--ss-secondary);" title="Standardmodell eintragen" @onclick="SpeechVm.ResetModel">Standard</button>
+            <button type="button" class="ss-btn" style="background: var(--ss-secondary);" title="@UiStrings.Speech_DefaultModelTitle" @onclick="SpeechVm.ResetModel">@UiStrings.Speech_Default</button>
         </div>
-        <div class="ss-hint">Standard: <code>@GeminiTtsInfo.DefaultModel</code>. Ändern Sie den Namen nur, wenn Google das Modell umbenennt.</div>
+        <div class="ss-hint">@LocHtml.Format(UiStrings.Speech_DefaultHint, ("model", GeminiTtsInfo.DefaultModel))</div>
     </div>
 
     <div>
-        <label class="ss-label">3. Stimmen:</label>
+        <label class="ss-label">@UiStrings.Speech_VoicesLabel</label>
         <div style="display: flex; gap: 10px;">
-            <label style="flex: 1; font-size: 12px; color: var(--ss-text-2);">Sprecherin / Moderatorin
+            <label style="flex: 1; font-size: 12px; color: var(--ss-text-2);">@UiStrings.Speech_VoicePrimary
                 <select class="ss-input" @bind="SpeechVm.VoicePrimary">
                     @foreach (var voice in SpeechVm.Voices)
                     {
@@ -36,7 +35,7 @@
                     }
                 </select>
             </label>
-            <label style="flex: 1; font-size: 12px; color: var(--ss-text-2);">Experte (Podcast)
+            <label style="flex: 1; font-size: 12px; color: var(--ss-text-2);">@UiStrings.Speech_VoiceSecondary
                 <select class="ss-input" @bind="SpeechVm.VoiceSecondary">
                     @foreach (var voice in SpeechVm.Voices)
                     {
@@ -61,13 +60,13 @@
 
 <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
     <button type="button" class="ss-btn" style="background: var(--ss-info);" disabled="@(!SpeechVm.CanTestConnection)"
-            title="Prüft Schlüssel und Modell über die kostenlose Modellabfrage – es wird keine Sprache erzeugt"
+            title="@UiStrings.Speech_TestTitle"
             @onclick="SpeechVm.TestConnectionAsync">
-        @(SpeechVm.IsTesting ? "Prüfe …" : "🔌 Verbindung testen")
+        @(SpeechVm.IsTesting ? UiStrings.Speech_Testing : UiStrings.Speech_Test)
     </button>
     <div style="display: flex; gap: 8px;">
-        <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">Schließen</button>
-        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">Speichern</button>
+        <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
+        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">@UiStrings.Common_Save</button>
     </div>
 </div>
 

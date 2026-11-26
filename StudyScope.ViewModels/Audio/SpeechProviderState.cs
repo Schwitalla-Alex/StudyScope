@@ -1,5 +1,6 @@
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels.Audio;
 
@@ -14,8 +15,7 @@ public sealed class SpeechProviderState
     public const string LocalAiHint =
         "Das Skript schreibt Ihre lokale KI. Zum Vorlesen nutzen Sie die Systemstimme (offline) oder Gemini TTS (Audiodatei, Podcast mit zwei Stimmen).";
 
-    public const string GeminiPrivacyHint =
-        "Datenschutz: Bei Gemini TTS wird der Skripttext an Google gesendet. In der kostenlosen Stufe kann Google die Eingaben zur Verbesserung seiner Dienste verwenden.";
+    public static string GeminiPrivacyHint => VmStrings.Speech_PrivacyHint;
 
     public const string NoFileExportHint =
         "Mit der Systemstimme ist kein Dateiexport möglich – sie liest nur direkt vor. Für eine Audiodatei (WAV) wählen Sie Gemini TTS.";

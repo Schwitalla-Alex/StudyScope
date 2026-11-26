@@ -18,6 +18,11 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
   - Dunkel dargestellt werden alle Bereiche: Menü, Leisten, Dialoge, Chat, Karteikarten, Mindmap (die Äste behalten ihre Farben, die Füllungen werden passend abgedunkelt), Präsentation, Quiz, Datentabelle, Audio, Video und der Bericht in der Vorschau.
   - Folien bleiben hell, ebenso Druck/PDF und alle exportierten Dateien (HTML, Word, PowerPoint, Excel, MP4).
 
+### Geändert
+- **Einheitliche Anrede:** Auch der Chat spricht Sie jetzt mit „Sie“ an („Stellen Sie eine Frage zu den aktivierten Dokumenten …“), und der Hinweis nennt alle Dokumentarten statt nur PDF.
+- **Richtige Einzahl:** Zähler im Chat, im Hinweis der eingeklappten Seitenleiste und bei der Modellsuche lauten jetzt z. B. „1 Nachricht“ bzw. „1 Modell gefunden“ statt „1 Nachrichten“ bzw. „1 Modell(e)“.
+- Vorbereitung für weitere Sprachen der Oberfläche: Die Texte von Menü, Reiterleiste, Seitenleiste, Statusleiste, Einstellungen, Dialogen und Chat liegen jetzt in Übersetzungsdateien. Die Oberfläche bleibt vorerst deutsch.
+
 ## [1.1.1] – 2026-11
 
 Mehr Platz für Ihre Inhalte: Die linke Seitenleiste lässt sich einklappen und in der Breite anpassen.

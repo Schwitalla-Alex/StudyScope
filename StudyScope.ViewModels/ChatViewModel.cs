@@ -7,6 +7,9 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
+using System.Globalization;
 
 namespace StudyScope.ViewModels;
 
@@ -173,27 +176,15 @@ public class ChatViewModel : INotifyPropertyChanged
         await SendPromptAsync();
     }
 
-    // Füllwörter, die in fast jedem Text vorkommen und die Suche verfälschen würden
-    private static readonly HashSet<string> StopWords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "wer", "wie", "was", "wo", "wann", "warum", "welche", "welcher", "welches", "wieso", "weshalb",
-        "der", "die", "das", "ein", "eine", "einer", "eines", "einem", "einen", "und", "oder", "ist",
-        "sind", "in", "im", "dem", "den", "des", "auf", "zu", "zum", "zur", "mit", "von", "vom", "du", "sie", "es",
-        "ich", "mir", "mich", "mein", "meine", "meiner", "meinen", "meinem", "wir", "uns", "unsere", "ihr", "ihre", "ihnen",
-        "für", "über", "bei", "aus", "als", "auch", "nicht", "kein", "keine", "wird", "werden", "wurde", "kann", "können",
-        "muss", "müssen", "soll", "sollte", "nach", "sich", "dass", "dies", "diese", "dieser", "dieses", "hier", "dort",
-        "bitte", "erkläre", "erklären", "erklär", "beschreibe", "beschreiben", "nenne", "nennen", "gib", "gibt",
-        "anhand", "zusammenhang", "zusammenhängen", "unterlagen", "dokument", "dokumente", "dokumenten", "text", "textes"
-    };
-
     /// <summary>
     /// Zerlegt eine Frage in Suchwörter: trennt an allen Zeichen außer Buchstaben und Ziffern
-    /// (also auch an typografischen Anführungszeichen „ “ und Bindestrichen) und entfernt Füllwörter.
+    /// (also auch an typografischen Anführungszeichen „ “ und Bindestrichen) und entfernt Füllwörter
+    /// aller Sprachen (<see cref="StudyScope.Core.Common.StopWords"/>, Dateien unter Core/Languages).
     /// </summary>
     public static List<string> ExtractSearchWords(string query) =>
         Regex.Split(query ?? string.Empty, @"[^\p{L}\p{N}]+")
             .Select(w => w.ToLowerInvariant())
-            .Where(w => w.Length > 2 && !StopWords.Contains(w))
+            .Where(w => w.Length > 2 && !StudyScope.Core.Common.StopWords.Contains(w))
             .Distinct()
             .ToList();
 
@@ -316,7 +307,7 @@ public class ChatViewModel : INotifyPropertyChanged
 
             if (string.IsNullOrWhiteSpace(response))
             {
-                response = "Keine Antwort vom Sprachmodell erhalten.";
+                response = VmStrings.Chat_NoResponse;
             }
 
             // 4. KI-Antwort genau einmal anfügen
@@ -331,7 +322,7 @@ public class ChatViewModel : INotifyPropertyChanged
             AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.System,
-                Content = "Anfrage wurde durch den Benutzer abgebrochen."
+                Content = VmStrings.Chat_Cancelled
             });
         }
         catch (LlmServiceException ex)
@@ -347,7 +338,7 @@ public class ChatViewModel : INotifyPropertyChanged
             AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.System,
-                Content = $"Fehler bei der Anfrage: {ex.Message}"
+                Content = Loc.Format(VmStrings.Chat_RequestFailed, ("error", ex.Message))
             });
         }
         finally
@@ -362,7 +353,7 @@ public class ChatViewModel : INotifyPropertyChanged
     {
         if (!Messages.Any())
         {
-            ExportStatusMessage = "Hinweis: Es ist noch kein Gesprächsverlauf vorhanden, der exportiert werden kann.";
+            ExportStatusMessage = VmStrings.Chat_NothingToExport;
             return false;
         }
 
@@ -375,18 +366,18 @@ public class ChatViewModel : INotifyPropertyChanged
 
             Directory.CreateDirectory(exportDir);
 
-            var fileName = $"ChatProtokoll_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
+            var fileName = $"{VmStrings.Chat_LogFilePrefix}_{DateTime.Now:yyyyMMdd_HHmmss}.txt";
             var fullPath = Path.Combine(exportDir, fileName);
 
             var text = GetConversationExportText();
             await File.WriteAllTextAsync(fullPath, text, Encoding.UTF8);
 
-            ExportStatusMessage = $"Protokoll erfolgreich gespeichert unter:\n{fullPath}";
+            ExportStatusMessage = Loc.Format(VmStrings.Chat_LogSaved, ("path", fullPath));
             return true;
         }
         catch (Exception ex)
         {
-            ExportStatusMessage = $"Fehler beim Speichern: {ex.Message}";
+            ExportStatusMessage = Loc.Format(VmStrings.Chat_SaveFailed, ("error", ex.Message));
             return false;
         }
     }
@@ -395,7 +386,7 @@ public class ChatViewModel : INotifyPropertyChanged
     {
         if (!Messages.Any())
         {
-            ExportStatusMessage = "Hinweis: Es ist noch kein Gesprächsverlauf vorhanden, der exportiert werden kann.";
+            ExportStatusMessage = VmStrings.Chat_NothingToExport;
             return false;
         }
 
@@ -406,12 +397,12 @@ public class ChatViewModel : INotifyPropertyChanged
         {
             var text = GetConversationExportText();
             await File.WriteAllTextAsync(destinationFilePath, text, Encoding.UTF8);
-            ExportStatusMessage = $"Protokoll erfolgreich gespeichert unter:\n{destinationFilePath}";
+            ExportStatusMessage = Loc.Format(VmStrings.Chat_LogSaved, ("path", destinationFilePath));
             return true;
         }
         catch (Exception ex)
         {
-            ExportStatusMessage = $"Fehler beim Speichern: {ex.Message}";
+            ExportStatusMessage = Loc.Format(VmStrings.Chat_SaveFailed, ("error", ex.Message));
             return false;
         }
     }
@@ -420,9 +411,9 @@ public class ChatViewModel : INotifyPropertyChanged
     {
         var sb = new StringBuilder();
         sb.AppendLine("==================================================");
-        sb.AppendLine("              STUDYSCOPE CHAT-PROTOKOLL           ");
-        sb.AppendLine($" Erstellt am: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-        sb.AppendLine($" Nachrichten: {Messages.Count}");
+        sb.AppendLine("              " + VmStrings.Chat_Log_Title);
+        sb.AppendLine(" " + Loc.Format(VmStrings.Chat_Log_Created, ("date", DateTime.Now.ToString("G", CultureInfo.CurrentCulture))));
+        sb.AppendLine(" " + Loc.Format(VmStrings.Chat_Log_Messages, ("count", Messages.Count)));
         sb.AppendLine("==================================================");
         sb.AppendLine();
 
@@ -430,13 +421,13 @@ public class ChatViewModel : INotifyPropertyChanged
         {
             var sender = msg.Role switch
             {
-                MessageRole.User => "BENUTZER",
-                MessageRole.Assistant => "ASSISTENT (KI)",
-                MessageRole.System => "SYSTEM",
+                MessageRole.User => VmStrings.Chat_Log_User,
+                MessageRole.Assistant => VmStrings.Chat_Log_Assistant,
+                MessageRole.System => VmStrings.Chat_Log_System,
                 _ => msg.Role.ToString().ToUpperInvariant()
             };
 
-            sb.AppendLine($"[{msg.Timestamp:HH:mm:ss}] {sender}:");
+            sb.AppendLine($"[{msg.Timestamp.ToString("T", CultureInfo.CurrentCulture)}] {sender}:");
             sb.AppendLine(msg.Content);
 
             // Bewertung nur bei Assistenten-Nachrichten ausgeben
@@ -444,11 +435,11 @@ public class ChatViewModel : INotifyPropertyChanged
             {
                 var ratingText = msg.IsLiked switch
                 {
-                    true => "👍 Hilfreich / Gut",
-                    false => "👎 Nicht hilfreich / Verbesserungsbedürftig",
-                    null => "— Unbewertet"
+                    true => VmStrings.Chat_Log_Liked,
+                    false => VmStrings.Chat_Log_Disliked,
+                    null => VmStrings.Chat_Log_Unrated
                 };
-                sb.AppendLine($"[Bewertung: {ratingText}]");
+                sb.AppendLine(Loc.Format(VmStrings.Chat_Log_Rating, ("rating", ratingText)));
             }
 
             sb.AppendLine(new string('-', 40));

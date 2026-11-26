@@ -6,4 +6,15 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <!-- ICU-MessageFormat mit CLDR-Pluralregeln für die Texte der Oberfläche (MIT, ohne weitere Abhängigkeiten) -->
+  <ItemGroup>
+    <PackageReference Include="MessageFormat" Version="8.0.0" />
+  </ItemGroup>
+
+  <!-- Sprachabhängige Daten je Sprache als Datei (Languages/<sprache>/…), siehe LanguageData.
+       WithCulture=false: Ordnernamen wie „de“ sind keine Satellitenassemblies. -->
+  <ItemGroup>
+    <EmbeddedResource Include="Languages\**\*.txt" WithCulture="false" />
+  </ItemGroup>
+
 </Project>
