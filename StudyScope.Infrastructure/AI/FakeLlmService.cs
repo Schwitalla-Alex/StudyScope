@@ -86,7 +86,7 @@ public class FakeLlmService : ILlmService
         // 2. Fall: Normaler Chatverlauf
         if (!chunks.Any())
         {
-            return Task.FromResult($"[Testmodus] Keine Dokumentinhalte aktiv. Deine Frage war: '{prompt}'");
+            return Task.FromResult($"[Testmodus] Keine Dokumentinhalte aktiv. Ihre Frage war: '{prompt}'");
         }
 
         var firstChunkPreview = chunks.First().Substring(0, Math.Min(50, chunks.First().Length));

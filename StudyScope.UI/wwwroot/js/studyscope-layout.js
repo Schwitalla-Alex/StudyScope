@@ -22,7 +22,16 @@ window.studyScopeLayout = (function () {
         return ['checkbox', 'radio', 'button', 'submit', 'reset', 'range', 'color', 'file', 'image'].indexOf(f.type.toLowerCase()) < 0;
     }
 
+    // Schreibrichtung der Oberfläche (dir="rtl" auf <html> bei Sprachen wie Arabisch oder Hebräisch)
+    function isRtl(el) { return getComputedStyle(el || document.documentElement).direction === 'rtl'; }
+
     return {
+        // Sprache und Schreibrichtung der Oberfläche auf <html> setzen (App.razor beim Start)
+        setLanguage: function (lang, rtl) {
+            document.documentElement.setAttribute('lang', lang);
+            document.documentElement.setAttribute('dir', rtl ? 'rtl' : 'ltr');
+        },
+
         attach: function (dotnetRef) {
             this.detach();
             keyHandler = function (e) {
@@ -183,13 +192,14 @@ window.studyScopeLayout = (function () {
                 overlay.className = 'ss-resize-overlay';
                 document.body.appendChild(overlay);
                 var start = currentWidth();
-                drag = { x: e.clientX, start: start, raw: start, moved: false, frame: 0, overlay: overlay };
+                // Bei rechts-nach-links liegt die Leiste rechts: Ziehen nach links macht sie breiter
+                drag = { x: e.clientX, dir: isRtl(sidebar) ? -1 : 1, start: start, raw: start, moved: false, frame: 0, overlay: overlay };
                 document.body.classList.add('ss-resizing');
                 sidebar.classList.add('ss-resizing');
             });
             separator.addEventListener('pointermove', function (e) {
                 if (!drag) return;
-                var dx = e.clientX - drag.x;
+                var dx = (e.clientX - drag.x) * drag.dir;
                 if (dx !== 0) drag.moved = true;
                 drag.raw = drag.start + dx;
                 if (!drag.frame) drag.frame = requestAnimationFrame(apply);
@@ -200,7 +210,9 @@ window.studyScopeLayout = (function () {
             separator.addEventListener('keydown', function (e) {
                 if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(e.key) < 0 || e.ctrlKey || e.altKey || e.metaKey) return;
                 e.preventDefault();
-                dotnetRef.invokeMethodAsync('OnSeparatorKey', e.key);
+                // .NET rechnet mit „rechts = breiter“; bei rechts-nach-links sind die Pfeile vertauscht
+                var key = !isRtl(sidebar) ? e.key : e.key === 'ArrowLeft' ? 'ArrowRight' : e.key === 'ArrowRight' ? 'ArrowLeft' : e.key;
+                dotnetRef.invokeMethodAsync('OnSeparatorKey', key);
             });
         }
     };

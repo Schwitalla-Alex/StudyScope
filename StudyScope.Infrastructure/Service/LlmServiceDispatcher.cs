@@ -197,7 +197,7 @@ public class LlmServiceDispatcher : ILlmService
         }
 
         if (!chunks.Any())
-            return $"[Testmodus] Keine Dokumentinhalte aktiv. Deine Frage war: '{prompt}'";
+            return $"[Testmodus] Keine Dokumentinhalte aktiv. Ihre Frage war: '{prompt}'";
 
         var firstPreview = chunks.First().Substring(0, Math.Min(50, chunks.First().Length));
         return $"[Testmodus] Antwort basierend auf {chunks.Count} Textstelle(n).\nFrage: {prompt}\nAuszug: {firstPreview}...";

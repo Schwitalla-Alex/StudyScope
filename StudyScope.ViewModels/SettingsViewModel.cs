@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
@@ -199,14 +201,14 @@ public class SettingsViewModel : INotifyPropertyChanged
 
     public string SelectedModelDisplayName => SelectedProvider switch
     {
-        AiProviderType.FakeAi => "Fake-KI (Testmodus)",
-        AiProviderType.OllamaLocal => "Ollama (Lokal)",
-        AiProviderType.LmStudioLocal => "LM Studio (Lokal)",
-        AiProviderType.OpenAiGpt4 => "OpenAI (GPT-4)",
-        AiProviderType.GoogleGemini => "Google Gemini",
-        AiProviderType.MistralAi => "Mistral AI",
-        AiProviderType.CustomOpenAi => "Benutzerdefiniert",
-        _ => "Unbekannt"
+        AiProviderType.FakeAi => VmStrings.Provider_FakeAi,
+        AiProviderType.OllamaLocal => VmStrings.Provider_Ollama,
+        AiProviderType.LmStudioLocal => VmStrings.Provider_LmStudio,
+        AiProviderType.OpenAiGpt4 => VmStrings.Provider_OpenAi,
+        AiProviderType.GoogleGemini => VmStrings.Provider_Gemini,
+        AiProviderType.MistralAi => VmStrings.Provider_Mistral,
+        AiProviderType.CustomOpenAi => VmStrings.Provider_Custom,
+        _ => VmStrings.Provider_Unknown
     };
 
     public string ConnectionStatusMessage
@@ -311,7 +313,7 @@ public class SettingsViewModel : INotifyPropertyChanged
     public async Task<bool> SaveAndConnectAsync()
     {
         IsSaving = true;
-        ConnectionStatusMessage = "Verbindung wird geprüft...";
+        ConnectionStatusMessage = VmStrings.Settings_Checking;
 
         try
         {
@@ -330,7 +332,7 @@ public class SettingsViewModel : INotifyPropertyChanged
             if (!isConnected)
             {
                 ConnectionSuccess = false;
-                ConnectionStatusMessage = "Fehler: Verbindung fehlgeschlagen. Bitte Einstellungen prüfen.";
+                ConnectionStatusMessage = VmStrings.Settings_ConnectFailed;
                 return false;
             }
 
@@ -341,13 +343,13 @@ public class SettingsViewModel : INotifyPropertyChanged
             await _storageService.SaveAiConfigAsync(config);
 
             ConnectionSuccess = true;
-            ConnectionStatusMessage = "Erfolgreich verbunden und gespeichert!";
+            ConnectionStatusMessage = VmStrings.Settings_ConnectedSaved;
             return true;
         }
         catch (Exception ex)
         {
             ConnectionSuccess = false;
-            ConnectionStatusMessage = $"Verbindung fehlgeschlagen: {ex.Message}";
+            ConnectionStatusMessage = Loc.Format(VmStrings.Settings_ConnectFailedDetail, ("error", ex.Message));
             return false;
         }
         finally
@@ -395,19 +397,19 @@ public class SettingsViewModel : INotifyPropertyChanged
                 }
 
                 ConnectionSuccess = true;
-                ConnectionStatusMessage = $"✓ Verbunden! {models.Count} Modell(e) gefunden.";
+                ConnectionStatusMessage = Loc.Format(VmStrings.Settings_ModelsFound, ("count", models.Count));
             }
             else
             {
                 ConnectionSuccess = false;
-                ConnectionStatusMessage = "⚠️ Keine Modelle gefunden. Bitte API-Key bzw. Server-URL prüfen.";
+                ConnectionStatusMessage = VmStrings.Settings_NoModels;
             }
             OnPropertyChanged(nameof(CanSaveAndConnect));
         }
         catch (Exception ex)
         {
             ConnectionSuccess = false;
-            ConnectionStatusMessage = ex is LlmServiceException ? $"⚠️ {ex.Message}" : $"Fehler: {ex.Message}";
+            ConnectionStatusMessage = Loc.Format(ex is LlmServiceException ? VmStrings.Common_WarningDetail : VmStrings.Common_ErrorDetail, ("message", ex.Message));
         }
         finally
         {

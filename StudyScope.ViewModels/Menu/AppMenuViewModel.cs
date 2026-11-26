@@ -1,4 +1,5 @@
 using StudyScope.Core.Common;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels.Menu;
 
@@ -55,22 +56,22 @@ public class AppMenuViewModel
     {
         var settings = new List<MenuEntry>
         {
-            new(SettingsAi, "KI-Modell", "🤖"),
-            new(SettingsSpeech, "Sprachausgabe", "🔊"),
-            new(SettingsExport, "Export", "🎞️"),
+            new(SettingsAi, VmStrings.Menu_SettingsAi, "🤖"),
+            new(SettingsSpeech, VmStrings.Menu_SettingsSpeech, "🔊"),
+            new(SettingsExport, VmStrings.Menu_SettingsExport, "🎞️"),
         };
-        if (appearanceAvailable) settings.Add(new(SettingsAppearance, "Darstellung", "🎨"));
+        if (appearanceAvailable) settings.Add(new(SettingsAppearance, VmStrings.Menu_SettingsAppearance, "🎨"));
 
-        var help = new List<MenuEntry> { new(About, "Über StudyScope", "ℹ️") };
-        if (donationAvailable) help.Add(new(Support, "StudyScope unterstützen ❤", "🤝"));
+        var help = new List<MenuEntry> { new(About, VmStrings.Menu_About, "ℹ️") };
+        if (donationAvailable) help.Add(new(Support, VmStrings.Menu_Support, "🤝"));
 
         return
         [
-            new(OpenFile, "Datei öffnen…", "📂"),
-            new(NewProfile, "Neues Profil…", "➕"),
-            new(Settings, "Einstellungen", "⚙️", settings, SeparatorBefore: true),
-            new(Help, "Hilfe", "❓", help),
-            new(Exit, "Anwendung schließen", "✕", SeparatorBefore: true, IsDanger: true),
+            new(OpenFile, VmStrings.Menu_OpenFile, "📂"),
+            new(NewProfile, VmStrings.Menu_NewProfile, "➕"),
+            new(Settings, VmStrings.Menu_Settings, "⚙️", settings, SeparatorBefore: true),
+            new(Help, VmStrings.Menu_Help, "❓", help),
+            new(Exit, VmStrings.Menu_Exit, "✕", SeparatorBefore: true, IsDanger: true),
         ];
     }
 

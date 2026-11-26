@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Tab_Chat" xml:space="preserve"><value>Chat &amp; questions</value></data>
+  <data name="Tab_Cards" xml:space="preserve"><value>Flashcards</value></data>
+  <data name="Tab_Mindmap" xml:space="preserve"><value>Mind map</value></data>
+  <data name="Tab_Presentation" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Tab_Quiz" xml:space="preserve"><value>Quiz</value></data>
+  <data name="Tab_Tables" xml:space="preserve"><value>Data table</value></data>
+  <data name="Tab_Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="Tab_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Tab_Reports" xml:space="preserve"><value>Reports</value></data>
+  <data name="Menu_SettingsAi" xml:space="preserve"><value>AI model</value></data>
+  <data name="Menu_SettingsSpeech" xml:space="preserve"><value>Text-to-speech</value></data>
+  <data name="Menu_SettingsExport" xml:space="preserve"><value>Export</value></data>
+  <data name="Menu_SettingsAppearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>About StudyScope</value></data>
+  <data name="Menu_Support" xml:space="preserve"><value>Support StudyScope ❤</value></data>
+  <data name="Menu_OpenFile" xml:space="preserve"><value>Open file…</value></data>
+  <data name="Menu_NewProfile" xml:space="preserve"><value>New profile…</value></data>
+  <data name="Menu_Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>Help</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Layout_ShowSidebarAuto" xml:space="preserve"><value>Show sidebar (Ctrl+B) – hidden automatically in a narrow window</value></data>
+  <data name="Layout_ShowSidebar" xml:space="preserve"><value>Show sidebar (Ctrl+B)</value></data>
+  <data name="Layout_HideSidebar" xml:space="preserve"><value>Hide sidebar (Ctrl+B)</value></data>
+  <data name="Layout_Badge_Profile" xml:space="preserve"><value>Profile: {profile}</value></data>
+  <data name="Layout_Badge_NoDocuments" xml:space="preserve"><value>No documents loaded</value></data>
+  <data name="Layout_Badge_NoneActive" xml:space="preserve"><value>{total, plural, one {The only document is not active} other {None of # documents active}}</value></data>
+  <data name="Layout_Badge_Active" xml:space="preserve"><value>Active ({active} of {total}):</value></data>
+  <data name="Layout_Badge_More" xml:space="preserve"><value>… and {count} more</value></data>
+  <data name="Layout_Badge_ClickToShow" xml:space="preserve"><value>Click to show</value></data>
+  <data name="Docs_LoadingModel" xml:space="preserve"><value>Loading model…</value></data>
+  <data name="Docs_NoAiConfigured" xml:space="preserve"><value>No AI configured</value></data>
+  <data name="Docs_ProfileExists" xml:space="preserve"><value>A profile “{name}” already exists. Select it from the list above or choose a different name.</value></data>
+  <data name="Appearance_System" xml:space="preserve"><value>Same as system</value></data>
+  <data name="Appearance_System_Hint" xml:space="preserve"><value>Follows the Windows or Linux setting, even when it changes.</value></data>
+  <data name="Appearance_Light" xml:space="preserve"><value>Light</value></data>
+  <data name="Appearance_Light_Hint" xml:space="preserve"><value>Always light.</value></data>
+  <data name="Appearance_Dark" xml:space="preserve"><value>Dark</value></data>
+  <data name="Appearance_Dark_Hint" xml:space="preserve"><value>Always dark.</value></data>
+  <data name="Appearance_Saved" xml:space="preserve"><value>Appearance saved.</value></data>
+  <data name="Export_CheckFailed" xml:space="preserve"><value>⚠️ The check failed: {error}</value></data>
+  <data name="Export_Saved" xml:space="preserve"><value>✓ Saved. {status}</value></data>
+  <data name="Export_SavedNotFound" xml:space="preserve"><value>Saved – but ffmpeg was not found.</value></data>
+  <data name="Common_SaveFailed" xml:space="preserve"><value>⚠️ Could not save: {error}</value></data>
+  <data name="Speech_VoiceFemale" xml:space="preserve"><value>{voice} (female)</value></data>
+  <data name="Speech_VoiceMale" xml:space="preserve"><value>{voice} (male)</value></data>
+  <data name="Speech_KeyFromChat" xml:space="preserve"><value>The Gemini key from this profile's AI settings is used. No separate key is needed.</value></data>
+  <data name="Speech_NoKey" xml:space="preserve"><value>No key yet – Gemini TTS is grayed out in the Audio tab. You can get a free key in Google AI Studio.</value></data>
+  <data name="Speech_OwnKey" xml:space="preserve"><value>This separate key is used (stored encrypted in the profile). The chat AI stays unchanged.</value></data>
+  <data name="Speech_Saved" xml:space="preserve"><value>✓ Text-to-speech saved for the profile “{profile}”.</value></data>
+  <data name="Speech_TestFailed" xml:space="preserve"><value>⚠️ Connection test failed: {error}</value></data>
+  <data name="Provider_FakeAi" xml:space="preserve"><value>Fake AI (test mode)</value></data>
+  <data name="Provider_Ollama" xml:space="preserve"><value>Ollama (local)</value></data>
+  <data name="Provider_LmStudio" xml:space="preserve"><value>LM Studio (local)</value></data>
+  <data name="Provider_OpenAi" xml:space="preserve"><value>OpenAI (GPT-4)</value></data>
+  <data name="Provider_Gemini" xml:space="preserve"><value>Google Gemini</value></data>
+  <data name="Provider_Mistral" xml:space="preserve"><value>Mistral AI</value></data>
+  <data name="Provider_Custom" xml:space="preserve"><value>Custom</value></data>
+  <data name="Provider_Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="Settings_Checking" xml:space="preserve"><value>Checking connection…</value></data>
+  <data name="Settings_ConnectFailed" xml:space="preserve"><value>Error: connection failed. Check the settings.</value></data>
+  <data name="Settings_ConnectedSaved" xml:space="preserve"><value>Connected and saved.</value></data>
+  <data name="Settings_ConnectFailedDetail" xml:space="preserve"><value>Connection failed: {error}</value></data>
+  <data name="Settings_ModelsFound" xml:space="preserve"><value>{count, plural, one {✓ Connected. # model found.} other {✓ Connected. # models found.}}</value></data>
+  <data name="Settings_NoModels" xml:space="preserve"><value>⚠️ No models found. Check the API key or server URL.</value></data>
+  <data name="Common_WarningDetail" xml:space="preserve"><value>⚠️ {message}</value></data>
+  <data name="Common_ErrorDetail" xml:space="preserve"><value>Error: {message}</value></data>
+  <data name="Chat_NoResponse" xml:space="preserve"><value>No response received from the language model.</value></data>
+  <data name="Chat_Cancelled" xml:space="preserve"><value>The request was canceled by the user.</value></data>
+  <data name="Chat_RequestFailed" xml:space="preserve"><value>Request failed: {error}</value></data>
+  <data name="Chat_NothingToExport" xml:space="preserve"><value>Note: there is no conversation history to export yet.</value></data>
+  <data name="Chat_LogFilePrefix" xml:space="preserve"><value>ChatLog</value></data>
+  <data name="Chat_LogSaved" xml:space="preserve"><value>Log saved to:
+{path}</value></data>
+  <data name="Chat_SaveFailed" xml:space="preserve"><value>Could not save: {error}</value></data>
+  <data name="Chat_Log_Title" xml:space="preserve"><value>STUDYSCOPE CHAT LOG</value></data>
+  <data name="Chat_Log_Created" xml:space="preserve"><value>Created: {date}</value></data>
+  <data name="Chat_Log_Messages" xml:space="preserve"><value>Messages: {count}</value></data>
+  <data name="Chat_Log_User" xml:space="preserve"><value>USER</value></data>
+  <data name="Chat_Log_Assistant" xml:space="preserve"><value>ASSISTANT (AI)</value></data>
+  <data name="Chat_Log_System" xml:space="preserve"><value>SYSTEM</value></data>
+  <data name="Chat_Log_Liked" xml:space="preserve"><value>👍 Helpful / good</value></data>
+  <data name="Chat_Log_Disliked" xml:space="preserve"><value>👎 Not helpful / needs improvement</value></data>
+  <data name="Chat_Log_Unrated" xml:space="preserve"><value>— Not rated</value></data>
+  <data name="Chat_Log_Rating" xml:space="preserve"><value>[Rating: {rating}]</value></data>
+  <data name="Speech_PrivacyHint" xml:space="preserve"><value>Privacy: with Gemini TTS, the script text is sent to Google. In the free tier, Google may use the input to improve its services.</value></data>
+</root>

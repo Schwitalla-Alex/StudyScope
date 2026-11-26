@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -20,11 +21,11 @@ public class AppearanceViewModel : INotifyPropertyChanged
     public AppearanceViewModel(IStorageService storage) => _storage = storage;
 
     /// <summary>Auswahl im Formular mit Anzeigetext.</summary>
-    public static IReadOnlyList<(ThemeMode Mode, string Label, string Hint)> Options { get; } =
+    public static IReadOnlyList<(ThemeMode Mode, string Label, string Hint)> Options =>
     [
-        (ThemeMode.System, "Wie System", "Folgt der Einstellung von Windows bzw. Linux, auch wenn sie sich ändert."),
-        (ThemeMode.Light, "Hell", "Immer helle Darstellung."),
-        (ThemeMode.Dark, "Dunkel", "Immer dunkle Darstellung."),
+        (ThemeMode.System, VmStrings.Appearance_System, VmStrings.Appearance_System_Hint),
+        (ThemeMode.Light, VmStrings.Appearance_Light, VmStrings.Appearance_Light_Hint),
+        (ThemeMode.Dark, VmStrings.Appearance_Dark, VmStrings.Appearance_Dark_Hint),
     ];
 
     private ThemeMode _savedTheme = ThemeMode.System;
@@ -57,7 +58,7 @@ public class AppearanceViewModel : INotifyPropertyChanged
         settings.Theme = SelectedTheme;
         await _storage.SaveUiSettingsAsync(settings);
         SavedTheme = SelectedTheme;
-        StatusMessage = "Darstellung gespeichert.";
+        StatusMessage = VmStrings.Appearance_Saved;
     }
 
     /// <summary>Vorschau verwerfen: zurück zum gespeicherten Stand.</summary>

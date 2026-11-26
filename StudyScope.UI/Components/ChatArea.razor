@@ -8,7 +8,7 @@
 <div style="flex: 1; display: flex; flex-direction: column; background: var(--ss-surface); height: 100%;">
     <!-- Kopfzeile mit Export-Aktion -->
     <div style="padding: 10px 15px; border-bottom: 1px solid var(--ss-border-light); display: flex; justify-content: space-between; align-items: center;">
-        <h4 style="font-size: 14px; margin: 0; color: var(--ss-text-2);">Gesprächsverlauf (@ChatVm.Messages.Count Nachrichten)</h4>
+        <h4 style="font-size: 14px; margin: 0; color: var(--ss-text-2);">@Loc.Format(UiStrings.Chat_Header, ("count", ChatVm.Messages.Count))</h4>
 
         <div style="display: flex; gap: 8px;">
             @if (ChatVm.Messages.Any())
@@ -17,14 +17,14 @@
                         style="padding: 4px 8px; font-size: 11px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer;"
                         disabled="@ChatVm.IsBusy"
                         @onclick="ChatVm.ClearConversation">
-                    Verlauf leeren
+                    @UiStrings.Chat_Clear
                 </button>
             }
             <button type="button"
                     style="padding: 4px 12px; font-size: 12px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer;"
                     disabled="@ChatVm.IsBusy"
                     @onclick="HandleExportAsync">
-                Protokoll exportieren
+                @UiStrings.Chat_Export
             </button>
         </div>
     </div>
@@ -32,10 +32,11 @@
     <!-- Statusmeldung bei Export oder Fehlern -->
     @if (!string.IsNullOrEmpty(ChatVm.ExportStatusMessage))
     {
-        <div style="margin: 8px 15px; padding: 8px 12px; background-color: var(--ss-neutral-bg); border-left: 4px solid var(--ss-neutral-text); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="margin: 8px 15px; padding: 8px 12px; background-color: var(--ss-neutral-bg); border-inline-start: 4px solid var(--ss-neutral-text); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
             <span style="white-space: pre-wrap;">@ChatVm.ExportStatusMessage</span>
             <button type="button"
                     style="background: none; border: none; cursor: pointer; font-size: 14px; color: var(--ss-neutral-text);"
+                    aria-label="@UiStrings.Common_Dismiss" title="@UiStrings.Common_Dismiss"
                     @onclick="() => ChatVm.ExportStatusMessage = string.Empty">
                 ✕
             </button>
@@ -47,7 +48,7 @@
         @if (!ChatVm.Messages.Any())
         {
             <div style="color: var(--ss-text-faint); font-size: 13px; text-align: center; margin-top: 40px;">
-                Stelle eine Frage zu den aktivierten PDF-Dokumenten...
+                @UiStrings.Chat_Empty
             </div>
         }
         else
@@ -59,7 +60,7 @@
                     background-color: @(msg.Role == MessageRole.User ? "var(--ss-primary)" : (msg.Role == MessageRole.System ? "var(--ss-warning-bg)" : "var(--ss-hover)"));
                     color: @(msg.Role == MessageRole.User ? "var(--ss-on-accent)" : (msg.Role == MessageRole.System ? "var(--ss-warning-text)" : "var(--ss-text)"));">
 
-                    <div style="font-weight: bold; font-size: 11px; margin-bottom: 3px; opacity: 0.8;">@msg.Role:</div>
+                    <div style="font-weight: bold; font-size: 11px; margin-bottom: 3px; opacity: 0.8;">@RoleLabel(msg.Role):</div>
                     <div style="white-space: pre-wrap;">@msg.Content</div>
 
                     <!-- Aktionsleiste bei Assistenten-Nachrichten (Kopieren, Bewerten, Neu generieren) -->
@@ -68,21 +69,21 @@
                         <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--ss-border-faint); display: flex; gap: 12px; align-items: center; font-size: 12px;">
                             <button type="button"
                                     style="border: none; background: transparent; cursor: pointer; padding: 0; color: var(--ss-text-2);"
-                                    title="In Zwischenablage kopieren"
+                                    title="@UiStrings.Chat_CopyTitle"
                                     @onclick="() => CopyToClipboardAsync(msg.Id, msg.Content)">
-                                @(_copiedMessageId == msg.Id ? "✓ Kopiert!" : "📋 Kopieren")
+                                @(_copiedMessageId == msg.Id ? UiStrings.Chat_Copied : UiStrings.Chat_Copy)
                             </button>
 
                             <button type="button"
                                     style="border: none; background: transparent; cursor: pointer; padding: 0;"
-                                    title="Hilfreich"
+                                    title="@UiStrings.Chat_Helpful"
                                     @onclick="() => ChatVm.RateMessage(msg, true)">
                                 @(msg.IsLiked == true ? "👍" : "👍🏻")
                             </button>
 
                             <button type="button"
                                     style="border: none; background: transparent; cursor: pointer; padding: 0;"
-                                    title="Nicht hilfreich"
+                                    title="@UiStrings.Chat_NotHelpful"
                                     @onclick="() => ChatVm.RateMessage(msg, false)">
                                 @(msg.IsLiked == false ? "👎" : "👎🏻")
                             </button>
@@ -91,9 +92,9 @@
                             {
                                 <button type="button"
                                         style="border: none; background: transparent; cursor: pointer; padding: 0; color: var(--ss-link);"
-                                        title="Neu generieren"
+                                        title="@UiStrings.Chat_RegenerateTitle"
                                         @onclick="ChatVm.RegenerateLastResponseAsync">
-                                    ↻ Neu generieren
+                                    @UiStrings.Chat_Regenerate
                                 </button>
                             }
                         </div>
@@ -109,15 +110,15 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ss-text-2);">
                         <span class="loading-spinner-dark"></span>
-                        <span>StudyScope denkt nach...</span>
+                        <span>@UiStrings.Chat_Thinking</span>
                     </div>
 
                     <!-- Abbruch-Button -->
                     <button type="button"
                             style="padding: 2px 8px; font-size: 11px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-weight: bold;"
-                            title="Aktuelle Anfrage abbrechen"
+                            title="@UiStrings.Chat_CancelTitle"
                             @onclick="ChatVm.CancelPrompt">
-                        ✕ Abbrechen
+                        @UiStrings.Chat_Cancel
                     </button>
                 </div>
 
@@ -132,7 +133,7 @@
     <!-- Eingabezeile -->
     <div style="padding: 12px; border-top: 1px solid var(--ss-border-light); display: flex; gap: 10px; background: var(--ss-sidebar-bg);">
         <input type="text"
-               placeholder="@(ChatVm.IsBusy ? "Bitte warten, Antwort wird generiert..." : "Geben Sie hier Ihre Frage an den KI-Chatbot ein...")"
+               placeholder="@(ChatVm.IsBusy ? UiStrings.Chat_PlaceholderBusy : UiStrings.Chat_Placeholder)"
                disabled="@ChatVm.IsBusy"
                style="flex: 1; padding: 8px 12px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; outline: none; cursor: @(ChatVm.IsBusy ? "wait" : "text"); background: @(ChatVm.IsBusy ? "var(--ss-hover)" : "var(--ss-surface)");"
                @bind="ChatVm.CurrentInputPrompt"
@@ -146,11 +147,11 @@
             @if (ChatVm.IsBusy)
             {
                 <span class="loading-spinner"></span>
-                <span>Antwortet...</span>
+                <span>@UiStrings.Chat_Answering</span>
             }
             else
             {
-                <span>Senden</span>
+                <span>@UiStrings.Chat_Send</span>
             }
         </button>
     </div>
@@ -158,6 +159,14 @@
 
 @code {
     private Guid? _copiedMessageId;
+
+    private static string RoleLabel(MessageRole role) => role switch
+    {
+        MessageRole.User => UiStrings.Chat_Role_User,
+        MessageRole.Assistant => UiStrings.Chat_Role_Assistant,
+        MessageRole.System => UiStrings.Chat_Role_System,
+        _ => role.ToString()
+    };
 
     protected override void OnInitialized()
     {
@@ -188,7 +197,7 @@
         }
         catch (Exception ex)
         {
-            ChatVm.ExportStatusMessage = $"Fehler beim Kopieren: {ex.Message}";
+            ChatVm.ExportStatusMessage = Loc.Format(UiStrings.Chat_CopyFailed, ("error", ex.Message));
         }
     }
 
@@ -196,7 +205,7 @@
     {
         if (!ChatVm.Messages.Any())
         {
-            ChatVm.ExportStatusMessage = "Hinweis: Es ist noch kein Gesprächsverlauf vorhanden, der exportiert werden kann.";
+            ChatVm.ExportStatusMessage = UiStrings.Chat_NothingToExport;
             StateHasChanged();
             return;
         }

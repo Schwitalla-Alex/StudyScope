@@ -14,7 +14,7 @@ public class FileDialogFiltersTests
     private static readonly (string Name, string[] Patterns)[] Dokumentfilter =
     {
         ("Unterstützte Dokumente (*.pdf, *.txt, *.csv)", new[] { "*.pdf", "*.txt", "*.csv" }),
-        ("PDF-Dokumente (*.pdf)", new[] { "*.pdf" }),
+        ("PDF-Dateien (*.pdf)", new[] { "*.pdf" }),
         ("Alle Dateien (*.*)", new[] { "*.*" })
     };
 

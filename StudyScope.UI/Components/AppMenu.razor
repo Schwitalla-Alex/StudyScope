@@ -7,7 +7,7 @@
 
 @* Hamburger-Menü oben links (ersetzt die frühere Menüleiste). Einträge: AppMenuViewModel.BuildItems. *@
 <DropdownMenu Navigator="MenuVm.Navigator" TriggerId="@TriggerId" MenuId="ss-appmenu-list"
-              TriggerClass="ss-hamburger" TriggerLabel="Menü" TriggerTitle="Menü (Datei, Einstellungen, Hilfe)"
+              TriggerClass="ss-hamburger" TriggerLabel="@UiStrings.Menu_Trigger" TriggerTitle="@UiStrings.Menu_TriggerTitle"
               OnActivate="HandleAsync">
     <TriggerContent><span aria-hidden="true">☰</span></TriggerContent>
 </DropdownMenu>

@@ -25,7 +25,7 @@ public enum AudioScriptExportFormat
 public partial class AudioViewModel : INotifyPropertyChanged
 {
     public const string LocalAiHint = SpeechProviderState.LocalAiHint;
-    public const string GeminiPrivacyHint = SpeechProviderState.GeminiPrivacyHint;
+    public static string GeminiPrivacyHint => SpeechProviderState.GeminiPrivacyHint;
     public const string NoFileExportHint = SpeechProviderState.NoFileExportHint;
 
     private readonly IAudioScriptService _audioService;

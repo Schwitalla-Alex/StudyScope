@@ -22,22 +22,22 @@
     }
     else
     {
-        <div class="ss-hint">ffmpeg wird gesucht …</div>
+        <div class="ss-hint">@UiStrings.Export_Searching</div>
     }
 
     <div>
-        <label class="ss-label">Pfad zu ffmpeg (optional):</label>
-        <input type="text" class="ss-input" placeholder="leer = automatisch suchen (PATH@(ExportVm.IsLinux ? ", /usr/bin" : ", WinGet-Ordner"))"
+        <label class="ss-label">@UiStrings.Export_PathLabel</label>
+        <input type="text" class="ss-input" placeholder="@(ExportVm.IsLinux ? UiStrings.Export_PathPlaceholderLinux : UiStrings.Export_PathPlaceholderWindows)"
                @bind="ExportVm.FfmpegPath" @bind:event="oninput" />
         <div class="ss-hint">
-            Nur nötig, wenn ffmpeg nicht automatisch gefunden wird – z. B. <code>@(ExportVm.IsLinux ? "/opt/ffmpeg/bin/ffmpeg" : @"C:\ffmpeg\bin\ffmpeg.exe")</code> oder der Ordner, in dem ffmpeg liegt.
+            @LocHtml.Format(UiStrings.Export_PathHint, ("example", ExportVm.IsLinux ? "/opt/ffmpeg/bin/ffmpeg" : @"C:\ffmpeg\bin\ffmpeg.exe"))
         </div>
     </div>
 
     <div style="font-size: 12px; padding: 8px 10px; border-radius: 4px; background: var(--ss-hover); color: var(--ss-text-2); border: 1px solid var(--ss-border-light); line-height: 1.5;">
-        <b>ffmpeg installieren</b><br />
-        Windows: Eingabeaufforderung öffnen und <code>@FfmpegInfo.WindowsInstall</code> eingeben, danach StudyScope neu starten (oder hier „ffmpeg suchen/testen“).<br />
-        Linux (Ubuntu/Debian): <code>@FfmpegInfo.LinuxInstall</code>, Fedora: <code>sudo dnf install ffmpeg</code>.
+        <b>@UiStrings.Export_InstallTitle</b><br />
+        @LocHtml.Format(UiStrings.Export_InstallWindows, ("command", FfmpegInfo.WindowsInstall))<br />
+        @LocHtml.Format(UiStrings.Export_InstallLinux, ("command", FfmpegInfo.LinuxInstall))
     </div>
 
     @if (!string.IsNullOrEmpty(ExportVm.StatusMessage))
@@ -50,13 +50,13 @@
 
 <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
     <button type="button" class="ss-btn" style="background: var(--ss-info);" disabled="@ExportVm.IsTesting"
-            title="Sucht ffmpeg mit dem eingegebenen Pfad (leer = automatisch) und prüft MP4/MP3 – ohne zu speichern"
+            title="@UiStrings.Export_TestTitle"
             @onclick="ExportVm.TestAsync">
-        @(ExportVm.IsTesting ? "Suche …" : "🔎 ffmpeg suchen/testen")
+        @(ExportVm.IsTesting ? UiStrings.Export_Testing : UiStrings.Export_Test)
     </button>
     <div style="display: flex; gap: 8px;">
-        <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">Schließen</button>
-        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">Speichern</button>
+        <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
+        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">@UiStrings.Common_Save</button>
     </div>
 </div>
 

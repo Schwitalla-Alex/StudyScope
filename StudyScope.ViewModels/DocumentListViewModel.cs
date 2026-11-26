@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
@@ -16,7 +18,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
     private readonly IDocumentService _pdfService;
     private string _searchText = string.Empty;
     private string _currentProfile = "Standard";
-    private string _currentAiModelDisplayName = "Lade Modell...";
+    private string _currentAiModelDisplayName = VmStrings.Docs_LoadingModel;
     private ObservableCollection<string> _availableProfiles = new();
 
     public DocumentListViewModel(IStorageService storageService, IDocumentService pdfService)
@@ -100,7 +102,12 @@ public class DocumentListViewModel : INotifyPropertyChanged
     {
         var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
 
-        if (aiConfig != null && !string.IsNullOrWhiteSpace(aiConfig.SelectedModelName))
+        if (aiConfig is { SelectedProvider: AiProviderType.FakeAi, SelectedModelName: AiConfig.FakeModelName })
+        {
+            // Der gespeicherte Modellname der Fake-KI ist deutsch („Fake-KI (Testmodus)“) – angezeigt wird der übersetzte
+            CurrentAiModelDisplayName = VmStrings.Provider_FakeAi;
+        }
+        else if (aiConfig != null && !string.IsNullOrWhiteSpace(aiConfig.SelectedModelName))
         {
             CurrentAiModelDisplayName = aiConfig.SelectedModelName;
         }
@@ -110,7 +117,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
         else
         {
-            CurrentAiModelDisplayName = "Keine KI konfiguriert";
+            CurrentAiModelDisplayName = VmStrings.Docs_NoAiConfigured;
         }
 
         OnPropertyChanged(nameof(CurrentAiModelDisplayName));
@@ -171,7 +178,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
         var existing = ProfileExists(trimmed)
             ? AvailableProfiles.FirstOrDefault(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)) ?? "Standard"
             : null;
-        return existing == null ? null : $"Ein Profil „{existing}“ gibt es bereits. Bitte wählen Sie es oben in der Liste aus oder vergeben Sie einen anderen Namen.";
+        return existing == null ? null : Loc.Format(VmStrings.Docs_ProfileExists, ("name", existing));
     }
 
     private bool ProfileExists(string profileName) =>

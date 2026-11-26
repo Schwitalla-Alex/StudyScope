@@ -5,7 +5,7 @@ using System.Text;
 namespace StudyScope.Core.Models
 {
     /// <summary>
-    /// Repräsentiert ein geladenes PDF-Dokument inklusive Status (ob die Datei noch auf der Festplatte existiert oder durchgestrichen werden soll)
+    /// Repräsentiert ein geladenes Dokument (PDF, TXT oder CSV) inklusive Status (ob die Datei noch auf der Festplatte existiert oder durchgestrichen werden soll)
     /// </summary>
     public class DocumentItem
     {

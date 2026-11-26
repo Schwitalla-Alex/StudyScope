@@ -290,4 +290,17 @@ public class DocumentListViewModelTests
         Assert.That(viewModel.CurrentProfile, Is.EqualTo("Standard"));
         Assert.That(viewModel.AvailableProfiles, Does.Not.Contain("Prüfung"));
     }
+
+    [Test]
+    [SetUICulture("en-US")]
+    public async Task FakeAi_StoredGermanModelName_IsShownTranslated()
+    {
+        var storage = new Mock<IStorageService>();
+        storage.Setup(s => s.LoadAiConfigForProfileAsync("Testprofil")).ReturnsAsync(new AiConfig());
+        var viewModel = new DocumentListViewModel(storage.Object, _pdfServiceMock.Object);
+
+        await viewModel.SwitchProfileAsync("Testprofil");
+
+        Assert.That(viewModel.CurrentAiModelDisplayName, Is.EqualTo("Fake AI (test mode)"));
+    }
 }

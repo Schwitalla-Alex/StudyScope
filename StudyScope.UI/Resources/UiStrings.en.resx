@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Menu_Trigger" xml:space="preserve"><value>Menu</value></data>
+  <data name="Menu_TriggerTitle" xml:space="preserve"><value>Menu (file, settings, help)</value></data>
+  <data name="Tabs_Label" xml:space="preserve"><value>Sections</value></data>
+  <data name="Tabs_More" xml:space="preserve"><value>» More</value></data>
+  <data name="Tabs_MoreLabel" xml:space="preserve"><value>More sections</value></data>
+  <data name="Status_Documents" xml:space="preserve"><value>Documents: &lt;b&gt;{total}&lt;/b&gt; ({active} active)</value></data>
+  <data name="Status_Chunks" xml:space="preserve"><value>Loaded passages: &lt;b&gt;{count}&lt;/b&gt;</value></data>
+  <data name="Status_AudioTitle" xml:space="preserve"><value>Audio episode is playing (continues in all tabs)</value></data>
+  <data name="Status_AudioPaused" xml:space="preserve"><value>is paused</value></data>
+  <data name="Status_AudioPlaying" xml:space="preserve"><value>is playing</value></data>
+  <data name="Status_VideoTitle" xml:space="preserve"><value>Video is playing (continues in all tabs)</value></data>
+  <data name="Status_VideoPaused" xml:space="preserve"><value>is paused</value></data>
+  <data name="Status_VideoPlaying" xml:space="preserve"><value>is playing</value></data>
+  <data name="Status_Ai" xml:space="preserve"><value>AI:</value></data>
+  <data name="Status_Profile" xml:space="preserve"><value>Profile:</value></data>
+  <data name="Common_Resume" xml:space="preserve"><value>Resume</value></data>
+  <data name="Common_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Common_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_Create" xml:space="preserve"><value>Create</value></data>
+  <data name="NewProfile_Title" xml:space="preserve"><value>Create new profile</value></data>
+  <data name="NewProfile_Prompt" xml:space="preserve"><value>Enter a name for the new subject area:</value></data>
+  <data name="NewProfile_Placeholder" xml:space="preserve"><value>e.g. Civil law, Tax law, Physics…</value></data>
+  <data name="Support_Title" xml:space="preserve"><value>❤ Support StudyScope</value></data>
+  <data name="Support_Text1" xml:space="preserve"><value>StudyScope is a free open-source project under the Apache License 2.0. The software stays free of charge – no ads, no subscription and no features that are only unlocked after a donation.</value></data>
+  <data name="Support_Text2" xml:space="preserve"><value>If StudyScope helps you learn, I would appreciate a voluntary contribution. It helps to develop the program further and to maintain it for Windows and Linux.</value></data>
+  <data name="Support_Text3" xml:space="preserve"><value>Donations are handled by PayPal. The button opens the donation page in your browser; StudyScope itself does not transmit any data.</value></data>
+  <data name="Support_OpenFailed" xml:space="preserve"><value>The browser could not be opened. You can copy the address:</value></data>
+  <data name="Support_Open" xml:space="preserve"><value>❤ Open in browser</value></data>
+  <data name="About_Title" xml:space="preserve"><value>About StudyScope</value></data>
+  <data name="About_Tagline" xml:space="preserve"><value>Desktop learning software with local LLM support.</value></data>
+  <data name="About_Developer" xml:space="preserve"><value>Developer:</value></data>
+  <data name="About_DeveloperValue" xml:space="preserve"><value>Alexander Schwitalla (Forchheim, Upper Franconia, Germany)</value></data>
+  <data name="About_Formats" xml:space="preserve"><value>Supported formats:</value></data>
+  <data name="About_Architecture" xml:space="preserve"><value>Architecture:</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Built for targeted knowledge retrieval from your own materials – with document chat, flashcards, mind map, presentation, quiz, data tables, reports, audio summaries and narrated explainer videos.</value></data>
+  <data name="About_License" xml:space="preserve"><value>License:</value></data>
+  <data name="About_LicensedUnder" xml:space="preserve"><value>Licensed under the</value></data>
+  <data name="About_Source" xml:space="preserve"><value>Source code:</value></data>
+  <data name="About_Contact" xml:space="preserve"><value>Contact / feedback:</value></data>
+  <data name="Sidebar_ResizerLabel" xml:space="preserve"><value>Sidebar width</value></data>
+  <data name="Sidebar_ResizerTitle" xml:space="preserve"><value>Drag to change the width, double-click: default width</value></data>
+  <data name="Sidebar_Show" xml:space="preserve"><value>Show sidebar</value></data>
+  <data name="Sidebar_Hide" xml:space="preserve"><value>Hide sidebar</value></data>
+  <data name="Sidebar_ActiveDocsShow" xml:space="preserve"><value>Active documents – show sidebar</value></data>
+  <data name="Sidebar_ProfileLabel" xml:space="preserve"><value>Profile / topic:</value></data>
+  <data name="Sidebar_NewProfile" xml:space="preserve"><value>Create new profile</value></data>
+  <data name="Sidebar_DeleteProfile" xml:space="preserve"><value>Delete current profile</value></data>
+  <data name="Sidebar_SearchPlaceholder" xml:space="preserve"><value>Search documents…</value></data>
+  <data name="Sidebar_SelectAllTitle" xml:space="preserve"><value>Select all documents for queries</value></data>
+  <data name="Sidebar_SelectAll" xml:space="preserve"><value>✓ Select all</value></data>
+  <data name="Sidebar_DeselectAllTitle" xml:space="preserve"><value>Deselect all documents</value></data>
+  <data name="Sidebar_DeselectAll" xml:space="preserve"><value>✕ Clear all</value></data>
+  <data name="Sidebar_NoMatches" xml:space="preserve"><value>No matches for “{search}”</value></data>
+  <data name="Sidebar_NoDocuments" xml:space="preserve"><value>No documents loaded</value></data>
+  <data name="Sidebar_OpenHint" xml:space="preserve"><value>Double-click to open: {path}</value></data>
+  <data name="Sidebar_Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="Sidebar_AddDocument" xml:space="preserve"><value>+ Add document</value></data>
+  <data name="Sidebar_NewProfilePlaceholder" xml:space="preserve"><value>e.g. Civil law, Tax law, Project…</value></data>
+  <data name="Sidebar_CreateAndConfigure" xml:space="preserve"><value>Create &amp; configure</value></data>
+  <data name="Chat_Header" xml:space="preserve"><value>{count, plural, one {Conversation history (# message)} other {Conversation history (# messages)}}</value></data>
+  <data name="Chat_Clear" xml:space="preserve"><value>Clear history</value></data>
+  <data name="Chat_Export" xml:space="preserve"><value>Export log</value></data>
+  <data name="Chat_Empty" xml:space="preserve"><value>Ask a question about the selected documents…</value></data>
+  <data name="Chat_Role_User" xml:space="preserve"><value>You</value></data>
+  <data name="Chat_Role_Assistant" xml:space="preserve"><value>Assistant (AI)</value></data>
+  <data name="Chat_Role_System" xml:space="preserve"><value>System</value></data>
+  <data name="Chat_CopyTitle" xml:space="preserve"><value>Copy to clipboard</value></data>
+  <data name="Chat_Copied" xml:space="preserve"><value>✓ Copied</value></data>
+  <data name="Chat_Copy" xml:space="preserve"><value>📋 Copy</value></data>
+  <data name="Chat_Helpful" xml:space="preserve"><value>Helpful</value></data>
+  <data name="Chat_NotHelpful" xml:space="preserve"><value>Not helpful</value></data>
+  <data name="Chat_RegenerateTitle" xml:space="preserve"><value>Regenerate</value></data>
+  <data name="Chat_Regenerate" xml:space="preserve"><value>↻ Regenerate</value></data>
+  <data name="Chat_Thinking" xml:space="preserve"><value>StudyScope is thinking…</value></data>
+  <data name="Chat_CancelTitle" xml:space="preserve"><value>Cancel the current request</value></data>
+  <data name="Chat_Cancel" xml:space="preserve"><value>✕ Cancel</value></data>
+  <data name="Chat_PlaceholderBusy" xml:space="preserve"><value>Please wait, generating the answer…</value></data>
+  <data name="Chat_Placeholder" xml:space="preserve"><value>Type your question for the AI chatbot here…</value></data>
+  <data name="Chat_Answering" xml:space="preserve"><value>Answering…</value></data>
+  <data name="Chat_Send" xml:space="preserve"><value>Send</value></data>
+  <data name="Chat_CopyFailed" xml:space="preserve"><value>Could not copy: {error}</value></data>
+  <data name="Chat_NothingToExport" xml:space="preserve"><value>Note: there is no conversation history to export yet.</value></data>
+  <data name="Common_Dismiss" xml:space="preserve"><value>Dismiss message</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>⚙️ Settings</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>Profile:</value></data>
+  <data name="Settings_Tab_Ai" xml:space="preserve"><value>🤖 AI model</value></data>
+  <data name="Settings_Tab_Speech" xml:space="preserve"><value>🔊 Text-to-speech</value></data>
+  <data name="Settings_Tab_Export" xml:space="preserve"><value>🎞️ Export</value></data>
+  <data name="Settings_Tab_Appearance" xml:space="preserve"><value>🎨 Appearance</value></data>
+  <data name="Settings_Provider" xml:space="preserve"><value>1. AI model / provider:</value></data>
+  <data name="Settings_Provider_FakeAi" xml:space="preserve"><value>Fake AI (test mode)</value></data>
+  <data name="Settings_Provider_Ollama" xml:space="preserve"><value>Ollama (local)</value></data>
+  <data name="Settings_Provider_LmStudio" xml:space="preserve"><value>LM Studio (local)</value></data>
+  <data name="Settings_Provider_Mistral" xml:space="preserve"><value>Mistral AI (cloud)</value></data>
+  <data name="Settings_Provider_Custom" xml:space="preserve"><value>Custom (OpenAI-compatible)</value></data>
+  <data name="Settings_ServerCustom" xml:space="preserve"><value>2. Server URL (base URL, OpenAI-compatible):</value></data>
+  <data name="Settings_Server" xml:space="preserve"><value>2. Server URL:</value></data>
+  <data name="Settings_ServerCustomPlaceholder" xml:space="preserve"><value>e.g. https://api.groq.com/openai/v1</value></data>
+  <data name="Settings_Checking" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Settings_FindModels" xml:space="preserve"><value>🔍 Find models</value></data>
+  <data name="Settings_ApiKeyOptional" xml:space="preserve"><value>API key (optional, e.g. not needed for local servers):</value></data>
+  <data name="Settings_ApiKey" xml:space="preserve"><value>2. API key ({provider}):</value></data>
+  <data name="Settings_ApiKeyPlaceholder" xml:space="preserve"><value>Enter API key here…</value></data>
+  <data name="Settings_FetchModels" xml:space="preserve"><value>🔄 Fetch models online</value></data>
+  <data name="Settings_Model" xml:space="preserve"><value>3. Select model:</value></data>
+  <data name="Settings_ModelCustomPlaceholder" xml:space="preserve"><value>e.g. llama-3.3-70b-versatile, deepseek-chat…</value></data>
+  <data name="Settings_LocalHint" xml:space="preserve"><value>ℹ️ Make sure {provider} is running, then click &lt;strong&gt;“Find models”&lt;/strong&gt; above.</value></data>
+  <data name="Settings_CloudHint" xml:space="preserve"><value>⚠️ Enter the API key first, then click &lt;strong&gt;“Fetch models online”&lt;/strong&gt; above.</value></data>
+  <data name="Settings_ResetTitle" xml:space="preserve"><value>Reset all fields</value></data>
+  <data name="Settings_Reset" xml:space="preserve"><value>🗑 Clear form</value></data>
+  <data name="Settings_Connecting" xml:space="preserve"><value>Connecting…</value></data>
+  <data name="Settings_SaveConnect" xml:space="preserve"><value>Save &amp; connect</value></data>
+  <data name="Appearance_ColorScheme" xml:space="preserve"><value>Color scheme</value></data>
+  <data name="Appearance_Currently" xml:space="preserve"><value>Currently: &lt;b&gt;{scheme}&lt;/b&gt;.</value></data>
+  <data name="Appearance_CurrentDark" xml:space="preserve"><value>dark</value></data>
+  <data name="Appearance_CurrentLight" xml:space="preserve"><value>light</value></data>
+  <data name="Appearance_Note" xml:space="preserve"><value>The appearance applies to all profiles. Slides, print/PDF and all exports (HTML, Word, PowerPoint, MP4) always stay light.</value></data>
+  <data name="Speech_Intro" xml:space="preserve"><value>Gemini TTS creates an audio file (WAV) from the script, with two voices for a podcast. The script itself is still written by the AI from “🤖 AI model” – a local AI works too. Choose which text-to-speech to use in the “🎧 Audio” tab.</value></data>
+  <data name="Speech_KeyLabel" xml:space="preserve"><value>1. Gemini API key for text-to-speech:</value></data>
+  <data name="Speech_KeyNotNeeded" xml:space="preserve"><value>not needed – the chat AI key is used</value></data>
+  <data name="Speech_KeyPlaceholder" xml:space="preserve"><value>API key from Google AI Studio…</value></data>
+  <data name="Speech_ModelLabel" xml:space="preserve"><value>2. Model:</value></data>
+  <data name="Speech_DefaultModelTitle" xml:space="preserve"><value>Use the default model</value></data>
+  <data name="Speech_Default" xml:space="preserve"><value>Default</value></data>
+  <data name="Speech_DefaultHint" xml:space="preserve"><value>Default: &lt;code&gt;{model}&lt;/code&gt;. Change the name only if Google renames the model.</value></data>
+  <data name="Speech_VoicesLabel" xml:space="preserve"><value>3. Voices:</value></data>
+  <data name="Speech_VoicePrimary" xml:space="preserve"><value>Narrator / host</value></data>
+  <data name="Speech_VoiceSecondary" xml:space="preserve"><value>Expert (podcast)</value></data>
+  <data name="Speech_TestTitle" xml:space="preserve"><value>Checks the key and model with the free model query – no speech is generated</value></data>
+  <data name="Speech_Testing" xml:space="preserve"><value>Checking…</value></data>
+  <data name="Speech_Test" xml:space="preserve"><value>🔌 Test connection</value></data>
+  <data name="Export_Searching" xml:space="preserve"><value>Looking for ffmpeg…</value></data>
+  <data name="Export_PathLabel" xml:space="preserve"><value>Path to ffmpeg (optional):</value></data>
+  <data name="Export_PathPlaceholderLinux" xml:space="preserve"><value>empty = search automatically (PATH, /usr/bin)</value></data>
+  <data name="Export_PathPlaceholderWindows" xml:space="preserve"><value>empty = search automatically (PATH, WinGet folder)</value></data>
+  <data name="Export_PathHint" xml:space="preserve"><value>Only needed if ffmpeg is not found automatically – e.g. &lt;code&gt;{example}&lt;/code&gt; or the folder that contains ffmpeg.</value></data>
+  <data name="Export_InstallTitle" xml:space="preserve"><value>Install ffmpeg</value></data>
+  <data name="Export_InstallWindows" xml:space="preserve"><value>Windows: open a command prompt and enter &lt;code&gt;{command}&lt;/code&gt;, then restart StudyScope (or use “Find/test ffmpeg” here).</value></data>
+  <data name="Export_InstallLinux" xml:space="preserve"><value>Linux (Ubuntu/Debian): &lt;code&gt;{command}&lt;/code&gt;, Fedora: &lt;code&gt;sudo dnf install ffmpeg&lt;/code&gt;.</value></data>
+  <data name="Export_TestTitle" xml:space="preserve"><value>Looks for ffmpeg using the path entered (empty = automatic) and checks MP4/MP3 – without saving</value></data>
+  <data name="Export_Testing" xml:space="preserve"><value>Searching…</value></data>
+  <data name="Export_Test" xml:space="preserve"><value>🔎 Find/test ffmpeg</value></data>
+  <data name="Dialog_MarkdownFiles" xml:space="preserve"><value>Markdown files (*.md)</value></data>
+  <data name="Dialog_ExportAs" xml:space="preserve"><value>Export as…</value></data>
+  <data name="Dialog_AllFiles" xml:space="preserve"><value>All files (*.*)</value></data>
+  <data name="Dialog_SupportedDocuments" xml:space="preserve"><value>Supported documents (*.pdf, *.txt, *.csv)</value></data>
+  <data name="Dialog_PdfFiles" xml:space="preserve"><value>PDF files (*.pdf)</value></data>
+  <data name="Dialog_TextFiles" xml:space="preserve"><value>Text files (*.txt)</value></data>
+  <data name="Dialog_CsvFiles" xml:space="preserve"><value>CSV files (*.csv)</value></data>
+  <data name="Dialog_SelectDocument" xml:space="preserve"><value>Select document</value></data>
+</root>

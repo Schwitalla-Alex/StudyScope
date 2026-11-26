@@ -8,7 +8,7 @@
    gespeichert wird erst mit „Speichern“; Schließen ohne Speichern stellt den gespeicherten Stand wieder her. *@
 <div style="display: flex; flex-direction: column; gap: 14px;">
     <div>
-        <span class="ap-label" id="ap-theme-label">Farbschema</span>
+        <span class="ap-label" id="ap-theme-label">@UiStrings.Appearance_ColorScheme</span>
         <div class="ap-options" role="radiogroup" aria-labelledby="ap-theme-label">
             @foreach (var option in AppearanceViewModel.Options)
             {
@@ -22,7 +22,7 @@
                             @option.Hint
                             @if (option.Mode == ThemeMode.System && systemDark is bool dark)
                             {
-                                <text> Zurzeit: <b>@(dark ? "Dunkel" : "Hell")</b>.</text>
+                                <span class="ap-current">@LocHtml.Format(UiStrings.Appearance_Currently, ("scheme", dark ? UiStrings.Appearance_CurrentDark : UiStrings.Appearance_CurrentLight))</span>
                             }
                         </span>
                     </span>
@@ -32,8 +32,7 @@
     </div>
 
     <div class="ap-note">
-        Die Darstellung gilt für alle Profile. Folien, Druck/PDF und alle Exporte (HTML, Word, PowerPoint, MP4)
-        bleiben immer hell.
+        @UiStrings.Appearance_Note
     </div>
 
     @if (!string.IsNullOrEmpty(AppearanceVm.StatusMessage))
@@ -44,8 +43,8 @@
     }
 
     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
-        <button type="button" class="ap-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">Schließen</button>
-        <button type="button" class="ap-btn" style="background: var(--ss-primary);" disabled="@(!AppearanceVm.IsDirty)" @onclick="SaveAsync">Speichern</button>
+        <button type="button" class="ap-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
+        <button type="button" class="ap-btn" style="background: var(--ss-primary);" disabled="@(!AppearanceVm.IsDirty)" @onclick="SaveAsync">@UiStrings.Common_Save</button>
     </div>
 </div>
 
@@ -64,6 +63,7 @@
     .ap-text { display: flex; flex-direction: column; gap: 1px; }
     .ap-name { font-size: 13px; font-weight: 600; color: var(--ss-text); }
     .ap-hint { font-size: 11.5px; color: var(--ss-text-muted); line-height: 1.4; }
+    .ap-current { margin-inline-start: .3em; }
     .ap-note { font-size: 11.5px; padding: 7px 10px; border-radius: 4px; background: var(--ss-hover); color: var(--ss-text-2); border: 1px solid var(--ss-border-light); }
     .ap-btn { padding: 7px 14px; color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
     .ap-btn:disabled { opacity: .55; cursor: not-allowed; }

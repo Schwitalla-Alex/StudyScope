@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
@@ -46,7 +48,8 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<string> Voices => GeminiTtsInfo.Voices;
 
-    public static string VoiceLabel(string voice) => $"{voice} ({(GeminiTtsInfo.IsFemaleVoice(voice) ? "weiblich" : "männlich")})";
+    public static string VoiceLabel(string voice) =>
+        Loc.Format(GeminiTtsInfo.IsFemaleVoice(voice) ? VmStrings.Speech_VoiceFemale : VmStrings.Speech_VoiceMale, ("voice", voice));
 
     /// <summary>Die Chat-KI des Profils ist Gemini mit Schlüssel – dann wird dieser Schlüssel verwendet.</summary>
     public bool ChatProvidesGeminiKey => _chatConfig is { SelectedProvider: AiProviderType.GoogleGemini } c && !string.IsNullOrWhiteSpace(c.ApiKey);
@@ -54,10 +57,10 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
     /// <summary>Welcher Schlüssel gilt (Anzeige unter dem Eingabefeld).</summary>
     public string KeySourceText =>
         ChatProvidesGeminiKey
-            ? "Verwendet wird der Gemini-Schlüssel aus den KI-Einstellungen dieses Profils. Ein eigener Schlüssel ist nicht nötig."
+            ? VmStrings.Speech_KeyFromChat
             : string.IsNullOrWhiteSpace(GeminiApiKey)
-                ? "Noch kein Schlüssel – Gemini TTS ist im Audio-Reiter ausgegraut. Einen Schlüssel gibt es kostenlos in Google AI Studio."
-                : "Verwendet wird dieser eigene Schlüssel (verschlüsselt im Profil gespeichert). Die Chat-KI bleibt unverändert.";
+                ? VmStrings.Speech_NoKey
+                : VmStrings.Speech_OwnKey;
 
     public string PrivacyHint => AudioViewModel.GeminiPrivacyHint;
 
@@ -114,14 +117,14 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
             await _storage.SaveSpeechSettingsAsync(ProfileName, updated);
             GeminiModel = updated.GeminiModel;
             IsSuccess = true;
-            StatusMessage = $"✓ Sprachausgabe für das Profil „{ProfileName}“ gespeichert.";
+            StatusMessage = Loc.Format(VmStrings.Speech_Saved, ("profile", ProfileName));
             Saved?.Invoke();
             return true;
         }
         catch (Exception ex)
         {
             IsSuccess = false;
-            StatusMessage = $"⚠️ Speichern fehlgeschlagen: {ex.Message}";
+            StatusMessage = Loc.Format(VmStrings.Common_SaveFailed, ("error", ex.Message));
             return false;
         }
     }
@@ -147,7 +150,7 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
         catch (Exception ex)
         {
             IsSuccess = false;
-            StatusMessage = $"⚠️ Verbindungstest fehlgeschlagen: {ex.Message}";
+            StatusMessage = Loc.Format(VmStrings.Speech_TestFailed, ("error", ex.Message));
         }
         finally
         {

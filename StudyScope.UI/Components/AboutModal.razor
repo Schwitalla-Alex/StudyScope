@@ -3,7 +3,7 @@
 @inject IExternalLinkOpener LinkOpener
 
 <!-- Hintergrund-Overlay -->
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; justify-content: center; align-items: center; z-index: 1050;"
+<div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; justify-content: center; align-items: center; z-index: 1050;"
      @onclick="Close">
 
     <!-- Dialogfenster -->
@@ -14,9 +14,9 @@
         <div style="padding: 14px 18px; border-bottom: 1px solid var(--ss-border-light); display: flex; justify-content: space-between; align-items: center; background: var(--ss-panel-light);">
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 18px;">ℹ️</span>
-                <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">Über StudyScope</h4>
+                <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.About_Title</h4>
             </div>
-            <button style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
+            <button type="button" aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
                     @onclick="Close">
                 ✕
             </button>
@@ -26,17 +26,17 @@
         <div style="padding: 20px; font-size: 13px; color: var(--ss-text-2); display: flex; flex-direction: column; gap: 12px; line-height: 1.5;">
             <div>
                 <strong style="font-size: 16px; color: var(--ss-text);">@AppInfo.ProductName v@(AppInfo.Version)</strong><br />
-                <span>Desktop-Lernsoftware mit lokaler LLM-Unterstützung.</span>
+                <span>@UiStrings.About_Tagline</span>
             </div>
 
             <div style="background: var(--ss-panel); padding: 10px 12px; border-radius: 6px; font-size: 12px; display: flex; flex-direction: column; gap: 4px;">
-                <div><b>Entwickler:</b> Alexander Schwitalla (Forchheim, Oberfranken)</div>
-                <div><b>Unterstützte Formate:</b> PDF, TXT, CSV</div>
-                <div><b>Architektur:</b> Photino.NET, Blazor, RAG-Pipeline</div>
+                <div><b>@UiStrings.About_Developer</b> @UiStrings.About_DeveloperValue</div>
+                <div><b>@UiStrings.About_Formats</b> PDF, TXT, CSV</div>
+                <div><b>@UiStrings.About_Architecture</b> Photino.NET, Blazor, RAG-Pipeline</div>
             </div>
 
             <div style="font-size: 12px; color: var(--ss-text-muted);">
-                Entwickelt zur gezielten Wissensabfrage auf Basis eigener Unterlagen – mit Dokumenten-Chat, Karteikarten, Mindmap, Präsentation, Quiz, Datentabellen, Berichten, Audio-Zusammenfassungen und vertonten Erklärvideos.
+                @UiStrings.About_Description
             </div>
 
             <hr style="border: none; border-top: 1px solid var(--ss-border-faint); margin: 2px 0;" />
@@ -44,15 +44,15 @@
             <!-- Lizenz & Kontaktbereich -->
             <div style="font-size: 12px; display: flex; flex-direction: column; gap: 6px; color: var(--ss-text-2);">
                 <div>
-                    <b>Lizenz:</b> Lizenziert unter der
+                    <b>@UiStrings.About_License</b> @UiStrings.About_LicensedUnder
                     <button type="button" class="ss-link-btn" title="@AppInfo.LicenseUrl" @onclick="() => Open(AppInfo.LicenseUrl)">Apache License 2.0</button>
                 </div>
                 <div>
-                    <b>Quellcode:</b>
+                    <b>@UiStrings.About_Source</b>
                     <button type="button" class="ss-link-btn" title="@AppInfo.RepositoryUrl" @onclick="() => Open(AppInfo.RepositoryUrl)">github.com/Schwitalla-Alex/StudyScope</button>
                 </div>
                 <div>
-                    <b>Kontakt / Feedback:</b>
+                    <b>@UiStrings.About_Contact</b>
                     <a href="mailto:info.schwitalla@gmail.com" style="color: var(--ss-link); text-decoration: none;">
                         info.schwitalla@gmail.com
                     </a>
@@ -65,7 +65,7 @@
             <button type="button"
                     style="padding: 6px 18px; background: var(--ss-primary); color: var(--ss-on-accent); border: none; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;"
                     @onclick="Close">
-                Schließen
+                @UiStrings.Common_Close
             </button>
         </div>
     </div>

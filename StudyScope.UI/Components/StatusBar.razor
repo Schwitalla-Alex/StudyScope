@@ -7,35 +7,35 @@
 <div style="background: var(--ss-panel); border-top: 1px solid var(--ss-border); padding: 4px 15px; font-size: 12px; color: var(--ss-text-2); display: flex; justify-content: space-between; align-items: center; user-select: none;">
     <!-- Linker Bereich: Dokumente & Textstellen -->
     <div style="display: flex; gap: 20px;">
-        <span>Dokumente: <b>@DocVm.TotalDocumentCount</b> (@DocVm.ActiveDocumentCount aktiv)</span>
-        <span>Geladene Textstellen: <b>@DocVm.TotalChunkCount</b></span>
+        <span>@LocHtml.Format(UiStrings.Status_Documents, ("total", DocVm.TotalDocumentCount), ("active", DocVm.ActiveDocumentCount))</span>
+        <span>@LocHtml.Format(UiStrings.Status_Chunks, ("count", DocVm.TotalChunkCount))</span>
     </div>
 
     <!-- Rechter Bereich: laufende Wiedergabe, aktives KI-Modell & Profil -->
     <div style="display: flex; gap: 20px; align-items: center;">
         @if (AuVm.NowPlayingTitle is { } playing)
         {
-            <span class="sb-audio" title="Audio-Beitrag wird vorgelesen (läuft in allen Reitern weiter)">
-                🎧 <b>@playing</b> @(AuVm.IsPaused ? "ist pausiert" : "wird vorgelesen")
-                <button class="sb-audio-btn" title="@(AuVm.IsPaused ? "Weiter" : "Pause")" @onclick="AuVm.TogglePlayPauseAsync">@(AuVm.IsPaused ? "▶" : "⏸")</button>
-                <button class="sb-audio-btn" title="Stopp" @onclick="AuVm.StopAsync">⏹</button>
+            <span class="sb-audio" title="@UiStrings.Status_AudioTitle">
+                🎧 <b>@playing</b> @(AuVm.IsPaused ? UiStrings.Status_AudioPaused : UiStrings.Status_AudioPlaying)
+                <button class="sb-audio-btn" title="@(AuVm.IsPaused ? UiStrings.Common_Resume : UiStrings.Common_Pause)" @onclick="AuVm.TogglePlayPauseAsync">@(AuVm.IsPaused ? "▶" : "⏸")</button>
+                <button class="sb-audio-btn" title="@UiStrings.Common_Stop" @onclick="AuVm.StopAsync">⏹</button>
             </span>
         }
         @if (VdVm.NowPlayingTitle is { } video)
         {
-            <span class="sb-audio" title="Video wird abgespielt (läuft in allen Reitern weiter)">
-                🎬 <b>@video</b> @(VdVm.IsPaused ? "ist pausiert" : "läuft")
-                <button class="sb-audio-btn" title="@(VdVm.IsPaused ? "Weiter" : "Pause")" @onclick="VdVm.TogglePlayPauseAsync">@(VdVm.IsPaused ? "▶" : "⏸")</button>
-                <button class="sb-audio-btn" title="Stopp" @onclick="VdVm.StopAsync">⏹</button>
+            <span class="sb-audio" title="@UiStrings.Status_VideoTitle">
+                🎬 <b>@video</b> @(VdVm.IsPaused ? UiStrings.Status_VideoPaused : UiStrings.Status_VideoPlaying)
+                <button class="sb-audio-btn" title="@(VdVm.IsPaused ? UiStrings.Common_Resume : UiStrings.Common_Pause)" @onclick="VdVm.TogglePlayPauseAsync">@(VdVm.IsPaused ? "▶" : "⏸")</button>
+                <button class="sb-audio-btn" title="@UiStrings.Common_Stop" @onclick="VdVm.StopAsync">⏹</button>
             </span>
         }
-        <span>KI: <b>@DocVm.CurrentAiModelDisplayName</b></span>
-        <span>Profil: <b>@DocVm.CurrentProfile</b></span>
+        <span>@UiStrings.Status_Ai <b>@DocVm.CurrentAiModelDisplayName</b></span>
+        <span>@UiStrings.Status_Profile <b>@DocVm.CurrentProfile</b></span>
     </div>
 </div>
 
 <style>
-    .sb-audio { display: inline-flex; align-items: center; gap: 5px; max-width: 460px; white-space: nowrap; background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 10px; padding: 0 4px 0 8px; }
+    .sb-audio { display: inline-flex; align-items: center; gap: 5px; max-width: 460px; white-space: nowrap; background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 10px; padding-block: 0; padding-inline: 8px 4px; }
     .sb-audio b { overflow: hidden; text-overflow: ellipsis; max-width: 220px; display: inline-block; vertical-align: bottom; }
     .sb-audio-btn { border: none; background: transparent; cursor: pointer; font-size: 12px; padding: 1px 4px; border-radius: 4px; }
     .sb-audio-btn:hover { background: var(--ss-panel); }

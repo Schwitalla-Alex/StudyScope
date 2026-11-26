@@ -6,6 +6,8 @@ using StudyScope.Infrastructure.Services;
 using StudyScope.UI;
 using StudyScope.UI.Services;
 using StudyScope.ViewModels;
+using StudyScope.Core.Localization;
+using System.Globalization;
 
 /// <summary>
 /// Startpunkt & Dependency Injection
@@ -15,6 +17,13 @@ class Program
     [STAThread]
     static void Main(string[] args)
     {
+        // Oberflächensprache vor dem ersten Zugriff auf Texte setzen. Bis Englisch in „Darstellung“ wählbar ist
+        // (Phase 3b), gilt Deutsch; STUDYSCOPE_UI_CULTURE (z. B. „en“) erzwingt eine Sprache für Prüfungen.
+        UiLanguage.Apply(UiLanguage.Resolve(
+            Environment.GetEnvironmentVariable(UiLanguage.OverrideVariable) ?? "de-DE",
+            CultureInfo.InstalledUICulture,
+            UiLanguage.AvailableCultures(AppContext.BaseDirectory, typeof(Program).Assembly.GetName().Name!)));
+
         var appBuilder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
         // Services registrieren

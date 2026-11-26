@@ -117,6 +117,13 @@
         selfRef = DotNetObjectReference.Create(this);
         try
         {
+            // Sprache und Schreibrichtung der Oberfläche (Vorlesen, Silbentrennung, dir="rtl")
+            var culture = System.Globalization.CultureInfo.CurrentUICulture;
+            await JS.InvokeVoidAsync("studyScopeLayout.setLanguage", culture.TwoLetterISOLanguageName, culture.TextInfo.IsRightToLeft);
+        }
+        catch (JSException) { /* Skript fehlt: lang aus index.html */ }
+        try
+        {
             // Farbschema aus config.json anwenden und den Startspiegel (localStorage) angleichen
             await JS.InvokeAsync<string>("studyScopeTheme.apply", AppearanceViewModel.ThemeAttribute(AppearanceVm.SavedTheme), true);
         }
