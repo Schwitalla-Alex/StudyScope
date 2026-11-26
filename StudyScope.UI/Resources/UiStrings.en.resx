@@ -477,7 +477,6 @@
   <data name="Common_EstimatePrefix" xml:space="preserve"><value>Estimated: {estimate}</value></data>
   <data name="Speech_PanelTitle" xml:space="preserve"><value>🔊 Text-to-speech</value></data>
   <data name="Speech_RecheckTitle" xml:space="preserve"><value>Check availability and voices again (e.g. after installing a voice)</value></data>
-  <data name="Speech_Recheck" xml:space="preserve"><value>↻ Check again</value></data>
   <data name="Speech_NotAvailableTitle" xml:space="preserve"><value>Not available: {message} {hint}</value></data>
   <data name="Speech_Current" xml:space="preserve"><value>Current:</value></data>
   <data name="Speech_SetupGemini" xml:space="preserve"><value>⚙️ Set up Gemini TTS (Settings › Text-to-speech)</value></data>

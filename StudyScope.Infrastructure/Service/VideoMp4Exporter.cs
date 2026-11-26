@@ -2,6 +2,8 @@ using System.Text;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -37,17 +39,17 @@ public class VideoMp4Exporter : IVideoMp4Exporter
         if (!status.IsAvailable)
             return Mp4Availability.Unavailable(status.Message, status.Hint);
         if (!status.CanEncodeMp4)
-            return Mp4Availability.Unavailable("Dieses ffmpeg kann kein MP4 mit H.264 und AAC schreiben.", status.Hint);
+            return Mp4Availability.Unavailable(InfraStrings.Mp4_NoH264, status.Hint);
 
         var (ok, error) = await Task.Run(SlideRasterizerLoader.Probe, cancellationToken);
         if (!ok)
         {
             var hint = OperatingSystem.IsLinux()
-                ? "Unter Linux braucht der MP4-Export die Bibliothek fontconfig: „sudo apt install libfontconfig1“, danach StudyScope neu starten."
-                : "Bitte StudyScope neu installieren (die Datei libSkiaSharp fehlt oder ist beschädigt).";
-            return Mp4Availability.Unavailable($"Die Grafikbibliothek für die Folienbilder (SkiaSharp) lässt sich nicht laden: {error}", hint);
+                ? InfraStrings.Mp4_FontconfigHint
+                : InfraStrings.Mp4_ReinstallHint;
+            return Mp4Availability.Unavailable(Loc.Format(InfraStrings.Mp4_SkiaFailed, ("error", error ?? "")), hint);
         }
-        return Mp4Availability.Ready($"Bereit – ffmpeg {status.Version}.");
+        return Mp4Availability.Ready(Loc.Format(InfraStrings.Mp4_Ready, ("version", status.Version ?? "")));
     }
 
     /// <summary>Anzahl Stichpunkte je Szene (Folien ohne Stichpunkte bzw. Titelfolien: 0).</summary>
@@ -77,7 +79,7 @@ public class VideoMp4Exporter : IVideoMp4Exporter
         var video = request.Video;
         var timeline = request.Timeline;
         var count = SceneCount(video, timeline);
-        if (count == 0) throw new InvalidOperationException("Das Video hat keine Folien.");
+        if (count == 0) throw new InvalidOperationException(InfraStrings.Mp4_NoSlides);
 
         var plan = VideoFramePlan.Build(timeline, BulletCounts(video, count));
         var renderShare = Math.Clamp(plan.Count * RenderSecondsPerImage / (plan.Count * RenderSecondsPerImage + timeline.Total * EncodeSecondsPerVideoSecond + 1), 0.2, 0.9);
@@ -90,7 +92,7 @@ public class VideoMp4Exporter : IVideoMp4Exporter
         {
             // 1. Folienbilder (parallel, je Arbeiter ein eigener Zeichner samt Layouts)
             var done = 0;
-            progress?.Report(new Mp4ExportProgress(0, $"Folienbilder werden gezeichnet (0 von {plan.Count}) …"));
+            progress?.Report(new Mp4ExportProgress(0, Loc.Format(InfraStrings.Mp4_Rendering, ("done", 0), ("total", plan.Count))));
             var workers = Math.Clamp(Environment.ProcessorCount / 2, 1, 4);
             await Task.Run(() => Parallel.ForEach(
                 Partition(plan.Count, workers),
@@ -109,7 +111,7 @@ public class VideoMp4Exporter : IVideoMp4Exporter
                         SkiaSlideRenderer.SavePng(bitmap, Path.Combine(tempDir, FrameName(i)));
                         var n = Interlocked.Increment(ref done);
                         if (n % 5 == 0 || n == plan.Count)
-                            progress?.Report(new Mp4ExportProgress(renderShare * n / plan.Count, $"Folienbilder werden gezeichnet ({n} von {plan.Count}) …"));
+                            progress?.Report(new Mp4ExportProgress(renderShare * n / plan.Count, Loc.Format(InfraStrings.Mp4_Rendering, ("done", n), ("total", plan.Count))));
                     }
                 }), cancellationToken);
 
@@ -118,14 +120,14 @@ public class VideoMp4Exporter : IVideoMp4Exporter
             await File.WriteAllTextAsync(list, FfmpegArguments.ConcatList(plan.Select((s, i) => (FrameName(i), s.Seconds)).ToList()),
                 new UTF8Encoding(false), cancellationToken);
 
-            progress?.Report(new Mp4ExportProgress(renderShare, "Video wird kodiert …"));
+            progress?.Report(new Mp4ExportProgress(renderShare, InfraStrings.Mp4_Encoding));
             var encodeProgress = new Progress<double>(p =>
-                progress?.Report(new Mp4ExportProgress(renderShare + (1 - renderShare) * p, $"Video wird kodiert ({(int)(p * 100)} %) …")));
+                progress?.Report(new Mp4ExportProgress(renderShare + (1 - renderShare) * p, Loc.Format(InfraStrings.Mp4_EncodingPercent, ("percent", (int)(p * 100))))));
             await _ffmpeg.RunAsync(FfmpegArguments.Mp4(list, request.AudioPath, partFile, timeline.Total), timeline.Total,
                 encodeProgress, cancellationToken);
 
             File.Move(partFile, request.TargetPath, overwrite: true);
-            progress?.Report(new Mp4ExportProgress(1, "Fertig."));
+            progress?.Report(new Mp4ExportProgress(1, InfraStrings.Mp4_Done));
             return new Mp4ExportResult(request.TargetPath, new FileInfo(request.TargetPath).Length, timeline.Total, plan.Count, request.AudioPath != null);
         }
         finally

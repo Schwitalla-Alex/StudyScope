@@ -255,11 +255,6 @@
   <data name="Report_Exported" xml:space="preserve"><value>✓ Exportiert als {format}: {file}</value></data>
   <data name="Report_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export: {error}</value></data>
   <data name="Report_TipFileOpen" xml:space="preserve"><value>Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
-  <data name="Media_MinutesApprox" xml:space="preserve"><value>ca. {count} Min.</value><comment>{count} = ganze Minuten</comment></data>
-  <data name="Media_MinutesUnderOne" xml:space="preserve"><value>unter 1 Min.</value></data>
-  <data name="Media_SizeApprox" xml:space="preserve"><value>ca. {size} MB</value><comment>{size} = Zahl in der Schreibweise der Oberflächensprache</comment></data>
-  <data name="Media_SizeUnder" xml:space="preserve"><value>unter {size} MB</value></data>
-  <data name="Media_Under" xml:space="preserve"><value>unter {value}</value></data>
   <data name="Media_GeminiEstimate" xml:space="preserve"><value>{minutes} Audio · ca. {size} MB (WAV) · geschätzt {usd} US-Dollar bei bezahlter Nutzung. In der kostenlosen Stufe von Google AI Studio fallen keine Kosten an (Tageslimits).</value><comment>{minutes} = Media_Minutes*, {usd} = Betrag oder Media_UsdUnder</comment></data>
   <data name="Media_SettingSaveFailed" xml:space="preserve"><value>⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {error}</value></data>
   <data name="Media_Busy" xml:space="preserve"><value>Bitte warten, bis die laufende Erstellung abgeschlossen ist.</value></data>
@@ -406,4 +401,16 @@
   <data name="Video_Mp3TrackBusy" xml:space="preserve"><value>Tonspur wird als MP3 gespeichert …</value></data>
   <data name="Video_ExportCancelled" xml:space="preserve"><value>Der Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert; temporäre Dateien wurden gelöscht.</value></data>
   <data name="Video_ReportVideoMissing" xml:space="preserve"><value>⚠️ Das Video aus dem Bericht gibt es nicht mehr (gelöscht oder in einem anderen Profil).</value></data>
+  <data name="Speech_Recheck" xml:space="preserve"><value>↻ Neu prüfen</value></data>
+  <data name="Voice_WindowsInstallHint" xml:space="preserve"><value>Deutsche Stimme unter Windows installieren: Einstellungen › Zeit und Sprache › Sprache und Region › Deutsch › Sprachoptionen › bei „Sprachausgabe“ bzw. „Text-zu-Sprache“ herunterladen (Windows 11 alternativ: Zeit und Sprache › Spracherkennung › Stimmen verwalten › Stimmen hinzufügen). Danach StudyScope neu starten.</value><comment>Menüpfade so, wie sie im Windows der jeweiligen Sprache heißen</comment></data>
+  <data name="Voice_LinuxNoSpeech" xml:space="preserve"><value>Unter Linux unterstützt die eingebaute Browser-Komponente (WebKitGTK) die Sprachausgabe häufig nicht. Nutzen Sie stattdessen Gemini TTS – damit entsteht zugleich eine Audiodatei.</value></data>
+  <data name="Voice_NotSupported" xml:space="preserve"><value>Ihre Systemumgebung stellt keine Sprachausgabe bereit.</value></data>
+  <data name="Voice_UseGemini" xml:space="preserve"><value>Nutzen Sie Gemini TTS, um den Beitrag als Audiodatei zu erzeugen.</value></data>
+  <data name="Voice_NoneInstalled" xml:space="preserve"><value>Es ist keine Stimme installiert.</value></data>
+  <data name="Voice_NoGerman" xml:space="preserve"><value>Bereit – aber keine deutsche Stimme gefunden; der Text wird mit einer fremdsprachigen Stimme vorgelesen.</value></data>
+  <data name="Voice_OnlyOnline" xml:space="preserve"><value>Bereit – {count, plural, one {# deutsche Online-Stimme} other {# deutsche Online-Stimmen}}. Online-Stimmen senden den Text an den Hersteller (Microsoft); offline ist keine deutsche Stimme installiert.</value></data>
+  <data name="Voice_Ready" xml:space="preserve"><value>Bereit – {count, plural, one {# deutsche Stimme} other {# deutsche Stimmen}} verfügbar.</value></data>
+  <data name="Voice_WindowsMoreVoices" xml:space="preserve"><value>Weitere deutsche Stimmen (z. B. „Stefan“) unter Windows: Einstellungen › Zeit und Sprache › Sprache und Region › Deutsch › Sprachoptionen › bei „Sprachausgabe“ bzw. „Text-zu-Sprache“ herunterladen. Danach hier „{recheck}“ bzw. StudyScope neu starten.</value><comment>{recheck} = Knopf „↻ Neu prüfen“ (UiStrings.Speech_Recheck)</comment></data>
+  <data name="Voice_OnlyOneGerman" xml:space="preserve"><value>Für zwei Sprecher ist nur eine deutsche Stimme installiert – beide klingen gleich.</value></data>
+  <data name="Voice_NoMatchingGender" xml:space="preserve"><value>Keine {gender, select, male {männliche} other {weibliche}} deutsche Stimme für „{role}“ installiert – es wird „{voice}“ verwendet.</value><comment>{gender} = male/female, {role} = Sprecherrolle (übersetzt)</comment></data>
 </root>

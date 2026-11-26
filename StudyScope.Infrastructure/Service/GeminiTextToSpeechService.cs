@@ -5,6 +5,8 @@ using System.Text.Json.Nodes;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -52,7 +54,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     }
 
     public SpeechProviderType Provider => SpeechProviderType.GeminiTts;
-    public string DisplayName => "Google Gemini TTS (Cloud, Audiodatei)";
+    public string DisplayName => InfraStrings.Tts_DisplayName;
     public bool SupportsLivePlayback => false;
     public bool SupportsFileExport => true;
 
@@ -64,9 +66,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         SpeechSettings
     }
 
-    public const string MissingKeyHint =
-        "Tragen Sie unter ⚙️ Einstellungen › Sprachausgabe einen Gemini-API-Schlüssel ein (kostenlos erhältlich in Google AI Studio). " +
-        "Die Chat-KI des Profils kann dabei bleiben, wie sie ist.";
+    public static string MissingKeyHint => InfraStrings.Tts_MissingKeyHint;
 
     /// <summary>Schlüssel für Gemini TTS: zuerst aus der Chat-KI des Profils (wenn Gemini), sonst der eigene der Sprachausgabe.</summary>
     public static (string Key, KeySource Source) ResolveApiKey(SpeechContext context)
@@ -82,9 +82,9 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
 
     public static string KeySourceText(KeySource source) => source switch
     {
-        KeySource.ChatSettings => "Schlüssel aus den KI-Einstellungen des Profils (Google Gemini)",
-        KeySource.SpeechSettings => "eigener Schlüssel der Sprachausgabe",
-        _ => "kein Schlüssel"
+        KeySource.ChatSettings => InfraStrings.Tts_KeyFromChat,
+        KeySource.SpeechSettings => InfraStrings.Tts_KeyOwn,
+        _ => InfraStrings.Tts_KeyNone
     };
 
     /// <summary>Modellname aus den Einstellungen (leer = Standard).</summary>
@@ -96,16 +96,16 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         var (_, source) = ResolveApiKey(context);
         var availability = source switch
         {
-            KeySource.ChatSettings => SpeechAvailability.Ready("Bereit – Schlüssel aus den KI-Einstellungen des Profils (Google Gemini)."),
-            KeySource.SpeechSettings => SpeechAvailability.Ready("Bereit – eigener Schlüssel der Sprachausgabe."),
-            _ => SpeechAvailability.Unavailable("Kein API-Schlüssel für Gemini TTS.", MissingKeyHint)
+            KeySource.ChatSettings => SpeechAvailability.Ready(InfraStrings.Tts_ReadyChatKey),
+            KeySource.SpeechSettings => SpeechAvailability.Ready(InfraStrings.Tts_ReadyOwnKey),
+            _ => SpeechAvailability.Unavailable(InfraStrings.Tts_NoKey, MissingKeyHint)
         };
         return Task.FromResult(availability);
     }
 
     public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<SpeechVoice>>(GeminiTtsInfo.Voices
-            .Select(v => new SpeechVoice(v, v, "mehrsprachig", IsLocal: false))
+            .Select(v => new SpeechVoice(v, v, InfraStrings.Tts_Multilingual, IsLocal: false))
             .ToList());
 
     // ---------------- Verbindung testen (kostenlos) ----------------
@@ -118,7 +118,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     {
         var (key, source) = ResolveApiKey(context);
         if (source == KeySource.None)
-            throw new LlmServiceException($"Kein API-Schlüssel für Gemini TTS. {MissingKeyHint}", ProviderName);
+            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_NoKeyWithHint, ("hint", MissingKeyHint)), ProviderName);
 
         var model = ResolveModel(context.Settings);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -135,7 +135,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
             throw new LlmServiceException(
-                $"{ProviderName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {ValidationTimeout.TotalSeconds:0} s). Bitte Internetverbindung prüfen und erneut versuchen.",
+                Loc.Format(InfraStrings.Tts_TestTimeout, ("provider", ProviderName), ("seconds", ((int)ValidationTimeout.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture))),
                 ProviderName);
         }
         catch (HttpRequestException ex)
@@ -151,8 +151,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
 
             var displayName = TryGetString(body, "displayName");
             var name = string.IsNullOrWhiteSpace(displayName) ? model : $"{model} ({displayName})";
-            return $"✓ Verbindung zu Gemini TTS erfolgreich – Modell „{name}“ ist verfügbar ({KeySourceText(source)}). " +
-                   "Der Test hat keine Kosten verursacht.";
+            return Loc.Format(InfraStrings.Tts_TestSuccess, ("model", name), ("source", KeySourceText(source)));
         }
     }
 
@@ -292,11 +291,11 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     {
         var (key, source) = ResolveApiKey(context);
         if (source == KeySource.None)
-            throw new LlmServiceException($"Kein API-Schlüssel für Gemini TTS. {MissingKeyHint}", ProviderName);
+            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_NoKeyWithHint, ("hint", MissingKeyHint)), ProviderName);
 
         var parts = BuildParts(summary);
         if (parts.Count == 0)
-            throw new LlmServiceException("Das Skript ist leer – es gibt nichts vorzulesen.", ProviderName);
+            throw new LlmServiceException(InfraStrings.Tts_EmptyScript, ProviderName);
 
         var model = ResolveModel(context.Settings);
         var twoSpeakers = AudioScriptFormats.HasTwoSpeakers(summary);
@@ -337,7 +336,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
                     }
                     catch (InvalidDataException ex)
                     {
-                        throw new LlmServiceException($"{ProviderName} hat Audio in unerwartetem Format geliefert. Bitte erneut versuchen.",
+                        throw new LlmServiceException(Loc.Format(InfraStrings.Tts_UnexpectedFormat, ("provider", ProviderName)),
                             ProviderName, null, ex.Message, ex);
                     }
 
@@ -403,8 +402,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
             catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
             {
                 throw new LlmServiceException(
-                    $"{ProviderName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {RequestTimeout.TotalMinutes:0} Minuten). " +
-                    "Bitte erneut versuchen; bei sehr langen Abschnitten den Text kürzen.", ProviderName);
+                    Loc.Format(InfraStrings.Tts_RequestTimeout, ("provider", ProviderName), ("minutes", (int)RequestTimeout.TotalMinutes)), ProviderName);
             }
             catch (HttpRequestException ex)
             {
@@ -438,7 +436,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         }
         catch (JsonException ex)
         {
-            throw new LlmServiceException($"{ProviderName} hat eine unerwartete Antwort geliefert. Bitte erneut versuchen.",
+            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_UnexpectedResponse, ("provider", ProviderName)),
                 ProviderName, null, Shorten(responseBody), ex);
         }
 
@@ -446,8 +444,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         if (audio == null)
         {
             throw new LlmServiceException(
-                $"{ProviderName} hat keine Audiodaten geliefert. Möglicherweise wurde der Text vom Inhaltsfilter blockiert oder das Modell " +
-                "erzeugt keine Sprache. Bitte erneut versuchen, den Abschnitt umformulieren oder unter ⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen.",
+                Loc.Format(InfraStrings.Tts_NoAudio, ("provider", ProviderName)),
                 ProviderName, null, Shorten(responseBody));
         }
 
@@ -458,7 +455,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         }
         catch (Exception ex) when (ex is FormatException or InvalidDataException)
         {
-            throw new LlmServiceException($"{ProviderName} hat Audio in unerwartetem Format geliefert ({audio.Value.MimeType}). Bitte erneut versuchen.",
+            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_UnexpectedFormatMime, ("provider", ProviderName), ("mime", audio.Value.MimeType ?? "")),
                 ProviderName, null, ex.Message, ex);
         }
     }
@@ -539,36 +536,31 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         if (reasons.Contains("API_KEY_INVALID") || text.Contains("api key not valid") || text.Contains("api key expired")
             || (statusCode == 400 && text.Contains("api key")))
         {
-            userMessage = "Der Gemini-API-Schlüssel wurde abgelehnt (ungültig oder abgelaufen). Bitte den Schlüssel unter ⚙️ Einstellungen › Sprachausgabe " +
-                          "bzw. in den KI-Einstellungen prüfen – einen neuen Schlüssel gibt es kostenlos in Google AI Studio.";
+            userMessage = InfraStrings.Tts_KeyRejected;
         }
         else if (statusCode is 401 or 403)
         {
-            userMessage = $"Der Gemini-API-Schlüssel hat keinen Zugriff auf die Sprachausgabe (HTTP {statusCode}). Prüfen Sie in Google AI Studio, " +
-                          "ob der Schlüssel aktiv ist und die Gemini API für das Projekt freigeschaltet ist.";
+            userMessage = Loc.Format(InfraStrings.Tts_KeyNoAccess, ("status", Status(statusCode)));
         }
         else if (statusCode == 404)
         {
-            userMessage = $"Das Modell „{model}“ wurde bei Gemini nicht gefunden. Bitte unter ⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen " +
-                          $"(Standard: {GeminiTtsInfo.DefaultModel}).";
+            userMessage = Loc.Format(InfraStrings.Tts_ModelNotFound, ("model", model), ("default", GeminiTtsInfo.DefaultModel));
         }
         else if (statusCode == 429)
         {
-            userMessage = "Das Kontingent für Gemini TTS ist erschöpft oder es wurden zu viele Anfragen gestellt (HTTP 429). In der kostenlosen Stufe gelten " +
-                          "Minuten- und Tageslimits: Warten Sie etwas (bzw. bis morgen) und versuchen Sie es erneut, oder aktivieren Sie die Abrechnung in Google AI Studio.";
+            userMessage = InfraStrings.Tts_Quota;
         }
         else if (statusCode == 400 && (text.Contains("location") || text.Contains("region") || text.Contains("country")))
         {
-            userMessage = "Gemini TTS ist für diesen Schlüssel in Ihrer Region nicht verfügbar (HTTP 400). Bitte die Verfügbarkeit in Google AI Studio prüfen.";
+            userMessage = InfraStrings.Tts_Region;
         }
         else if (statusCode == 400)
         {
-            userMessage = $"Gemini hat die Anfrage abgelehnt (HTTP 400). Möglicherweise erzeugt das Modell „{model}“ keine Sprache – bitte unter " +
-                          $"⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen (Standard: {GeminiTtsInfo.DefaultModel}).";
+            userMessage = Loc.Format(InfraStrings.Tts_BadRequest, ("model", model), ("default", GeminiTtsInfo.DefaultModel));
         }
         else if (statusCode >= 500)
         {
-            userMessage = $"Gemini TTS ist gerade überlastet oder gestört (HTTP {statusCode}). Bitte in einigen Minuten erneut versuchen.";
+            userMessage = Loc.Format(InfraStrings.Tts_ServerError, ("status", Status(statusCode)));
         }
         else
         {
@@ -577,6 +569,9 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
 
         return new LlmServiceException(userMessage, ProviderName, statusCode, detail);
     }
+
+    /// <summary>HTTP-Status als Text (ohne Tausendertrennzeichen der Kultur).</summary>
+    private static string Status(int statusCode) => statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private static (string Status, string Message, HashSet<string> Reasons) ParseError(string? body)
     {

@@ -1,3 +1,5 @@
+using StudyScope.Core.Localization;
+using StudyScope.Core.Resources;
 namespace StudyScope.Core.Models;
 
 /// <summary>
@@ -40,9 +42,8 @@ public static class FfmpegInfo
 
     /// <summary>Installationshinweis für das laufende Betriebssystem.</summary>
     public static string InstallHint(bool isLinux) => isLinux
-        ? $"ffmpeg installieren: im Terminal „{LinuxInstall}“ (Fedora: „sudo dnf install ffmpeg“), danach „ffmpeg suchen/testen“ in Einstellungen › Export."
-        : $"ffmpeg installieren: in der Eingabeaufforderung „{WindowsInstall}“, danach StudyScope neu starten oder „ffmpeg suchen/testen“ in Einstellungen › Export. Alternativ den Pfad zur ffmpeg.exe dort eintragen.";
+        ? Loc.Format(CoreStrings.Ffmpeg_InstallLinux, ("command", LinuxInstall))
+        : Loc.Format(CoreStrings.Ffmpeg_InstallWindows, ("command", WindowsInstall));
 
-    public const string Purpose =
-        "ffmpeg ist ein kostenloses Programm zum Umwandeln von Audio und Video. StudyScope liefert es nicht mit, nutzt es aber, wenn es installiert ist: für den MP4-Export der Videos und den MP3-Export der Audio-Beiträge (auch als kleinere Tonspur in HTML-Exporten).";
+    public static string Purpose => CoreStrings.Ffmpeg_Purpose;
 }

@@ -3,6 +3,8 @@ using System.Text;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -25,10 +27,9 @@ public static class VideoHtmlExporter
     public static string? NoAudioReason(VideoDocument video, string? audioPath)
     {
         if (HasCurrentAudio(video, audioPath)) return null;
-        var minutes = AudioScriptFormats.FormatMinutes(TimelineFor(video, withAudio: false).Total / 60);
-        if (video.HasAudioFile && video.IsAudioOutdated)
-            return $"Ohne Ton: Die Gemini-Audiodatei ist veraltet (Sprechtexte oder Folien wurden geändert). Die Folien laufen im festen Takt der geschätzten Sprechdauer ({minutes}).";
-        return $"Ohne Ton: Es gibt keine Gemini-Audiodatei (die Systemstimme lässt sich nicht aufnehmen). Die Folien laufen im festen Takt der geschätzten Sprechdauer ({minutes}).";
+        var minutes = MediaFormat.Minutes(TimelineFor(video, withAudio: false).Total / 60);
+        return Loc.Format(video.HasAudioFile && video.IsAudioOutdated ? InfraStrings.Video_NoAudioOutdated : InfraStrings.Video_NoAudioMissing,
+            ("minutes", minutes));
     }
 
     /// <summary>Zeitachse: exakte Zeitmarken der Audiodatei bzw. geschätzte Dauern bei Tempo 1.</summary>

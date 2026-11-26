@@ -125,6 +125,18 @@ jobs:
           --results-directory TestResults
           --blame-hang-timeout 10m
 
+      # Zweiter Lauf mit deutscher Formatkultur (Dezimalkomma): Die Runner prüfen sonst nur en-US bzw. die invariante
+      # Kultur. Ein Lauf genügt (Linux); Oberflächensprache bleibt in beiden Läufen Deutsch (TestCulture.cs).
+      - name: Tests (Formatkultur de-DE)
+        if: ${{ matrix.name == 'Linux' }}
+        env:
+          STUDYSCOPE_TEST_CULTURE: de-DE
+        run: >
+          dotnet test StudyScope.Tests -c Release --no-build
+          --logger "trx;LogFileName=tests-${{ matrix.name }}-de-DE.trx"
+          --results-directory TestResults
+          --blame-hang-timeout 10m
+
       - name: Testzusammenfassung
         if: ${{ !cancelled() }}
         shell: pwsh

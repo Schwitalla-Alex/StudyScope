@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Llm_ProviderCustom" xml:space="preserve"><value>Der benutzerdefinierte KI-Dienst</value><comment>Steht am Satzanfang („… meldet einen Fehler“)</comment></data>
+  <data name="Llm_Timeout" xml:space="preserve"><value>{provider} hat nicht rechtzeitig geantwortet (Zeitüberschreitung). Bitte Internetverbindung prüfen und erneut versuchen.</value></data>
+  <data name="Llm_TimeoutSeconds" xml:space="preserve"><value>{provider} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {seconds} s). Bitte erneut versuchen oder weniger Dokumente aktivieren.</value></data>
+  <data name="Llm_NoProvider" xml:space="preserve"><value>Kein gültiger KI-Provider konfiguriert.</value></data>
+  <data name="Llm_UnexpectedResponse" xml:space="preserve"><value>{provider} hat eine unerwartete Antwort geliefert. Bitte Modell und Server-URL in den Einstellungen prüfen.</value></data>
+  <data name="Llm_GeminiNoKey" xml:space="preserve"><value>Für Google Gemini ist kein API-Schlüssel hinterlegt. Bitte in den Einstellungen eintragen.</value></data>
+  <data name="Tts_DisplayName" xml:space="preserve"><value>Google Gemini TTS (Cloud, Audiodatei)</value></data>
+  <data name="Tts_MissingKeyHint" xml:space="preserve"><value>Tragen Sie unter ⚙️ Einstellungen › Sprachausgabe einen Gemini-API-Schlüssel ein (kostenlos erhältlich in Google AI Studio). Die Chat-KI des Profils kann dabei bleiben, wie sie ist.</value></data>
+  <data name="Tts_KeyFromChat" xml:space="preserve"><value>Schlüssel aus den KI-Einstellungen des Profils (Google Gemini)</value></data>
+  <data name="Tts_KeyOwn" xml:space="preserve"><value>eigener Schlüssel der Sprachausgabe</value></data>
+  <data name="Tts_KeyNone" xml:space="preserve"><value>kein Schlüssel</value></data>
+  <data name="Tts_ReadyChatKey" xml:space="preserve"><value>Bereit – Schlüssel aus den KI-Einstellungen des Profils (Google Gemini).</value></data>
+  <data name="Tts_ReadyOwnKey" xml:space="preserve"><value>Bereit – eigener Schlüssel der Sprachausgabe.</value></data>
+  <data name="Tts_NoKey" xml:space="preserve"><value>Kein API-Schlüssel für Gemini TTS.</value></data>
+  <data name="Tts_NoKeyWithHint" xml:space="preserve"><value>Kein API-Schlüssel für Gemini TTS. {hint}</value></data>
+  <data name="Tts_Multilingual" xml:space="preserve"><value>mehrsprachig</value><comment>Sprachangabe der Gemini-Stimmen</comment></data>
+  <data name="Tts_TestTimeout" xml:space="preserve"><value>{provider} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {seconds} s). Bitte Internetverbindung prüfen und erneut versuchen.</value></data>
+  <data name="Tts_TestSuccess" xml:space="preserve"><value>✓ Verbindung zu Gemini TTS erfolgreich – Modell „{model}“ ist verfügbar ({source}). Der Test hat keine Kosten verursacht.</value><comment>{source} = Tts_Key*</comment></data>
+  <data name="Tts_EmptyScript" xml:space="preserve"><value>Das Skript ist leer – es gibt nichts vorzulesen.</value></data>
+  <data name="Tts_UnexpectedFormat" xml:space="preserve"><value>{provider} hat Audio in unerwartetem Format geliefert. Bitte erneut versuchen.</value></data>
+  <data name="Tts_UnexpectedFormatMime" xml:space="preserve"><value>{provider} hat Audio in unerwartetem Format geliefert ({mime}). Bitte erneut versuchen.</value></data>
+  <data name="Tts_RequestTimeout" xml:space="preserve"><value>{provider} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {minutes, plural, one {# Minute} other {# Minuten}}). Bitte erneut versuchen; bei sehr langen Abschnitten den Text kürzen.</value></data>
+  <data name="Tts_UnexpectedResponse" xml:space="preserve"><value>{provider} hat eine unerwartete Antwort geliefert. Bitte erneut versuchen.</value></data>
+  <data name="Tts_NoAudio" xml:space="preserve"><value>{provider} hat keine Audiodaten geliefert. Möglicherweise wurde der Text vom Inhaltsfilter blockiert oder das Modell erzeugt keine Sprache. Bitte erneut versuchen, den Abschnitt umformulieren oder unter ⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen.</value></data>
+  <data name="Tts_KeyRejected" xml:space="preserve"><value>Der Gemini-API-Schlüssel wurde abgelehnt (ungültig oder abgelaufen). Bitte den Schlüssel unter ⚙️ Einstellungen › Sprachausgabe bzw. in den KI-Einstellungen prüfen – einen neuen Schlüssel gibt es kostenlos in Google AI Studio.</value></data>
+  <data name="Tts_KeyNoAccess" xml:space="preserve"><value>Der Gemini-API-Schlüssel hat keinen Zugriff auf die Sprachausgabe (HTTP {status}). Prüfen Sie in Google AI Studio, ob der Schlüssel aktiv ist und die Gemini API für das Projekt freigeschaltet ist.</value></data>
+  <data name="Tts_ModelNotFound" xml:space="preserve"><value>Das Modell „{model}“ wurde bei Gemini nicht gefunden. Bitte unter ⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen (Standard: {default}).</value></data>
+  <data name="Tts_Quota" xml:space="preserve"><value>Das Kontingent für Gemini TTS ist erschöpft oder es wurden zu viele Anfragen gestellt (HTTP 429). In der kostenlosen Stufe gelten Minuten- und Tageslimits: Warten Sie etwas (bzw. bis morgen) und versuchen Sie es erneut, oder aktivieren Sie die Abrechnung in Google AI Studio.</value></data>
+  <data name="Tts_Region" xml:space="preserve"><value>Gemini TTS ist für diesen Schlüssel in Ihrer Region nicht verfügbar (HTTP 400). Bitte die Verfügbarkeit in Google AI Studio prüfen.</value></data>
+  <data name="Tts_BadRequest" xml:space="preserve"><value>Gemini hat die Anfrage abgelehnt (HTTP 400). Möglicherweise erzeugt das Modell „{model}“ keine Sprache – bitte unter ⚙️ Einstellungen › Sprachausgabe den Modellnamen prüfen (Standard: {default}).</value></data>
+  <data name="Tts_ServerError" xml:space="preserve"><value>Gemini TTS ist gerade überlastet oder gestört (HTTP {status}). Bitte in einigen Minuten erneut versuchen.</value></data>
+  <data name="Ffmpeg_CustomPathIgnored" xml:space="preserve"><value>Der eingetragene Pfad „{path}“ funktioniert nicht – verwendet wird das automatisch gefundene ffmpeg.</value></data>
+  <data name="Ffmpeg_Found" xml:space="preserve"><value>ffmpeg {version} gefunden: {path} ({abilities}).</value><comment>{abilities} = „MP4 ✓ · MP3 ✗“</comment></data>
+  <data name="Ffmpeg_Missing" xml:space="preserve"><value>Diesem ffmpeg fehlt {codecs}. Installieren Sie eine vollständige Ausgabe – {hint}</value></data>
+  <data name="Ffmpeg_NotFoundCustom" xml:space="preserve"><value>ffmpeg wurde unter „{path}“ nicht gefunden oder startet nicht – und auch sonst nicht auf diesem Rechner.</value></data>
+  <data name="Ffmpeg_NotFoundWindows" xml:space="preserve"><value>ffmpeg wurde auf diesem Rechner nicht gefunden (PATH, WinGet-Ordner).</value></data>
+  <data name="Ffmpeg_NotFoundLinux" xml:space="preserve"><value>ffmpeg wurde auf diesem Rechner nicht gefunden (PATH, /usr/bin).</value></data>
+  <data name="Ffmpeg_StartFailed" xml:space="preserve"><value>ffmpeg konnte nicht gestartet werden: {error}</value></data>
+  <data name="Ffmpeg_Failed" xml:space="preserve"><value>ffmpeg hat mit einem Fehler abgebrochen (Code {code}). Es wurde keine halbe Datei gespeichert. Prüfen Sie freien Speicherplatz und Schreibrechte im Zielordner; die technische Meldung steht in den Details.</value></data>
+  <data name="Ffmpeg_NoMp3" xml:space="preserve"><value>Diesem ffmpeg fehlt der MP3-Encoder (libmp3lame). {hint}</value></data>
+  <data name="Mp4_NoH264" xml:space="preserve"><value>Dieses ffmpeg kann kein MP4 mit H.264 und AAC schreiben.</value></data>
+  <data name="Mp4_FontconfigHint" xml:space="preserve"><value>Unter Linux braucht der MP4-Export die Bibliothek fontconfig: „sudo apt install libfontconfig1“, danach StudyScope neu starten.</value></data>
+  <data name="Mp4_ReinstallHint" xml:space="preserve"><value>Bitte StudyScope neu installieren (die Datei libSkiaSharp fehlt oder ist beschädigt).</value></data>
+  <data name="Mp4_SkiaFailed" xml:space="preserve"><value>Die Grafikbibliothek für die Folienbilder (SkiaSharp) lässt sich nicht laden: {error}</value></data>
+  <data name="Mp4_SkiaDisabled" xml:space="preserve"><value>SkiaSharp ist deaktiviert (STUDYSCOPE_DISABLE_SKIA=1).</value></data>
+  <data name="Mp4_Ready" xml:space="preserve"><value>Bereit – ffmpeg {version}.</value></data>
+  <data name="Mp4_NoSlides" xml:space="preserve"><value>Das Video hat keine Folien.</value></data>
+  <data name="Mp4_Rendering" xml:space="preserve"><value>Folienbilder werden gezeichnet ({done} von {total}) …</value></data>
+  <data name="Mp4_Encoding" xml:space="preserve"><value>Video wird kodiert …</value></data>
+  <data name="Mp4_EncodingPercent" xml:space="preserve"><value>Video wird kodiert ({percent} %) …</value></data>
+  <data name="Mp4_Done" xml:space="preserve"><value>Fertig.</value></data>
+  <data name="Video_NoAudioOutdated" xml:space="preserve"><value>Ohne Ton: Die Gemini-Audiodatei ist veraltet (Sprechtexte oder Folien wurden geändert). Die Folien laufen im festen Takt der geschätzten Sprechdauer ({minutes}).</value></data>
+  <data name="Video_NoAudioMissing" xml:space="preserve"><value>Ohne Ton: Es gibt keine Gemini-Audiodatei (die Systemstimme lässt sich nicht aufnehmen). Die Folien laufen im festen Takt der geschätzten Sprechdauer ({minutes}).</value></data>
+  <data name="Video_SceneAudioMissing" xml:space="preserve"><value>Für Folie {number} fehlt die aktuelle Audiodatei. Bitte die Audiodatei erneut erzeugen.</value></data>
+  <data name="Video_NoNarrationToAssemble" xml:space="preserve"><value>Das Video enthält keinen Sprechtext – es gibt nichts zusammenzusetzen.</value></data>
+  <data name="Wav_UnsupportedFormat" xml:space="preserve"><value>Nicht unterstütztes Audioformat „{mime}“.</value></data>
+  <data name="Wav_Compressed" xml:space="preserve"><value>Die WAV-Datei ist komprimiert (Format {format}).</value></data>
+  <data name="Wav_NoData" xml:space="preserve"><value>Die WAV-Daten enthalten keinen Audioteil.</value></data>
+  <data name="Wav_UnsupportedBits" xml:space="preserve"><value>Nicht unterstützte Bittiefe ({bits} Bit).</value></data>
+  <data name="Wav_FormatMismatch" xml:space="preserve"><value>Die Audioteile haben unterschiedliche Formate ({rate} Hz/{channels} Kanal vs. {otherRate} Hz/{otherChannels} Kanal).</value></data>
+</root>

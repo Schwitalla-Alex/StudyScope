@@ -1,4 +1,5 @@
 using StudyScope.Core.Models;
+using StudyScope.Core.Resources;
 
 namespace StudyScope.Core.Interfaces;
 
@@ -21,7 +22,7 @@ public sealed record SpeechAvailability(SpeechAvailabilityStatus Status, string 
 {
     public bool IsAvailable => Status is SpeechAvailabilityStatus.Ready or SpeechAvailabilityStatus.ReadyWithWarning;
 
-    public static SpeechAvailability Checking(string message = "Sprachausgabe wird geprüft …") => new(SpeechAvailabilityStatus.Checking, message);
+    public static SpeechAvailability Checking(string? message = null) => new(SpeechAvailabilityStatus.Checking, message ?? CoreStrings.Speech_CheckingDefault);
     public static SpeechAvailability Ready(string message) => new(SpeechAvailabilityStatus.Ready, message);
     public static SpeechAvailability Warning(string message, string? hint = null) => new(SpeechAvailabilityStatus.ReadyWithWarning, message, hint);
     public static SpeechAvailability Unavailable(string message, string? hint = null) => new(SpeechAvailabilityStatus.Unavailable, message, hint);

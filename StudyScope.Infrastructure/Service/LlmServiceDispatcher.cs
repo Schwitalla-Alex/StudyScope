@@ -5,6 +5,8 @@ using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -53,7 +55,7 @@ public class LlmServiceDispatcher : ILlmService
             AiProviderType.MistralAi => !string.IsNullOrWhiteSpace(config.ApiKey) &&
                 await CheckModelListAsync("Mistral AI", "https://api.mistral.ai/v1/models", BearerAuth(config.ApiKey)),
             AiProviderType.CustomOpenAi => !string.IsNullOrWhiteSpace(config.LocalEndpointUrl) &&
-                await CheckModelListAsync("Der benutzerdefinierte KI-Dienst", CustomModelsUrl(config.LocalEndpointUrl),
+                await CheckModelListAsync(InfraStrings.Llm_ProviderCustom, CustomModelsUrl(config.LocalEndpointUrl),
                     BearerAuth(config.ApiKey), notFoundIsReachable: true),
             _ => false
         };
@@ -97,7 +99,7 @@ public class LlmServiceDispatcher : ILlmService
         catch (OperationCanceledException ex)
         {
             throw new LlmServiceException(
-                $"{providerName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung). Bitte Internetverbindung prüfen und erneut versuchen.",
+                Loc.Format(InfraStrings.Llm_Timeout, ("provider", providerName)),
                 providerName, null, ex.Message, ex);
         }
         catch (HttpRequestException ex)
@@ -132,9 +134,9 @@ public class LlmServiceDispatcher : ILlmService
                     providerName: "OpenAI", useJsonMode: IsStructuredJsonPrompt(prompt), cancellationToken: cancellationToken),
                 AiProviderType.MistralAi => await AskMistralAsync(config, prompt, chunks, cancellationToken),
                 AiProviderType.CustomOpenAi => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false,
-                    providerName: "Der benutzerdefinierte KI-Dienst", cancellationToken: cancellationToken),
+                    providerName: InfraStrings.Llm_ProviderCustom, cancellationToken: cancellationToken),
                 AiProviderType.GoogleGemini => await AskGeminiAsync(config, prompt, chunks, cancellationToken),
-                _ => "Kein gültiger KI-Provider konfiguriert."
+                _ => InfraStrings.Llm_NoProvider
             };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -425,7 +427,7 @@ public class LlmServiceDispatcher : ILlmService
     }
 
     private static LlmServiceException UnexpectedResponse(string providerName, int statusCode, string responseContent) =>
-        new($"{providerName} hat eine unerwartete Antwort geliefert. Bitte Modell und Server-URL in den Einstellungen prüfen.",
+        new(Loc.Format(InfraStrings.Llm_UnexpectedResponse, ("provider", providerName)),
             providerName, statusCode, responseContent.Length > 500 ? responseContent[..500] + " …" : responseContent);
 
     /// <summary>
@@ -445,7 +447,7 @@ public class LlmServiceDispatcher : ILlmService
         catch (OperationCanceledException ex)
         {
             throw new LlmServiceException(
-                $"{providerName} hat nicht rechtzeitig geantwortet (Zeitüberschreitung nach {_httpClient.Timeout.TotalSeconds:0} s). Bitte erneut versuchen oder weniger Dokumente aktivieren.",
+                Loc.Format(InfraStrings.Llm_TimeoutSeconds, ("provider", providerName), ("seconds", ((int)_httpClient.Timeout.TotalSeconds).ToString(System.Globalization.CultureInfo.InvariantCulture))),
                 providerName, null, ex.Message, ex);
         }
         catch (HttpRequestException ex)
@@ -459,7 +461,7 @@ public class LlmServiceDispatcher : ILlmService
         const string providerName = "Google Gemini";
         if (string.IsNullOrWhiteSpace(config.ApiKey))
         {
-            throw new LlmServiceException("Für Google Gemini ist kein API-Schlüssel hinterlegt. Bitte in den Einstellungen eintragen.", providerName);
+            throw new LlmServiceException(InfraStrings.Llm_GeminiNoKey, providerName);
         }
 
         var model = string.IsNullOrWhiteSpace(config.SelectedModelName) || config.SelectedModelName.Equals("Google Gemini", StringComparison.OrdinalIgnoreCase)

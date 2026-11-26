@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Llm_Http400" xml:space="preserve"><value>Die Anfrage wurde abgelehnt. Bitte Modell und Einstellungen prüfen.</value></data>
+  <data name="Llm_Http401" xml:space="preserve"><value>Der API-Schlüssel wurde abgelehnt. Bitte den Schlüssel in den Einstellungen prüfen.</value></data>
+  <data name="Llm_Http404" xml:space="preserve"><value>Modell oder Adresse wurde nicht gefunden. Bitte Modell und Server-URL in den Einstellungen prüfen.</value></data>
+  <data name="Llm_Http408" xml:space="preserve"><value>Der KI-Dienst hat nicht rechtzeitig geantwortet. Bitte später erneut versuchen.</value></data>
+  <data name="Llm_Http429" xml:space="preserve"><value>Zu viele Anfragen oder das Kontingent ist erschöpft. Bitte kurz warten und erneut versuchen.</value></data>
+  <data name="Llm_Http5xx" xml:space="preserve"><value>Der KI-Dienst ist gerade gestört oder überlastet. Bitte in einigen Minuten erneut versuchen.</value></data>
+  <data name="Llm_HttpOther" xml:space="preserve"><value>Der KI-Dienst hat die Anfrage nicht beantwortet.</value></data>
+  <data name="Llm_HttpError" xml:space="preserve"><value>{provider} meldet einen Fehler (HTTP {status}). {hint}</value><comment>{provider} = Name des Dienstes, {hint} = Llm_Http*</comment></data>
+  <data name="Llm_NotReachable" xml:space="preserve"><value>{provider} ist nicht erreichbar. Bitte Internetverbindung bzw. Server-Adresse prüfen ({error}).</value></data>
+  <data name="Profile_NameEmpty" xml:space="preserve"><value>Bitte geben Sie einen Namen ein.</value></data>
+  <data name="Profile_NameTooLong" xml:space="preserve"><value>Der Name darf höchstens {max} Zeichen lang sein.</value></data>
+  <data name="Profile_NameControlChars" xml:space="preserve"><value>Der Name enthält unzulässige Steuerzeichen.</value></data>
+  <data name="Profile_NameInvalidChars" xml:space="preserve"><value>Der Name darf diese Zeichen nicht enthalten: {chars}</value></data>
+  <data name="Profile_NameEndsWithDot" xml:space="preserve"><value>Der Name darf nicht mit einem Punkt enden.</value></data>
+  <data name="Profile_NameReserved" xml:space="preserve"><value>„{name}“ ist ein reservierter Systemname und kann nicht verwendet werden.</value></data>
+  <data name="Ffmpeg_InstallLinux" xml:space="preserve"><value>ffmpeg installieren: im Terminal „{command}“ (Fedora: „sudo dnf install ffmpeg“), danach „ffmpeg suchen/testen“ in Einstellungen › Export.</value><comment>{command} = Installationsbefehl</comment></data>
+  <data name="Ffmpeg_InstallWindows" xml:space="preserve"><value>ffmpeg installieren: in der Eingabeaufforderung „{command}“, danach StudyScope neu starten oder „ffmpeg suchen/testen“ in Einstellungen › Export. Alternativ den Pfad zur ffmpeg.exe dort eintragen.</value></data>
+  <data name="Ffmpeg_Purpose" xml:space="preserve"><value>ffmpeg ist ein kostenloses Programm zum Umwandeln von Audio und Video. StudyScope liefert es nicht mit, nutzt es aber, wenn es installiert ist: für den MP4-Export der Videos und den MP3-Export der Audio-Beiträge (auch als kleinere Tonspur in HTML-Exporten).</value></data>
+  <data name="Speech_CheckingDefault" xml:space="preserve"><value>Sprachausgabe wird geprüft …</value></data>
+  <data name="Media_MinutesApprox" xml:space="preserve"><value>ca. {count} Min.</value><comment>{count} = ganze Minuten</comment></data>
+  <data name="Media_MinutesUnderOne" xml:space="preserve"><value>unter 1 Min.</value></data>
+  <data name="Media_SizeApprox" xml:space="preserve"><value>ca. {size} MB</value><comment>{size} = Zahl in der Schreibweise der Oberflächensprache</comment></data>
+  <data name="Media_SizeUnder" xml:space="preserve"><value>unter {size} MB</value></data>
+  <data name="Media_Under" xml:space="preserve"><value>unter {value}</value></data>
+</root>

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using SkiaSharp;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -253,7 +254,7 @@ public static class SlideRasterizerLoader
     private static (bool, string?) ProbeCore()
     {
         if (Environment.GetEnvironmentVariable("STUDYSCOPE_DISABLE_SKIA") == "1")
-            return (false, "SkiaSharp ist deaktiviert (STUDYSCOPE_DISABLE_SKIA=1).");
+            return (false, InfraStrings.Mp4_SkiaDisabled);
         try
         {
             return TouchNative();

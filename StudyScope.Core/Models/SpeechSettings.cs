@@ -74,9 +74,6 @@ public static class GeminiTtsInfo
     /// <summary>Bis zu diesem Tag gilt der Einführungspreis; danach verdoppelt Google den Preis für Audio-Ausgabe.</summary>
     public static readonly DateTime IntroductoryPriceUntil = new(2026, 12, 31);
 
-    /// <summary>Kostenlose Stufe (mit Tageslimits) – Hinweis für die Kostenanzeige.</summary>
-    public const string FreeTierHint = "In der kostenlosen Stufe von Google AI Studio fallen keine Kosten an (Tageslimits).";
-
     /// <summary>Preis je 1 Mio. Audio-Token zum angegebenen Datum.</summary>
     public static double UsdPerMillionAudioTokensAt(DateTime date) =>
         date.Date <= IntroductoryPriceUntil ? UsdPerMillionAudioTokens : UsdPerMillionAudioTokens * 2;
