@@ -10,9 +10,9 @@
     <!-- Obere Steuerleiste -->
     <div class="pp-toolbar">
         <div style="min-width: 0;">
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Präsentation: @DocVm.CurrentProfile</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Presentation_Title, ("profile", DocVm.CurrentProfile))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
-                @(PresVm.HasPresentation ? PresVm.SourceInfoText : "Noch keine Präsentation für dieses Profil")
+                @(PresVm.HasPresentation ? PresVm.SourceInfoText : UiStrings.Presentation_NoneForProfile)
             </span>
         </div>
 
@@ -20,36 +20,36 @@
             @if (PresVm.IsGenerating)
             {
                 <button type="button" class="pp-btn" style="background: var(--ss-secondary);" @onclick="PresVm.CancelGeneration">
-                    <span class="pp-spinner"></span> Abbrechen
+                    <span class="pp-spinner"></span> @UiStrings.Common_Cancel
                 </button>
             }
             else if (pendingReplace != null)
             {
                 <!-- Rückfrage: Eine vorhandene Präsentation würde ersetzt -->
                 <span style="font-size: 13px; color: var(--ss-warning-text); background: var(--ss-warning-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; padding: 5px 10px;">
-                    Die vorhandene Präsentation wird ersetzt.
+                    @UiStrings.Presentation_ReplaceWarning
                 </span>
-                <button type="button" class="pp-btn" style="background: var(--ss-danger);" @onclick="ConfirmReplaceAsync">Ersetzen</button>
-                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" @onclick="() => pendingReplace = null">Abbrechen</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-danger);" @onclick="ConfirmReplaceAsync">@UiStrings.Presentation_Replace</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" @onclick="() => pendingReplace = null">@UiStrings.Common_Cancel</button>
             }
             else
             {
-                <label style="font-size: 13px; color: var(--ss-text-2);" title="Anzahl der Inhaltsfolien bei „Mit KI erstellen“">Folien:</label>
+                <label style="font-size: 13px; color: var(--ss-text-2);" title="@Loc.Format(UiStrings.Presentation_SlidesTitle, ("button", VmStrings.Presentation_GenerateAi))">@UiStrings.Presentation_Slides</label>
                 <input type="number" min="3" max="20" class="pp-number" @bind="PresVm.SlideCount" />
                 <button type="button" class="pp-btn" style="background: var(--ss-primary);"
-                        title="Die KI erstellt Folien mit Stichpunkten und Sprechernotizen aus den links aktivierten Dokumenten"
-                        @onclick="GenerateAsync">✨ Mit KI erstellen</button>
+                        title="@UiStrings.Presentation_GenerateTitle"
+                        @onclick="GenerateAsync">✨ @VmStrings.Presentation_GenerateAi</button>
                 <button type="button" class="pp-btn" style="background: var(--ss-purple);"
-                        title="Folien aus der Mindmap dieses Profils ableiten (ohne KI, sofort)"
-                        @onclick="FromMindmapAsync">🧠 Aus Mindmap</button>
+                        title="@UiStrings.Presentation_FromMindmapTitle"
+                        @onclick="FromMindmapAsync">@UiStrings.Presentation_FromMindmap</button>
             }
 
             @if (PresVm.HasPresentation && !PresVm.IsGenerating)
             {
-                <button type="button" class="pp-btn" style="background: var(--ss-success);" title="Vortrag ab der ersten Folie starten (Esc beendet)" @onclick="() => StartPresentingAsync(true)">▶ Vortragen</button>
-                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" title="Folien drucken oder als PDF speichern (eine Folie pro Seite)" @onclick="PrintAsync">🖨️ Drucken / PDF</button>
-                <button type="button" class="pp-btn" style="background: #d24726;" title="Als PowerPoint-Datei (.pptx) speichern – mit Sprechernotizen" @onclick="ExportPptxAsync">📊 PowerPoint</button> @* ss:feste-farbe – PowerPoint-Markenfarbe *@
-                <button type="button" class="pp-btn" style="background: var(--ss-danger);" title="Präsentation dieses Profils löschen" @onclick="DeleteAsync">🗑️</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-success);" title="@UiStrings.Presentation_PresentTitle" @onclick="() => StartPresentingAsync(true)">@VmStrings.Presentation_Present</button>
+                <button type="button" class="pp-btn" style="background: var(--ss-secondary);" title="@UiStrings.Presentation_PrintTitle" @onclick="PrintAsync">@UiStrings.Common_PrintPdf</button>
+                <button type="button" class="pp-btn" style="background: #d24726;" title="@UiStrings.Presentation_PptxTitle" @onclick="ExportPptxAsync">📊 PowerPoint</button> @* ss:feste-farbe – PowerPoint-Markenfarbe *@
+                <button type="button" class="pp-btn" style="background: var(--ss-danger);" title="@UiStrings.Presentation_DeleteTitle" aria-label="@UiStrings.Presentation_DeleteTitle" @onclick="DeleteAsync">🗑️</button>
             }
         </div>
     </div>
@@ -57,9 +57,9 @@
     @if (PresVm.IsGenerating)
     {
         <div class="pp-info">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">📽️ KI gliedert die Inhalte und formuliert die Folien ...</div>
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">@UiStrings.Presentation_GeneratingInfo</div>
             <div class="pp-progress"><div class="pp-progress-bar"></div></div>
-            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
+            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">@UiStrings.Common_GenerationWait</div>
         </div>
     }
 
@@ -74,8 +74,8 @@
                 <div style="font-weight: 600;">@PresVm.StatusMessage</div>
                 @if (PresVm.StatusTips.Count > 0)
                 {
-                    <div style="margin-top: 6px;">@(PresVm.IsError ? "Das können Sie tun:" : "Tipp:")</div>
-                    <ul style="margin: 2px 0 0 18px; line-height: 1.5;">
+                    <div style="margin-top: 6px;">@(PresVm.IsError ? UiStrings.Common_WhatYouCanDo : UiStrings.Common_Tip)</div>
+                    <ul style="margin-block: 2px 0; margin-inline: 18px 0; line-height: 1.5;">
                         @foreach (var tip in PresVm.StatusTips)
                         {
                             <li>@tip</li>
@@ -85,12 +85,12 @@
                 @if (!string.IsNullOrEmpty(PresVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">@UiStrings.Common_TechnicalDetailsAi</summary>
                         <pre class="pp-details-raw">@PresVm.StatusDetails</pre>
                     </details>
                 }
             </div>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="PresVm.ClearStatus">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="@UiStrings.Common_Dismiss" aria-label="@UiStrings.Common_Dismiss" @onclick="PresVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -100,10 +100,9 @@
         {
             <div class="pp-empty">
                 <div style="font-size: 34px; margin-bottom: 10px;">📽️</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Präsentation vorhanden.</p>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">@UiStrings.Presentation_Empty</p>
                 <span style="font-size: 12px; line-height: 1.5; display: block;">
-                    <b>✨ Mit KI erstellen:</b> Die KI formuliert aus den links aktivierten Dokumenten Folien mit Stichpunkten und Sprechernotizen.<br />
-                    <b>🧠 Aus Mindmap:</b> Die Mindmap dieses Profils wird sofort in Folien umgewandelt – jeder Hauptast wird zu einer Folie.
+                    @LocHtml.Format(UiStrings.Presentation_EmptyHint, ("ai", VmStrings.Presentation_GenerateAi), ("mindmap", UiStrings.Presentation_FromMindmap))
                 </span>
             </div>
         }
@@ -132,16 +131,16 @@
                     </div>
 
                     <div class="pp-nav">
-                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasPrevious)" @onclick="PreviousAsync">◀ Zurück</button>
-                        <span style="font-size: 13px; color: var(--ss-text-2); min-width: 70px; text-align: center;">Folie @PresVm.ProgressText</span>
-                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasNext)" @onclick="NextAsync">Weiter ▶</button>
-                        <button type="button" class="pp-btn-outline" title="Vortrag ab dieser Folie starten" @onclick="() => StartPresentingAsync(false)">▶ Ab hier vortragen</button>
+                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasPrevious)" @onclick="PreviousAsync"><span class="ss-flip-rtl">◀</span> @UiStrings.Common_Back</button>
+                        <span style="font-size: 13px; color: var(--ss-text-2); min-width: 70px; text-align: center;">@Loc.Format(UiStrings.Presentation_SlideOf, ("progress", PresVm.ProgressText))</span>
+                        <button type="button" class="pp-btn-outline" disabled="@(!PresVm.HasNext)" @onclick="NextAsync">@UiStrings.Common_Next <span class="ss-flip-rtl">▶</span></button>
+                        <button type="button" class="pp-btn-outline" title="@UiStrings.Presentation_PresentFromHereTitle" @onclick="() => StartPresentingAsync(false)">@UiStrings.Presentation_PresentFromHere</button>
                     </div>
 
                     <div class="pp-notes">
-                        <div style="font-size: 11px; font-weight: 600; color: var(--ss-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Sprechernotizen</div>
+                        <div style="font-size: 11px; font-weight: 600; color: var(--ss-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">@UiStrings.Presentation_SpeakerNotes</div>
                         <div style="font-size: 13px; line-height: 1.5; color: var(--ss-text); white-space: pre-wrap;">
-                            @(string.IsNullOrWhiteSpace(current.Notes) ? "Keine Notizen zu dieser Folie." : current.Notes)
+                            @(string.IsNullOrWhiteSpace(current.Notes) ? UiStrings.Presentation_NoNotes : current.Notes)
                         </div>
                     </div>
                 }
@@ -157,7 +156,7 @@
              @onclick="NextInPresentationAsync">
             <div class="pp-present-slide">@SlideMarkup(presented, PresVm.CurrentIndex + 1, PresVm.Slides.Count)</div>
             <div class="pp-present-hint">
-                @PresVm.ProgressText · → / Klick: weiter · ←: zurück · Esc: beenden
+                @Loc.Format(UiStrings.Presentation_PresentHint, ("progress", PresVm.ProgressText))
             </div>
         </div>
     }
@@ -187,9 +186,9 @@
         .pp-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
         .pp-empty { margin: auto; text-align: center; color: var(--ss-text-muted); max-width: 520px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border); }
 
-        .pp-thumbs { width: 190px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+        .pp-thumbs { width: 190px; flex-shrink: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-inline-end: 4px; }
         .pp-thumb { display: flex; gap: 6px; align-items: flex-start; cursor: pointer; }
-        .pp-thumb-number { width: 18px; font-size: 11px; color: var(--ss-text-muted); text-align: right; padding-top: 2px; }
+        .pp-thumb-number { width: 18px; font-size: 11px; color: var(--ss-text-muted); text-align: end; padding-top: 2px; }
         .pp-thumb-slide { flex: 1; border: 2px solid transparent; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); overflow: hidden; }
         .pp-thumb.active .pp-thumb-slide { border-color: var(--ss-primary); }
         .pp-thumb:hover .pp-thumb-slide { border-color: var(--ss-selected-border); }
@@ -204,14 +203,14 @@
 
         .pp-present { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; outline: none; cursor: pointer; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .pp-present-slide { width: min(100vw, calc(100vh * 16 / 9)); }
-        .pp-present-hint { position: absolute; right: 16px; bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.85); background: var(--ss-overlay); padding: 3px 10px; border-radius: 12px; user-select: none; opacity: 0.35; transition: opacity 0.2s; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
+        .pp-present-hint { position: absolute; inset-inline-end: 16px; bottom: 10px; font-size: 12px; color: rgba(255,255,255,0.85); background: var(--ss-overlay); padding: 3px 10px; border-radius: 12px; user-select: none; opacity: 0.35; transition: opacity 0.2s; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .pp-present:hover .pp-present-hint { opacity: 1; }
 
         .pp-spinner { display: inline-block; width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.35) /* ss:feste-farbe – Ladekreis auf farbigem Knopf */; border-radius: 50%; border-top-color: var(--ss-on-accent); animation: pp-spin 0.8s linear infinite; }
         @@keyframes pp-spin { to { transform: rotate(360deg); } }
         .pp-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .pp-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: pp-slide 1.4s ease-in-out infinite; }
-        @@keyframes pp-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        @@keyframes pp-slide { 0% { left: -40%; } 100% { left: 100%; } }  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
 
         .pp-print-only { display: none; }
 
@@ -220,7 +219,7 @@
             @@page { size: 297mm 167mm; margin: 0; }
             body * { visibility: hidden; }
             .pp-print-only, .pp-print-only * { visibility: visible; }
-            .pp-print-only { display: block; position: absolute; left: 0; top: 0; width: 297mm; }
+            .pp-print-only { display: block; position: absolute; left: 0; top: 0; width: 297mm; }  /* ss:physisch – Druckseite */
             .pp-print-page { width: 297mm; height: 167mm; overflow: hidden; break-after: page; page-break-after: always; }
             .pp-print-page:last-child { break-after: auto; page-break-after: auto; }
             .pp-print-page .pp-slide { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -371,7 +370,7 @@
         }
         catch (Exception ex)
         {
-            PresVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true);
+            PresVm.ShowStatus(Loc.Format(UiStrings.Common_PrintDialogFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -382,8 +381,8 @@
             var path = await DesktopDialogs.SaveFileAsync(
                 PresVm.SuggestFileName("pptx"),
                 filterExtension: "pptx",
-                filterDescription: "PowerPoint-Präsentation (*.pptx)",
-                title: "Präsentation speichern als...");
+                filterDescription: UiStrings.Presentation_PptxFilter,
+                title: UiStrings.Presentation_SaveAs);
 
             if (string.IsNullOrWhiteSpace(path))
                 return;
@@ -395,7 +394,7 @@
         }
         catch (Exception ex)
         {
-            PresVm.ShowStatus($"⚠️ Fehler beim PowerPoint-Export: {ex.Message}", isError: true);
+            PresVm.ShowStatus(Loc.Format(VmStrings.Presentation_PptxError, ("error", ex.Message)), isError: true);
         }
     }
 

@@ -4,6 +4,8 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Mindmap;
 using StudyScope.ViewModels.Quiz;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -289,13 +291,13 @@ public class QuizViewModel : INotifyPropertyChanged
         var name = FormName.Trim();
         if (name.Length == 0)
         {
-            FormError = "Bitte einen Namen für das Thema eingeben.";
+            FormError = VmStrings.Quiz_FormNameMissing;
             return false;
         }
 
         if (Topics.Any(t => t.Id != _editingTopicId && string.Equals(t.Name, name, StringComparison.OrdinalIgnoreCase)))
         {
-            FormError = $"Ein Thema „{name}“ gibt es bereits.";
+            FormError = Loc.Format(VmStrings.Quiz_FormNameExists, ("name", name));
             return false;
         }
 
@@ -312,7 +314,7 @@ public class QuizViewModel : INotifyPropertyChanged
 
         if (docs.Count == 0)
         {
-            FormError = "Bitte mindestens ein Dokument auswählen, aus dem die Fragen stammen sollen.";
+            FormError = VmStrings.Quiz_FormNoDocuments;
             return false;
         }
 
@@ -332,7 +334,7 @@ public class QuizViewModel : INotifyPropertyChanged
         await SaveAsync();
         CloseTopicForm();
         NotifyTopicsChanged();
-        ShowStatus(existing != null ? $"✓ Thema „{name}“ gespeichert." : $"✓ Thema „{name}“ angelegt. Fragen werden beim ersten Quiz erzeugt.", isError: false);
+        ShowStatus(Loc.Format(existing != null ? VmStrings.Quiz_TopicSaved : VmStrings.Quiz_TopicCreated, ("name", name)), isError: false);
         return true;
     }
 
@@ -345,7 +347,7 @@ public class QuizViewModel : INotifyPropertyChanged
         _selectedTopicIds.Remove(topicId);
         await SaveAsync();
         NotifyTopicsChanged();
-        ShowStatus($"✓ Thema „{topic.Name}“ gelöscht.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Quiz_TopicDeleted, ("name", topic.Name)), isError: false);
     }
 
     /// <summary>Verwirft den Fragenpool eines Themas – beim nächsten Quiz erzeugt die KI neue Fragen.</summary>
@@ -357,7 +359,7 @@ public class QuizViewModel : INotifyPropertyChanged
         topic.Questions.Clear();
         await SaveAsync();
         NotifyTopicsChanged();
-        ShowStatus($"✓ Die Fragen zu „{topic.Name}“ wurden verworfen. Beim nächsten Quiz werden neue erzeugt.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Quiz_QuestionsReset, ("name", topic.Name)), isError: false);
     }
 
     // ---------------- Themen per KI vorschlagen ----------------
@@ -376,13 +378,13 @@ public class QuizViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus, damit die KI Themen vorschlagen kann.", isError: true);
+            ShowStatus(VmStrings.Quiz_SuggestNoDocuments, isError: true);
             return;
         }
 
         IsBusy = true;
         ClearStatus();
-        ProgressText = "🧠 KI liest die Dokumente und sucht Themen ...";
+        ProgressText = VmStrings.Quiz_SuggestProgress;
         ProgressPercent = 0;
         _cts = new CancellationTokenSource();
         var token = _cts.Token;
@@ -393,13 +395,13 @@ public class QuizViewModel : INotifyPropertyChanged
             var result = await _quizService.SuggestTopicsAsync(chunks, token);
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Themensuche wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.Quiz_SuggestCancelled, isError: false);
                 return;
             }
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Themenliste", "✨ Themen vorschlagen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.TopicList, VmStrings.Quiz_SuggestTopics);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -412,15 +414,15 @@ public class QuizViewModel : INotifyPropertyChanged
                 .ToList();
 
             if (Suggestions.Count == 0)
-                ShowStatus("Die KI hat nur Themen gefunden, die es schon gibt.", isError: false);
+                ShowStatus(VmStrings.Quiz_SuggestOnlyKnown, isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Themensuche wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Quiz_SuggestCancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler bei der Themensuche: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Quiz_SuggestError, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -462,7 +464,7 @@ public class QuizViewModel : INotifyPropertyChanged
         await SaveAsync();
         DismissSuggestions();
         NotifyTopicsChanged();
-        ShowStatus($"✓ {chosen.Count} Thema/Themen übernommen und für das nächste Quiz ausgewählt.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Quiz_SuggestionsAccepted, ("count", chosen.Count)), isError: false);
     }
 
     // ---------------- Quiz starten ----------------
@@ -474,14 +476,14 @@ public class QuizViewModel : INotifyPropertyChanged
         var topics = Topics.Where(t => _selectedTopicIds.Contains(t.Id)).ToList();
         if (topics.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie mindestens ein Thema für das Quiz aus.", isError: true,
-                new[] { "Legen Sie mit „➕ Neues Thema“ ein Thema an oder lassen Sie mit „✨ Themen vorschlagen“ welche erstellen." });
+            ShowStatus(VmStrings.Quiz_NoTopicSelected, isError: true,
+                new[] { Loc.Format(VmStrings.Quiz_NoTopicSelected_Tip, ("newTopic", VmStrings.Quiz_NewTopic), ("suggest", VmStrings.Quiz_SuggestTopics)) });
             return;
         }
 
         if (_allowedTypes.Count == 0)
         {
-            ShowStatus("⚠️ Bitte mindestens einen Fragetyp auswählen.", isError: true);
+            ShowStatus(VmStrings.Quiz_NoTypeSelected, isError: true);
             return;
         }
 
@@ -518,7 +520,7 @@ public class QuizViewModel : INotifyPropertyChanged
                 while (needed > 0 && emptyInARow < MaxEmptyBatches)
                 {
                     token.ThrowIfCancellationRequested();
-                    ProgressText = $"✨ KI erstellt Fragen zu „{topic.Name}“ ... ({generated} von {totalMissing} neuen Fragen)";
+                    ProgressText = Loc.Format(VmStrings.Quiz_GenerateProgress, ("topic", topic.Name), ("done", generated), ("total", totalMissing));
                     ProgressPercent = totalMissing == 0 ? 0 : 100.0 * generated / totalMissing;
 
                     var request = Math.Min(needed, _quizService.BatchSize);
@@ -548,8 +550,8 @@ public class QuizViewModel : INotifyPropertyChanged
             if (composed.Count == 0)
             {
                 var failure = lastFailure != null
-                    ? MindmapStatusTexts.ForFailure(lastFailure.FailureReason, lastFailure.RawResponse, "Quiz", "▶ Quiz starten", "kein Quiz", "einem Quiz", "ein Quiz")
-                    : new MindmapStatusText("⚠️ Für die gewählten Themen und Fragetypen gibt es keine Fragen.", new[] { "Wählen Sie weitere Fragetypen oder Themen aus." }, null);
+                    ? MindmapStatusTexts.ForFailure(lastFailure.FailureReason, lastFailure.RawResponse, GenerationSubject.Quiz, VmStrings.Quiz_Start)
+                    : new MindmapStatusText(VmStrings.Quiz_NoQuestions, new[] { VmStrings.Quiz_NoQuestions_Tip }, null);
                 var tips = failure.Tips.Concat(MissingDocumentTips(missingDocuments)).ToList();
                 ShowStatus(failure.Message, isError: true, tips, failure.Details);
                 return;
@@ -562,24 +564,24 @@ public class QuizViewModel : INotifyPropertyChanged
             var hints = MissingDocumentTips(missingDocuments).ToList();
             if (composed.Count < QuestionCount)
             {
-                ShowStatus($"Es konnten nur {composed.Count} von {QuestionCount} Fragen erstellt werden – das Quiz startet mit diesen.", isError: false,
-                    hints.Concat(new[] { "Für mehr Fragen: weitere Dokumente zum Thema hinzufügen oder ein größeres Modell wählen." }).ToList(), isWarning: true);
+                ShowStatus(Loc.Format(VmStrings.Quiz_Partial, ("count", composed.Count), ("requested", QuestionCount)), isError: false,
+                    hints.Concat(new[] { VmStrings.Quiz_Partial_Tip }).ToList(), isWarning: true);
             }
             else if (hints.Count > 0 || wasRepaired)
             {
-                ShowStatus("Das Quiz läuft. Hinweis:", isError: false,
-                    hints.Concat(wasRepaired ? new[] { "Eine Antwort der KI war unvollständig oder fehlerhaft; es wurden nur vollständige Fragen übernommen." } : Array.Empty<string>()).ToList(),
+                ShowStatus(VmStrings.Quiz_RunningNote, isError: false,
+                    hints.Concat(wasRepaired ? new[] { VmStrings.Quiz_RepairedNote } : Array.Empty<string>()).ToList(),
                     isWarning: true);
             }
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung der Fragen wurde abgebrochen. Bereits erzeugte Fragen bleiben im Fragenpool erhalten.", isError: false);
+            ShowStatus(VmStrings.Quiz_GenerateCancelled, isError: false);
             NotifyTopicsChanged();
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Starten des Quiz: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Quiz_StartError, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -590,7 +592,7 @@ public class QuizViewModel : INotifyPropertyChanged
     private static IEnumerable<string> MissingDocumentTips(List<string> missing) =>
         missing.Count == 0
             ? Enumerable.Empty<string>()
-            : new[] { $"Nicht gefunden (verschoben oder gelöscht?): {string.Join(", ", missing.Distinct())}. Passen Sie die Dokumente des Themas über ✏️ an." };
+            : new[] { Loc.Format(VmStrings.Quiz_MissingDocuments, ("files", string.Join(", ", missing.Distinct()))) };
 
     private async Task<List<string>> LoadChunksAsync(IEnumerable<QuizDocumentRef> documents, List<string>? missing = null)
     {
@@ -681,7 +683,7 @@ public class QuizViewModel : INotifyPropertyChanged
 
         if (items.Count == 0)
         {
-            ShowStatus("Es gibt keine falsch beantworteten Fragen zum Wiederholen.", isError: false);
+            ShowStatus(VmStrings.Quiz_NoWrongQuestions, isError: false);
             return;
         }
 
@@ -702,16 +704,16 @@ public class QuizViewModel : INotifyPropertyChanged
         await SaveAsync();
         OnPropertyChanged(nameof(History));
         NotifyTopicsChanged();
-        ShowStatus("✓ Der Verlauf wurde gelöscht.", isError: false);
+        ShowStatus(VmStrings.Quiz_HistoryCleared, isError: false);
     }
 
     /// <summary>Kurze Bewertung des Ergebnisses.</summary>
     public static string Verdict(double percent) => percent switch
     {
-        >= 90 => "Hervorragend! 🎉",
-        >= 75 => "Sehr gut gemacht! 👍",
-        >= 50 => "Gut – mit etwas Wiederholung sitzt es bald. 💪",
-        _ => "Da geht noch mehr – wiederholen Sie die falschen Fragen. 📚"
+        >= 90 => VmStrings.Quiz_Verdict_Excellent,
+        >= 75 => VmStrings.Quiz_Verdict_VeryGood,
+        >= 50 => VmStrings.Quiz_Verdict_Good,
+        _ => VmStrings.Quiz_Verdict_KeepGoing
     };
 
     // ---------------- intern ----------------

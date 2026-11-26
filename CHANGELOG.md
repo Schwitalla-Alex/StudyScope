@@ -20,8 +20,10 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 
 ### Geändert
 - **Einheitliche Anrede:** Auch der Chat spricht Sie jetzt mit „Sie“ an („Stellen Sie eine Frage zu den aktivierten Dokumenten …“), und der Hinweis nennt alle Dokumentarten statt nur PDF.
-- **Richtige Einzahl:** Zähler im Chat, im Hinweis der eingeklappten Seitenleiste und bei der Modellsuche lauten jetzt z. B. „1 Nachricht“ bzw. „1 Modell gefunden“ statt „1 Nachrichten“ bzw. „1 Modell(e)“.
-- Vorbereitung für weitere Sprachen der Oberfläche: Die Texte von Menü, Reiterleiste, Seitenleiste, Statusleiste, Einstellungen, Dialogen und Chat liegen jetzt in Übersetzungsdateien. Die Oberfläche bleibt vorerst deutsch.
+- **Richtige Einzahl:** Zähler im Chat, im Hinweis der eingeklappten Seitenleiste und bei der Modellsuche lauten jetzt z. B. „1 Nachricht“ bzw. „1 Modell gefunden“ statt „1 Nachrichten“ bzw. „1 Modell(e)“. Ebenso in Karteikarten, Mindmap, Präsentation und Quiz („1 Karte“, „1 Thema übernommen“, „1 Frage unbeantwortet“ statt „Karte(n)“, „Thema/Themen“, „Frage(n)“).
+- Vorbereitung für weitere Sprachen der Oberfläche: Die Texte von Menü, Reiterleiste, Seitenleiste, Statusleiste, Einstellungen, Dialogen, Chat, Karteikarten, Mindmap, Präsentation und Quiz liegen jetzt in Übersetzungsdateien. Die Oberfläche bleibt vorerst deutsch.
+- Der Hinweis bei Verbindungsproblemen nennt den Knopf in den KI-Einstellungen jetzt richtig („Speichern & Verbinden“ statt „Speichern & Prüfen“), und die leere Karteikarten-Ansicht spricht von Dokumenten statt nur von PDF-Dokumenten.
+- Datum und Uhrzeit bei Mindmap und Präsentation („Erstellt am …“) richten sich nach der Sprache der Oberfläche.
 
 ## [1.1.1] – 2026-11
 

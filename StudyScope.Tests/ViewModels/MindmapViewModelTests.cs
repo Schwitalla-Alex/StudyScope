@@ -193,6 +193,19 @@ public class MindmapViewModelTests
         Assert.That(_viewModel.BuildQuestionFor(root), Does.Contain("Überblick"));
     }
 
+    /// <summary>Die Frage ist eine Benutzerfrage und folgt der Oberflächensprache (die Stichwortsuche kennt englische Füllwörter).</summary>
+    [Test]
+    [SetUICulture("en")]
+    public async Task BuildQuestionFor_FollowsUiLanguage()
+    {
+        _mindmapService.NextResult = new MindmapGenerationResult { Root = CreateTree() };
+        await _viewModel.GenerateAsync("Testprofil", Docs(("a.pdf", true)));
+        var root = _viewModel.Mindmap!.Root;
+
+        Assert.That(_viewModel.BuildQuestionFor(root.Children[0].Children[1]), Is.EqualTo("Explain “Blatt A2” in the context of “Ast A” based on my materials."));
+        Assert.That(_viewModel.BuildQuestionFor(root), Does.StartWith("Give me an overview of"));
+    }
+
     [Test]
     public async Task SelectNode_SetsPathFromRoot()
     {

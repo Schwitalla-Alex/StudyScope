@@ -486,7 +486,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 token.ThrowIfCancellationRequested();
                 if (!slides.IsSuccess)
                 {
-                    var failure = MindmapStatusTexts.ForFailure(slides.FailureReason, slides.RawResponse, "Präsentation", "Video erstellen");
+                    var failure = MindmapStatusTexts.ForFailure(slides.FailureReason, slides.RawResponse, GenerationSubject.Presentation, "Video erstellen");
                     ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                     return;
                 }
@@ -514,8 +514,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 token.ThrowIfCancellationRequested();
                 if (!result.IsSuccess)
                 {
-                    var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Video-Skript", "Video erstellen",
-                        "kein Video-Skript", "einem Video-Skript", "ein Video-Skript");
+                    var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.VideoScript, "Video erstellen");
                     ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                     return;
                 }

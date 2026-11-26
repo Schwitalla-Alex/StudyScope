@@ -16,14 +16,14 @@
     <!-- Obere Steuerleiste: Profil, Fortschritt und zentrale Aktionsbuttons -->
     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px;">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Lernkarteikarten: @DocVm.CurrentProfile</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfile))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
-                @FlashVm.Flashcards.Count Karte(n) vorhanden | Karte @FlashVm.ProgressText
+                @Loc.Format(UiStrings.Flashcards_Summary, ("count", FlashVm.Flashcards.Count), ("progress", FlashVm.ProgressText))
             </span>
         </div>
 
         <div style="display: flex; gap: 8px; align-items: center;">
-            <label style="font-size: 13px; color: var(--ss-text-2);">Anzahl:</label>
+            <label style="font-size: 13px; color: var(--ss-text-2);">@UiStrings.Flashcards_Count</label>
             <input type="number"
                    min="1"
                    max="50"
@@ -39,11 +39,11 @@
                 @if (FlashVm.IsGenerating)
                 {
                     <span class="loading-spinner"></span>
-                    <span>Generiere...</span>
+                    <span>@UiStrings.Flashcards_Generating</span>
                 }
                 else
                 {
-                    <span>✨ Neue Karten erstellen</span>
+                    <span>@UiStrings.Flashcards_Generate</span>
                 }
             </button>
 
@@ -53,16 +53,16 @@
                 <button type="button"
                         style="padding: 7px 12px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
                         disabled="@FlashVm.IsGenerating"
-                        title="Drucken oder als PDF speichern"
+                        title="@UiStrings.Flashcards_PrintTitle"
                         @onclick="PrintCardsAsync">
-                    🖨️ Drucken / PDF
+                    @UiStrings.Common_PrintPdf
                 </button>
                 <button type="button"
                         style="padding: 7px 12px; background: var(--ss-info); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: @(FlashVm.IsGenerating ? "not-allowed" : "pointer"); font-size: 13px;"
                         disabled="@FlashVm.IsGenerating"
-                        title="Als Markdown exportieren"
+                        title="@UiStrings.Common_ExportMdTitle"
                         @onclick="ExportMarkdownAsync">
-                    📄 Export (.md)
+                    @UiStrings.Common_ExportMd
                 </button>
             }
 
@@ -70,9 +70,9 @@
             {
                 <button type="button"
                         style="padding: 7px 12px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
-                        title="Alle Karten dieses Profils löschen"
+                        title="@UiStrings.Flashcards_DeleteAllTitle"
                         @onclick="ClearCardsAsync">
-                    🗑️ Alle löschen
+                    @UiStrings.Flashcards_DeleteAll
                 </button>
             }
 
@@ -84,9 +84,9 @@
     {
         <div class="flash-mode-backdrop" @onclick="CancelModeDialog">
             <div class="flash-mode-dialog" role="dialog" aria-modal="true" aria-labelledby="flash-mode-title" @onclick:stopPropagation="true">
-                <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: var(--ss-text);">Neue Karten erstellen</h4>
+                <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: var(--ss-text);">@UiStrings.Flashcards_Mode_Title</h4>
                 <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--ss-text-2);">
-                    Es sind bereits @FlashVm.Flashcards.Count Karte(n) vorhanden. Wie sollen die @selectedCardCount neuen Karten übernommen werden?
+                    @Loc.Format(UiStrings.Flashcards_Mode_Question, ("existing", FlashVm.Flashcards.Count), ("count", selectedCardCount))
                 </p>
 
                 <label class="flash-mode-option @(generationMode == FlashcardGenerationMode.Append ? "selected" : "")">
@@ -94,8 +94,8 @@
                            checked="@(generationMode == FlashcardGenerationMode.Append)"
                            @onchange="() => generationMode = FlashcardGenerationMode.Append" />
                     <span>
-                        <strong>Zum Stapel hinzufügen</strong> (empfohlen)<br />
-                        <small>Vorhandene Karten und ihr Lernstand bleiben erhalten. Fragen, die es schon gibt, werden weggelassen.</small>
+                        @((MarkupString)UiStrings.Flashcards_Mode_Append)<br />
+                        <small>@UiStrings.Flashcards_Mode_AppendHint</small>
                     </span>
                 </label>
 
@@ -104,16 +104,15 @@
                            checked="@(generationMode == FlashcardGenerationMode.Replace)"
                            @onchange="() => generationMode = FlashcardGenerationMode.Replace" />
                     <span>
-                        <strong>Stapel ersetzen</strong><br />
-                        <small>Alle vorhandenen Karten werden durch die neuen ersetzt.</small>
+                        <strong>@UiStrings.Flashcards_Mode_Replace</strong><br />
+                        <small>@UiStrings.Flashcards_Mode_ReplaceHint</small>
                     </span>
                 </label>
 
                 @if (generationMode == FlashcardGenerationMode.Replace)
                 {
                     <div id="flash-mode-warning" role="alert" style="margin-top: 10px; padding: 8px 12px; background: var(--ss-danger-bg); border: 1px solid var(--ss-danger-border); color: var(--ss-danger-text); border-radius: 4px; font-size: 12px;">
-                        ⚠️ Achtung: Die @FlashVm.Flashcards.Count vorhandenen Karten werden gelöscht – samt Lernstand
-                        (@FlashVm.KnownCount gelernt, @FlashVm.DifficultCount zum Wiederholen). Das lässt sich nicht rückgängig machen.
+                        @Loc.Format(UiStrings.Flashcards_Mode_ReplaceWarning, ("count", FlashVm.Flashcards.Count), ("known", FlashVm.KnownCount), ("difficult", FlashVm.DifficultCount))
                     </div>
                 }
 
@@ -121,12 +120,12 @@
                     <button type="button" id="flash-mode-cancel"
                             style="padding: 7px 14px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; cursor: pointer; font-size: 13px;"
                             @onclick="CancelModeDialog">
-                        Abbrechen
+                        @UiStrings.Common_Cancel
                     </button>
                     <button type="button" id="flash-mode-confirm"
                             style="padding: 7px 14px; background: @(generationMode == FlashcardGenerationMode.Replace ? "var(--ss-danger)" : "var(--ss-primary)"); color: var(--ss-on-accent); border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 13px;"
                             @onclick="ConfirmModeDialogAsync">
-                        @(generationMode == FlashcardGenerationMode.Replace ? "Stapel ersetzen" : "Karten hinzufügen")
+                        @(generationMode == FlashcardGenerationMode.Replace ? UiStrings.Flashcards_Mode_Replace : UiStrings.Flashcards_Mode_AddCards)
                     </button>
                 </div>
             </div>
@@ -138,7 +137,7 @@
     {
         <div style="margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text);">
             <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">
-                🧠 KI analysiert Textstellen und formuliert Lernkarten...
+                @UiStrings.Flashcards_GeneratingInfo
             </div>
 
             <!-- Animierter Fortschrittsbalken -->
@@ -147,7 +146,7 @@
             </div>
 
             <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">
-                Dies kann je nach Hardware und Kontextgröße einige Sekunden dauern.
+                @UiStrings.Flashcards_GeneratingWait
             </div>
         </div>
     }
@@ -157,7 +156,7 @@
     {
         <div style="margin-top: 12px; padding: 8px 12px; background: @(isErrorMessage ? "var(--ss-danger-bg)" : "var(--ss-success-bg)"); border: 1px solid @(isErrorMessage ? "var(--ss-danger-border)" : "var(--ss-success-border)"); color: @(isErrorMessage ? "var(--ss-danger-text)" : "var(--ss-success-text)"); border-radius: 4px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
             <span>@statusMessage</span>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px;" @onclick="() => statusMessage = null">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px;" aria-label="@UiStrings.Common_Dismiss" title="@UiStrings.Common_Dismiss" @onclick="() => statusMessage = null">✕</button>
         </div>
     }
 
@@ -166,25 +165,25 @@
         <button type="button"
                 style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-border); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "var(--ss-chip-active-bg)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.All ? "var(--ss-chip-active-text)" : "var(--ss-text)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.All)">
-            Alle (@FlashVm.TotalCount)
+            @Loc.Format(UiStrings.Flashcards_Filter_All, ("count", FlashVm.TotalCount))
         </button>
 
         <button type="button"
                 style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-danger); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "var(--ss-danger)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.DifficultOnly ? "var(--ss-on-accent)" : "var(--ss-danger-fg)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.DifficultOnly)">
-            🔴 Wiederholen (@FlashVm.DifficultCount)
+            @Loc.Format(UiStrings.Flashcards_Filter_Difficult, ("count", FlashVm.DifficultCount))
         </button>
 
         <button type="button"
                 style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-secondary); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "var(--ss-secondary)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.NewOnly ? "var(--ss-on-accent)" : "var(--ss-text-muted)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.NewOnly)">
-            ⚪ Neu (@FlashVm.NewCount)
+            @Loc.Format(UiStrings.Flashcards_Filter_New, ("count", FlashVm.NewCount))
         </button>
 
         <button type="button"
                 style="padding: 5px 12px; font-size: 12px; border-radius: 20px; border: 1px solid var(--ss-success); cursor: pointer; background: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "var(--ss-success)" : "var(--ss-surface)"); color: @(FlashVm.SelectedFilter == FlashcardStatusFilter.KnownOnly ? "var(--ss-on-accent)" : "var(--ss-success-fg)"); font-weight: bold;"
                 @onclick="() => SetFilter(FlashcardStatusFilter.KnownOnly)">
-            🟢 Gelernt (@FlashVm.KnownCount)
+            @Loc.Format(UiStrings.Flashcards_Filter_Known, ("count", FlashVm.KnownCount))
         </button>
     </div>
 
@@ -194,9 +193,9 @@
         {
             <div style="text-align: center; color: var(--ss-text-muted); max-width: 420px; background: var(--ss-surface); padding: 30px; border-radius: 8px; border: 1px dashed var(--ss-border);">
                 <div style="font-size: 34px; margin-bottom: 10px;">🎴</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Keine passenden Karteikarten vorhanden.</p>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">@UiStrings.Flashcards_Empty</p>
                 <span style="font-size: 12px; color: var(--ss-text-muted); line-height: 1.4; display: block;">
-                    Aktivieren Sie links mindestens ein PDF-Dokument und klicken Sie oben auf „✨ Neue Karten erstellen“.
+                    @UiStrings.Flashcards_EmptyHint
                 </span>
             </div>
         }
@@ -207,11 +206,11 @@
                  @onclick="FlipCardAsync">
 
                 <!-- Karten-Kopfzeile -->
-                <div style="padding: 12px 18px; border-bottom: 1px solid var(--ss-border-faint); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ss-text-muted); background: var(--ss-sidebar-bg); border-top-left-radius: 10px; border-top-right-radius: 10px;">
+                <div style="padding: 12px 18px; border-bottom: 1px solid var(--ss-border-faint); display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--ss-text-muted); background: var(--ss-sidebar-bg); border-start-start-radius: 10px; border-start-end-radius: 10px;">
                     <span style="font-weight: bold; letter-spacing: 0.5px; color: @(FlashVm.IsAnswerRevealed ? "var(--ss-success-fg)" : "var(--ss-link)");">
-                        @(FlashVm.IsAnswerRevealed ? "ANTWORT" : "FRAGE")
+                        @(FlashVm.IsAnswerRevealed ? UiStrings.Flashcards_Answer : UiStrings.Flashcards_Question)
                     </span>
-                    <span>Status: @GetStatusLabel(FlashVm.CurrentCard.Status)</span>
+                    <span>@Loc.Format(UiStrings.Flashcards_Status, ("status", GetStatusLabel(FlashVm.CurrentCard.Status)))</span>
                 </div>
 
                 <!-- Karten-Inhalt -->
@@ -223,7 +222,7 @@
 
                 <!-- Interaktiver Hinweis unten -->
                 <div style="padding: 10px; text-align: center; font-size: 11px; color: var(--ss-text-faint); border-top: 1px solid var(--ss-border-faint);">
-                    Klicken oder [Leertaste] zum Umdrehen
+                    @UiStrings.Flashcards_FlipHint
                 </div>
             </div>
         }
@@ -240,8 +239,8 @@
                         style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--ss-text-2); background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 6px; cursor: @(!FlashVm.HasPreviousCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasPreviousCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
                         disabled="@(!FlashVm.HasPreviousCard)"
                         @onclick="PreviousCardAsync">
-                    <span>◀</span>
-                    <span>Zurück</span>
+                    <span class="ss-flip-rtl">◀</span>
+                    <span>@UiStrings.Common_Back</span>
                     <span style="font-size: 11px; color: var(--ss-text-muted); font-weight: normal;">[←]</span>
                 </button>
 
@@ -252,12 +251,12 @@
                         <button type="button"
                                 style="padding: 9px 18px; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(220,53,69,0.25);"
                                 @onclick="() => RateAsync(FlashcardStatus.Difficult)">
-                            ✕ Nicht gewusst [1]
+                            @UiStrings.Flashcards_DidNotKnow
                         </button>
                         <button type="button"
                                 style="padding: 9px 18px; background: var(--ss-success); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(40,167,69,0.25);"
                                 @onclick="() => RateAsync(FlashcardStatus.Known)">
-                            ✓ Gewusst [2]
+                            @UiStrings.Flashcards_Knew
                         </button>
                     }
                     else
@@ -265,7 +264,7 @@
                         <button type="button"
                                 style="padding: 9px 24px; background: var(--ss-info); color: var(--ss-on-accent); border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 13px; box-shadow: 0 2px 4px rgba(23,162,184,0.25);"
                                 @onclick="FlipCardAsync">
-                            Aufdecken [Leertaste]
+                            @UiStrings.Flashcards_Reveal
                         </button>
                     }
                 </div>
@@ -275,31 +274,31 @@
                         style="padding: 9px 18px; font-size: 13px; font-weight: 600; color: var(--ss-text-2); background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 6px; cursor: @(!FlashVm.HasNextCard ? "not-allowed" : "pointer"); opacity: @(!FlashVm.HasNextCard ? "0.45" : "1"); display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.15s ease;"
                         disabled="@(!FlashVm.HasNextCard)"
                         @onclick="NextCardAsync">
-                    <span>Weiter</span>
+                    <span>@UiStrings.Common_Next</span>
                     <span style="font-size: 11px; color: var(--ss-text-muted); font-weight: normal;">[→]</span>
-                    <span>▶</span>
+                    <span class="ss-flip-rtl">▶</span>
                 </button>
             </div>
 
             <div style="text-align: center; font-size: 11px; color: var(--ss-text-muted);">
-                Tastaturnavigation aktiv: <b>Leertaste</b>: Drehen | <b>← / →</b>: Vor/Zurück | <b>1</b>: Nicht gewusst | <b>2</b>: Gewusst
+                @((MarkupString)UiStrings.Flashcards_KeyboardHelp)
             </div>
         </div>
     }
 
     <!-- Versteckter Druckbereich für DIN-A4 -->
     <div class="print-only-container">
-        <h2 style="margin-bottom: 20px;">Lernkarteikarten: @DocVm.CurrentProfile</h2>
+        <h2 style="margin-bottom: 20px;">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfile))</h2>
         <div class="print-grid">
             @foreach (var card in FlashVm.FilteredFlashcards)
             {
                 <div class="print-card">
                     <div class="print-question">
-                        <strong>Frage:</strong><br />
+                        <strong>@UiStrings.Flashcards_PrintQuestion</strong><br />
                         @card.Question
                     </div>
                     <div class="print-answer">
-                        <strong>Antwort:</strong><br />
+                        <strong>@UiStrings.Flashcards_PrintAnswer</strong><br />
                         @card.Answer
                     </div>
                 </div>
@@ -352,16 +351,16 @@
 
             @@keyframes progress-slide {
                 0% {
-                    left: -40%;
+                    left: -40%;  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
                 }
 
                 50% {
-                    left: 40%;
+                    left: 40%;  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
                     width: 50%;
                 }
 
                 100% {
-                    left: 100%;
+                    left: 100%;  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
                     width: 40%;
                 }
             }
@@ -429,7 +428,7 @@
                 .print-only-container {
                     display: block !important;
                     position: absolute;
-                    left: 0;
+                    inset-inline-start: 0;
                     top: 0;
                     width: 100%;
                 }
@@ -541,7 +540,7 @@
         if (!hasActiveDocs)
         {
             isErrorMessage = true;
-            statusMessage = "⚠️ Bitte wählen Sie links in der Liste mindestens ein PDF-Dokument aus, um Lernkarten zu erstellen.";
+            statusMessage = UiStrings.Flashcards_NoDocuments;
             StateHasChanged();
             return;
         }
@@ -588,33 +587,30 @@
                 selectedCardCount,
                 mode);
 
-            var skippedText = result.SkippedDuplicates > 0
-                ? $" {result.SkippedDuplicates} doppelte Frage(n) wurden weggelassen."
-                : string.Empty;
-
             if (result.Added > 0)
             {
-                statusMessage = mode == FlashcardGenerationMode.Replace && hadCards
-                    ? $"✓ Der Stapel wurde durch {result.Added} neue Lernkarteikarten ersetzt.{skippedText}"
-                    : $"✓ Es wurden {result.Added} neue Lernkarteikarten hinzugefügt.{skippedText}";
+                var added = Loc.Format(mode == FlashcardGenerationMode.Replace && hadCards ? UiStrings.Flashcards_Replaced : UiStrings.Flashcards_Added,
+                    ("count", result.Added));
+                statusMessage = result.SkippedDuplicates > 0
+                    ? Sentences(added, Loc.Format(UiStrings.Flashcards_SkippedDuplicates, ("count", result.SkippedDuplicates)))
+                    : added;
             }
             else if (result.Received > 0)
             {
                 isErrorMessage = true;
-                statusMessage = "⚠️ Die KI hat nur Fragen geliefert, die es im Stapel schon gibt – es wurde nichts hinzugefügt. Bitte erneut versuchen oder andere Dokumente aktivieren.";
+                statusMessage = UiStrings.Flashcards_OnlyDuplicates;
             }
             else
             {
                 isErrorMessage = true;
-                statusMessage = "⚠️ Die KI hat keine verwertbaren Karteikarten geliefert. Bitte erneut auf „Neue Karten erstellen“ klicken."
-                    + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
+                statusMessage = hadCards ? Sentences(UiStrings.Flashcards_NothingUsable, UiStrings.Flashcards_KeptExisting) : UiStrings.Flashcards_NothingUsable;
             }
         }
         catch (Exception ex)
         {
             isErrorMessage = true;
-            statusMessage = $"⚠️ Fehler beim Erstellen der Karteikarten: {ex.Message}"
-                + (hadCards ? " Ihre vorhandenen Karten bleiben unverändert." : string.Empty);
+            var error = Loc.Format(UiStrings.Flashcards_Error, ("error", ex.Message));
+            statusMessage = hadCards ? Sentences(error, UiStrings.Flashcards_KeptExisting) : error;
         }
 
         await EnsureFocusAsync();
@@ -663,10 +659,13 @@
 
     private string GetStatusLabel(FlashcardStatus status) => status switch
     {
-        FlashcardStatus.Known => "🟢 Gelernt",
-        FlashcardStatus.Difficult => "🔴 Wiederholen",
-        _ => "⚪ Neu"
+        FlashcardStatus.Known => UiStrings.Flashcards_Status_Known,
+        FlashcardStatus.Difficult => UiStrings.Flashcards_Status_Difficult,
+        _ => UiStrings.Flashcards_Status_New
     };
+
+    /// <summary>Zwei eigenständige Sätze hintereinander (jeder für sich übersetzt, keine Satzteile).</summary>
+    private static string Sentences(string first, string second) => $"{first} {second}";
 
     private async Task PrintCardsAsync()
     {
@@ -677,13 +676,12 @@
     {
         try
         {
-            var defaultName = $"Karteikarten_{DocVm.CurrentProfile}_{DateTime.Now:yyyyMMdd_HHmm}.md";
+            var defaultName = Loc.Format(UiStrings.Flashcards_ExportFileName, ("profile", DocVm.CurrentProfile), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm")));
 
             var selectedPath = await DesktopDialogs.SaveFileAsync(
                 defaultName,
                 filterExtension: "md",
-                filterDescription: "Markdown-Dateien (*.md)",
-                title: "Karteikarten exportieren als...");
+                title: UiStrings.Flashcards_ExportTitle);
 
             if (string.IsNullOrWhiteSpace(selectedPath))
             {
@@ -694,12 +692,12 @@
             await File.WriteAllTextAsync(selectedPath, mdContent);
 
             isErrorMessage = false;
-            statusMessage = $"✓ Erfolgreich exportiert nach: {Path.GetFileName(selectedPath)}";
+            statusMessage = Loc.Format(UiStrings.Common_Exported, ("file", Path.GetFileName(selectedPath)));
         }
         catch (Exception ex)
         {
             isErrorMessage = true;
-            statusMessage = $"⚠️ Fehler beim Exportieren: {ex.Message}";
+            statusMessage = Loc.Format(UiStrings.Common_ExportFailed, ("error", ex.Message));
         }
 
         await InvokeAsync(StateHasChanged);
@@ -709,7 +707,7 @@
     private async Task ClearCardsAsync()
     {
         await FlashVm.ClearFlashcardsAsync(DocVm.CurrentProfile);
-        statusMessage = "✓ Alle Karteikarten für dieses Profil wurden gelöscht.";
+        statusMessage = UiStrings.Flashcards_Cleared;
         await InvokeAsync(StateHasChanged);
     }
 

@@ -264,8 +264,7 @@ public class DataTableViewModel : INotifyPropertyChanged
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Datentabelle", "✨ Tabelle erstellen",
-                    "keine Datentabelle", "einer Datentabelle", "eine Datentabelle");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.DataTable, "✨ Tabelle erstellen");
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -352,8 +351,7 @@ public class DataTableViewModel : INotifyPropertyChanged
 
             if (result.FailureReason != MindmapFailureReason.None)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Datentabelle", "➕ Weitere Zeilen ergänzen",
-                    "keine neuen Zeilen", "neuen Zeilen", "neue Zeilen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.NewRows, "➕ Weitere Zeilen ergänzen");
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }

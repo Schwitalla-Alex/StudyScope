@@ -1,4 +1,4 @@
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace StudyScope.Tests.Localization;
 
@@ -32,6 +32,12 @@ public class LogicalCssTests
         "Components/StatusBar.razor",
         "Components/SupportDialog.razor",
         "Components/TabBar.razor",
+        // 3a-2 Lernen
+        "Components/FlashcardView.razor",
+        "Components/MindmapView.razor",
+        "Components/PresentationView.razor",
+        "Components/QuizView.razor",
+        "Components/SlideView.razor",
     };
 
     private static readonly Regex Physical = new(

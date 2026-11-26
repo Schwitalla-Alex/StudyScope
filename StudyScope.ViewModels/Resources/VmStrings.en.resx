@@ -89,4 +89,87 @@
   <data name="Chat_Log_Unrated" xml:space="preserve"><value>— Not rated</value></data>
   <data name="Chat_Log_Rating" xml:space="preserve"><value>[Rating: {rating}]</value></data>
   <data name="Speech_PrivacyHint" xml:space="preserve"><value>Privacy: with Gemini TTS, the script text is sent to Google. In the free tier, Google may use the input to improve its services.</value></data>
+  <data name="Common_Regenerate" xml:space="preserve"><value>Regenerate</value></data>
+  <data name="GenStatus_TipFewerDocuments" xml:space="preserve"><value>Select fewer documents at a time so the response is shorter.</value></data>
+  <data name="GenStatus_TipOtherModel" xml:space="preserve"><value>Choose a larger or different model in Settings. Small local models often cut long responses short.</value></data>
+  <data name="GenStatus_TipCheckSettings" xml:space="preserve"><value>Check the connection, the model and, if needed, the API key in Settings (“Save &amp; connect”).</value></data>
+  <data name="GenStatus_TipRetry" xml:space="preserve"><value>Click “{button}” again – the AI answers a little differently each time.</value></data>
+  <data name="GenStatus_NoContent" xml:space="preserve"><value>⚠️ No text could be read from the selected documents.</value></data>
+  <data name="GenStatus_NoContent_Tip" xml:space="preserve"><value>Check that the files still exist and contain text (scanned PDFs without text recognition contain only images).</value></data>
+  <data name="GenStatus_EmptyResponse" xml:space="preserve"><value>⚠️ The AI did not return a response.</value></data>
+  <data name="GenStatus_EmptyResponse_TipLocal" xml:space="preserve"><value>For local models: Is Ollama or LM Studio running and is the model loaded?</value></data>
+  <data name="GenStatus_ServiceError" xml:space="preserve"><value>⚠️ The AI service reported an error, so {subject, select, mindmap {no mind map} presentation {no presentation} topicList {no topic list} quiz {no quiz} audioScript {no audio script} dataTable {no data table} newRows {no new rows} report {no report} videoScript {no video script} other {nothing}} could be generated.</value></data>
+  <data name="GenStatus_ServiceMessage" xml:space="preserve"><value>Message from the service: “{message}”</value></data>
+  <data name="GenStatus_PlainText" xml:space="preserve"><value>⚠️ The AI replied with plain text instead of {subject, select, mindmap {a mind map} presentation {a presentation} topicList {a topic list} quiz {a quiz} audioScript {an audio script} dataTable {a data table} newRows {new rows} report {a report} videoScript {a video script} other {the expected result}}.</value></data>
+  <data name="GenStatus_NoTopics" xml:space="preserve"><value>⚠️ The AI found no topics for {subject, select, mindmap {a mind map} presentation {a presentation} topicList {a topic list} quiz {a quiz} audioScript {an audio script} dataTable {a data table} newRows {new rows} report {a report} videoScript {a video script} other {a result}} in the documents.</value></data>
+  <data name="GenStatus_NoTopics_Tip" xml:space="preserve"><value>Use documents with more running text.</value></data>
+  <data name="GenStatus_InvalidJson" xml:space="preserve"><value>⚠️ The response from the AI was incomplete or invalid, so {subject, select, mindmap {no mind map} presentation {no presentation} topicList {no topic list} quiz {no quiz} audioScript {no audio script} dataTable {no data table} newRows {no new rows} report {no report} videoScript {no video script} other {nothing}} could be generated.</value></data>
+  <data name="Mindmap_Create" xml:space="preserve"><value>Generate mind map</value></data>
+  <data name="Mindmap_Success" xml:space="preserve"><value>✓ Mind map with {count, plural, one {# topic} other {# topics}} generated. Click a topic for details.</value></data>
+  <data name="Mindmap_SuccessRepaired" xml:space="preserve"><value>✓ Mind map with {count, plural, one {# topic} other {# topics}} generated. However, the response from the AI was incomplete or invalid, so some topics may be missing.</value></data>
+  <data name="Mindmap_SuccessRepaired_TipRegenerate" xml:space="preserve"><value>For a complete mind map, click “{button}” – the AI answers a little differently each time.</value></data>
+  <data name="Mindmap_SuccessRepaired_TipFewer" xml:space="preserve"><value>Only for very extensive materials: select fewer documents so the response is shorter.</value></data>
+  <data name="Mindmap_NoDocuments" xml:space="preserve"><value>⚠️ Select at least one document on the left to generate a mind map.</value></data>
+  <data name="Mindmap_Cancelled" xml:space="preserve"><value>Mind map generation was canceled.</value></data>
+  <data name="Mindmap_Error" xml:space="preserve"><value>⚠️ Could not generate the mind map: {error}</value></data>
+  <data name="Mindmap_Deleted" xml:space="preserve"><value>✓ The mind map for this profile was deleted.</value></data>
+  <data name="Mindmap_SourceInfo" xml:space="preserve"><value>Created on {date}</value></data>
+  <data name="Mindmap_SourceInfoWithSources" xml:space="preserve"><value>Created on {date} from: {sources}</value></data>
+  <data name="Mindmap_Zoom" xml:space="preserve"><value>{percent}%</value></data>
+  <data name="Mindmap_QuestionOverview" xml:space="preserve"><value>Give me an overview of “{topic}” based on my materials.</value></data>
+  <data name="Mindmap_QuestionInContext" xml:space="preserve"><value>Explain “{topic}” in the context of “{parent}” based on my materials.</value></data>
+  <data name="Presentation_GenerateAi" xml:space="preserve"><value>Generate with AI</value></data>
+  <data name="Presentation_Present" xml:space="preserve"><value>▶ Present</value></data>
+  <data name="Presentation_DefaultFileName" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Presentation_SourceInfo" xml:space="preserve"><value>{count, plural, one {# slide} other {# slides}}, created on {date} {origin, select, mindmap {from the mind map} other {by the AI}}</value></data>
+  <data name="Presentation_SourceInfoWithSources" xml:space="preserve"><value>{count, plural, one {# slide} other {# slides}}, created on {date} {origin, select, mindmap {from the mind map} other {by the AI}} – sources: {sources}</value></data>
+  <data name="Presentation_NoDocuments" xml:space="preserve"><value>⚠️ Select at least one document on the left to generate a presentation.</value></data>
+  <data name="Presentation_Cancelled" xml:space="preserve"><value>Presentation generation was canceled.</value></data>
+  <data name="Presentation_Success" xml:space="preserve"><value>✓ Presentation with {count, plural, one {# slide} other {# slides}} generated. Click “{button}” to start presentation mode.</value></data>
+  <data name="Presentation_SuccessRepaired" xml:space="preserve"><value>✓ Presentation with {count, plural, one {# slide} other {# slides}} generated. However, the response from the AI was incomplete or invalid, so some slides may be missing.</value></data>
+  <data name="Presentation_SuccessRepaired_Tip" xml:space="preserve"><value>For a complete presentation, generate it again or choose fewer slides or documents.</value></data>
+  <data name="Presentation_Error" xml:space="preserve"><value>⚠️ Could not generate the presentation: {error}</value></data>
+  <data name="Presentation_NoMindmap" xml:space="preserve"><value>⚠️ There is no mind map for this profile yet.</value></data>
+  <data name="Presentation_NoMindmap_TipCreate" xml:space="preserve"><value>First generate a mind map in the “🧠 {tab}” tab.</value></data>
+  <data name="Presentation_NoMindmap_TipAi" xml:space="preserve"><value>Or click “✨ {button}” to generate the presentation directly from the documents.</value></data>
+  <data name="Presentation_FromMindmapDone" xml:space="preserve"><value>✓ Presentation with {count, plural, one {# slide} other {# slides}} created from the mind map.</value></data>
+  <data name="Presentation_Deleted" xml:space="preserve"><value>✓ The presentation for this profile was deleted.</value></data>
+  <data name="Presentation_PptxExported" xml:space="preserve"><value>✓ Exported as PowerPoint: {file}</value></data>
+  <data name="Presentation_PptxError" xml:space="preserve"><value>⚠️ Could not export to PowerPoint: {error}</value></data>
+  <data name="Presentation_PptxError_Tip" xml:space="preserve"><value>Is the file still open in PowerPoint? Close it and export again.</value></data>
+  <data name="Quiz_NewTopic" xml:space="preserve"><value>➕ New topic</value></data>
+  <data name="Quiz_SuggestTopics" xml:space="preserve"><value>✨ Suggest topics</value></data>
+  <data name="Quiz_Start" xml:space="preserve"><value>▶ Start quiz</value></data>
+  <data name="Quiz_FormNameMissing" xml:space="preserve"><value>Enter a name for the topic.</value></data>
+  <data name="Quiz_FormNameExists" xml:space="preserve"><value>A topic named “{name}” already exists.</value></data>
+  <data name="Quiz_FormNoDocuments" xml:space="preserve"><value>Select at least one document for the questions to come from.</value></data>
+  <data name="Quiz_TopicSaved" xml:space="preserve"><value>✓ Topic “{name}” saved.</value></data>
+  <data name="Quiz_TopicCreated" xml:space="preserve"><value>✓ Topic “{name}” created. Questions will be generated for the first quiz.</value></data>
+  <data name="Quiz_TopicDeleted" xml:space="preserve"><value>✓ Topic “{name}” deleted.</value></data>
+  <data name="Quiz_QuestionsReset" xml:space="preserve"><value>✓ The questions for “{name}” were discarded. New ones will be generated for the next quiz.</value></data>
+  <data name="Quiz_SuggestNoDocuments" xml:space="preserve"><value>⚠️ Select at least one document on the left so the AI can suggest topics.</value></data>
+  <data name="Quiz_SuggestProgress" xml:space="preserve"><value>🧠 The AI is reading the documents and looking for topics…</value></data>
+  <data name="Quiz_SuggestCancelled" xml:space="preserve"><value>Topic search was canceled.</value></data>
+  <data name="Quiz_SuggestOnlyKnown" xml:space="preserve"><value>The AI only found topics that already exist.</value></data>
+  <data name="Quiz_SuggestError" xml:space="preserve"><value>⚠️ Could not search for topics: {error}</value></data>
+  <data name="Quiz_SuggestionsAccepted" xml:space="preserve"><value>✓ {count, plural, one {# topic} other {# topics}} added and selected for the next quiz.</value></data>
+  <data name="Quiz_NoTopicSelected" xml:space="preserve"><value>⚠️ Select at least one topic for the quiz.</value></data>
+  <data name="Quiz_NoTopicSelected_Tip" xml:space="preserve"><value>Create a topic with “{newTopic}” or let the AI create some with “{suggest}”.</value></data>
+  <data name="Quiz_NoTypeSelected" xml:space="preserve"><value>⚠️ Select at least one question type.</value></data>
+  <data name="Quiz_GenerateProgress" xml:space="preserve"><value>✨ The AI is generating questions on “{topic}”… ({done} of {total} new questions)</value></data>
+  <data name="Quiz_NoQuestions" xml:space="preserve"><value>⚠️ There are no questions for the selected topics and question types.</value></data>
+  <data name="Quiz_NoQuestions_Tip" xml:space="preserve"><value>Select more question types or topics.</value></data>
+  <data name="Quiz_Partial" xml:space="preserve"><value>Only {count} of {requested} questions could be generated – the quiz starts with these.</value></data>
+  <data name="Quiz_Partial_Tip" xml:space="preserve"><value>For more questions: add more documents to the topic or choose a larger model.</value></data>
+  <data name="Quiz_RunningNote" xml:space="preserve"><value>The quiz is running. Note:</value></data>
+  <data name="Quiz_RepairedNote" xml:space="preserve"><value>A response from the AI was incomplete or invalid; only complete questions were kept.</value></data>
+  <data name="Quiz_GenerateCancelled" xml:space="preserve"><value>Question generation was canceled. Questions already generated stay in the question pool.</value></data>
+  <data name="Quiz_StartError" xml:space="preserve"><value>⚠️ Could not start the quiz: {error}</value></data>
+  <data name="Quiz_MissingDocuments" xml:space="preserve"><value>Not found (moved or deleted?): {files}. Adjust the documents of the topic with ✏️.</value></data>
+  <data name="Quiz_NoWrongQuestions" xml:space="preserve"><value>There are no incorrectly answered questions to retry.</value></data>
+  <data name="Quiz_HistoryCleared" xml:space="preserve"><value>✓ The history was deleted.</value></data>
+  <data name="Quiz_Verdict_Excellent" xml:space="preserve"><value>Excellent! 🎉</value></data>
+  <data name="Quiz_Verdict_VeryGood" xml:space="preserve"><value>Very well done! 👍</value></data>
+  <data name="Quiz_Verdict_Good" xml:space="preserve"><value>Good – with a little review it will stick soon. 💪</value></data>
+  <data name="Quiz_Verdict_KeepGoing" xml:space="preserve"><value>There is room for more – retry the incorrect questions. 📚</value></data>
 </root>

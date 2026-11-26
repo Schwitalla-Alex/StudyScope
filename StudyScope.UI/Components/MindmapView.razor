@@ -12,9 +12,9 @@
     <!-- Obere Steuerleiste -->
     <div class="mm-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Mindmap: @DocVm.CurrentProfile</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Mindmap_Title, ("name", DocVm.CurrentProfile))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
-                @(MapVm.HasMindmap ? MapVm.SourceInfoText : "Noch keine Mindmap für dieses Profil")
+                @(MapVm.HasMindmap ? MapVm.SourceInfoText : UiStrings.Mindmap_NoneForProfile)
             </span>
         </div>
 
@@ -22,36 +22,36 @@
             @if (MapVm.IsGenerating)
             {
                 <button type="button" class="mm-btn" style="background: var(--ss-secondary);" @onclick="MapVm.CancelGeneration">
-                    <span class="mm-spinner"></span> Abbrechen
+                    <span class="mm-spinner"></span> @UiStrings.Common_Cancel
                 </button>
             }
             else
             {
                 <button type="button" class="mm-btn" style="background: var(--ss-primary);"
-                        title="Mindmap aus den links aktivierten Dokumenten erstellen"
+                        title="@UiStrings.Mindmap_CreateTitle"
                         @onclick="GenerateAsync">
-                    ✨ @(MapVm.HasMindmap ? "Neu erstellen" : "Mindmap erstellen")
+                    ✨ @(MapVm.HasMindmap ? VmStrings.Common_Regenerate : VmStrings.Mindmap_Create)
                 </button>
             }
 
             @if (MapVm.HasMindmap && !MapVm.IsGenerating)
             {
                 <span class="mm-group">
-                    <button type="button" class="mm-btn-outline" title="Alle Äste aufklappen" @onclick="MapVm.ExpandAll">⊞ Alle auf</button>
-                    <button type="button" class="mm-btn-outline" title="Nur Hauptäste zeigen" @onclick="MapVm.CollapseAll">⊟ Alle zu</button>
+                    <button type="button" class="mm-btn-outline" title="@UiStrings.Mindmap_ExpandAllTitle" @onclick="MapVm.ExpandAll">@UiStrings.Mindmap_ExpandAll</button>
+                    <button type="button" class="mm-btn-outline" title="@UiStrings.Mindmap_CollapseAllTitle" @onclick="MapVm.CollapseAll">@UiStrings.Mindmap_CollapseAll</button>
                 </span>
 
                 <span class="mm-group">
-                    <button type="button" class="mm-btn-outline" title="Verkleinern" disabled="@(MapVm.Zoom <= MindmapViewModel.MinZoom)" @onclick="MapVm.ZoomOut">−</button>
-                    <button type="button" class="mm-btn-outline" title="Zoom zurücksetzen" style="min-width: 62px;" @onclick="MapVm.ResetZoom">@MapVm.ZoomText</button>
-                    <button type="button" class="mm-btn-outline" title="Vergrößern" disabled="@(MapVm.Zoom >= MindmapViewModel.MaxZoom)" @onclick="MapVm.ZoomIn">+</button>
+                    <button type="button" class="mm-btn-outline" title="@UiStrings.Mindmap_ZoomOut" aria-label="@UiStrings.Mindmap_ZoomOut" disabled="@(MapVm.Zoom <= MindmapViewModel.MinZoom)" @onclick="MapVm.ZoomOut">−</button>
+                    <button type="button" class="mm-btn-outline" title="@UiStrings.Mindmap_ZoomReset" style="min-width: 62px;" @onclick="MapVm.ResetZoom">@MapVm.ZoomText</button>
+                    <button type="button" class="mm-btn-outline" title="@UiStrings.Mindmap_ZoomIn" aria-label="@UiStrings.Mindmap_ZoomIn" disabled="@(MapVm.Zoom >= MindmapViewModel.MaxZoom)" @onclick="MapVm.ZoomIn">+</button>
                 </span>
 
                 <button type="button" class="mm-btn" style="background: var(--ss-secondary);"
-                        title="Mindmap als Grafik drucken oder als PDF speichern (gedruckt wird die aktuelle Ansicht – vorher ggf. „Alle auf“ klicken)"
-                        @onclick="PrintAsync">🖨️ Drucken / PDF</button>
-                <button type="button" class="mm-btn" style="background: var(--ss-info);" title="Als Markdown-Gliederung exportieren" @onclick="ExportMarkdownAsync">📄 Export (.md)</button>
-                <button type="button" class="mm-btn" style="background: var(--ss-danger);" title="Mindmap dieses Profils löschen" @onclick="DeleteAsync">🗑️ Löschen</button>
+                        title="@UiStrings.Mindmap_PrintTitle"
+                        @onclick="PrintAsync">@UiStrings.Common_PrintPdf</button>
+                <button type="button" class="mm-btn" style="background: var(--ss-info);" title="@UiStrings.Mindmap_ExportTitle" @onclick="ExportMarkdownAsync">@UiStrings.Common_ExportMd</button>
+                <button type="button" class="mm-btn" style="background: var(--ss-danger);" title="@UiStrings.Mindmap_DeleteTitle" @onclick="DeleteAsync">🗑️ @UiStrings.Common_Delete</button>
             }
         </div>
     </div>
@@ -59,9 +59,9 @@
     @if (MapVm.IsGenerating)
     {
         <div class="mm-info">
-            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">🧠 KI analysiert die Dokumente und ordnet die Themen ...</div>
+            <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">@UiStrings.Mindmap_GeneratingInfo</div>
             <div class="mm-progress"><div class="mm-progress-bar"></div></div>
-            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</div>
+            <div style="font-size: 11px; margin-top: 6px; color: var(--ss-text-muted);">@UiStrings.Common_GenerationWait</div>
         </div>
     }
 
@@ -77,8 +77,8 @@
 
                 @if (MapVm.StatusTips.Count > 0)
                 {
-                    <div style="margin-top: 6px;">@(MapVm.IsError ? "Das können Sie tun:" : "Tipp:")</div>
-                    <ul style="margin: 2px 0 0 18px; line-height: 1.5;">
+                    <div style="margin-top: 6px;">@(MapVm.IsError ? UiStrings.Common_WhatYouCanDo : UiStrings.Common_Tip)</div>
+                    <ul style="margin-block: 2px 0; margin-inline: 18px 0; line-height: 1.5;">
                         @foreach (var tip in MapVm.StatusTips)
                         {
                             <li>@tip</li>
@@ -89,12 +89,12 @@
                 @if (!string.IsNullOrEmpty(MapVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">@UiStrings.Common_TechnicalDetailsAi</summary>
                         <pre class="mm-details-raw">@MapVm.StatusDetails</pre>
                     </details>
                 }
             </div>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="MapVm.ClearStatus">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="@UiStrings.Common_Dismiss" aria-label="@UiStrings.Common_Dismiss" @onclick="MapVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -104,10 +104,9 @@
         {
             <div class="mm-empty">
                 <div style="font-size: 34px; margin-bottom: 10px;">🧠</div>
-                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Mindmap vorhanden.</p>
+                <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">@UiStrings.Mindmap_Empty</p>
                 <span style="font-size: 12px; line-height: 1.4; display: block;">
-                    Aktivieren Sie links ein oder mehrere Dokumente und klicken Sie oben auf „✨ Mindmap erstellen“.
-                    Die KI ordnet die Inhalte dann als Themenbaum an.
+                    @Loc.Format(UiStrings.Mindmap_EmptyHint, ("button", VmStrings.Mindmap_Create))
                 </span>
             </div>
         }
@@ -117,8 +116,8 @@
             <div class="mm-canvas" @onclick="() => MapVm.SelectNode(null)">
                 <!-- Kopfzeile nur für Druck/PDF -->
                 <div class="mm-print-header">
-                    <div style="font-size: 16pt; font-weight: 600;">Mindmap: @MapVm.Mindmap!.Root.Title</div>
-                    <div style="font-size: 9pt; color: var(--ss-text-muted);">@MapVm.SourceInfoText · Profil: @DocVm.CurrentProfile</div>
+                    <div style="font-size: 16pt; font-weight: 600;">@Loc.Format(UiStrings.Mindmap_Title, ("name", MapVm.Mindmap!.Root.Title))</div>
+                    <div style="font-size: 9pt; color: var(--ss-text-muted);">@Loc.Format(UiStrings.Mindmap_PrintSource, ("source", MapVm.SourceInfoText), ("profile", DocVm.CurrentProfile))</div>
                 </div>
                 <svg width="@F(layout.Width * MapVm.Zoom)" height="@F(layout.Height * MapVm.Zoom)"
                      viewBox="0 0 @F(layout.Width) @F(layout.Height)" xmlns="http://www.w3.org/2000/svg">
@@ -153,7 +152,7 @@
                         @if (item.HasChildren)
                         {
                             <g class="mm-toggle" @onclick="() => MapVm.ToggleNode(node.Id)" @onclick:stopPropagation="true">
-                                <title>@(item.IsExpanded ? "Zuklappen" : $"{node.Children.Count} Unterthemen aufklappen")</title>
+                                <title>@(item.IsExpanded ? UiStrings.Mindmap_Collapse : Loc.Format(UiStrings.Mindmap_ExpandChildren, ("count", node.Children.Count)))</title>
                                 <circle cx="@F(item.Right + ToggleRadius)" cy="@F(item.CenterY)" r="@F(ToggleRadius)"
                                         style="fill: var(--ss-surface); stroke: @(isRoot ? "var(--ss-mm-root)" : color);" stroke-width="1.5" />
                                 <text x="@F(item.Right + ToggleRadius)" y="@F(item.CenterY)" text-anchor="middle" dominant-baseline="central"
@@ -174,13 +173,13 @@
                     </div>
                     <h4 style="margin: 0 0 8px 0; font-size: 15px; color: var(--ss-text);">@selected.Title</h4>
                     <p style="font-size: 13px; line-height: 1.5; color: var(--ss-text); white-space: pre-wrap;">
-                        @(string.IsNullOrWhiteSpace(selected.Summary) ? "Keine Kurzbeschreibung vorhanden." : selected.Summary)
+                        @(string.IsNullOrWhiteSpace(selected.Summary) ? UiStrings.Mindmap_NoSummary : selected.Summary)
                     </p>
 
                     @if (selected.Children.Count > 0)
                     {
-                        <div style="font-size: 12px; color: var(--ss-text-muted); margin-top: 12px;">Unterthemen:</div>
-                        <ul style="margin: 4px 0 0 18px; font-size: 12px; color: var(--ss-text); line-height: 1.6;">
+                        <div style="font-size: 12px; color: var(--ss-text-muted); margin-top: 12px;">@UiStrings.Mindmap_Subtopics</div>
+                        <ul style="margin-block: 4px 0; margin-inline: 18px 0; font-size: 12px; color: var(--ss-text); line-height: 1.6;">
                             @foreach (var child in selected.Children)
                             {
                                 <li><a href="javascript:void(0)" style="color: var(--ss-link); text-decoration: none;" @onclick="() => MapVm.SelectNode(child.Id)">@child.Title</a></li>
@@ -189,12 +188,12 @@
                     }
 
                     <button type="button" class="mm-btn" style="background: var(--ss-success); width: 100%; margin-top: 16px; justify-content: center;"
-                            title="Frage zu diesem Thema im Chat stellen (mit Ihren Unterlagen als Grundlage)"
+                            title="@UiStrings.Mindmap_AskInChatTitle"
                             @onclick="() => AskInChatAsync(selected)">
-                        💬 Im Chat erklären lassen
+                        @UiStrings.Mindmap_AskInChat
                     </button>
                     <div style="font-size: 11px; color: var(--ss-text-muted); margin-top: 10px; line-height: 1.4;">
-                        Tipp: Doppelklick auf ein Thema klappt es auf oder zu.
+                        @UiStrings.Mindmap_DoubleClickTip
                     </div>
                 </aside>
             }
@@ -226,7 +225,7 @@
         @@keyframes mm-spin { to { transform: rotate(360deg); } }
         .mm-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .mm-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: mm-slide 1.4s ease-in-out infinite; }
-        @@keyframes mm-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        @@keyframes mm-slide { 0% { left: -40%; } 100% { left: 100%; } }  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
         .mm-print-header { display: none; }
 
         /* Druck / PDF: nur die Mindmap als Grafik, auf eine A4-Seite quer eingepasst */
@@ -234,7 +233,7 @@
             @@page { size: A4 landscape; margin: 12mm; }
             body * { visibility: hidden; }
             .mm-canvas, .mm-canvas * { visibility: visible; }
-            .mm-canvas { position: absolute; left: 0; top: 0; width: 100%; overflow: visible !important; border: none !important; border-radius: 0; }
+            .mm-canvas { position: absolute; left: 0; top: 0;  /* ss:physisch – Druckseite */ width: 100%; overflow: visible !important; border: none !important; border-radius: 0; }
             .mm-print-header { display: block; margin-bottom: 6mm; }
             .mm-root { overflow: visible !important; }
             .mm-canvas svg {
@@ -318,7 +317,7 @@
         }
         catch (Exception ex)
         {
-            MapVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true);
+            MapVm.ShowStatus(Loc.Format(UiStrings.Common_PrintDialogFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -327,20 +326,19 @@
         try
         {
             var path = await DesktopDialogs.SaveFileAsync(
-                $"Mindmap_{DocVm.CurrentProfile}_{DateTime.Now:yyyyMMdd_HHmm}.md",
+                Loc.Format(UiStrings.Mindmap_ExportFileName, ("profile", DocVm.CurrentProfile), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm"))),
                 filterExtension: "md",
-                filterDescription: "Markdown-Dateien (*.md)",
-                title: "Mindmap exportieren als...");
+                title: UiStrings.Mindmap_ExportDialogTitle);
 
             if (string.IsNullOrWhiteSpace(path))
                 return;
 
             await File.WriteAllTextAsync(path, MapVm.GetMarkdownExport());
-            MapVm.ShowStatus($"✓ Erfolgreich exportiert nach: {Path.GetFileName(path)}", isError: false);
+            MapVm.ShowStatus(Loc.Format(UiStrings.Common_Exported, ("file", Path.GetFileName(path))), isError: false);
         }
         catch (Exception ex)
         {
-            MapVm.ShowStatus($"⚠️ Fehler beim Exportieren: {ex.Message}", isError: true);
+            MapVm.ShowStatus(Loc.Format(UiStrings.Common_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 

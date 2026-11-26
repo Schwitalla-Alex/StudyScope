@@ -358,8 +358,7 @@ public class ReportViewModel : INotifyPropertyChanged
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Bericht", "✨ Bericht erstellen",
-                    "kein Bericht", "einem Bericht", "einen Bericht");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.Report, "✨ Bericht erstellen");
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }

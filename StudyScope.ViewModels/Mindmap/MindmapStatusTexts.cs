@@ -1,4 +1,6 @@
-﻿using StudyScope.Core.Models;
+﻿using StudyScope.Core.Localization;
+using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels.Mindmap;
 
@@ -6,7 +8,24 @@ namespace StudyScope.ViewModels.Mindmap;
 public sealed record MindmapStatusText(string Message, IReadOnlyList<string> Tips, string? Details);
 
 /// <summary>
-/// Übersetzt das Ergebnis einer Mindmap-Erzeugung in Meldungen für den Benutzer.
+/// Was erzeugt werden sollte. Die Meldungen wählen daraus per ICU-<c>select</c> die passende Wortform
+/// („keine Mindmap“, „einem Quiz“ …) – jede Sprache legt ihre Formen selbst in der Ressource fest.
+/// </summary>
+public enum GenerationSubject
+{
+    Mindmap,
+    Presentation,
+    TopicList,
+    Quiz,
+    AudioScript,
+    DataTable,
+    NewRows,
+    Report,
+    VideoScript
+}
+
+/// <summary>
+/// Übersetzt das Ergebnis einer KI-Erzeugung (Mindmap, Präsentation, Quiz, …) in Meldungen für den Benutzer.
 /// Die rohe KI-Antwort steht nicht im Hauptsatz, sondern nur in den (einklappbaren) Details.
 /// </summary>
 public static class MindmapStatusTexts
@@ -14,7 +33,7 @@ public static class MindmapStatusTexts
     private const int MaxDetailsLength = 2000;
     private const int MaxServiceMessageLength = 200;
 
-    /// <summary>Begriffe, an denen eine Fehlermeldung des KI-Dienstes erkannt wird.</summary>
+    /// <summary>Begriffe, an denen eine Fehlermeldung des KI-Dienstes erkannt wird (Dienste antworten deutsch oder englisch).</summary>
     private static readonly string[] ErrorKeywords =
     {
         "fehler", "error", "api-schlüssel", "api-key", "api key", "apikey", "unauthorized", "forbidden",
@@ -22,71 +41,63 @@ public static class MindmapStatusTexts
         "kein gültiger ki-provider", "not found", "401", "403", "404", "429", "500", "503"
     };
 
-    private const string TipFewerDocuments = "Aktivieren Sie weniger Dokumente gleichzeitig, damit die Antwort kürzer wird.";
-    private const string TipOtherModel = "Wählen Sie in den Einstellungen ein größeres oder anderes Modell. Kleine lokale Modelle brechen lange Antworten oft ab.";
-    private const string TipCheckSettings = "Prüfen Sie in den Einstellungen Verbindung, Modell und gegebenenfalls den API-Schlüssel („Speichern & Prüfen“).";
-
     public static MindmapStatusText ForFailure(MindmapGenerationResult result) =>
-        ForFailure(result.FailureReason, result.RawResponse, "Mindmap", "Mindmap erstellen");
+        ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.Mindmap, VmStrings.Mindmap_Create);
+
+    /// <summary>Wert für das ICU-<c>select</c> der Meldungen (z. B. „mindmap“, „topicList“).</summary>
+    public static string SelectKey(GenerationSubject subject)
+    {
+        var name = subject.ToString();
+        return char.ToLowerInvariant(name[0]) + name[1..];
+    }
 
     /// <summary>
-    /// Meldung für einen Misserfolg. Auch für die Präsentation genutzt: <paramref name="subject"/> ist der
-    /// Gegenstand („Mindmap“, „Präsentation“), <paramref name="buttonText"/> die Beschriftung des Erstellen-Knopfs.
+    /// Meldung für einen Misserfolg.
     /// </summary>
-    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText) =>
-        ForFailure(failureReason, rawResponse, subject, buttonText, $"keine {subject}", $"einer {subject}", $"eine {subject}");
-
-    /// <summary>
-    /// Wie oben, mit frei wählbaren Wortformen (z. B. für das Quiz: „kein Quiz“, „einem Quiz“, „ein Quiz“).
-    /// </summary>
-    /// <param name="none">Verneinung im Akkusativ, z. B. „keine Mindmap“.</param>
-    /// <param name="withArticle">Dativ nach „mit“, z. B. „einer Mindmap“.</param>
-    /// <param name="forArticle">Akkusativ nach „für“, z. B. „eine Mindmap“.</param>
-    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, string subject, string buttonText,
-        string none, string withArticle, string forArticle)
+    /// <param name="subject">Was erzeugt werden sollte.</param>
+    /// <param name="buttonText">Beschriftung des Knopfs, mit dem man es erneut versucht (übersetzt).</param>
+    public static MindmapStatusText ForFailure(MindmapFailureReason failureReason, string? rawResponse, GenerationSubject subject, string buttonText)
     {
         var raw = rawResponse?.Trim() ?? string.Empty;
         var reason = failureReason != MindmapFailureReason.None
             ? failureReason
             : string.IsNullOrWhiteSpace(raw) ? MindmapFailureReason.EmptyResponse : MindmapFailureReason.InvalidJson;
-        var tipRetry = $"Klicken Sie erneut auf „{buttonText}“ – die KI antwortet jedes Mal etwas anders.";
+        var key = SelectKey(subject);
+        var tipRetry = Loc.Format(VmStrings.GenStatus_TipRetry, ("button", buttonText));
 
         switch (reason)
         {
             case MindmapFailureReason.NoContent:
-                return new MindmapStatusText(
-                    "⚠️ Aus den gewählten Dokumenten konnte kein Text gelesen werden.",
-                    new[] { "Prüfen Sie, ob die Dateien noch vorhanden sind und Text enthalten (eingescannte PDFs ohne Texterkennung enthalten nur Bilder)." },
-                    null);
+                return new MindmapStatusText(VmStrings.GenStatus_NoContent, new[] { VmStrings.GenStatus_NoContent_Tip }, null);
 
             case MindmapFailureReason.EmptyResponse:
                 return new MindmapStatusText(
-                    "⚠️ Die KI hat keine Antwort geliefert.",
-                    new[] { TipCheckSettings, "Bei lokalen Modellen: Läuft Ollama bzw. LM Studio und ist das Modell geladen?" },
+                    VmStrings.GenStatus_EmptyResponse,
+                    new[] { VmStrings.GenStatus_TipCheckSettings, VmStrings.GenStatus_EmptyResponse_TipLocal },
                     null);
 
             case MindmapFailureReason.NoJson when LooksLikeServiceError(raw):
                 return new MindmapStatusText(
-                    $"⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte {none} erstellt werden.",
-                    new[] { $"Meldung des Dienstes: „{Shorten(raw, MaxServiceMessageLength)}“", TipCheckSettings },
+                    Loc.Format(VmStrings.GenStatus_ServiceError, ("subject", key)),
+                    new[] { Loc.Format(VmStrings.GenStatus_ServiceMessage, ("message", Shorten(raw, MaxServiceMessageLength))), VmStrings.GenStatus_TipCheckSettings },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoJson:
                 return new MindmapStatusText(
-                    $"⚠️ Die KI hat mit normalem Text statt mit {withArticle} geantwortet.",
-                    new[] { tipRetry, TipOtherModel },
+                    Loc.Format(VmStrings.GenStatus_PlainText, ("subject", key)),
+                    new[] { tipRetry, VmStrings.GenStatus_TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
 
             case MindmapFailureReason.NoTopics:
                 return new MindmapStatusText(
-                    $"⚠️ Die KI hat in den Dokumenten keine Themen für {forArticle} gefunden.",
-                    new[] { tipRetry, "Verwenden Sie Dokumente mit mehr Fließtext." },
+                    Loc.Format(VmStrings.GenStatus_NoTopics, ("subject", key)),
+                    new[] { tipRetry, VmStrings.GenStatus_NoTopics_Tip },
                     Shorten(raw, MaxDetailsLength));
 
             default: // InvalidJson
                 return new MindmapStatusText(
-                    $"⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte {none} erstellt werden.",
-                    new[] { tipRetry, TipFewerDocuments, TipOtherModel },
+                    Loc.Format(VmStrings.GenStatus_InvalidJson, ("subject", key)),
+                    new[] { tipRetry, VmStrings.GenStatus_TipFewerDocuments, VmStrings.GenStatus_TipOtherModel },
                     Shorten(raw, MaxDetailsLength));
         }
     }
@@ -94,13 +105,14 @@ public static class MindmapStatusTexts
     public static MindmapStatusText ForSuccess(int topicCount, bool wasRepaired) =>
         wasRepaired
             ? new MindmapStatusText(
-                $"✓ Mindmap mit {topicCount} Themen erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Themen.",
-                new[] { "Für eine vollständige Mindmap auf „Neu erstellen“ klicken – die KI antwortet jedes Mal etwas anders.", "Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird." },
+                Loc.Format(VmStrings.Mindmap_SuccessRepaired, ("count", topicCount)),
+                new[]
+                {
+                    Loc.Format(VmStrings.Mindmap_SuccessRepaired_TipRegenerate, ("button", VmStrings.Common_Regenerate)),
+                    VmStrings.Mindmap_SuccessRepaired_TipFewer
+                },
                 null)
-            : new MindmapStatusText(
-                $"✓ Mindmap mit {topicCount} Themen erstellt. Klicken Sie auf ein Thema für Details.",
-                Array.Empty<string>(),
-                null);
+            : new MindmapStatusText(Loc.Format(VmStrings.Mindmap_Success, ("count", topicCount)), Array.Empty<string>(), null);
 
     public static bool LooksLikeServiceError(string text)
     {

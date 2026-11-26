@@ -157,4 +157,196 @@
   <data name="Dialog_TextFiles" xml:space="preserve"><value>Textdateien (*.txt)</value></data>
   <data name="Dialog_CsvFiles" xml:space="preserve"><value>CSV-Dateien (*.csv)</value></data>
   <data name="Dialog_SelectDocument" xml:space="preserve"><value>Dokument auswählen</value></data>
+  <data name="Common_PrintPdf" xml:space="preserve"><value>🖨️ Drucken / PDF</value></data>
+  <data name="Common_ExportMd" xml:space="preserve"><value>📄 Export (.md)</value></data>
+  <data name="Common_ExportMdTitle" xml:space="preserve"><value>Als Markdown exportieren</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="Common_Next" xml:space="preserve"><value>Weiter</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="Common_WhatYouCanDo" xml:space="preserve"><value>Das können Sie tun:</value></data>
+  <data name="Common_Tip" xml:space="preserve"><value>Tipp:</value></data>
+  <data name="Common_TechnicalDetailsAi" xml:space="preserve"><value>Technische Details (Antwort der KI)</value></data>
+  <data name="Common_PrintDialogFailed" xml:space="preserve"><value>⚠️ Der Druckdialog konnte nicht geöffnet werden: {error}</value></data>
+  <data name="Common_Exported" xml:space="preserve"><value>✓ Erfolgreich exportiert nach: {file}</value></data>
+  <data name="Common_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Exportieren: {error}</value></data>
+  <data name="Common_GenerationWait" xml:space="preserve"><value>Je nach Modell und Dokumentgröße kann das etwas dauern.</value></data>
+  <data name="Flashcards_Title" xml:space="preserve"><value>Lernkarteikarten: {profile}</value></data>
+  <data name="Flashcards_Summary" xml:space="preserve"><value>{count, plural, one {# Karte} other {# Karten}} vorhanden | Karte {progress}</value><comment>{progress} = „3 / 10“</comment></data>
+  <data name="Flashcards_Count" xml:space="preserve"><value>Anzahl:</value></data>
+  <data name="Flashcards_Generating" xml:space="preserve"><value>Generiere …</value></data>
+  <data name="Flashcards_Generate" xml:space="preserve"><value>✨ Neue Karten erstellen</value></data>
+  <data name="Flashcards_PrintTitle" xml:space="preserve"><value>Drucken oder als PDF speichern</value></data>
+  <data name="Flashcards_DeleteAll" xml:space="preserve"><value>🗑️ Alle löschen</value></data>
+  <data name="Flashcards_DeleteAllTitle" xml:space="preserve"><value>Alle Karten dieses Profils löschen</value></data>
+  <data name="Flashcards_Mode_Title" xml:space="preserve"><value>Neue Karten erstellen</value></data>
+  <data name="Flashcards_Mode_Question" xml:space="preserve"><value>Es {existing, plural, one {ist bereits # Karte} other {sind bereits # Karten}} vorhanden. Wie sollen die {count} neuen Karten übernommen werden?</value></data>
+  <data name="Flashcards_Mode_Append" xml:space="preserve"><value>&lt;strong&gt;Zum Stapel hinzufügen&lt;/strong&gt; (empfohlen)</value><comment>Enthält HTML</comment></data>
+  <data name="Flashcards_Mode_AppendHint" xml:space="preserve"><value>Vorhandene Karten und ihr Lernstand bleiben erhalten. Fragen, die es schon gibt, werden weggelassen.</value></data>
+  <data name="Flashcards_Mode_Replace" xml:space="preserve"><value>Stapel ersetzen</value></data>
+  <data name="Flashcards_Mode_ReplaceHint" xml:space="preserve"><value>Alle vorhandenen Karten werden durch die neuen ersetzt.</value></data>
+  <data name="Flashcards_Mode_ReplaceWarning" xml:space="preserve"><value>⚠️ Achtung: {count, plural, one {Die vorhandene Karte wird} other {Die # vorhandenen Karten werden}} gelöscht – samt Lernstand ({known} gelernt, {difficult} zum Wiederholen). Das lässt sich nicht rückgängig machen.</value></data>
+  <data name="Flashcards_Mode_AddCards" xml:space="preserve"><value>Karten hinzufügen</value></data>
+  <data name="Flashcards_GeneratingInfo" xml:space="preserve"><value>🧠 KI analysiert Textstellen und formuliert Lernkarten …</value></data>
+  <data name="Flashcards_GeneratingWait" xml:space="preserve"><value>Dies kann je nach Hardware und Kontextgröße einige Sekunden dauern.</value></data>
+  <data name="Flashcards_Filter_All" xml:space="preserve"><value>Alle ({count})</value></data>
+  <data name="Flashcards_Filter_Difficult" xml:space="preserve"><value>🔴 Wiederholen ({count})</value></data>
+  <data name="Flashcards_Filter_New" xml:space="preserve"><value>⚪ Neu ({count})</value></data>
+  <data name="Flashcards_Filter_Known" xml:space="preserve"><value>🟢 Gelernt ({count})</value></data>
+  <data name="Flashcards_Empty" xml:space="preserve"><value>Keine passenden Karteikarten vorhanden.</value></data>
+  <data name="Flashcards_EmptyHint" xml:space="preserve"><value>Aktivieren Sie links mindestens ein Dokument und klicken Sie oben auf „✨ Neue Karten erstellen“.</value></data>
+  <data name="Flashcards_Answer" xml:space="preserve"><value>ANTWORT</value><comment>Kopf der Karte, Großbuchstaben</comment></data>
+  <data name="Flashcards_Question" xml:space="preserve"><value>FRAGE</value><comment>Kopf der Karte, Großbuchstaben</comment></data>
+  <data name="Flashcards_Status" xml:space="preserve"><value>Status: {status}</value></data>
+  <data name="Flashcards_Status_Known" xml:space="preserve"><value>🟢 Gelernt</value></data>
+  <data name="Flashcards_Status_Difficult" xml:space="preserve"><value>🔴 Wiederholen</value></data>
+  <data name="Flashcards_Status_New" xml:space="preserve"><value>⚪ Neu</value></data>
+  <data name="Flashcards_FlipHint" xml:space="preserve"><value>Klicken oder [Leertaste] zum Umdrehen</value></data>
+  <data name="Flashcards_DidNotKnow" xml:space="preserve"><value>✕ Nicht gewusst [1]</value></data>
+  <data name="Flashcards_Knew" xml:space="preserve"><value>✓ Gewusst [2]</value></data>
+  <data name="Flashcards_Reveal" xml:space="preserve"><value>Aufdecken [Leertaste]</value></data>
+  <data name="Flashcards_KeyboardHelp" xml:space="preserve"><value>Tastaturnavigation aktiv: &lt;b&gt;Leertaste&lt;/b&gt;: Drehen | &lt;b&gt;← / →&lt;/b&gt;: Vor/Zurück | &lt;b&gt;1&lt;/b&gt;: Nicht gewusst | &lt;b&gt;2&lt;/b&gt;: Gewusst</value><comment>Enthält HTML</comment></data>
+  <data name="Flashcards_PrintQuestion" xml:space="preserve"><value>Frage:</value></data>
+  <data name="Flashcards_PrintAnswer" xml:space="preserve"><value>Antwort:</value></data>
+  <data name="Flashcards_NoDocuments" xml:space="preserve"><value>⚠️ Bitte wählen Sie links in der Liste mindestens ein Dokument aus, um Lernkarten zu erstellen.</value></data>
+  <data name="Flashcards_SkippedDuplicates" xml:space="preserve"><value>{count, plural, one {# doppelte Frage wurde} other {# doppelte Fragen wurden}} weggelassen.</value></data>
+  <data name="Flashcards_Replaced" xml:space="preserve"><value>✓ Der Stapel wurde durch {count, plural, one {# neue Lernkarteikarte} other {# neue Lernkarteikarten}} ersetzt.</value></data>
+  <data name="Flashcards_Added" xml:space="preserve"><value>✓ Es {count, plural, one {wurde # neue Lernkarteikarte} other {wurden # neue Lernkarteikarten}} hinzugefügt.</value></data>
+  <data name="Flashcards_OnlyDuplicates" xml:space="preserve"><value>⚠️ Die KI hat nur Fragen geliefert, die es im Stapel schon gibt – es wurde nichts hinzugefügt. Bitte erneut versuchen oder andere Dokumente aktivieren.</value></data>
+  <data name="Flashcards_NothingUsable" xml:space="preserve"><value>⚠️ Die KI hat keine verwertbaren Karteikarten geliefert. Bitte erneut auf „Neue Karten erstellen“ klicken.</value></data>
+  <data name="Flashcards_KeptExisting" xml:space="preserve"><value>Ihre vorhandenen Karten bleiben unverändert.</value></data>
+  <data name="Flashcards_Error" xml:space="preserve"><value>⚠️ Fehler beim Erstellen der Karteikarten: {error}</value></data>
+  <data name="Flashcards_ExportFileName" xml:space="preserve"><value>Karteikarten_{profile}_{stamp}.md</value><comment>Vorgeschlagener Dateiname; {stamp} = Datum und Uhrzeit</comment></data>
+  <data name="Flashcards_ExportTitle" xml:space="preserve"><value>Karteikarten exportieren als …</value></data>
+  <data name="Flashcards_Cleared" xml:space="preserve"><value>✓ Alle Karteikarten für dieses Profil wurden gelöscht.</value></data>
+  <data name="Mindmap_Title" xml:space="preserve"><value>Mindmap: {name}</value></data>
+  <data name="Mindmap_NoneForProfile" xml:space="preserve"><value>Noch keine Mindmap für dieses Profil</value></data>
+  <data name="Mindmap_CreateTitle" xml:space="preserve"><value>Mindmap aus den links aktivierten Dokumenten erstellen</value></data>
+  <data name="Mindmap_ExpandAll" xml:space="preserve"><value>⊞ Alle auf</value></data>
+  <data name="Mindmap_ExpandAllTitle" xml:space="preserve"><value>Alle Äste aufklappen</value></data>
+  <data name="Mindmap_CollapseAll" xml:space="preserve"><value>⊟ Alle zu</value></data>
+  <data name="Mindmap_CollapseAllTitle" xml:space="preserve"><value>Nur Hauptäste zeigen</value></data>
+  <data name="Mindmap_ZoomOut" xml:space="preserve"><value>Verkleinern</value></data>
+  <data name="Mindmap_ZoomReset" xml:space="preserve"><value>Zoom zurücksetzen</value></data>
+  <data name="Mindmap_ZoomIn" xml:space="preserve"><value>Vergrößern</value></data>
+  <data name="Mindmap_PrintTitle" xml:space="preserve"><value>Mindmap als Grafik drucken oder als PDF speichern (gedruckt wird die aktuelle Ansicht – vorher ggf. „Alle auf“ klicken)</value></data>
+  <data name="Mindmap_ExportTitle" xml:space="preserve"><value>Als Markdown-Gliederung exportieren</value></data>
+  <data name="Mindmap_DeleteTitle" xml:space="preserve"><value>Mindmap dieses Profils löschen</value></data>
+  <data name="Mindmap_GeneratingInfo" xml:space="preserve"><value>🧠 KI analysiert die Dokumente und ordnet die Themen …</value></data>
+  <data name="Mindmap_Empty" xml:space="preserve"><value>Noch keine Mindmap vorhanden.</value></data>
+  <data name="Mindmap_EmptyHint" xml:space="preserve"><value>Aktivieren Sie links ein oder mehrere Dokumente und klicken Sie oben auf „✨ {button}“. Die KI ordnet die Inhalte dann als Themenbaum an.</value></data>
+  <data name="Mindmap_PrintSource" xml:space="preserve"><value>{source} · Profil: {profile}</value></data>
+  <data name="Mindmap_Collapse" xml:space="preserve"><value>Zuklappen</value></data>
+  <data name="Mindmap_ExpandChildren" xml:space="preserve"><value>{count, plural, one {# Unterthema aufklappen} other {# Unterthemen aufklappen}}</value></data>
+  <data name="Mindmap_NoSummary" xml:space="preserve"><value>Keine Kurzbeschreibung vorhanden.</value></data>
+  <data name="Mindmap_Subtopics" xml:space="preserve"><value>Unterthemen:</value></data>
+  <data name="Mindmap_AskInChat" xml:space="preserve"><value>💬 Im Chat erklären lassen</value></data>
+  <data name="Mindmap_AskInChatTitle" xml:space="preserve"><value>Frage zu diesem Thema im Chat stellen (mit Ihren Unterlagen als Grundlage)</value></data>
+  <data name="Mindmap_DoubleClickTip" xml:space="preserve"><value>Tipp: Doppelklick auf ein Thema klappt es auf oder zu.</value></data>
+  <data name="Mindmap_ExportFileName" xml:space="preserve"><value>Mindmap_{profile}_{stamp}.md</value><comment>Vorgeschlagener Dateiname; {stamp} = Datum und Uhrzeit</comment></data>
+  <data name="Mindmap_ExportDialogTitle" xml:space="preserve"><value>Mindmap exportieren als …</value></data>
+  <data name="Presentation_Title" xml:space="preserve"><value>Präsentation: {profile}</value></data>
+  <data name="Presentation_NoneForProfile" xml:space="preserve"><value>Noch keine Präsentation für dieses Profil</value></data>
+  <data name="Presentation_ReplaceWarning" xml:space="preserve"><value>Die vorhandene Präsentation wird ersetzt.</value></data>
+  <data name="Presentation_Replace" xml:space="preserve"><value>Ersetzen</value></data>
+  <data name="Presentation_Slides" xml:space="preserve"><value>Folien:</value></data>
+  <data name="Presentation_SlidesTitle" xml:space="preserve"><value>Anzahl der Inhaltsfolien bei „{button}“</value></data>
+  <data name="Presentation_GenerateTitle" xml:space="preserve"><value>Die KI erstellt Folien mit Stichpunkten und Sprechernotizen aus den links aktivierten Dokumenten</value></data>
+  <data name="Presentation_FromMindmap" xml:space="preserve"><value>🧠 Aus Mindmap</value></data>
+  <data name="Presentation_FromMindmapTitle" xml:space="preserve"><value>Folien aus der Mindmap dieses Profils ableiten (ohne KI, sofort)</value></data>
+  <data name="Presentation_PresentTitle" xml:space="preserve"><value>Vortrag ab der ersten Folie starten (Esc beendet)</value></data>
+  <data name="Presentation_PrintTitle" xml:space="preserve"><value>Folien drucken oder als PDF speichern (eine Folie pro Seite)</value></data>
+  <data name="Presentation_PptxTitle" xml:space="preserve"><value>Als PowerPoint-Datei (.pptx) speichern – mit Sprechernotizen</value></data>
+  <data name="Presentation_DeleteTitle" xml:space="preserve"><value>Präsentation dieses Profils löschen</value></data>
+  <data name="Presentation_GeneratingInfo" xml:space="preserve"><value>📽️ KI gliedert die Inhalte und formuliert die Folien …</value></data>
+  <data name="Presentation_Empty" xml:space="preserve"><value>Noch keine Präsentation vorhanden.</value></data>
+  <data name="Presentation_EmptyHint" xml:space="preserve"><value>&lt;b&gt;✨ {ai}:&lt;/b&gt; Die KI formuliert aus den links aktivierten Dokumenten Folien mit Stichpunkten und Sprechernotizen.&lt;br /&gt;&lt;b&gt;{mindmap}:&lt;/b&gt; Die Mindmap dieses Profils wird sofort in Folien umgewandelt – jeder Hauptast wird zu einer Folie.</value><comment>Enthält HTML</comment></data>
+  <data name="Presentation_SlideOf" xml:space="preserve"><value>Folie {progress}</value><comment>{progress} = „3 / 10“</comment></data>
+  <data name="Presentation_PresentFromHere" xml:space="preserve"><value>▶ Ab hier vortragen</value></data>
+  <data name="Presentation_PresentFromHereTitle" xml:space="preserve"><value>Vortrag ab dieser Folie starten</value></data>
+  <data name="Presentation_SpeakerNotes" xml:space="preserve"><value>Sprechernotizen</value></data>
+  <data name="Presentation_NoNotes" xml:space="preserve"><value>Keine Notizen zu dieser Folie.</value></data>
+  <data name="Presentation_PresentHint" xml:space="preserve"><value>{progress} · → / Klick: weiter · ←: zurück · Esc: beenden</value></data>
+  <data name="Presentation_PptxFilter" xml:space="preserve"><value>PowerPoint-Präsentation (*.pptx)</value></data>
+  <data name="Presentation_SaveAs" xml:space="preserve"><value>Präsentation speichern als …</value></data>
+  <data name="Quiz_Title" xml:space="preserve"><value>Quiz: {profile}</value></data>
+  <data name="Quiz_NoTopicsYet" xml:space="preserve"><value>Noch keine Themen angelegt</value></data>
+  <data name="Quiz_Summary" xml:space="preserve"><value>{topics, plural, one {# Thema} other {# Themen}} · {questions, plural, one {# Frage} other {# Fragen}} im Pool · {runs, plural, one {# Durchgang} other {# Durchgänge}} im Verlauf</value></data>
+  <data name="Quiz_NewTopicTitle" xml:space="preserve"><value>Eigenes Thema mit Dokumenten anlegen</value></data>
+  <data name="Quiz_SuggestTitle" xml:space="preserve"><value>Die KI schlägt Themen aus den links aktivierten Dokumenten vor</value></data>
+  <data name="Quiz_BusyHint" xml:space="preserve"><value>Einmal erzeugte Fragen werden gespeichert und in späteren Quizrunden wiederverwendet.</value></data>
+  <data name="Quiz_EditTopic" xml:space="preserve"><value>✏️ Thema bearbeiten</value></data>
+  <data name="Quiz_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Quiz_NamePlaceholder" xml:space="preserve"><value>z. B. Einkommensteuer</value></data>
+  <data name="Quiz_Description" xml:space="preserve"><value>Worum geht es?</value></data>
+  <data name="Quiz_DescriptionHint" xml:space="preserve"><value>(optional – hilft der KI, passende Textstellen zu finden)</value></data>
+  <data name="Quiz_DescriptionPlaceholder" xml:space="preserve"><value>z. B. Tarif, Freibeträge und Splittingverfahren</value></data>
+  <data name="Quiz_Documents" xml:space="preserve"><value>Dokumente, aus denen die Fragen stammen</value></data>
+  <data name="Quiz_NoDocuments" xml:space="preserve"><value>Dieses Profil enthält noch keine Dokumente. Laden Sie links zuerst Dokumente hoch.</value></data>
+  <data name="Quiz_NotFound" xml:space="preserve"><value>(nicht gefunden)</value></data>
+  <data name="Quiz_Suggestions" xml:space="preserve"><value>✨ Themenvorschläge der KI</value></data>
+  <data name="Quiz_SuggestionsHint" xml:space="preserve"><value>Haken Sie die Themen an, die Sie übernehmen möchten. Sie beruhen auf den gerade aktivierten Dokumenten.</value></data>
+  <data name="Quiz_AcceptSelected" xml:space="preserve"><value>Ausgewählte übernehmen</value></data>
+  <data name="Quiz_Dismiss" xml:space="preserve"><value>Verwerfen</value></data>
+  <data name="Quiz_Topics" xml:space="preserve"><value>📚 Themen</value></data>
+  <data name="Quiz_SelectAll" xml:space="preserve"><value>alle wählen</value></data>
+  <data name="Quiz_SelectNone" xml:space="preserve"><value>keine</value></data>
+  <data name="Quiz_Empty" xml:space="preserve"><value>&lt;b&gt;Noch keine Themen vorhanden.&lt;/b&gt;&lt;br /&gt;Legen Sie mit &lt;b&gt;{newTopic}&lt;/b&gt; selbst ein Thema an (Name + Dokumente)&lt;br /&gt;oder lassen Sie mit &lt;b&gt;{suggest}&lt;/b&gt; die KI Themen aus den links aktivierten Dokumenten finden.</value><comment>Enthält HTML</comment></data>
+  <data name="Quiz_SelectForQuiz" xml:space="preserve"><value>Für das Quiz auswählen</value></data>
+  <data name="Quiz_AiBadge" xml:space="preserve"><value>KI</value></data>
+  <data name="Quiz_TopicPool" xml:space="preserve"><value>❓ {count, plural, one {# Frage} other {# Fragen}} im Pool</value></data>
+  <data name="Quiz_TopicStats" xml:space="preserve"><value>aus {count, plural, one {# Antwort} other {# Antworten}}</value></data>
+  <data name="Quiz_Percent" xml:space="preserve"><value>{percent} %</value><comment>{percent} = Zahl, schon gerundet</comment></data>
+  <data name="Quiz_DeleteConfirm" xml:space="preserve"><value>Löschen?</value></data>
+  <data name="Quiz_DontDelete" xml:space="preserve"><value>Nicht löschen</value></data>
+  <data name="Quiz_EditTopicTitle" xml:space="preserve"><value>Thema bearbeiten (Name, Beschreibung, Dokumente)</value></data>
+  <data name="Quiz_ResetQuestionsTitle" xml:space="preserve"><value>Fragenpool verwerfen – beim nächsten Quiz erzeugt die KI neue Fragen</value></data>
+  <data name="Quiz_DeleteTopicTitle" xml:space="preserve"><value>Thema löschen</value></data>
+  <data name="Quiz_SelectedTopics" xml:space="preserve"><value>Ausgewählte Themen: &lt;b&gt;{selected}&lt;/b&gt; von {total}</value><comment>Enthält HTML</comment></data>
+  <data name="Quiz_QuestionCount" xml:space="preserve"><value>Anzahl Fragen ({min}–{max})</value></data>
+  <data name="Quiz_Mode" xml:space="preserve"><value>Modus</value></data>
+  <data name="Quiz_LearnMode" xml:space="preserve"><value>🎓 Lernmodus</value></data>
+  <data name="Quiz_LearnModeHint" xml:space="preserve"><value>Rückmeldung und Erklärung nach jeder Frage</value></data>
+  <data name="Quiz_ExamMode" xml:space="preserve"><value>📝 Prüfungsmodus</value></data>
+  <data name="Quiz_ExamModeHint" xml:space="preserve"><value>Alle Fragen beantworten, Auswertung am Ende</value></data>
+  <data name="Quiz_QuestionTypes" xml:space="preserve"><value>Fragetypen</value></data>
+  <data name="Quiz_Type_Single" xml:space="preserve"><value>Multiple Choice – eine Antwort richtig</value></data>
+  <data name="Quiz_Type_TrueFalse" xml:space="preserve"><value>Wahr / Falsch</value></data>
+  <data name="Quiz_Type_Multiple" xml:space="preserve"><value>Mehrere richtige Antworten</value></data>
+  <data name="Quiz_StartWithCount" xml:space="preserve"><value>▶ Quiz mit {count, plural, one {# Frage} other {# Fragen}} starten</value></data>
+  <data name="Quiz_StartHint" xml:space="preserve"><value>Fehlende Fragen erzeugt die KI automatisch (in Paketen zu je 10). Erzeugte Fragen werden gespeichert und wiederverwendet – neue und zuletzt falsch beantwortete Fragen kommen zuerst.</value></data>
+  <data name="Quiz_History" xml:space="preserve"><value>📈 Verlauf</value></data>
+  <data name="Quiz_ReallyDelete" xml:space="preserve"><value>Wirklich löschen</value></data>
+  <data name="Quiz_No" xml:space="preserve"><value>Nein</value></data>
+  <data name="Quiz_ClearHistory" xml:space="preserve"><value>Verlauf löschen</value></data>
+  <data name="Quiz_NoHistory" xml:space="preserve"><value>Noch keine Quizrunden gespielt.</value></data>
+  <data name="Quiz_HistoryDateFormat" xml:space="preserve"><value>dd.MM. HH:mm</value><comment>.NET-Datumsformat (benutzerdefiniert) für die Verlaufsliste, schmale Spalte</comment></data>
+  <data name="Quiz_ShowLess" xml:space="preserve"><value>weniger anzeigen</value></data>
+  <data name="Quiz_ShowAll" xml:space="preserve"><value>alle {count} anzeigen</value></data>
+  <data name="Quiz_QuestionOf" xml:space="preserve"><value>Frage {number} von {total}</value></data>
+  <data name="Quiz_CorrectSoFar" xml:space="preserve"><value>{correct} von {checked} richtig</value></data>
+  <data name="Quiz_AbortConfirm" xml:space="preserve"><value>Quiz abbrechen? Das Ergebnis wird nicht gespeichert.</value></data>
+  <data name="Quiz_AbortYes" xml:space="preserve"><value>Ja, abbrechen</value></data>
+  <data name="Quiz_KeepPlaying" xml:space="preserve"><value>Weiterspielen</value></data>
+  <data name="Quiz_Abort" xml:space="preserve"><value>Quiz abbrechen</value></data>
+  <data name="Quiz_DotTitle" xml:space="preserve"><value>Frage {number}</value></data>
+  <data name="Quiz_DotTitleAnswered" xml:space="preserve"><value>Frage {number} (beantwortet)</value></data>
+  <data name="Quiz_Hint_TrueFalse" xml:space="preserve"><value>Ist die Aussage wahr oder falsch?</value></data>
+  <data name="Quiz_Hint_Multiple" xml:space="preserve"><value>Mehrere Antworten sind richtig ({count}) – wählen Sie alle richtigen aus.</value></data>
+  <data name="Quiz_Hint_Single" xml:space="preserve"><value>Eine Antwort ist richtig.</value></data>
+  <data name="Quiz_Correct" xml:space="preserve"><value>✓ Richtig!</value></data>
+  <data name="Quiz_Wrong" xml:space="preserve"><value>✗ Leider falsch.</value></data>
+  <data name="Quiz_NotAnswered" xml:space="preserve"><value>✗ Nicht beantwortet.</value></data>
+  <data name="Quiz_KeyboardLearn" xml:space="preserve"><value>Tastatur: {keys} wählen, Enter prüfen/weiter</value><comment>{keys} = „A–D“ bzw. „A/B“</comment></data>
+  <data name="Quiz_KeyboardExam" xml:space="preserve"><value>Tastatur: {keys} wählen, Enter weiter</value><comment>{keys} = „A–D“ bzw. „A/B“</comment></data>
+  <data name="Quiz_CheckAnswer" xml:space="preserve"><value>Antwort prüfen</value></data>
+  <data name="Quiz_ShowResult" xml:space="preserve"><value>Ergebnis anzeigen</value></data>
+  <data name="Quiz_Unanswered" xml:space="preserve"><value>{count, plural, one {# Frage unbeantwortet – zählt} other {# Fragen unbeantwortet – zählen}} als falsch.</value></data>
+  <data name="Quiz_SubmitAnyway" xml:space="preserve"><value>Trotzdem abgeben</value></data>
+  <data name="Quiz_Submit" xml:space="preserve"><value>✔ Abgeben</value></data>
+  <data name="Quiz_ScoreOf" xml:space="preserve"><value>{correct} von {total}</value></data>
+  <data name="Quiz_RetryWrong" xml:space="preserve"><value>🔁 Falsche wiederholen ({count})</value></data>
+  <data name="Quiz_BackToLibrary" xml:space="preserve"><value>Zur Übersicht / neues Quiz</value></data>
+  <data name="Quiz_AllWithSolutions" xml:space="preserve"><value>Alle Fragen mit Lösung</value></data>
+  <data name="Quiz_OnlyWrong" xml:space="preserve"><value>nur falsche anzeigen</value></data>
+  <data name="Quiz_YourAnswer" xml:space="preserve"><value>← Ihre Antwort</value></data>
 </root>
