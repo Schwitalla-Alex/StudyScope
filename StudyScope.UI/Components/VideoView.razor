@@ -14,11 +14,11 @@
     <!-- Obere Steuerleiste -->
     <div class="vd-toolbar">
         <div style="min-width: 0;">
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Videoübersicht: @DocVm.CurrentProfile</h3>
-            <span style="font-size: 12px; color: var(--ss-text-muted);">Vertontes Erklärvideo aus einer Präsentation – je Folie ein Sprechtext, abgespielt wie ein Video.</span>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Video_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <span style="font-size: 12px; color: var(--ss-text-muted);">@UiStrings.Video_Subtitle</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center;">
-            <button type="button" class="vd-btn" style="background: var(--ss-primary);" disabled="@VdVm.IsBusy" @onclick="OpenForm">➕ Neues Video</button>
+            <button type="button" class="vd-btn" style="background: var(--ss-primary);" disabled="@VdVm.IsBusy" @onclick="OpenForm">@UiStrings.Video_New</button>
         </div>
     </div>
 
@@ -28,8 +28,8 @@
             <div style="font-weight: 600; font-size: 13px;">🎞️ @VdVm.ExportProgressText</div>
             <div class="vd-bar" style="margin-top: 8px;"><div class="vd-bar-fill" style="width: @(Percent(VdVm.ExportProgress))%;"></div></div>
             <div style="margin-top: 8px; display: flex; justify-content: center; gap: 10px; align-items: center;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Beim Abbrechen wird ffmpeg beendet; es entsteht keine halbe Datei, temporäre Bilder werden gelöscht.</span>
-                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.CancelMediaExport">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Video_ExportCancelHint</span>
+                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.CancelMediaExport">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
@@ -39,18 +39,18 @@
             <div style="font-weight: 600; font-size: 13px;">🎙️ @VdVm.AudioProgressText</div>
             <div class="vd-bar" style="margin-top: 8px;"><div class="vd-bar-fill" style="width: @(Percent(VdVm.AudioProgress))%;"></div></div>
             <div style="margin-top: 8px; display: flex; justify-content: center; gap: 10px; align-items: center;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Fertige Szenen bleiben bei Abbruch erhalten; es entsteht keine halbe Datei.</span>
-                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.CancelAudioGeneration">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Video_AudioCancelHint</span>
+                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.CancelAudioGeneration">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
     else if (VdVm.IsBusy)
     {
         <div class="vd-info">
-            <div style="font-weight: 600; font-size: 13px;">🎬 @(string.IsNullOrEmpty(VdVm.BusyText) ? "Bitte warten …" : VdVm.BusyText)</div>
+            <div style="font-weight: 600; font-size: 13px;">🎬 @(string.IsNullOrEmpty(VdVm.BusyText) ? UiStrings.Video_PleaseWait : VdVm.BusyText)</div>
             <div class="vd-progress"><div class="vd-progress-bar"></div></div>
             <div style="margin-top: 6px;">
-                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.Cancel">Abbrechen</button>
+                <button type="button" class="vd-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="VdVm.Cancel">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
@@ -66,8 +66,8 @@
                 <div style="font-weight: 600;">@VdVm.StatusMessage</div>
                 @if (VdVm.StatusTips.Count > 0)
                 {
-                    <div style="margin-top: 6px;">@(VdVm.IsError ? "Das können Sie tun:" : "Tipp:")</div>
-                    <ul style="margin: 2px 0 0 18px; line-height: 1.5;">
+                    <div style="margin-top: 6px;">@(VdVm.IsError ? UiStrings.Common_WhatYouCanDo : UiStrings.Common_Tip)</div>
+                    <ul style="margin-block: 2px 0; margin-inline: 18px 0; line-height: 1.5;">
                         @foreach (var tip in VdVm.StatusTips)
                         {
                             <li>@tip</li>
@@ -77,12 +77,12 @@
                 @if (!string.IsNullOrEmpty(VdVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">@UiStrings.Common_TechnicalDetails</summary>
                         <pre class="vd-details-raw">@VdVm.StatusDetails</pre>
                     </details>
                 }
             </div>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="VdVm.ClearStatus">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="@UiStrings.Common_Dismiss" aria-label="@UiStrings.Common_Dismiss" @onclick="VdVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -96,7 +96,7 @@
             else
             {
                 <div class="vd-card">
-                    <h4>🎬 Videos (@VdVm.Items.Count)</h4>
+                    <h4>@Loc.Format(UiStrings.Video_Videos, ("count", VdVm.Items.Count))</h4>
                     @foreach (var it in VdVm.Items)
                     {
                         var isSelected = VdVm.SelectedVideo?.Id == it.Id;
@@ -111,24 +111,24 @@
                                 {
                                     <div class="vd-item-title" title="@it.Title">@it.Title</div>
                                 }
-                                <div class="vd-meta">@it.Scenes.Count Folien · @AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(it.WordCount)) · @it.CreatedAt.ToString("dd.MM.yyyy HH:mm")@(it.HasAudioFile ? " · 🎵" : "")</div>
-                                <div class="vd-meta" title="Aus diesen Dokumenten wurde das Video erstellt">📄 @(it.SourceDocuments.Count > 0 ? string.Join(", ", it.SourceDocuments) : "Quelle unbekannt")</div>
+                                <div class="vd-meta">@Loc.Format(UiStrings.Video_ItemMeta, ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", it.Scenes.Count))), ("minutes", MediaTexts.Minutes(AudioScriptFormats.EstimateMinutes(it.WordCount))), ("date", it.CreatedAt.ToString("g")))@(it.HasAudioFile ? " · 🎵" : "")</div>
+                                <div class="vd-meta" title="@UiStrings.Video_SourcesTitle">📄 @(it.SourceDocuments.Count > 0 ? string.Join(", ", it.SourceDocuments) : UiStrings.Video_SourceUnknown)</div>
                             </div>
                             <div style="display: flex; gap: 2px; align-items: center;" @onclick:stopPropagation="true">
                                 @if (renameId == it.Id)
                                 {
-                                    <button class="vd-icon" title="Übernehmen" @onclick="() => RenameAsync(it.Id)">✔</button>
-                                    <button class="vd-icon" title="Abbrechen" @onclick="() => renameId = null">✕</button>
+                                    <button class="vd-icon" title="@UiStrings.Common_Apply" aria-label="@UiStrings.Common_Apply" @onclick="() => RenameAsync(it.Id)">✔</button>
+                                    <button class="vd-icon" title="@UiStrings.Common_Cancel" aria-label="@UiStrings.Common_Cancel" @onclick="() => renameId = null">✕</button>
                                 }
                                 else if (confirmDeleteId == it.Id)
                                 {
-                                    <button class="vd-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(it.Id)">Löschen?</button>
-                                    <button class="vd-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
+                                    <button class="vd-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(it.Id)">@UiStrings.Common_DeleteConfirm</button>
+                                    <button class="vd-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteId = null">✕</button>
                                 }
                                 else
                                 {
-                                    <button class="vd-icon" title="Umbenennen" @onclick="() => StartRename(it)">✏️</button>
-                                    <button class="vd-icon" title="Video samt Audiodateien löschen" @onclick="() => confirmDeleteId = it.Id">🗑️</button>
+                                    <button class="vd-icon" title="@UiStrings.Common_Rename" aria-label="@UiStrings.Common_Rename" @onclick="() => StartRename(it)">✏️</button>
+                                    <button class="vd-icon" title="@UiStrings.Video_DeleteVideo" aria-label="@UiStrings.Video_DeleteVideo" @onclick="() => confirmDeleteId = it.Id">🗑️</button>
                                 }
                             </div>
                         </div>
@@ -149,23 +149,24 @@
                         <div style="min-width: 0;">
                             <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@video.Title</div>
                             <div class="vd-meta">
-                                @total Folien · @video.WordCount Wörter · @AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(video.WordCount))
-                                · @(video.NarrationSource == VideoNarrationSource.Notes ? "Sprechtexte aus den Sprechernotizen" : "Sprechtexte von der KI")
-                                · @(video.OwnSlides ? "eigene Folien" : "Folien aus der Präsentation")
+                                @Loc.Format(UiStrings.Video_HeadMeta, ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", total))), ("words", video.WordCount),
+                                    ("minutes", MediaTexts.Minutes(AudioScriptFormats.EstimateMinutes(video.WordCount))))
+                                <span> · @(video.NarrationSource == VideoNarrationSource.Notes ? UiStrings.Video_NarrationFromNotes : UiStrings.Video_NarrationFromAi)</span>
+                                <span> · @(video.OwnSlides ? UiStrings.Video_OwnSlides : UiStrings.Video_PresentationSlides)</span>
                                 @if (video.SourceDocuments.Count > 0)
                                 {
-                                    <span> · Quellen: @string.Join(", ", video.SourceDocuments)</span>
+                                    <span> · @Loc.Format(UiStrings.Common_SourcesMeta, ("sources", string.Join(", ", video.SourceDocuments)))</span>
                                 }
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="vd-btn" style="background: var(--ss-strong);" title="Sprechtexte als Textdatei speichern" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Text)">📄 Text</button>
-                            <button type="button" class="vd-btn" style="background: var(--ss-info);" title="Sprechtexte als Markdown speichern" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Markdown)">📝 Markdown</button>
+                            <button type="button" class="vd-btn" style="background: var(--ss-strong);" title="@UiStrings.Video_ExportTextTitle" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Text)">📄 Text</button>
+                            <button type="button" class="vd-btn" style="background: var(--ss-info);" title="@UiStrings.Video_ExportMarkdownTitle" @onclick="() => ExportScriptAsync(VideoScriptExportFormat.Markdown)">📝 Markdown</button>
                             <button type="button" class="vd-btn" style="background: var(--ss-purple);" disabled="@(!VdVm.CanExportHtml)"
-                                    title="Als interaktive Webseite speichern – Folien, Stichpunkte und Ton laufen im Browser auch ohne StudyScope"
+                                    title="@UiStrings.Video_HtmlTitle"
                                     @onclick="() => { confirmHtmlExport = !confirmHtmlExport; confirmMp4Export = false; }">🌐 HTML</button>
                             <button type="button" class="vd-btn" style="background: var(--ss-donate);" disabled="@(!VdVm.CanExportMp4)"
-                                    title="@(VdVm.Mp4DisabledReason ?? "Als MP4-Video speichern (1920 × 1080, H.264) – läuft auf jedem Gerät und lässt sich hochladen")"
+                                    title="@(VdVm.Mp4DisabledReason ?? UiStrings.Video_Mp4Title)"
                                     @onclick="() => { confirmMp4Export = !confirmMp4Export; confirmHtmlExport = false; }">🎞️ MP4</button>
                         </div>
                     </div>
@@ -173,30 +174,30 @@
                     @if (VdVm.Mp4DisabledReason is { } mp4Reason && VdVm.Mp4Status is { IsAvailable: false } && !VdVm.IsBusy)
                     {
                         <div class="vd-meta" style="margin-top: 6px; font-size: 11.5px;">
-                            🎞️ MP4: @mp4Reason
+                            @Loc.Format(UiStrings.Video_Mp4Reason, ("reason", mp4Reason))
                             @if (VdVm.Mp4Hint is { } mp4Hint) { <div>@mp4Hint</div> }
-                            <button type="button" class="vd-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">⚙️ ffmpeg einrichten</button>
+                            <button type="button" class="vd-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">@UiStrings.Speech_SetupFfmpeg</button>
                         </div>
                     }
 
                     @if (confirmMp4Export && VdVm.HasVideo)
                     {
                         <div class="vd-confirm" style="margin-top: 10px;">
-                            <div style="font-weight: 600;">🎞️ Video als MP4 speichern (1920 × 1080)</div>
+                            <div style="font-weight: 600;">@UiStrings.Video_Mp4ConfirmTitle</div>
                             <div class="vd-meta" style="margin-top: 4px;">@VdVm.Mp4EstimateText</div>
                             @if (VdVm.HtmlExportNoAudioReason is { } mp4NoAudio)
                             {
-                                <div class="vd-meta" style="margin-top: 4px; color: var(--ss-warning-text);">🔇 @mp4NoAudio Für Ton erzeugen Sie zuerst das Audio mit Gemini TTS.</div>
+                                <div class="vd-meta" style="margin-top: 4px; color: var(--ss-warning-text);">@Loc.Format(UiStrings.Video_NoAudioHint, ("reason", mp4NoAudio))</div>
                             }
-                            <div class="vd-meta" style="margin-top: 4px;">Die Folien sehen aus wie hier im Reiter; Stichpunkte erscheinen nacheinander, zwischen den Folien wird übergeblendet. Die Zeit- und Größenangaben sind Schätzungen.</div>
+                            <div class="vd-meta" style="margin-top: 4px;">@UiStrings.Video_Mp4Explanation</div>
                             <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center; flex-wrap: wrap;">
-                                <button type="button" class="vd-btn" style="background: var(--ss-donate);" disabled="@(!VdVm.CanExportMp4)" @onclick="ExportMp4Async">💾 MP4 speichern …</button>
+                                <button type="button" class="vd-btn" style="background: var(--ss-donate);" disabled="@(!VdVm.CanExportMp4)" @onclick="ExportMp4Async">@UiStrings.Video_SaveMp4</button>
                                 @if (VdVm.HtmlExportHasAudio)
                                 {
                                     <button type="button" class="vd-btn" style="background: var(--ss-primary);" disabled="@(!VdVm.CanExportAudioTrackMp3)"
-                                            title="@(VdVm.Mp3TrackDisabledReason ?? "Nur die Tonspur als MP3 speichern (64 kbit/s mono)")" @onclick="ExportAudioTrackMp3Async">🎵 Nur Tonspur (MP3) …</button>
+                                            title="@(VdVm.Mp3TrackDisabledReason ?? UiStrings.Video_Mp3TrackTitle)" @onclick="ExportAudioTrackMp3Async">@UiStrings.Video_Mp3Track</button>
                                 }
-                                <button type="button" class="vd-link" @onclick="() => confirmMp4Export = false">Abbrechen</button>
+                                <button type="button" class="vd-link" @onclick="() => confirmMp4Export = false">@UiStrings.Common_Cancel</button>
                             </div>
                         </div>
                     }
@@ -204,11 +205,11 @@
                     @if (confirmHtmlExport && VdVm.HasVideo)
                     {
                         <div class="vd-confirm" style="margin-top: 10px;">
-                            <div style="font-weight: 600;">🌐 Video als interaktive HTML-Datei speichern</div>
-                            <div class="vd-meta" style="margin-top: 4px;">Ungefähre Dateigröße: <b>@VdVm.HtmlExportEstimateText</b></div>
+                            <div style="font-weight: 600;">@UiStrings.Video_HtmlConfirmTitle</div>
+                            <div class="vd-meta" style="margin-top: 4px;">@LocHtml.Format(UiStrings.Video_HtmlSize, ("size", VdVm.HtmlExportEstimateText ?? ""))</div>
                             @if (VdVm.HtmlExportNoAudioReason is { } noAudio)
                             {
-                                <div class="vd-meta" style="margin-top: 4px; color: var(--ss-warning-text);">🔇 @noAudio Für Ton erzeugen Sie zuerst das Audio mit Gemini TTS.</div>
+                                <div class="vd-meta" style="margin-top: 4px; color: var(--ss-warning-text);">@Loc.Format(UiStrings.Video_NoAudioHint, ("reason", noAudio))</div>
                             }
                             @if (VdVm.HtmlExportHasAudio)
                             {
@@ -216,17 +217,17 @@
                                 {
                                     <label class="vd-meta" style="display: flex; gap: 6px; align-items: center; margin-top: 6px; cursor: pointer;">
                                         <input type="checkbox" checked="@VdVm.HtmlUseMp3" @onchange="e => VdVm.HtmlUseMp3 = (bool)(e.Value ?? false)" />
-                                        Ton als MP3 einbetten (kleinere Datei, über ffmpeg)
+                                        @UiStrings.Video_HtmlUseMp3
                                     </label>
                                 }
                                 else
                                 {
-                                    <div class="vd-meta" style="margin-top: 4px;">Der Ton wird als WAV eingebettet (≈ 3,9 MB je Minute). Mit ffmpeg wäre MP3 möglich (deutlich kleiner).</div>
+                                    <div class="vd-meta" style="margin-top: 4px;">@UiStrings.Video_HtmlWavHint</div>
                                 }
                             }
                             <div style="display: flex; gap: 8px; margin-top: 8px; align-items: center;">
-                                <button type="button" class="vd-btn" style="background: var(--ss-purple);" disabled="@(!VdVm.CanExportHtml)" @onclick="ExportHtmlAsync">💾 Speichern …</button>
-                                <button type="button" class="vd-link" @onclick="() => confirmHtmlExport = false">Abbrechen</button>
+                                <button type="button" class="vd-btn" style="background: var(--ss-purple);" disabled="@(!VdVm.CanExportHtml)" @onclick="ExportHtmlAsync">@UiStrings.Video_Save</button>
+                                <button type="button" class="vd-link" @onclick="() => confirmHtmlExport = false">@UiStrings.Common_Cancel</button>
                             </div>
                         </div>
                     }
@@ -234,13 +235,13 @@
                     @if (VdVm.IsPresentationChanged)
                     {
                         <div class="vd-hint" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                            <span style="flex: 1; min-width: 200px;">📝 <b>Präsentation wurde geändert.</b> Das Video zeigt noch die Folien vom Erstellen. „Folien aktualisieren“ übernimmt die neuen Folien; vorhandene Sprechtexte bleiben erhalten, neue Folien bekommen den Text aus den Sprechernotizen.</span>
-                            <button type="button" class="vd-btn" style="background: var(--ss-orange);" disabled="@VdVm.IsBusy" @onclick="VdVm.RefreshSlidesAsync">🔄 Folien aktualisieren</button>
+                            <span style="flex: 1; min-width: 200px;">@LocHtml.Format(UiStrings.Video_PresentationChanged, ("button", UiStrings.Video_RefreshSlides))</span>
+                            <button type="button" class="vd-btn" style="background: var(--ss-orange);" disabled="@VdVm.IsBusy" @onclick="VdVm.RefreshSlidesAsync">@UiStrings.Video_RefreshSlides</button>
                         </div>
                     }
                     else if (VdVm.IsPresentationMissing)
                     {
-                        <div class="vd-meta" style="margin-top: 6px;">ℹ️ Die Präsentation dieses Profils wurde gelöscht – das Video nutzt weiter seine eigene Kopie der Folien.</div>
+                        <div class="vd-meta" style="margin-top: 6px;">@UiStrings.Video_PresentationMissing</div>
                     }
 
                     <!-- Abspielfläche -->
@@ -265,7 +266,7 @@
                         var slide = video.SlideAt(index);
                         var isCurrent = index == VdVm.CurrentSceneIndex;
                         <div id="vd-scene-@index" class="vd-scene @(isCurrent ? "current" : "")">
-                            <div class="vd-scene-thumb" title="Diese Folie zeigen" @onclick="() => VdVm.GoToSceneAsync(index)">
+                            <div class="vd-scene-thumb" title="@UiStrings.Video_ShowSlide" @onclick="() => VdVm.GoToSceneAsync(index)">
                                 @if (slide != null)
                                 {
                                     <SlideView Slide="slide" Number="index + 1" Total="total" PresentationTitle="@video.PresentationTitle" />
@@ -273,33 +274,33 @@
                             </div>
                             <div class="vd-scene-body">
                                 <div class="vd-scene-head">
-                                    <b>Folie @(index + 1): @slide?.Title</b>
+                                    <b>@Loc.Format(UiStrings.Video_SceneHeading, ("number", index + 1), ("title", slide?.Title ?? ""))</b>
                                     @if (isCurrent && VdVm.IsPlaying)
                                     {
-                                        <span class="vd-meta" style="color: var(--ss-link); font-weight: 600;">@(VdVm.IsPaused ? "⏸ pausiert" : "🔊 läuft …")</span>
+                                        <span class="vd-meta" style="color: var(--ss-link); font-weight: 600;">@(VdVm.IsPaused ? UiStrings.Audio_PausedBadge : UiStrings.Video_Running)</span>
                                     }
                                     @if (VdVm.SelectedProvider == SpeechProviderType.GeminiTts && scene.HasNarration)
                                     {
-                                        <span class="vd-meta" title="Audio dieser Szene">@(scene.NeedsAudio ? (scene.HasAudio ? "✏️ Audio veraltet" : "○ noch kein Audio") : "🎵 Audio aktuell")</span>
+                                        <span class="vd-meta" title="@UiStrings.Video_SceneAudioTitle">@(scene.NeedsAudio ? (scene.HasAudio ? UiStrings.Video_SceneAudioOutdated : UiStrings.Video_SceneNoAudio) : UiStrings.Video_SceneAudioCurrent)</span>
                                     }
                                     <span class="vd-scene-tools">
-                                        <button class="vd-icon small" title="Ab hier abspielen" disabled="@(!VdVm.CanPlay)" @onclick="() => PlayFromAsync(index)">▶</button>
-                                        <button class="vd-icon small" title="Sprechtext bearbeiten" @onclick="() => StartEdit(index, scene.Narration)">✏️</button>
+                                        <button class="vd-icon small" title="@UiStrings.Video_PlayFromHere" aria-label="@UiStrings.Video_PlayFromHere" disabled="@(!VdVm.CanPlay)" @onclick="() => PlayFromAsync(index)">▶</button>
+                                        <button class="vd-icon small" title="@UiStrings.Video_EditNarration" aria-label="@UiStrings.Video_EditNarration" @onclick="() => StartEdit(index, scene.Narration)">✏️</button>
                                     </span>
                                 </div>
                                 @if (editIndex == index)
                                 {
                                     <textarea id="vd-editor" class="vd-input" rows="@(Math.Clamp(editText.Length / 90 + 2, 3, 12))" @bind="editText" @bind:event="oninput" @onkeydown="EditKeyAsync"></textarea>
                                     <div style="display: flex; gap: 6px; margin-top: 4px; align-items: center;">
-                                        <button class="vd-btn" style="background: var(--ss-success); padding: 3px 10px;" @onclick="CommitEditAsync">Übernehmen</button>
-                                        <button class="vd-link" @onclick="() => editIndex = null">Abbrechen</button>
-                                        <span class="vd-meta">Strg+Enter übernimmt, Esc bricht ab. Leer = Folie ohne Ton (3 Sekunden).</span>
+                                        <button class="vd-btn" style="background: var(--ss-success); padding: 3px 10px;" @onclick="CommitEditAsync">@UiStrings.Common_Apply</button>
+                                        <button class="vd-link" @onclick="() => editIndex = null">@UiStrings.Common_Cancel</button>
+                                        <span class="vd-meta">@UiStrings.Video_EditHint</span>
                                     </div>
                                 }
                                 else
                                 {
-                                    <div class="vd-scene-text" title="Doppelklick zum Bearbeiten" @ondblclick="() => StartEdit(index, scene.Narration)">
-                                        @(scene.HasNarration ? scene.Narration : "(kein Sprechtext – die Folie wird 3 Sekunden ohne Ton gezeigt)")
+                                    <div class="vd-scene-text" title="@UiStrings.Common_DoubleClickToEdit" @ondblclick="() => StartEdit(index, scene.Narration)">
+                                        @(scene.HasNarration ? scene.Narration : UiStrings.Video_NoNarrationScene)
                                     </div>
                                 }
                             </div>
@@ -309,18 +310,15 @@
             }
             else if (!VdVm.IsFormOpen)
             {
-                <div class="vd-empty">Wählen Sie links ein Video aus oder erstellen Sie ein neues.</div>
+                <div class="vd-empty">@UiStrings.Video_Empty</div>
             }
             else
             {
                 <div class="vd-empty">
                     <div style="font-size: 34px; margin-bottom: 10px;">🎬</div>
-                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">So entsteht die Videoübersicht</p>
-                    <span style="font-size: 12px; line-height: 1.6; display: block; text-align: left;">
-                        1. Grundlage ist die Präsentation dieses Profils – oder die KI erzeugt neue Folien nur für dieses Video.<br />
-                        2. Die KI schreibt zu jeder Folie einen kurzen Sprechtext (oder die Sprechernotizen werden direkt übernommen).<br />
-                        3. Beim Abspielen bleibt jede Folie so lange stehen, wie ihr Sprechtext dauert; die Stichpunkte erscheinen nacheinander.<br />
-                        4. Vorgelesen wird mit der Systemstimme oder mit Gemini TTS (Audiodatei, exakt passende Folienwechsel).
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">@UiStrings.Video_HowTitle</p>
+                    <span style="font-size: 12px; line-height: 1.6; display: block; text-align: start;">
+                        @LocHtml.Format(UiStrings.Video_HowSteps)
                     </span>
                 </div>
             }
@@ -351,7 +349,7 @@
         .vd-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
         .vd-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .vd-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: vd-slide 1.4s ease-in-out infinite; }
-        @@keyframes vd-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        @@keyframes vd-slide { 0% { left: -40%; } 100% { left: 100%; } }  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
         .vd-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .vd-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .vd-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
@@ -365,7 +363,7 @@
         .vd-number { width: 56px; padding: 4px; border-radius: 4px; border: 1px solid var(--ss-border); font-size: 13px; text-align: center; }
         .vd-select { padding: 3px 6px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 12px; font-family: inherit; background: var(--ss-surface); max-width: 100%; }
         .vd-choices { display: flex; flex-direction: column; gap: 6px; }
-        .vd-choice { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
+        .vd-choice { display: flex; gap: 10px; align-items: flex-start; text-align: start; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
         .vd-choice.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .vd-choice:disabled { cursor: not-allowed; background: var(--ss-hover); color: var(--ss-text-muted); }
         .vd-choice b { display: block; }
@@ -376,7 +374,7 @@
         .vd-item.active { background: var(--ss-selected-bg); border-color: var(--ss-selected-border); }
         .vd-item-title { font-size: 13px; font-weight: 600; color: var(--ss-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .vd-providers { display: flex; gap: 8px; flex-wrap: wrap; }
-        .vd-provider { flex: 1 1 240px; display: flex; gap: 8px; align-items: flex-start; text-align: left; padding: 8px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 12.5px; font-family: inherit; color: var(--ss-text); }
+        .vd-provider { flex: 1 1 240px; display: flex; gap: 8px; align-items: flex-start; text-align: start; padding: 8px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 12.5px; font-family: inherit; color: var(--ss-text); }
         .vd-provider.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .vd-provider:disabled { cursor: not-allowed; background: var(--ss-hover); color: var(--ss-text-muted); }
         .vd-provider b { display: block; }
@@ -405,8 +403,8 @@
         .vd-confirm { background: var(--ss-purple-bg); border: 1px solid var(--ss-purple-border); border-radius: 6px; padding: 9px 12px; }
         .vd-hint { margin-top: 8px; font-size: 12px; color: var(--ss-warning-text); background: var(--ss-highlight-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; padding: 5px 9px; }
         .vd-scenes { display: flex; flex-direction: column; gap: 6px; }
-        .vd-scene { display: flex; flex-wrap: wrap; gap: 8px 12px; min-width: 0; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-left: 4px solid var(--ss-border-light); border-radius: 6px; padding: 8px 12px; transition: background 0.2s, border-color 0.2s; }
-        .vd-scene.current { background: var(--ss-highlight-bg); border-color: var(--ss-highlight-border); border-left-color: var(--ss-amber); }
+        .vd-scene { display: flex; flex-wrap: wrap; gap: 8px 12px; min-width: 0; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-inline-start: 4px solid var(--ss-border-light); border-radius: 6px; padding: 8px 12px; transition: background 0.2s, border-color 0.2s; }
+        .vd-scene.current { background: var(--ss-highlight-bg); border-color: var(--ss-highlight-border); border-inline-start-color: var(--ss-amber); }
         .vd-scene-body { flex: 1 1 260px; min-width: 0; }
         .vd-scene-thumb { width: 130px; flex-shrink: 0; border-radius: 4px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.15); cursor: pointer; align-self: flex-start; }
         .vd-scene-head { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-bottom: 3px; font-size: 13px; color: var(--ss-text); }
@@ -419,7 +417,7 @@
 
         .vd-present { position: fixed; inset: 0; z-index: 1000; background: #000; display: flex; align-items: center; justify-content: center; outline: none; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .vd-present-slide { width: min(100vw, calc(100vh * 16 / 9)); }
-        .vd-present-bar { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 18px; background: linear-gradient(transparent, rgba(0,0,0,0.75)); opacity: 0.15; transition: opacity 0.25s; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
+        .vd-present-bar { position: absolute; inset-inline: 0; bottom: 0; padding: 10px 18px; background: linear-gradient(transparent, rgba(0,0,0,0.75)); opacity: 0.15; transition: opacity 0.25s; }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .vd-present:hover .vd-present-bar, .vd-present-bar:focus-within { opacity: 1; }
         .vd-present-bar .vd-meta { color: rgba(255,255,255,0.85); }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
         .vd-present-bar .vd-play-btn { background: rgba(255,255,255,0.9); }  /* ss:feste-farbe – Vortrag/Bühne immer dunkel */
@@ -476,34 +474,34 @@
     private RenderFragment PlayerControls(bool presenting) => __builder =>
     {
         <div class="vd-player">
-            <button class="vd-play-btn" title="Vorherige Folie (←)" disabled="@(!VdVm.CanPlay || !VdVm.CanGoPrevious)" @onclick="VdVm.PreviousAsync">⏮</button>
-            <button class="vd-play-btn main" title="@(VdVm.PlayDisabledReason ?? (VdVm.IsPlaying && !VdVm.IsPaused ? "Pause (Leertaste)" : "Abspielen (Leertaste)"))"
+            <button class="vd-play-btn" title="@UiStrings.Video_PreviousSlide" aria-label="@UiStrings.Video_PreviousSlide" disabled="@(!VdVm.CanPlay || !VdVm.CanGoPrevious)" @onclick="VdVm.PreviousAsync">⏮</button>
+            <button class="vd-play-btn main" title="@(VdVm.PlayDisabledReason ?? (VdVm.IsPlaying && !VdVm.IsPaused ? UiStrings.Video_PauseKey : UiStrings.Video_PlayKey))"
                     disabled="@(!VdVm.CanPlay)" @onclick="VdVm.TogglePlayPauseAsync">
                 @(VdVm.IsPlaying && !VdVm.IsPaused ? "⏸" : "▶")
             </button>
-            <button class="vd-play-btn" title="Nächste Folie (→)" disabled="@(!VdVm.CanPlay || !VdVm.CanGoNext)" @onclick="VdVm.NextAsync">⏭</button>
-            <button class="vd-play-btn" title="Stopp" disabled="@(!VdVm.IsPlaying)" @onclick="VdVm.StopAsync">⏹</button>
+            <button class="vd-play-btn" title="@UiStrings.Video_NextSlide" aria-label="@UiStrings.Video_NextSlide" disabled="@(!VdVm.CanPlay || !VdVm.CanGoNext)" @onclick="VdVm.NextAsync">⏭</button>
+            <button class="vd-play-btn" title="@UiStrings.Common_Stop" aria-label="@UiStrings.Common_Stop" disabled="@(!VdVm.IsPlaying)" @onclick="VdVm.StopAsync">⏹</button>
             <div style="flex: 1; min-width: 160px;">
                 <input type="range" class="vd-range" min="0" max="1000" step="1" value="@((int)Math.Round(VdVm.Progress * 1000))"
-                       title="Zum Springen klicken oder ziehen" disabled="@(!VdVm.HasVideo)" @onchange="SeekAsync" />
-                <div class="vd-meta" style="margin-top: 1px;">@VdVm.ProgressText @(VdVm.IsPaused ? "· pausiert" : "") @(VdVm.IsEnded ? "· Ende" : "")</div>
+                       title="@UiStrings.Video_SeekTitle" disabled="@(!VdVm.HasVideo)" @onchange="SeekAsync" />
+                <div class="vd-meta" style="margin-top: 1px;">@VdVm.ProgressText @(VdVm.IsPaused ? $"· {UiStrings.Common_Paused}" : "") @(VdVm.IsEnded ? $"· {UiStrings.Video_Ended}" : "")</div>
             </div>
-            <label class="vd-meta" style="display: inline-flex; align-items: center; gap: 6px;" title="Sprechgeschwindigkeit">
-                Tempo
+            <label class="vd-meta" style="display: inline-flex; align-items: center; gap: 6px;" title="@UiStrings.Common_TempoTitle">
+                @UiStrings.Common_Tempo
                 <select class="vd-select" value="@VdVm.Rate.ToString("0.##", CultureInfo.InvariantCulture)" @onchange="RateChangedAsync">
                     @foreach (var rate in Rates)
                     {
-                        <option value="@rate.ToString("0.##", CultureInfo.InvariantCulture)">@rate.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"))×</option>
+                        <option value="@rate.ToString("0.##", CultureInfo.InvariantCulture)">@rate.ToString("0.##", CultureInfo.CurrentCulture)×</option>
                     }
                 </select>
             </label>
             @if (presenting)
             {
-                <button class="vd-btn" style="background: var(--ss-secondary);" title="Vollbild beenden (Esc)" @onclick="ExitPresentingAsync">✕ Esc</button>
+                <button class="vd-btn" style="background: var(--ss-secondary);" title="@UiStrings.Video_ExitFullScreenTitle" @onclick="ExitPresentingAsync">✕ Esc</button>
             }
             else
             {
-                <button class="vd-btn" style="background: var(--ss-success);" title="Im Vollbild abspielen (Esc beendet)" disabled="@(!VdVm.CanPlay)" @onclick="StartPresentingAsync">⛶ Vollbild</button>
+                <button class="vd-btn" style="background: var(--ss-success);" title="@UiStrings.Video_FullScreenTitle" disabled="@(!VdVm.CanPlay)" @onclick="StartPresentingAsync">@UiStrings.Video_FullScreen</button>
             }
         </div>
     };
@@ -513,22 +511,22 @@
     {
         var pres = VdVm.CurrentPresentation;
         <div class="vd-card" style="border-color: var(--ss-selected-border);">
-            <h4>➕ Neues Video</h4>
-            <label class="vd-label" style="margin-top: 4px;">Folien</label>
+            <h4>@UiStrings.Video_FormTitle</h4>
+            <label class="vd-label" style="margin-top: 4px;">@UiStrings.Video_Slides</label>
             <div class="vd-choices">
                 <button type="button" class="vd-choice @(VdVm.SlideSource == VideoSlideSource.ProfilePresentation ? "active" : "")"
                         disabled="@(VdVm.IsBusy || !VdVm.HasProfilePresentation)" @onclick="() => VdVm.SlideSource = VideoSlideSource.ProfilePresentation">
                     <span style="font-size: 18px;">📽️</span>
                     <span>
-                        <b>Präsentation dieses Profils</b>
+                        <b>@UiStrings.Video_ProfilePresentation</b>
                         <span class="vd-desc">
                             @if (pres is { Slides.Count: > 0 })
                             {
-                                @($"„{pres.Title}“ · {pres.Slides.Count} Folien – das Video speichert eine Kopie der Folien.")
+                                @Loc.Format(UiStrings.Video_PresentationInfo, ("title", pres.Title), ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", pres.Slides.Count))))
                             }
                             else
                             {
-                                @("Noch keine Präsentation vorhanden (Reiter „Präsentation“).")
+                                @UiStrings.Video_NoProfilePresentation
                             }
                         </span>
                     </span>
@@ -537,8 +535,8 @@
                         @onclick="() => VdVm.SlideSource = VideoSlideSource.NewPresentation">
                     <span style="font-size: 18px;">✨</span>
                     <span>
-                        <b>Neue Folien per KI</b>
-                        <span class="vd-desc">Aus den links aktivierten Dokumenten – nur für dieses Video, die Präsentation des Profils bleibt unverändert.</span>
+                        <b>@UiStrings.Video_NewSlidesAi</b>
+                        <span class="vd-desc">@UiStrings.Video_NewSlidesAiDesc</span>
                     </span>
                 </button>
             </div>
@@ -547,19 +545,19 @@
             {
                 <!-- Warnung bleibt bei beiden Grundlagen sichtbar -->
                 <div class="vd-note warn" style="margin-top: 10px;">
-                    <b>⚠️ Andere Dokumente als angehakt</b><br />
+                    <b>@UiStrings.Video_MismatchTitle</b><br />
                     @($"{mismatch.Message} ")
                     @if (VdVm.SlideSource == VideoSlideSource.ProfilePresentation)
                     {
-                        <span>Das Video würde die Folien der vorhandenen Präsentation verwenden.</span>
+                        <span>@UiStrings.Video_MismatchUsePresentation</span>
                         <button type="button" class="vd-btn" style="background: var(--ss-orange); margin-top: 8px; width: 100%; justify-content: center;"
                                 disabled="@(VdVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateFromSelectedAsync">
-                            ✨ Stattdessen neu aus den angehakten Dokumenten erzeugen
+                            @UiStrings.Video_MismatchRegenerate
                         </button>
                     }
                     else
                     {
-                        <span>Deshalb ist „Neue Folien per KI“ aus den angehakten Dokumenten vorausgewählt. Soll trotzdem die vorhandene Präsentation verwendet werden, oben „Präsentation dieses Profils“ wählen.</span>
+                        <span>@Loc.Format(UiStrings.Video_MismatchNewSelected, ("newSlides", UiStrings.Video_NewSlidesAi), ("presentation", UiStrings.Video_ProfilePresentation))</span>
                     }
                 </div>
             }
@@ -579,33 +577,33 @@
             @if (VdVm.SlideSource == VideoSlideSource.NewPresentation)
             {
                 <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--ss-text-2);">
-                    Inhaltsfolien: <input type="number" min="3" max="20" class="vd-number" @bind="VdVm.SlideCount" />
-                    <span class="vd-meta">(@ActiveDocumentCount aktivierte Dokumente)</span>
+                    @UiStrings.Video_ContentSlides <input type="number" min="3" max="20" class="vd-number" @bind="VdVm.SlideCount" />
+                    <span class="vd-meta">@Loc.Format(UiStrings.Video_ActiveDocuments, ("count", ActiveDocumentCount))</span>
                 </div>
             }
             else if (VdVm.CanUseNotes)
             {
                 <label style="display: flex; gap: 6px; align-items: flex-start; margin-top: 10px; font-size: 12.5px; color: var(--ss-text); cursor: pointer;">
                     <input type="checkbox" checked="@VdVm.UseNotesDirectly" @onchange="e => VdVm.UseNotesDirectly = e.Value is true" />
-                    <span>Sprechernotizen direkt verwenden<span class="vd-desc">Die Präsentation hat ausführliche Notizen – sie werden ohne KI-Aufruf als Sprechtext übernommen.</span></span>
+                    <span>@UiStrings.Video_UseNotes<span class="vd-desc">@UiStrings.Video_UseNotesDesc</span></span>
                 </label>
             }
 
-            <label class="vd-label">Titel <span style="font-weight: normal; color: var(--ss-text-muted);">(optional)</span></label>
+            <label class="vd-label">@UiStrings.Common_TitleLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.Common_OptionalHint</span></label>
             <input class="vd-input" @bind="VdVm.CustomTitle" @bind:event="oninput" />
 
             <button type="button" class="vd-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                     disabled="@(!VdVm.CanGenerate)" @onclick="GenerateAsync">
-                🎬 Video erstellen
+                @VmStrings.Video_Generate
             </button>
             @if (VdVm.SlideSource == VideoSlideSource.NewPresentation && ActiveDocumentCount == 0)
             {
-                <div class="vd-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                <div class="vd-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">@UiStrings.Common_ActivateDocument</div>
             }
-            <div class="vd-meta" style="margin-top: 6px;">Die Sprechtexte schreibt die KI aus Ihren Einstellungen; vorgelesen wird mit der gewählten Sprachausgabe.</div>
+            <div class="vd-meta" style="margin-top: 6px;">@UiStrings.Video_FormHint</div>
             @if (VdVm.Items.Count > 0)
             {
-                <button type="button" class="vd-link" style="margin-top: 8px;" @onclick="() => VdVm.IsFormOpen = false">Abbrechen</button>
+                <button type="button" class="vd-link" style="margin-top: 8px;" @onclick="() => VdVm.IsFormOpen = false">@UiStrings.Common_Cancel</button>
             }
         </div>
     };
@@ -618,8 +616,8 @@
 
         <div class="vd-card">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <h4 style="margin: 0;">🔊 Sprachausgabe</h4>
-                <button class="vd-link" title="Verfügbarkeit und Stimmen neu prüfen (z. B. nach Installation einer Stimme)" @onclick="RecheckAsync">↻ Neu prüfen</button>
+                <h4 style="margin: 0;">@UiStrings.Speech_PanelTitle</h4>
+                <button class="vd-link" title="@UiStrings.Speech_RecheckTitle" @onclick="RecheckAsync">@UiStrings.Speech_Recheck</button>
             </div>
             <div class="vd-providers" style="margin-top: 8px;">
                 @foreach (var service in VdVm.SpeechServices)
@@ -629,18 +627,18 @@
                     var (css, icon) = AvailabilityStyle(availability);
                     var selectable = VdVm.CanSelectProvider(provider);
                     <button type="button" class="vd-provider @(VdVm.SelectedProvider == provider ? "active" : "")" disabled="@(!selectable)"
-                            title="@(selectable ? service.DisplayName : $"Nicht verfügbar: {availability.Message} {availability.Hint}")"
+                            title="@(selectable ? MediaTexts.ProviderName(provider) : Loc.Format(UiStrings.Speech_NotAvailableTitle, ("message", availability.Message), ("hint", availability.Hint ?? "")))"
                             @onclick="() => VdVm.SetProviderAsync(provider)">
                         <span style="font-size: 16px;">@(provider == SpeechProviderType.SystemVoice ? "🖥️" : "☁️")</span>
                         <span>
-                            <b>@service.DisplayName</b>
+                            <b>@MediaTexts.ProviderName(provider)</b>
                             <span class="vd-avail @css">@icon @availability.Message</span>
                         </span>
                     </button>
                 }
             </div>
             <div class="vd-meta" style="margin-top: 8px;">
-                Aktuell: <b>@(VdVm.CurrentSpeechService?.DisplayName ?? "–")</b> · <span class="vd-avail @currentCss" style="display: inline;">@currentIcon @current.Message</span>
+                @UiStrings.Speech_Current <b>@(VdVm.CurrentSpeechService is { } currentService ? MediaTexts.ProviderName(currentService.Provider) : "–")</b> · <span class="vd-avail @currentCss" style="display: inline;">@currentIcon @current.Message</span>
             </div>
             @if (!string.IsNullOrWhiteSpace(current.Hint))
             {
@@ -648,16 +646,16 @@
             }
             @if (VdVm.AvailabilityOf(SpeechProviderType.GeminiTts).Status == SpeechAvailabilityStatus.Unavailable)
             {
-                <button type="button" class="vd-link" style="margin-top: 6px;" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Gemini TTS einrichten (Einstellungen › Sprachausgabe)</button>
+                <button type="button" class="vd-link" style="margin-top: 6px;" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">@UiStrings.Speech_SetupGemini</button>
             }
 
             @if (VdVm.SelectedProvider == SpeechProviderType.SystemVoice)
             {
                 @if (VdVm.SystemVoices.Count > 0)
                 {
-                    <label class="vd-voice-row">Stimme
+                    <label class="vd-voice-row">@UiStrings.Speech_Voice
                         <select class="vd-select" value="@VdVm.SpeechSettings.SystemVoicePrimary" @onchange="VoiceChangedAsync">
-                            <option value="">Automatisch (@VoiceName(VdVm.NarratorVoice))</option>
+                            <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(VdVm.NarratorVoice)))</option>
                             @foreach (var voice in VdVm.SystemVoices)
                             {
                                 <option value="@voice.Id">@VoiceLabel(voice)</option>
@@ -665,18 +663,18 @@
                         </select>
                     </label>
                 }
-                <div class="vd-meta" style="margin-top: 6px;">⏱️ Die Folienwechsel richten sich nach dem Ende jedes Sprechtexts; die Gesamtdauer ist anfangs geschätzt.</div>
-                <div class="vd-meta" style="margin-top: 4px;">💾 Dateiexport: @SpeechProviderState.NoFileExportHint</div>
+                <div class="vd-meta" style="margin-top: 6px;">@UiStrings.Video_SystemVoiceTiming</div>
+                <div class="vd-meta" style="margin-top: 4px;">@Loc.Format(UiStrings.Speech_FileExport, ("hint", SpeechProviderState.NoFileExportHint))</div>
             }
             else if (VdVm.SelectedProvider == SpeechProviderType.GeminiTts)
             {
-                <div class="vd-note info">☁️ Gemini TTS erzeugt das Audio vorab – je Folie eine eigene Anfrage, damit die Folienwechsel exakt zum Ton passen (Stimme <b>@VdVm.SpeechSettings.GeminiVoicePrimary</b>). Nach Änderungen werden nur die geänderten Szenen neu erzeugt.</div>
+                <div class="vd-note info">@LocHtml.Format(UiStrings.Video_GeminiNote, ("voice", VdVm.SpeechSettings.GeminiVoicePrimary))</div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
                     <button type="button" class="vd-btn" style="background: var(--ss-info);" disabled="@(!VdVm.CurrentAvailability.IsAvailable || VdVm.IsTestingConnection)"
-                            title="Prüft Schlüssel und Modell über die kostenlose Modellabfrage – es wird keine Sprache erzeugt" @onclick="VdVm.TestSpeechConnectionAsync">
-                        @(VdVm.IsTestingConnection ? "Prüfe …" : "🔌 Verbindung testen")
+                            title="@UiStrings.Speech_TestTitle" @onclick="VdVm.TestSpeechConnectionAsync">
+                        @(VdVm.IsTestingConnection ? UiStrings.Speech_Testing : UiStrings.Speech_Test)
                     </button>
-                    <button type="button" class="vd-btn" style="background: var(--ss-secondary);" title="Schlüssel, Modell und Stimmen ändern" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Schlüssel, Modell, Stimmen</button>
+                    <button type="button" class="vd-btn" style="background: var(--ss-secondary);" title="@UiStrings.Speech_SettingsTitle" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">@UiStrings.Speech_Settings</button>
                 </div>
             }
 
@@ -686,7 +684,7 @@
             }
             @if (VdVm.IsLocalChatAi)
             {
-                <div class="vd-note info">ℹ️ @SpeechProviderState.LocalAiHint Ollama und LM Studio selbst können keine Sprache erzeugen.</div>
+                <div class="vd-note info">@Loc.Format(UiStrings.Speech_LocalAiNote, ("hint", SpeechProviderState.LocalAiHint))</div>
             }
         </div>
     };
@@ -704,34 +702,34 @@
             @if (video.HasAudioFile)
             {
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <span style="font-weight: 600;">🎵 Audio:</span>
+                    <span style="font-weight: 600;">@UiStrings.Video_AudioLabel</span>
                     <span class="vd-meta" style="font-size: 12px;">
-                        @Clock(video.AudioDurationSeconds) Min.
-                        @if (video.AudioCreatedAt is { } created) { <span> · erzeugt am @created.ToString("dd.MM.yyyy HH:mm")</span> }
+                        @Loc.Format(UiStrings.Audio_FileDuration, ("duration", Clock(video.AudioDurationSeconds)))
+                        @if (video.AudioCreatedAt is { } created) { <span> · @Loc.Format(UiStrings.Common_CreatedOn, ("date", created.ToString("g")))</span> }
                         @if (!string.IsNullOrWhiteSpace(video.AudioCreatedWith)) { <span> · @video.AudioCreatedWith</span> }
                     </span>
                     <span style="flex: 1;"></span>
                     @if (confirmDeleteAudio)
                     {
-                        <button type="button" class="vd-btn" style="background: var(--ss-danger);" @onclick="DeleteAudioAsync">Audio löschen?</button>
-                        <button class="vd-icon" title="Nicht löschen" @onclick="() => confirmDeleteAudio = false">✕</button>
+                        <button type="button" class="vd-btn" style="background: var(--ss-danger);" @onclick="DeleteAudioAsync">@UiStrings.Video_DeleteAudioConfirm</button>
+                        <button class="vd-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteAudio = false">✕</button>
                     }
                     else
                     {
-                        <button class="vd-icon" title="Alle Audiodateien dieses Videos löschen (die Sprechtexte bleiben)" disabled="@VdVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
+                        <button class="vd-icon" title="@UiStrings.Video_DeleteAudioTitle" aria-label="@UiStrings.Video_DeleteAudioTitle" disabled="@VdVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
                     }
                 </div>
                 @if (VdVm.SelectedAudioFilePath == null)
                 {
-                    <div class="vd-hint">⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie das Audio bei Bedarf neu.</div>
+                    <div class="vd-hint">@UiStrings.Video_AudioFileMissing</div>
                 }
                 else if (video.IsAudioOutdated)
                 {
-                    <div class="vd-hint">✏️ Sprechtexte oder Folien wurden nach dem Erzeugen geändert. @(needing > 0 ? $"{needing} Szene(n) müssen neu erzeugt werden – die übrigen bleiben." : "Das Audio muss nur neu zusammengesetzt werden (kostenlos).")</div>
+                    <div class="vd-hint">@(needing > 0 ? Loc.Format(UiStrings.Video_AudioChangedScenes, ("count", needing)) : UiStrings.Video_AudioChangedAssemble)</div>
                 }
                 else if (!VdVm.UsesFilePlayback && service is { SupportsLivePlayback: true })
                 {
-                    <div class="vd-meta" style="margin-top: 4px;">▶ liest mit der Systemstimme vor. Zum Abspielen des Gemini-Audios oben „Gemini TTS“ wählen.</div>
+                    <div class="vd-meta" style="margin-top: 4px;">@UiStrings.Video_LiveWithSystemVoice</div>
                 }
             }
 
@@ -742,19 +740,19 @@
                     @if (confirmGenerateAudio && VdVm.CanGenerateAudio)
                     {
                         <div class="vd-confirm">
-                            <div style="font-weight: 600;">🎙️ Audio mit @service!.DisplayName @(confirmGenerateAll ? "für alle Szenen neu erzeugen" : "erzeugen")?</div>
+                            <div style="font-weight: 600;">@Loc.Format(confirmGenerateAll ? UiStrings.Video_ConfirmGenerateAll : UiStrings.Video_ConfirmGenerate, ("provider", MediaTexts.ProviderName(service!.Provider)))</div>
                             @if (VdVm.EstimateText(confirmGenerateAll) is { } estimate)
                             {
-                                <div class="vd-meta" style="margin-top: 3px; font-size: 12px;">Geschätzt: @estimate</div>
+                                <div class="vd-meta" style="margin-top: 3px; font-size: 12px;">@Loc.Format(UiStrings.Common_EstimatePrefix, ("estimate", estimate))</div>
                             }
                             else
                             {
-                                <div class="vd-meta" style="margin-top: 3px; font-size: 12px;">Alle Szenen sind aktuell – das Audio wird nur neu zusammengesetzt (kostenlos).</div>
+                                <div class="vd-meta" style="margin-top: 3px; font-size: 12px;">@UiStrings.Video_OnlyAssemble</div>
                             }
-                            <div class="vd-meta" style="margin-top: 3px;">🔒 Die Sprechtexte werden dazu an Google gesendet. Jede Szene entsteht vollständig oder gar nicht.</div>
+                            <div class="vd-meta" style="margin-top: 3px;">@UiStrings.Video_SentToGoogle</div>
                             <div style="display: flex; gap: 6px; margin-top: 8px;">
-                                <button type="button" class="vd-btn" style="background: var(--ss-success);" @onclick="GenerateAudioAsync">Jetzt erzeugen</button>
-                                <button type="button" class="vd-link" @onclick="() => confirmGenerateAudio = false">Abbrechen</button>
+                                <button type="button" class="vd-btn" style="background: var(--ss-success);" @onclick="GenerateAudioAsync">@UiStrings.Common_GenerateNow</button>
+                                <button type="button" class="vd-link" @onclick="() => confirmGenerateAudio = false">@UiStrings.Common_Cancel</button>
                             </div>
                         </div>
                     }
@@ -764,9 +762,11 @@
                             @if (!upToDate)
                             {
                                 <button type="button" class="vd-btn" style="background: var(--ss-purple);" disabled="@(!VdVm.CanGenerateAudio)"
-                                        title="@(VdVm.GenerateAudioDisabledReason ?? "Audio erzeugen (vorher werden Kosten und Größe angezeigt)")"
+                                        title="@(VdVm.GenerateAudioDisabledReason ?? UiStrings.Video_GenerateAudioTitle)"
                                         @onclick="() => AskGenerate(false)">
-                                    🎙️ @(VdVm.NeedsOnlyAssembly ? "Audio zusammensetzen" : video.HasAudioFile ? $"Geänderte Szenen neu erzeugen ({needing})" : "Audio erzeugen")
+                                    @(VdVm.NeedsOnlyAssembly
+                                        ? Loc.Format(UiStrings.Video_AssembleButton, ("label", VmStrings.Video_AssembleAudio))
+                                        : video.HasAudioFile ? Loc.Format(UiStrings.Video_RegenerateChanged, ("count", needing)) : VmStrings.Video_GenerateAudio)
                                 </button>
                                 @if (VdVm.EstimateText(false) is { } estimate)
                                 {
@@ -775,11 +775,11 @@
                             }
                             else
                             {
-                                <span class="vd-meta">✓ Audio ist aktuell.</span>
+                                <span class="vd-meta">@UiStrings.Video_AudioCurrent</span>
                             }
                             @if (video.Scenes.Any(s => s.HasAudio))
                             {
-                                <button type="button" class="vd-link" disabled="@(!VdVm.CanGenerateAudio)" title="Z. B. nach einem Wechsel der Stimme oder des Modells" @onclick="() => AskGenerate(true)">Alle Szenen neu erzeugen</button>
+                                <button type="button" class="vd-link" disabled="@(!VdVm.CanGenerateAudio)" title="@UiStrings.Video_RegenerateAllTitle" @onclick="() => AskGenerate(true)">@UiStrings.Video_RegenerateAll</button>
                             }
                         </div>
                         @if (VdVm.GenerateAudioDisabledReason is { } reason && !VdVm.IsBusy)
@@ -805,9 +805,10 @@
         return t.TotalHours >= 1 ? t.ToString(@"h\:mm\:ss") : t.ToString(@"m\:ss");
     }
 
-    private string VoiceName(string id) => VdVm.SystemVoices.FirstOrDefault(v => v.Id == id)?.Name ?? "Standard";
+    private string VoiceName(string id) => VdVm.SystemVoices.FirstOrDefault(v => v.Id == id)?.Name ?? UiStrings.Speech_VoiceDefault;
 
-    private static string VoiceLabel(SpeechVoice voice) => $"{voice.Name} ({voice.Language}{(voice.IsLocal ? "" : ", online")})";
+    private static string VoiceLabel(SpeechVoice voice) =>
+        voice.IsLocal ? $"{voice.Name} ({voice.Language})" : $"{voice.Name} ({voice.Language}, {UiStrings.Speech_VoiceOnline})";
 
     // ---------------- Lebenszyklus ----------------
 
@@ -1029,14 +1030,14 @@
         {
             var extension = VideoViewModel.Extension(format);
             var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName(extension), filterExtension: extension,
-                filterDescription: VideoViewModel.FormatDescription(format), title: "Sprechtexte speichern als...");
+                filterDescription: VideoViewModel.FormatDescription(format), title: UiStrings.Video_SaveScriptTitle);
             if (string.IsNullOrWhiteSpace(path)) return;
             if (!path.EndsWith("." + extension, StringComparison.OrdinalIgnoreCase)) path += "." + extension;
             await VdVm.ExportScriptAsync(format, path);
         }
         catch (Exception ex)
         {
-            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            VdVm.ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -1048,7 +1049,7 @@
         try
         {
             var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("mp4"), filterExtension: "mp4",
-                filterDescription: "MP4-Video (*.mp4)", title: "Video als MP4 speichern unter...");
+                filterDescription: UiStrings.Video_FormatMp4, title: UiStrings.Video_SaveMp4Title);
             if (string.IsNullOrWhiteSpace(path)) return;
             if (!path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)) path += ".mp4";
             confirmMp4Export = false;
@@ -1056,7 +1057,7 @@
         }
         catch (Exception ex)
         {
-            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            VdVm.ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -1065,7 +1066,7 @@
         try
         {
             var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("mp3"), filterExtension: "mp3",
-                filterDescription: "MP3-Audiodatei (*.mp3)", title: "Tonspur als MP3 speichern unter...");
+                filterDescription: UiStrings.Audio_FormatMp3, title: UiStrings.Video_SaveMp3Title);
             if (string.IsNullOrWhiteSpace(path)) return;
             if (!path.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase)) path += ".mp3";
             confirmMp4Export = false;
@@ -1073,7 +1074,7 @@
         }
         catch (Exception ex)
         {
-            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            VdVm.ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -1082,7 +1083,7 @@
         try
         {
             var path = await DesktopDialogs.SaveFileAsync(VdVm.SuggestFileName("html"), filterExtension: "html",
-                filterDescription: "Interaktive Webseite (*.html)", title: "Video als HTML speichern unter...");
+                filterDescription: UiStrings.Video_FormatHtml, title: UiStrings.Video_SaveHtmlTitle);
             if (string.IsNullOrWhiteSpace(path)) return;
             if (!path.EndsWith(".html", StringComparison.OrdinalIgnoreCase)) path += ".html";
             confirmHtmlExport = false;
@@ -1090,7 +1091,7 @@
         }
         catch (Exception ex)
         {
-            VdVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            VdVm.ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 

@@ -1,9 +1,12 @@
 using System.Collections.Concurrent;
 using Microsoft.JSInterop;
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Audio;
+using StudyScope.ViewModels;
+using StudyScope.UI.Resources;
 
 namespace StudyScope.UI.Services;
 
@@ -21,7 +24,7 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
     private int _nextId;
 
     public SpeechProviderType Provider => SpeechProviderType.SystemVoice;
-    public string DisplayName => "Systemstimme (kostenlos, offline)";
+    public string DisplayName => MediaTexts.ProviderName(SpeechProviderType.SystemVoice);
     public bool SupportsLivePlayback => true;
     public bool SupportsFileExport => false;
 
@@ -80,7 +83,7 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
     public async Task<bool> SpeakAsync(string text, string voiceId, double rate, CancellationToken cancellationToken = default)
     {
         if (_js == null || _reference == null)
-            throw new InvalidOperationException("Die Sprachausgabe ist noch nicht bereit. Bitte den Reiter neu öffnen.");
+            throw new InvalidOperationException(UiStrings.SystemVoice_NotReady);
 
         // Eine laufende Äußerung gilt als abgebrochen
         CompleteAll(false);
@@ -114,13 +117,13 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
 
     private static string ErrorMessage(string code) => code switch
     {
-        "not-supported" => "Ihre Systemumgebung stellt keine Sprachausgabe bereit.",
-        "voice-unavailable" => "Die gewählte Stimme ist nicht verfügbar. Bitte eine andere Stimme wählen.",
-        "language-unavailable" => "Für die Sprache ist keine Stimme installiert. Bitte eine deutsche Stimme installieren oder eine andere Stimme wählen.",
-        "synthesis-unavailable" or "audio-hardware" => "Die Sprachausgabe konnte nicht gestartet werden. Ist ein Audiogerät angeschlossen und aktiviert?",
-        "network" => "Die gewählte Online-Stimme ist nicht erreichbar. Bitte eine Offline-Stimme wählen oder die Internetverbindung prüfen.",
-        "not-allowed" => "Die Sprachausgabe wurde vom System blockiert. Bitte erneut auf „Abspielen“ klicken.",
-        _ => $"Die Sprachausgabe ist fehlgeschlagen ({code})."
+        "not-supported" => UiStrings.SystemVoice_NotSupported,
+        "voice-unavailable" => UiStrings.SystemVoice_VoiceUnavailable,
+        "language-unavailable" => UiStrings.SystemVoice_LanguageUnavailable,
+        "synthesis-unavailable" or "audio-hardware" => UiStrings.SystemVoice_NoAudioDevice,
+        "network" => UiStrings.SystemVoice_Network,
+        "not-allowed" => Loc.Format(UiStrings.SystemVoice_Blocked, ("button", UiStrings.Common_Play)),
+        _ => Loc.Format(UiStrings.SystemVoice_Failed, ("code", code))
     };
 
     private void CompleteAll(bool result)

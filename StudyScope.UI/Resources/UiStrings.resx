@@ -464,4 +464,196 @@
   <data name="Report_NoReports" xml:space="preserve"><value>Noch keine Berichte</value></data>
   <data name="Report_ReportCount" xml:space="preserve"><value>{count, plural, one {# Bericht} other {# Berichte}}</value></data>
   <data name="Report_SaveAsTitle" xml:space="preserve"><value>Bericht speichern als …</value></data>
+  <data name="Common_TechnicalDetails" xml:space="preserve"><value>Technische Details</value></data>
+  <data name="Common_Play" xml:space="preserve"><value>Abspielen</value></data>
+  <data name="Common_Paused" xml:space="preserve"><value>pausiert</value></data>
+  <data name="Common_Tempo" xml:space="preserve"><value>Tempo</value></data>
+  <data name="Common_TempoTitle" xml:space="preserve"><value>Sprechgeschwindigkeit</value></data>
+  <data name="Common_EditHintCtrlEnter" xml:space="preserve"><value>Strg+Enter übernimmt, Esc bricht ab.</value></data>
+  <data name="Common_DoubleClickToEdit" xml:space="preserve"><value>Doppelklick zum Bearbeiten</value></data>
+  <data name="Common_SourcesMeta" xml:space="preserve"><value>Quellen: {sources}</value></data>
+  <data name="Common_CreatedOn" xml:space="preserve"><value>erzeugt am {date}</value></data>
+  <data name="Common_GenerateNow" xml:space="preserve"><value>Jetzt erzeugen</value></data>
+  <data name="Common_EstimatePrefix" xml:space="preserve"><value>Geschätzt: {estimate}</value></data>
+  <data name="Speech_PanelTitle" xml:space="preserve"><value>🔊 Sprachausgabe</value></data>
+  <data name="Speech_RecheckTitle" xml:space="preserve"><value>Verfügbarkeit und Stimmen neu prüfen (z. B. nach Installation einer Stimme)</value></data>
+  <data name="Speech_Recheck" xml:space="preserve"><value>↻ Neu prüfen</value></data>
+  <data name="Speech_NotAvailableTitle" xml:space="preserve"><value>Nicht verfügbar: {message} {hint}</value></data>
+  <data name="Speech_Current" xml:space="preserve"><value>Aktuell:</value></data>
+  <data name="Speech_SetupGemini" xml:space="preserve"><value>⚙️ Gemini TTS einrichten (Einstellungen › Sprachausgabe)</value></data>
+  <data name="Speech_Voice" xml:space="preserve"><value>Stimme</value></data>
+  <data name="Speech_VoiceFor" xml:space="preserve"><value>Stimme {role}</value><comment>{role} = Sprecherrolle, z. B. „Moderatorin“</comment></data>
+  <data name="Speech_VoiceAuto" xml:space="preserve"><value>Automatisch ({voice})</value></data>
+  <data name="Speech_VoiceDefault" xml:space="preserve"><value>Standard</value></data>
+  <data name="Speech_VoiceOnline" xml:space="preserve"><value>online</value></data>
+  <data name="Speech_FileExport" xml:space="preserve"><value>💾 Dateiexport: {hint}</value></data>
+  <data name="Speech_SettingsTitle" xml:space="preserve"><value>Schlüssel, Modell und Stimmen ändern</value></data>
+  <data name="Speech_Settings" xml:space="preserve"><value>⚙️ Schlüssel, Modell, Stimmen</value></data>
+  <data name="Speech_LocalAiNote" xml:space="preserve"><value>ℹ️ {hint} Ollama und LM Studio selbst können keine Sprache erzeugen.</value></data>
+  <data name="Speech_SetupFfmpeg" xml:space="preserve"><value>⚙️ ffmpeg einrichten</value></data>
+  <data name="SystemVoice_NotReady" xml:space="preserve"><value>Die Sprachausgabe ist noch nicht bereit. Bitte den Reiter neu öffnen.</value></data>
+  <data name="SystemVoice_NotSupported" xml:space="preserve"><value>Ihre Systemumgebung stellt keine Sprachausgabe bereit.</value></data>
+  <data name="SystemVoice_VoiceUnavailable" xml:space="preserve"><value>Die gewählte Stimme ist nicht verfügbar. Bitte eine andere Stimme wählen.</value></data>
+  <data name="SystemVoice_LanguageUnavailable" xml:space="preserve"><value>Für die Sprache ist keine Stimme installiert. Bitte eine deutsche Stimme installieren oder eine andere Stimme wählen.</value></data>
+  <data name="SystemVoice_NoAudioDevice" xml:space="preserve"><value>Die Sprachausgabe konnte nicht gestartet werden. Ist ein Audiogerät angeschlossen und aktiviert?</value></data>
+  <data name="SystemVoice_Network" xml:space="preserve"><value>Die gewählte Online-Stimme ist nicht erreichbar. Bitte eine Offline-Stimme wählen oder die Internetverbindung prüfen.</value></data>
+  <data name="SystemVoice_Blocked" xml:space="preserve"><value>Die Sprachausgabe wurde vom System blockiert. Bitte erneut auf „{button}“ klicken.</value><comment>{button} = Common_Play</comment></data>
+  <data name="SystemVoice_Failed" xml:space="preserve"><value>Die Sprachausgabe ist fehlgeschlagen ({code}).</value></data>
+  <data name="Audio_Title" xml:space="preserve"><value>Audio-Zusammenfassung: {profile}</value></data>
+  <data name="Audio_NoItems" xml:space="preserve"><value>Noch keine Beiträge</value></data>
+  <data name="Audio_ItemCount" xml:space="preserve"><value>{count, plural, one {# Beitrag} other {# Beiträge}}</value></data>
+  <data name="Audio_New" xml:space="preserve"><value>➕ Neuer Beitrag</value></data>
+  <data name="Audio_Mp3Saving" xml:space="preserve"><value>🎵 MP3 wird gespeichert … {percent} %</value></data>
+  <data name="Audio_CancelNoHalfFile" xml:space="preserve"><value>Beim Abbrechen entsteht keine halbe Datei.</value></data>
+  <data name="Audio_Generating" xml:space="preserve"><value>🎙️ {provider} erzeugt die Audiodatei … {progress}</value></data>
+  <data name="Audio_GeneratingHint" xml:space="preserve"><value>Lange Skripte werden in mehreren Teilen erzeugt. Beim Abbrechen wird keine Datei gespeichert.</value></data>
+  <data name="Audio_BusyScript" xml:space="preserve"><value>🎧 KI liest die Dokumente und schreibt das Sprechskript ({format}, {length}) …</value></data>
+  <data name="Audio_BusyHint" xml:space="preserve"><value>Je nach Modell und Länge kann das etwas dauern.</value></data>
+  <data name="Audio_FormTitle" xml:space="preserve"><value>➕ Neuer Audio-Beitrag</value></data>
+  <data name="Audio_Format" xml:space="preserve"><value>Format</value></data>
+  <data name="Audio_Length" xml:space="preserve"><value>Länge</value></data>
+  <data name="Audio_TopicLabel" xml:space="preserve"><value>Schwerpunkt / Thema</value></data>
+  <data name="Audio_TopicPlaceholder" xml:space="preserve"><value>z. B. Photosynthese</value></data>
+  <data name="Audio_TopicHint" xml:space="preserve"><value>Grenzt den Beitrag auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</value></data>
+  <data name="Audio_FormHint" xml:space="preserve"><value>Das Skript schreibt die KI aus Ihren Einstellungen; vorgelesen wird es mit der gewählten Sprachausgabe.</value></data>
+  <data name="Audio_Saved" xml:space="preserve"><value>🎧 Gespeicherte Beiträge</value></data>
+  <data name="Audio_ItemMeta" xml:space="preserve"><value>{format} · {minutes} · {date}</value></data>
+  <data name="Audio_DeleteItem" xml:space="preserve"><value>Beitrag löschen (samt Audiodatei)</value></data>
+  <data name="Audio_HeadMeta" xml:space="preserve"><value>{format} · {segments} · {words, plural, one {# Wort} other {# Wörter}} · {minutes}</value><comment>{segments} = Anzahl Abschnitte (VmStrings.Audio_SegmentCount)</comment></data>
+  <data name="Audio_FocusMeta" xml:space="preserve"><value>Schwerpunkt: {topic}</value></data>
+  <data name="Audio_ExportTextTitle" xml:space="preserve"><value>Skript als Textdatei speichern</value></data>
+  <data name="Audio_ExportMarkdownTitle" xml:space="preserve"><value>Skript als Markdown speichern</value></data>
+  <data name="Audio_PreviousSegment" xml:space="preserve"><value>Vorheriger Abschnitt</value></data>
+  <data name="Audio_NextSegment" xml:space="preserve"><value>Nächster Abschnitt</value></data>
+  <data name="Audio_ChangeSpeaker" xml:space="preserve"><value>Sprecher ändern</value></data>
+  <data name="Audio_PausedBadge" xml:space="preserve"><value>⏸ pausiert</value></data>
+  <data name="Audio_Speaking" xml:space="preserve"><value>🔊 spricht …</value></data>
+  <data name="Audio_PlayFromHere" xml:space="preserve"><value>Ab hier vorlesen</value></data>
+  <data name="Audio_EditText" xml:space="preserve"><value>Text bearbeiten</value></data>
+  <data name="Audio_InsertAfter" xml:space="preserve"><value>Abschnitt danach einfügen</value></data>
+  <data name="Audio_DeleteSegment" xml:space="preserve"><value>Abschnitt löschen</value></data>
+  <data name="Audio_AppendSegment" xml:space="preserve"><value>➕ Abschnitt am Ende anfügen</value></data>
+  <data name="Audio_Empty" xml:space="preserve"><value>Wählen Sie links einen Beitrag aus oder erstellen Sie einen neuen.</value></data>
+  <data name="Audio_GeminiNote" xml:space="preserve"><value>☁️ Gemini TTS erzeugt eine Audiodatei (WAV), beim Podcast mit zwei Stimmen (Sprecherin/Moderatorin: &lt;b&gt;{primary}&lt;/b&gt;, Experte: &lt;b&gt;{secondary}&lt;/b&gt;).</value><comment>Enthält HTML</comment></data>
+  <data name="Audio_FileLabel" xml:space="preserve"><value>🎵 Audiodatei:</value></data>
+  <data name="Audio_FileDuration" xml:space="preserve"><value>{duration} Min.</value></data>
+  <data name="Audio_ExportWavTitle" xml:space="preserve"><value>Audiodatei (WAV) speichern unter …</value></data>
+  <data name="Audio_ExportWav" xml:space="preserve"><value>💾 WAV exportieren</value></data>
+  <data name="Audio_ExportMp3Title" xml:space="preserve"><value>Als MP3 speichern – {estimate}</value></data>
+  <data name="Audio_ExportMp3" xml:space="preserve"><value>🎵 MP3 exportieren</value></data>
+  <data name="Audio_DeleteFileConfirm" xml:space="preserve"><value>Audiodatei löschen?</value></data>
+  <data name="Audio_DeleteFileTitle" xml:space="preserve"><value>Nur die Audiodatei löschen (das Skript bleibt)</value></data>
+  <data name="Audio_Mp3Reason" xml:space="preserve"><value>🎵 MP3: {reason}</value></data>
+  <data name="Audio_FileMissing" xml:space="preserve"><value>⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie sie bei Bedarf neu.</value></data>
+  <data name="Audio_FileOutdated" xml:space="preserve"><value>✏️ Das Skript wurde nach dem Erzeugen geändert – die Audiodatei enthält noch die alte Fassung. Erzeugen Sie sie neu, damit Ton und Text übereinstimmen.</value></data>
+  <data name="Audio_LiveWithSystemVoice" xml:space="preserve"><value>▶ liest mit der Systemstimme vor. Zum Abspielen der Audiodatei oben „Gemini TTS“ wählen.</value></data>
+  <data name="Audio_ConfirmGenerate" xml:space="preserve"><value>🎙️ Audiodatei mit {provider} erzeugen?</value></data>
+  <data name="Audio_ReplaceHint" xml:space="preserve"><value>Die vorhandene Audiodatei wird erst ersetzt, wenn die neue vollständig erzeugt ist.</value></data>
+  <data name="Audio_SentToGoogle" xml:space="preserve"><value>🔒 Der Skripttext wird dazu an Google gesendet.</value></data>
+  <data name="Audio_GenerateFileTitle" xml:space="preserve"><value>Audiodatei erzeugen (vorher werden Kosten und Größe angezeigt)</value></data>
+  <data name="Audio_RegenerateFile" xml:space="preserve"><value>🎙️ Audiodatei neu erzeugen</value></data>
+  <data name="Audio_FormatWav" xml:space="preserve"><value>WAV-Audiodatei (*.wav)</value></data>
+  <data name="Audio_FormatMp3" xml:space="preserve"><value>MP3-Audiodatei (*.mp3)</value></data>
+  <data name="Audio_SaveWavTitle" xml:space="preserve"><value>Audiodatei speichern als …</value></data>
+  <data name="Audio_SaveMp3Title" xml:space="preserve"><value>Als MP3 speichern unter …</value></data>
+  <data name="Audio_SaveScriptTitle" xml:space="preserve"><value>Skript speichern als …</value></data>
+  <data name="Video_Title" xml:space="preserve"><value>Videoübersicht: {profile}</value></data>
+  <data name="Video_Subtitle" xml:space="preserve"><value>Vertontes Erklärvideo aus einer Präsentation – je Folie ein Sprechtext, abgespielt wie ein Video.</value></data>
+  <data name="Video_New" xml:space="preserve"><value>➕ Neues Video</value></data>
+  <data name="Video_ExportCancelHint" xml:space="preserve"><value>Beim Abbrechen wird ffmpeg beendet; es entsteht keine halbe Datei, temporäre Bilder werden gelöscht.</value></data>
+  <data name="Video_AudioCancelHint" xml:space="preserve"><value>Fertige Szenen bleiben bei Abbruch erhalten; es entsteht keine halbe Datei.</value></data>
+  <data name="Video_PleaseWait" xml:space="preserve"><value>Bitte warten …</value></data>
+  <data name="Video_Videos" xml:space="preserve"><value>🎬 Videos ({count})</value></data>
+  <data name="Video_ItemMeta" xml:space="preserve"><value>{slides} · {minutes} · {date}</value><comment>{slides} = Anzahl Folien (VmStrings.Video_SlideCount)</comment></data>
+  <data name="Video_SourcesTitle" xml:space="preserve"><value>Aus diesen Dokumenten wurde das Video erstellt</value></data>
+  <data name="Video_SourceUnknown" xml:space="preserve"><value>Quelle unbekannt</value></data>
+  <data name="Video_DeleteVideo" xml:space="preserve"><value>Video samt Audiodateien löschen</value></data>
+  <data name="Video_HeadMeta" xml:space="preserve"><value>{slides} · {words, plural, one {# Wort} other {# Wörter}} · {minutes}</value></data>
+  <data name="Video_NarrationFromNotes" xml:space="preserve"><value>Sprechtexte aus den Sprechernotizen</value></data>
+  <data name="Video_NarrationFromAi" xml:space="preserve"><value>Sprechtexte von der KI</value></data>
+  <data name="Video_OwnSlides" xml:space="preserve"><value>eigene Folien</value></data>
+  <data name="Video_PresentationSlides" xml:space="preserve"><value>Folien aus der Präsentation</value></data>
+  <data name="Video_ExportTextTitle" xml:space="preserve"><value>Sprechtexte als Textdatei speichern</value></data>
+  <data name="Video_ExportMarkdownTitle" xml:space="preserve"><value>Sprechtexte als Markdown speichern</value></data>
+  <data name="Video_HtmlTitle" xml:space="preserve"><value>Als interaktive Webseite speichern – Folien, Stichpunkte und Ton laufen im Browser auch ohne StudyScope</value></data>
+  <data name="Video_Mp4Title" xml:space="preserve"><value>Als MP4-Video speichern (1920 × 1080, H.264) – läuft auf jedem Gerät und lässt sich hochladen</value></data>
+  <data name="Video_Mp4Reason" xml:space="preserve"><value>🎞️ MP4: {reason}</value></data>
+  <data name="Video_Mp4ConfirmTitle" xml:space="preserve"><value>🎞️ Video als MP4 speichern (1920 × 1080)</value></data>
+  <data name="Video_NoAudioHint" xml:space="preserve"><value>🔇 {reason} Für Ton erzeugen Sie zuerst das Audio mit Gemini TTS.</value></data>
+  <data name="Video_Mp4Explanation" xml:space="preserve"><value>Die Folien sehen aus wie hier im Reiter; Stichpunkte erscheinen nacheinander, zwischen den Folien wird übergeblendet. Die Zeit- und Größenangaben sind Schätzungen.</value></data>
+  <data name="Video_SaveMp4" xml:space="preserve"><value>💾 MP4 speichern …</value></data>
+  <data name="Video_Mp3TrackTitle" xml:space="preserve"><value>Nur die Tonspur als MP3 speichern (64 kbit/s mono)</value></data>
+  <data name="Video_Mp3Track" xml:space="preserve"><value>🎵 Nur Tonspur (MP3) …</value></data>
+  <data name="Video_HtmlConfirmTitle" xml:space="preserve"><value>🌐 Video als interaktive HTML-Datei speichern</value></data>
+  <data name="Video_HtmlSize" xml:space="preserve"><value>Ungefähre Dateigröße: &lt;b&gt;{size}&lt;/b&gt;</value><comment>Enthält HTML</comment></data>
+  <data name="Video_HtmlUseMp3" xml:space="preserve"><value>Ton als MP3 einbetten (kleinere Datei, über ffmpeg)</value></data>
+  <data name="Video_HtmlWavHint" xml:space="preserve"><value>Der Ton wird als WAV eingebettet (≈ 3,9 MB je Minute). Mit ffmpeg wäre MP3 möglich (deutlich kleiner).</value></data>
+  <data name="Video_Save" xml:space="preserve"><value>💾 Speichern …</value></data>
+  <data name="Video_PresentationChanged" xml:space="preserve"><value>📝 &lt;b&gt;Präsentation wurde geändert.&lt;/b&gt; Das Video zeigt noch die Folien vom Erstellen. „{button}“ übernimmt die neuen Folien; vorhandene Sprechtexte bleiben erhalten, neue Folien bekommen den Text aus den Sprechernotizen.</value><comment>Enthält HTML; {button} = Video_RefreshSlides</comment></data>
+  <data name="Video_RefreshSlides" xml:space="preserve"><value>🔄 Folien aktualisieren</value></data>
+  <data name="Video_PresentationMissing" xml:space="preserve"><value>ℹ️ Die Präsentation dieses Profils wurde gelöscht – das Video nutzt weiter seine eigene Kopie der Folien.</value></data>
+  <data name="Video_ShowSlide" xml:space="preserve"><value>Diese Folie zeigen</value></data>
+  <data name="Video_SceneHeading" xml:space="preserve"><value>Folie {number}: {title}</value></data>
+  <data name="Video_Running" xml:space="preserve"><value>🔊 läuft …</value></data>
+  <data name="Video_SceneAudioTitle" xml:space="preserve"><value>Audio dieser Szene</value></data>
+  <data name="Video_SceneAudioOutdated" xml:space="preserve"><value>✏️ Audio veraltet</value></data>
+  <data name="Video_SceneNoAudio" xml:space="preserve"><value>○ noch kein Audio</value></data>
+  <data name="Video_SceneAudioCurrent" xml:space="preserve"><value>🎵 Audio aktuell</value></data>
+  <data name="Video_PlayFromHere" xml:space="preserve"><value>Ab hier abspielen</value></data>
+  <data name="Video_EditNarration" xml:space="preserve"><value>Sprechtext bearbeiten</value></data>
+  <data name="Video_EditHint" xml:space="preserve"><value>Strg+Enter übernimmt, Esc bricht ab. Leer = Folie ohne Ton (3 Sekunden).</value></data>
+  <data name="Video_NoNarrationScene" xml:space="preserve"><value>(kein Sprechtext – die Folie wird 3 Sekunden ohne Ton gezeigt)</value></data>
+  <data name="Video_Empty" xml:space="preserve"><value>Wählen Sie links ein Video aus oder erstellen Sie ein neues.</value></data>
+  <data name="Video_HowTitle" xml:space="preserve"><value>So entsteht die Videoübersicht</value></data>
+  <data name="Video_HowSteps" xml:space="preserve"><value>1. Grundlage ist die Präsentation dieses Profils – oder die KI erzeugt neue Folien nur für dieses Video.&lt;br /&gt;2. Die KI schreibt zu jeder Folie einen kurzen Sprechtext (oder die Sprechernotizen werden direkt übernommen).&lt;br /&gt;3. Beim Abspielen bleibt jede Folie so lange stehen, wie ihr Sprechtext dauert; die Stichpunkte erscheinen nacheinander.&lt;br /&gt;4. Vorgelesen wird mit der Systemstimme oder mit Gemini TTS (Audiodatei, exakt passende Folienwechsel).</value><comment>Enthält HTML</comment></data>
+  <data name="Video_PreviousSlide" xml:space="preserve"><value>Vorherige Folie (←)</value></data>
+  <data name="Video_PauseKey" xml:space="preserve"><value>Pause (Leertaste)</value></data>
+  <data name="Video_PlayKey" xml:space="preserve"><value>Abspielen (Leertaste)</value></data>
+  <data name="Video_NextSlide" xml:space="preserve"><value>Nächste Folie (→)</value></data>
+  <data name="Video_SeekTitle" xml:space="preserve"><value>Zum Springen klicken oder ziehen</value></data>
+  <data name="Video_Ended" xml:space="preserve"><value>Ende</value></data>
+  <data name="Video_ExitFullScreenTitle" xml:space="preserve"><value>Vollbild beenden (Esc)</value></data>
+  <data name="Video_FullScreenTitle" xml:space="preserve"><value>Im Vollbild abspielen (Esc beendet)</value></data>
+  <data name="Video_FullScreen" xml:space="preserve"><value>⛶ Vollbild</value></data>
+  <data name="Video_FormTitle" xml:space="preserve"><value>➕ Neues Video</value></data>
+  <data name="Video_Slides" xml:space="preserve"><value>Folien</value></data>
+  <data name="Video_ProfilePresentation" xml:space="preserve"><value>Präsentation dieses Profils</value></data>
+  <data name="Video_PresentationInfo" xml:space="preserve"><value>„{title}“ · {slides} – das Video speichert eine Kopie der Folien.</value><comment>{slides} = Anzahl Folien (VmStrings.Video_SlideCount)</comment></data>
+  <data name="Video_NoProfilePresentation" xml:space="preserve"><value>Noch keine Präsentation vorhanden (Reiter „Präsentation“).</value></data>
+  <data name="Video_NewSlidesAi" xml:space="preserve"><value>Neue Folien per KI</value></data>
+  <data name="Video_NewSlidesAiDesc" xml:space="preserve"><value>Aus den links aktivierten Dokumenten – nur für dieses Video, die Präsentation des Profils bleibt unverändert.</value></data>
+  <data name="Video_MismatchTitle" xml:space="preserve"><value>⚠️ Andere Dokumente als angehakt</value></data>
+  <data name="Video_MismatchUsePresentation" xml:space="preserve"><value>Das Video würde die Folien der vorhandenen Präsentation verwenden.</value></data>
+  <data name="Video_MismatchRegenerate" xml:space="preserve"><value>✨ Stattdessen neu aus den angehakten Dokumenten erzeugen</value></data>
+  <data name="Video_MismatchNewSelected" xml:space="preserve"><value>Deshalb ist „{newSlides}“ aus den angehakten Dokumenten vorausgewählt. Soll trotzdem die vorhandene Präsentation verwendet werden, oben „{presentation}“ wählen.</value></data>
+  <data name="Video_ContentSlides" xml:space="preserve"><value>Inhaltsfolien:</value></data>
+  <data name="Video_ActiveDocuments" xml:space="preserve"><value>({count, plural, one {# aktiviertes Dokument} other {# aktivierte Dokumente}})</value></data>
+  <data name="Video_UseNotes" xml:space="preserve"><value>Sprechernotizen direkt verwenden</value></data>
+  <data name="Video_UseNotesDesc" xml:space="preserve"><value>Die Präsentation hat ausführliche Notizen – sie werden ohne KI-Aufruf als Sprechtext übernommen.</value></data>
+  <data name="Video_FormHint" xml:space="preserve"><value>Die Sprechtexte schreibt die KI aus Ihren Einstellungen; vorgelesen wird mit der gewählten Sprachausgabe.</value></data>
+  <data name="Video_SystemVoiceTiming" xml:space="preserve"><value>⏱️ Die Folienwechsel richten sich nach dem Ende jedes Sprechtexts; die Gesamtdauer ist anfangs geschätzt.</value></data>
+  <data name="Video_GeminiNote" xml:space="preserve"><value>☁️ Gemini TTS erzeugt das Audio vorab – je Folie eine eigene Anfrage, damit die Folienwechsel exakt zum Ton passen (Stimme &lt;b&gt;{voice}&lt;/b&gt;). Nach Änderungen werden nur die geänderten Szenen neu erzeugt.</value><comment>Enthält HTML</comment></data>
+  <data name="Video_AudioLabel" xml:space="preserve"><value>🎵 Audio:</value></data>
+  <data name="Video_DeleteAudioConfirm" xml:space="preserve"><value>Audio löschen?</value></data>
+  <data name="Video_DeleteAudioTitle" xml:space="preserve"><value>Alle Audiodateien dieses Videos löschen (die Sprechtexte bleiben)</value></data>
+  <data name="Video_AudioFileMissing" xml:space="preserve"><value>⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie das Audio bei Bedarf neu.</value></data>
+  <data name="Video_AudioChangedScenes" xml:space="preserve"><value>✏️ Sprechtexte oder Folien wurden nach dem Erzeugen geändert. {count, plural, one {# Szene muss} other {# Szenen müssen}} neu erzeugt werden – die übrigen bleiben.</value></data>
+  <data name="Video_AudioChangedAssemble" xml:space="preserve"><value>✏️ Sprechtexte oder Folien wurden nach dem Erzeugen geändert. Das Audio muss nur neu zusammengesetzt werden (kostenlos).</value></data>
+  <data name="Video_LiveWithSystemVoice" xml:space="preserve"><value>▶ liest mit der Systemstimme vor. Zum Abspielen des Gemini-Audios oben „Gemini TTS“ wählen.</value></data>
+  <data name="Video_ConfirmGenerate" xml:space="preserve"><value>🎙️ Audio mit {provider} erzeugen?</value></data>
+  <data name="Video_ConfirmGenerateAll" xml:space="preserve"><value>🎙️ Audio mit {provider} für alle Szenen neu erzeugen?</value></data>
+  <data name="Video_OnlyAssemble" xml:space="preserve"><value>Alle Szenen sind aktuell – das Audio wird nur neu zusammengesetzt (kostenlos).</value></data>
+  <data name="Video_SentToGoogle" xml:space="preserve"><value>🔒 Die Sprechtexte werden dazu an Google gesendet. Jede Szene entsteht vollständig oder gar nicht.</value></data>
+  <data name="Video_GenerateAudioTitle" xml:space="preserve"><value>Audio erzeugen (vorher werden Kosten und Größe angezeigt)</value></data>
+  <data name="Video_RegenerateChanged" xml:space="preserve"><value>🎙️ Geänderte Szenen neu erzeugen ({count})</value></data>
+  <data name="Video_AssembleButton" xml:space="preserve"><value>🎙️ {label}</value><comment>{label} = Video_AssembleAudio</comment></data>
+  <data name="Video_AudioCurrent" xml:space="preserve"><value>✓ Audio ist aktuell.</value></data>
+  <data name="Video_RegenerateAllTitle" xml:space="preserve"><value>Z. B. nach einem Wechsel der Stimme oder des Modells</value></data>
+  <data name="Video_RegenerateAll" xml:space="preserve"><value>Alle Szenen neu erzeugen</value></data>
+  <data name="Video_SaveScriptTitle" xml:space="preserve"><value>Sprechtexte speichern als …</value></data>
+  <data name="Video_FormatMp4" xml:space="preserve"><value>MP4-Video (*.mp4)</value></data>
+  <data name="Video_SaveMp4Title" xml:space="preserve"><value>Video als MP4 speichern unter …</value></data>
+  <data name="Video_SaveMp3Title" xml:space="preserve"><value>Tonspur als MP3 speichern unter …</value></data>
+  <data name="Video_FormatHtml" xml:space="preserve"><value>Interaktive Webseite (*.html)</value></data>
+  <data name="Video_SaveHtmlTitle" xml:space="preserve"><value>Video als HTML speichern unter …</value></data>
 </root>

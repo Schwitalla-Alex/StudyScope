@@ -4,6 +4,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 using StudyScope.ViewModels.Audio;
 using StudyScope.ViewModels.Mindmap;
 
@@ -166,13 +168,14 @@ public partial class VideoViewModel : INotifyPropertyChanged
             .Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         if (sources.Count == 0)
             return new PresentationSourceInfo(PresentationSourceMatch.Unknown, sources, selected,
-                "Aus welchen Dokumenten die Präsentation erstellt wurde, ist nicht gespeichert (ältere Präsentation). Prüfen Sie die Folien vor dem Erstellen.");
+                VmStrings.Video_SourcesUnknown);
 
         var same = sources.Count == selected.Count && sources.All(s => selected.Contains(s, StringComparer.OrdinalIgnoreCase));
         return same
-            ? new PresentationSourceInfo(PresentationSourceMatch.Match, sources, selected, $"Erstellt aus: {string.Join(", ", sources)}")
+            ? new PresentationSourceInfo(PresentationSourceMatch.Match, sources, selected, Loc.Format(VmStrings.Video_SourcesMatch, ("sources", string.Join(", ", sources))))
             : new PresentationSourceInfo(PresentationSourceMatch.Mismatch, sources, selected,
-                $"Die Präsentation stammt aus: {string.Join(", ", sources)}. Angehakt ist: {(selected.Count == 0 ? "kein Dokument" : string.Join(", ", selected))}.");
+                Loc.Format(VmStrings.Video_SourcesMismatch, ("sources", string.Join(", ", sources)),
+                    ("selected", selected.Count == 0 ? VmStrings.Video_NoDocumentChecked : string.Join(", ", selected))));
     }
 
     /// <summary>Vergleich für die aktuelle Präsentation des Profils.</summary>
@@ -416,7 +419,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Media_SettingSaveFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -453,14 +456,14 @@ public partial class VideoViewModel : INotifyPropertyChanged
 
         if (SlideSource == VideoSlideSource.ProfilePresentation && !HasProfilePresentation)
         {
-            ShowStatus("⚠️ Für dieses Profil gibt es noch keine Präsentation. Erstellen Sie eine im Reiter „Präsentation“ oder lassen Sie hier neue Folien erzeugen.", isError: true);
+            ShowStatus(VmStrings.Video_NoPresentation, isError: true);
             return;
         }
 
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (SlideSource == VideoSlideSource.NewPresentation && selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um neue Folien zu erzeugen.", isError: true);
+            ShowStatus(VmStrings.Video_SelectDocument, isError: true);
             return;
         }
 
@@ -476,7 +479,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
             var ownSlides = false;
             if (SlideSource == VideoSlideSource.NewPresentation)
             {
-                BusyText = "Die KI gliedert die Inhalte und formuliert die Folien …";
+                BusyText = VmStrings.Video_BusySlides;
                 var chunks = new List<string>();
                 foreach (var doc in selectedDocs)
                     chunks.AddRange(await _documentService.ExtractChunksAsync(doc.FilePath));
@@ -486,7 +489,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 token.ThrowIfCancellationRequested();
                 if (!slides.IsSuccess)
                 {
-                    var failure = MindmapStatusTexts.ForFailure(slides.FailureReason, slides.RawResponse, GenerationSubject.Presentation, "Video erstellen");
+                    var failure = MindmapStatusTexts.ForFailure(slides.FailureReason, slides.RawResponse, GenerationSubject.Presentation, VmStrings.Video_Generate);
                     ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                     return;
                 }
@@ -509,12 +512,12 @@ public partial class VideoViewModel : INotifyPropertyChanged
             }
             else
             {
-                BusyText = "Die KI schreibt die Sprechtexte zu den Folien …";
+                BusyText = VmStrings.Video_BusyNarration;
                 result = await _videoService.GenerateAsync(presentation, fallbackTitle, token);
                 token.ThrowIfCancellationRequested();
                 if (!result.IsSuccess)
                 {
-                    var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.VideoScript, "Video erstellen");
+                    var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.VideoScript, VmStrings.Video_Generate);
                     ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                     return;
                 }
@@ -533,27 +536,29 @@ public partial class VideoViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(Items));
             SelectedVideo = video;
 
-            var info = $"{video.Scenes.Count} Szenen, {AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(video.WordCount))}";
+            var info = Loc.Format(VmStrings.Video_CreatedInfo,
+                ("scenes", Loc.Format(VmStrings.Video_SceneCount, ("count", video.Scenes.Count))),
+                ("minutes", MediaTexts.Minutes(AudioScriptFormats.EstimateMinutes(video.WordCount))));
             if (result is { WasRepaired: true } || result is { FilledFromNotes: > 0 })
             {
                 var missing = result.FilledFromNotes > 0
-                    ? $" Für {result.FilledFromNotes} Folie(n) hat die KI keinen Text geliefert; dort steht der Text aus den Sprechernotizen bzw. Stichpunkten."
-                    : " Die Antwort der KI war allerdings unvollständig.";
-                ShowStatus($"✓ Video „{video.Title}“ erstellt ({info}).{missing}", isError: false,
-                    new[] { "Die Sprechtexte lassen sich je Szene per Doppelklick bearbeiten." }, isWarning: true);
+                    ? Loc.Format(VmStrings.Video_FilledFromNotes, ("count", result.FilledFromNotes))
+                    : VmStrings.Video_ResponseIncomplete;
+                ShowStatus(Loc.Format(VmStrings.Video_CreatedWithNote, ("title", video.Title), ("info", info), ("note", missing)), isError: false,
+                    new[] { VmStrings.Video_TipEditNarration }, isWarning: true);
             }
             else
             {
-                ShowStatus($"✓ Video „{video.Title}“ erstellt ({info}). Mit ▶ abspielen.", isError: false);
+                ShowStatus(Loc.Format(VmStrings.Video_Created, ("title", video.Title), ("info", info)), isError: false);
             }
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung des Videos wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Video_Cancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen des Videos: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Video_Failed, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -581,7 +586,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         _measured.Clear();
         OnPropertyChanged(nameof(SelectedVideo));
         OnVideoChanged();
-        ShowStatus($"✓ Folien aktualisiert ({video.Scenes.Count} Folien). Neue Folien haben den Text aus den Sprechernotizen; vorhandene Sprechtexte bleiben erhalten.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Video_SlidesRefreshed, ("count", video.Scenes.Count)), isError: false);
     }
 
     // ---------------- Verwalten und Bearbeiten ----------------
@@ -617,7 +622,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
             SelectedVideo = Items.FirstOrDefault();
         if (_library.Items.Count == 0)
             IsFormOpen = true;
-        ShowStatus($"✓ Video „{item.Title}“ gelöscht.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Video_Deleted, ("title", item.Title)), isError: false);
     }
 
     /// <summary>Ändert den Sprechtext einer Szene (leer erlaubt: die Folie wird dann ohne Ton gezeigt).</summary>
@@ -647,14 +652,14 @@ public partial class VideoViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Speichern fehlgeschlagen: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Audio_SaveFailed, ("error", ex.Message)), isError: true);
         }
     }
 
     public static string Extension(VideoScriptExportFormat format) => format == VideoScriptExportFormat.Markdown ? "md" : "txt";
 
     public static string FormatDescription(VideoScriptExportFormat format) =>
-        format == VideoScriptExportFormat.Markdown ? "Markdown-Datei (*.md)" : "Textdatei (*.txt)";
+        format == VideoScriptExportFormat.Markdown ? VmStrings.Video_FormatMarkdown : VmStrings.Media_FormatText;
 
     public async Task<bool> ExportScriptAsync(VideoScriptExportFormat format, string filePath)
     {
@@ -664,12 +669,12 @@ public partial class VideoViewModel : INotifyPropertyChanged
         {
             var text = format == VideoScriptExportFormat.Markdown ? _videoService.ExportToMarkdown(video) : _videoService.ExportToText(video);
             await File.WriteAllTextAsync(filePath, text, new System.Text.UTF8Encoding(true));
-            ShowStatus($"✓ Sprechtexte exportiert: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Video_ScriptExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
             return false;
         }
     }
@@ -691,18 +696,18 @@ public partial class VideoViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (!HasVideo) return "Bitte zuerst ein Video erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
+            if (!HasVideo) return VmStrings.Video_NoVideo;
+            if (IsBusy) return VmStrings.Media_Busy;
             var service = CurrentSpeechService;
-            if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
+            if (service == null) return VmStrings.Media_SpeechUnavailable;
             if (!service.SupportsLivePlayback)
             {
                 if (SelectedVideo!.HasAudioFile && SelectedVideo.IsAudioOutdated)
-                    return "Sprechtexte oder Folien wurden geändert – erzeugen Sie das Audio neu (nur geänderte Szenen werden berechnet) oder wählen Sie die Systemstimme.";
+                    return VmStrings.Video_AudioOutdated;
                 if (SelectedAudioFilePath == null)
-                    return $"{service.DisplayName} liest nicht direkt vor – erzeugen Sie zuerst das Audio („🎙️ Audio erzeugen“) oder wählen Sie die Systemstimme.";
-                if (_filePlayer == null) return "Der Audio-Player ist in dieser Umgebung nicht verfügbar.";
-                return _filePlayer.IsReady ? null : "Der Audio-Player wird noch geladen …";
+                    return Loc.Format(VmStrings.Video_NoLivePlayback, ("provider", MediaTexts.ProviderName(service.Provider)), ("button", VmStrings.Video_GenerateAudio));
+                if (_filePlayer == null) return VmStrings.Media_PlayerUnavailable;
+                return _filePlayer.IsReady ? null : VmStrings.Media_PlayerLoading;
             }
             return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
@@ -714,12 +719,12 @@ public partial class VideoViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (!HasVideo) return "Bitte zuerst ein Video erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
+            if (!HasVideo) return VmStrings.Video_NoVideo;
+            if (IsBusy) return VmStrings.Media_Busy;
             var service = CurrentSpeechService;
-            if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
+            if (service == null) return VmStrings.Media_SpeechUnavailable;
             if (!service.SupportsFileExport || service is not IAudioFileSpeechService) return SpeechProviderState.NoFileExportHint;
-            if (SelectedVideo!.Scenes.All(s => !s.HasNarration)) return "Keine Szene hat einen Sprechtext.";
+            if (SelectedVideo!.Scenes.All(s => !s.HasNarration)) return VmStrings.Video_NoNarration;
             return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
     }
@@ -754,14 +759,12 @@ public partial class VideoViewModel : INotifyPropertyChanged
     public string? EstimateText(bool all)
     {
         if (SelectedVideo is not { } video || EstimateFor(all) is not { } e) return null;
-        var de = CultureInfo.GetCultureInfo("de-DE");
         var count = all ? video.Scenes.Count(s => s.HasNarration) : ScenesNeedingAudio.Count;
         var total = video.Scenes.Count(s => s.HasNarration);
-        var scenes = count == total ? $"{count} Szene(n)" : $"{count} von {total} Szenen";
-        var minutes = AudioScriptFormats.FormatMinutes(e.Seconds / 60);
-        var size = e.Megabytes < 10 ? e.Megabytes.ToString("0.0", de) : e.Megabytes.ToString("0", de);
-        var usd = e.Usd < 0.01 ? "unter 0,01" : e.Usd.ToString("0.00", de);
-        return $"{scenes} · {minutes} Audio · ca. {size} MB (WAV) · geschätzt {usd} US-Dollar bei bezahlter Nutzung. {GeminiTtsInfo.FreeTierHint}";
+        var scenes = count == total
+            ? Loc.Format(VmStrings.Video_SceneCount, ("count", count))
+            : Loc.Format(VmStrings.Video_ScenesOfTotal, ("count", count), ("total", total));
+        return Loc.Format(VmStrings.Video_EstimateScenes, ("scenes", scenes), ("estimate", MediaTexts.GeminiEstimate(e)));
     }
 
     private bool _isGeneratingAudio;
@@ -797,7 +800,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         IsBusy = true;
         IsGeneratingAudio = true;
         AudioProgress = 0;
-        AudioProgressText = todo.Count == 0 ? "Audio wird zusammengesetzt …" : "Audio wird vorbereitet …";
+        AudioProgressText = todo.Count == 0 ? VmStrings.Video_AudioAssembling : VmStrings.Video_AudioPreparing;
         ClearStatus();
         _audioCts = new CancellationTokenSource();
         var token = _audioCts.Token;
@@ -814,7 +817,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 var progress = new SynchronousProgress<SpeechSynthesisProgress>(p =>
                 {
                     AudioProgress = (sceneIndex + p.Fraction) / (todo.Count + 0.2);
-                    AudioProgressText = $"Szene {sceneIndex + 1} von {todo.Count} (Folie {number}) wird erzeugt …";
+                    AudioProgressText = Loc.Format(VmStrings.Video_AudioSceneProgress, ("number", sceneIndex + 1), ("total", todo.Count), ("slide", number));
                 });
                 progress.Report(new SpeechSynthesisProgress(0, 1));
 
@@ -838,7 +841,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
 
             token.ThrowIfCancellationRequested();
             AudioProgress = todo.Count / (todo.Count + 0.2);
-            AudioProgressText = "Audio wird zusammengesetzt …";
+            AudioProgressText = VmStrings.Video_AudioAssembling;
             var assembly = await _videoService.AssembleAudioAsync(_profileName, video, token);
             video.AudioFileName = assembly.FileName;
             video.AudioDurationSeconds = assembly.DurationSeconds;
@@ -850,22 +853,22 @@ public partial class VideoViewModel : INotifyPropertyChanged
 
             _currentSceneIndex = -1;
             _position = 0;
-            var fresh = todo.Count == 0 ? "Keine Szene musste neu berechnet werden." : $"{todo.Count} Szene(n) neu erzeugt.";
-            ShowStatus($"✓ Audio fertig ({FormatClock(assembly.DurationSeconds)} Min.). {fresh} Mit ▶ abspielen.", isError: false);
+            var fresh = todo.Count == 0 ? VmStrings.Video_AudioNothingNew : Loc.Format(VmStrings.Video_AudioScenesNew, ("count", todo.Count));
+            ShowStatus(Loc.Format(VmStrings.Video_AudioDone, ("duration", FormatClock(assembly.DurationSeconds)), ("fresh", fresh)), isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus($"Die Erzeugung wurde abgebrochen. {done} von {todo.Count} Szene(n) sind fertig und bleiben gespeichert – beim nächsten Mal werden nur die übrigen berechnet. Es wurde keine halbe Datei gespeichert.", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Video_AudioCancelled, ("done", done), ("total", todo.Count)), isError: false);
         }
         catch (LlmServiceException ex)
         {
             ShowStatus($"⚠️ {ex.Message}", isError: true,
-                new[] { $"{done} von {todo.Count} Szene(n) sind fertig und bleiben gespeichert; es wurde keine halbe Datei gespeichert." }, ex.Detail);
+                new[] { Loc.Format(VmStrings.Video_AudioPartialTip, ("done", done), ("total", todo.Count)) }, ex.Detail);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erzeugen des Audios: {ex.Message}", isError: true,
-                new[] { "Es wurde keine halbe Datei gespeichert; vorhandene Audiodateien bleiben unverändert." });
+            ShowStatus(Loc.Format(VmStrings.Video_AudioFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Video_AudioUnchangedTip });
         }
         finally
         {
@@ -889,13 +892,13 @@ public partial class VideoViewModel : INotifyPropertyChanged
         _videoService.DeleteAllAudio(_profileName, video);
         if (video.HasAudioFile)
         {
-            ShowStatus("⚠️ Die Audiodateien konnten nicht gelöscht werden (noch in Benutzung). Bitte später erneut versuchen.", isError: true);
+            ShowStatus(VmStrings.Video_AudioDeleteFailed, isError: true);
             return;
         }
         await SaveAsync();
         OnPropertyChanged(nameof(SelectedVideo));
         OnVideoChanged();
-        ShowStatus("✓ Audio gelöscht. Die Sprechtexte bleiben erhalten.", isError: false);
+        ShowStatus(VmStrings.Video_AudioDeleted, isError: false);
     }
 
     private sealed class SynchronousProgress<T>(Action<T> report) : IProgress<T>
@@ -957,9 +960,11 @@ public partial class VideoViewModel : INotifyPropertyChanged
             var video = SelectedVideo;
             if (video == null || video.Scenes.Count == 0) return string.Empty;
             var timeline = Timeline;
-            var scene = _currentSceneIndex < 0 ? $"{video.Scenes.Count} Folien" : $"Folie {_currentSceneIndex + 1} von {video.Scenes.Count}";
-            var approx = UsesFilePlayback ? string.Empty : "ca. ";
-            return $"{FormatClock(_position)} / {approx}{FormatClock(timeline.Total)} · {scene}{(UsesFilePlayback ? " · Audiodatei" : string.Empty)}";
+            var scene = _currentSceneIndex < 0
+                ? Loc.Format(VmStrings.Video_SlideCount, ("count", video.Scenes.Count))
+                : Loc.Format(VmStrings.Video_SlidePosition, ("number", _currentSceneIndex + 1), ("total", video.Scenes.Count));
+            return Loc.Format(UsesFilePlayback ? VmStrings.Video_ProgressFile : VmStrings.Video_ProgressApprox,
+                ("position", FormatClock(_position)), ("duration", FormatClock(timeline.Total)), ("scene", scene));
         }
     }
 
@@ -1331,7 +1336,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         {
             _fileMode = false;
             _isPlaying = false;
-            ShowStatus($"⚠️ Die Audiodatei konnte nicht abgespielt werden: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Media_FilePlaybackFailed, ("error", ex.Message)), isError: true);
             OnPlayerChanged();
         }
     }

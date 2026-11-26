@@ -255,4 +255,155 @@
   <data name="Report_Exported" xml:space="preserve"><value>✓ Exportiert als {format}: {file}</value></data>
   <data name="Report_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export: {error}</value></data>
   <data name="Report_TipFileOpen" xml:space="preserve"><value>Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
+  <data name="Media_MinutesApprox" xml:space="preserve"><value>ca. {count} Min.</value><comment>{count} = ganze Minuten</comment></data>
+  <data name="Media_MinutesUnderOne" xml:space="preserve"><value>unter 1 Min.</value></data>
+  <data name="Media_SizeApprox" xml:space="preserve"><value>ca. {size} MB</value><comment>{size} = Zahl in der Schreibweise der Oberflächensprache</comment></data>
+  <data name="Media_SizeUnder" xml:space="preserve"><value>unter {size} MB</value></data>
+  <data name="Media_Under" xml:space="preserve"><value>unter {value}</value></data>
+  <data name="Media_GeminiEstimate" xml:space="preserve"><value>{minutes} Audio · ca. {size} MB (WAV) · geschätzt {usd} US-Dollar bei bezahlter Nutzung. In der kostenlosen Stufe von Google AI Studio fallen keine Kosten an (Tageslimits).</value><comment>{minutes} = Media_Minutes*, {usd} = Betrag oder Media_UsdUnder</comment></data>
+  <data name="Media_SettingSaveFailed" xml:space="preserve"><value>⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {error}</value></data>
+  <data name="Media_Busy" xml:space="preserve"><value>Bitte warten, bis die laufende Erstellung abgeschlossen ist.</value></data>
+  <data name="Media_BusyOperation" xml:space="preserve"><value>Bitte warten, bis der laufende Vorgang abgeschlossen ist.</value></data>
+  <data name="Media_SpeechUnavailable" xml:space="preserve"><value>Die gewählte Sprachausgabe ist nicht verfügbar.</value></data>
+  <data name="Media_PlayerUnavailable" xml:space="preserve"><value>Der Audio-Player ist in dieser Umgebung nicht verfügbar.</value></data>
+  <data name="Media_PlayerLoading" xml:space="preserve"><value>Der Audio-Player wird noch geladen …</value></data>
+  <data name="Media_FilePlaybackFailed" xml:space="preserve"><value>⚠️ Die Audiodatei konnte nicht abgespielt werden: {error}</value></data>
+  <data name="Media_FfmpegSearching" xml:space="preserve"><value>ffmpeg wird gesucht …</value></data>
+  <data name="Media_Mp3Unavailable" xml:space="preserve"><value>MP3-Export ist in dieser Umgebung nicht verfügbar.</value></data>
+  <data name="Media_FfmpegCheckFailed" xml:space="preserve"><value>ffmpeg konnte nicht geprüft werden: {error}</value></data>
+  <data name="Media_NoHalfFile" xml:space="preserve"><value>Es wurde keine halbe Datei gespeichert.</value></data>
+  <data name="Media_FileOpenTip" xml:space="preserve"><value>Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
+  <data name="Media_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export: {error}</value></data>
+  <data name="Media_FormatMarkdown" xml:space="preserve"><value>Markdown (*.md)</value></data>
+  <data name="Media_FormatText" xml:space="preserve"><value>Textdatei (*.txt)</value></data>
+  <data name="AudioFormat_Summary" xml:space="preserve"><value>Zusammenfassung</value></data>
+  <data name="AudioFormat_Podcast" xml:space="preserve"><value>Podcast-Gespräch</value></data>
+  <data name="AudioFormat_Briefing" xml:space="preserve"><value>Kurz-Briefing</value></data>
+  <data name="AudioFormat_Summary_Desc" xml:space="preserve"><value>Eine Sprecherin fasst die Unterlagen verständlich und zusammenhängend zusammen.</value></data>
+  <data name="AudioFormat_Podcast_Desc" xml:space="preserve"><value>Zwei Stimmen: Eine Moderatorin fragt nach, ein Experte erklärt – locker im Dialog.</value></data>
+  <data name="AudioFormat_Briefing_Desc" xml:space="preserve"><value>Das Wichtigste kompakt: Kernaussagen und Merksätze, ideal zum Wiederholen.</value></data>
+  <data name="AudioLength_Short" xml:space="preserve"><value>kurz (ca. 3 Min.)</value></data>
+  <data name="AudioLength_Medium" xml:space="preserve"><value>mittel (ca. 8 Min.)</value></data>
+  <data name="AudioLength_Long" xml:space="preserve"><value>lang (ca. 15 Min.)</value></data>
+  <data name="Speaker_Narrator" xml:space="preserve"><value>Sprecherin</value><comment>Anzeige des gespeicherten Sprechers „Sprecherin“</comment></data>
+  <data name="Speaker_Host" xml:space="preserve"><value>Moderatorin</value><comment>Anzeige des gespeicherten Sprechers „Moderatorin“</comment></data>
+  <data name="Speaker_Expert" xml:space="preserve"><value>Experte</value><comment>Anzeige des gespeicherten Sprechers „Experte“</comment></data>
+  <data name="SpeechProvider_System" xml:space="preserve"><value>Systemstimme (kostenlos, offline)</value></data>
+  <data name="SpeechProvider_Gemini" xml:space="preserve"><value>Google Gemini TTS (Cloud, Audiodatei)</value></data>
+  <data name="Speech_LocalAiHint" xml:space="preserve"><value>Das Skript schreibt Ihre lokale KI. Zum Vorlesen nutzen Sie die Systemstimme (offline) oder Gemini TTS (Audiodatei, Podcast mit zwei Stimmen).</value></data>
+  <data name="Speech_NoFileExportHint" xml:space="preserve"><value>Mit der Systemstimme ist kein Dateiexport möglich – sie liest nur direkt vor. Für eine Audiodatei (WAV) wählen Sie Gemini TTS.</value></data>
+  <data name="Speech_NotIncluded" xml:space="preserve"><value>Diese Sprachausgabe ist in dieser Version nicht enthalten.</value></data>
+  <data name="Speech_CheckFailed" xml:space="preserve"><value>Prüfung fehlgeschlagen: {error}</value></data>
+  <data name="Speech_Checking" xml:space="preserve"><value>Die Sprachausgabe wird noch geprüft …</value></data>
+  <data name="Audio_GenerateScript" xml:space="preserve"><value>✨ Skript erstellen</value></data>
+  <data name="Audio_GenerateFile" xml:space="preserve"><value>🎙️ Audiodatei erzeugen</value></data>
+  <data name="Audio_NoScript" xml:space="preserve"><value>Bitte zuerst ein Skript erstellen oder auswählen.</value></data>
+  <data name="Audio_NoLivePlayback" xml:space="preserve"><value>{provider} liest nicht direkt vor – erzeugen Sie zuerst die Audiodatei („{button}“) oder wählen Sie die Systemstimme.</value><comment>{button} = Knopf „Audiodatei erzeugen“</comment></data>
+  <data name="Audio_SegmentCount" xml:space="preserve"><value>{count, plural, one {# Abschnitt} other {# Abschnitte}}</value></data>
+  <data name="Audio_SegmentPosition" xml:space="preserve"><value>Abschnitt {number} von {total}</value></data>
+  <data name="Audio_ProgressFile" xml:space="preserve"><value>{position} / {duration} · {segments} · Audiodatei</value><comment>{segments} = Audio_SegmentCount oder Audio_SegmentPosition</comment></data>
+  <data name="Audio_ProgressLive" xml:space="preserve"><value>{segments} · {minutes}</value></data>
+  <data name="Audio_ProgressLiveRemaining" xml:space="preserve"><value>{segments} · noch {minutes}</value></data>
+  <data name="Audio_FilePreparing" xml:space="preserve"><value>Audiodatei wird vorbereitet …</value></data>
+  <data name="Audio_FilePart" xml:space="preserve"><value>Teil {number} von {total} wird erzeugt …</value></data>
+  <data name="Audio_FileSaving" xml:space="preserve"><value>Audiodatei wird gespeichert …</value></data>
+  <data name="Audio_FileCreated" xml:space="preserve"><value>✓ Audiodatei erzeugt ({duration} Min., {size} MB). Mit ▶ abspielen oder als WAV exportieren.</value></data>
+  <data name="Audio_FileCancelled" xml:space="preserve"><value>Die Erzeugung der Audiodatei wurde abgebrochen. Es wurde keine Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert.</value></data>
+  <data name="Audio_FileUnchangedTip" xml:space="preserve"><value>Es wurde keine halbe Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert.</value></data>
+  <data name="Audio_FileFailed" xml:space="preserve"><value>⚠️ Fehler beim Erzeugen der Audiodatei: {error}</value></data>
+  <data name="Audio_FileDeleteFailed" xml:space="preserve"><value>⚠️ Die Audiodatei konnte nicht gelöscht werden (noch in Benutzung). Bitte später erneut versuchen.</value></data>
+  <data name="Audio_FileDeleted" xml:space="preserve"><value>✓ Audiodatei gelöscht. Das Skript bleibt erhalten.</value></data>
+  <data name="Audio_FileExported" xml:space="preserve"><value>✓ Audiodatei exportiert: {file}</value></data>
+  <data name="Audio_FileExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export der Audiodatei: {error}</value></data>
+  <data name="Audio_SelectDocument" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht der Audio-Beitrag.</value></data>
+  <data name="Audio_ScriptCancelled" xml:space="preserve"><value>Die Erstellung des Skripts wurde abgebrochen.</value></data>
+  <data name="Audio_ScriptInfo" xml:space="preserve"><value>{segments}, {minutes}</value><comment>{segments} = Audio_SegmentCount, {minutes} = Media_Minutes*</comment></data>
+  <data name="Audio_ScriptCreatedRepaired" xml:space="preserve"><value>✓ Skript erstellt ({info}). Die Antwort der KI war allerdings unvollständig – das Ende fehlt eventuell.</value></data>
+  <data name="Audio_TipEditScript" xml:space="preserve"><value>Das Skript lässt sich direkt bearbeiten und ergänzen.</value></data>
+  <data name="Audio_TipShorter" xml:space="preserve"><value>Für vollständige Antworten eine kürzere Länge wählen oder einen Schwerpunkt angeben.</value></data>
+  <data name="Audio_ScriptCreatedPlain" xml:space="preserve"><value>✓ Skript erstellt ({info}). Die KI hat normalen Text geliefert; er wurde in Abschnitte aufgeteilt.</value></data>
+  <data name="Audio_TipCheckSpeakers" xml:space="preserve"><value>Prüfen Sie Sprecher und Abschnitte und passen Sie sie bei Bedarf an.</value></data>
+  <data name="Audio_ScriptCreated" xml:space="preserve"><value>✓ Skript „{title}“ erstellt ({info}).</value></data>
+  <data name="Audio_ScriptFailed" xml:space="preserve"><value>⚠️ Fehler beim Erstellen des Skripts: {error}</value></data>
+  <data name="Audio_Deleted" xml:space="preserve"><value>✓ Beitrag „{title}“ gelöscht.</value></data>
+  <data name="Audio_NewSegmentText" xml:space="preserve"><value>Neuer Abschnitt.</value><comment>Platzhaltertext eines neu eingefügten Abschnitts</comment></data>
+  <data name="Audio_SaveFailed" xml:space="preserve"><value>⚠️ Speichern fehlgeschlagen: {error}</value></data>
+  <data name="Audio_ScriptExported" xml:space="preserve"><value>✓ Skript exportiert als {format}: {file}</value></data>
+  <data name="Audio_Mp3NeedsFile" xml:space="preserve"><value>Erst eine Audiodatei erzeugen (Gemini TTS).</value></data>
+  <data name="Audio_Mp3Estimate" xml:space="preserve"><value>ca. {size} MB (MP3, {kbps} kbit/s mono)</value></data>
+  <data name="Audio_Mp3Exported" xml:space="preserve"><value>✓ MP3 exportiert: {file}</value></data>
+  <data name="Audio_Mp3Cancelled" xml:space="preserve"><value>Der MP3-Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert.</value></data>
+  <data name="Audio_Mp3Failed" xml:space="preserve"><value>⚠️ Fehler beim MP3-Export: {error}</value></data>
+  <data name="Video_Generate" xml:space="preserve"><value>🎬 Video erstellen</value></data>
+  <data name="Video_GenerateAudio" xml:space="preserve"><value>🎙️ Audio erzeugen</value></data>
+  <data name="Video_AssembleAudio" xml:space="preserve"><value>Audio zusammensetzen</value></data>
+  <data name="Video_SourcesUnknown" xml:space="preserve"><value>Aus welchen Dokumenten die Präsentation erstellt wurde, ist nicht gespeichert (ältere Präsentation). Prüfen Sie die Folien vor dem Erstellen.</value></data>
+  <data name="Video_SourcesMatch" xml:space="preserve"><value>Erstellt aus: {sources}</value></data>
+  <data name="Video_SourcesMismatch" xml:space="preserve"><value>Die Präsentation stammt aus: {sources}. Angehakt ist: {selected}.</value></data>
+  <data name="Video_NoDocumentChecked" xml:space="preserve"><value>kein Dokument</value></data>
+  <data name="Video_NoPresentation" xml:space="preserve"><value>⚠️ Für dieses Profil gibt es noch keine Präsentation. Erstellen Sie eine im Reiter „Präsentation“ oder lassen Sie hier neue Folien erzeugen.</value></data>
+  <data name="Video_SelectDocument" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um neue Folien zu erzeugen.</value></data>
+  <data name="Video_BusySlides" xml:space="preserve"><value>Die KI gliedert die Inhalte und formuliert die Folien …</value></data>
+  <data name="Video_BusyNarration" xml:space="preserve"><value>Die KI schreibt die Sprechtexte zu den Folien …</value></data>
+  <data name="Video_SceneCount" xml:space="preserve"><value>{count, plural, one {# Szene} other {# Szenen}}</value></data>
+  <data name="Video_CreatedInfo" xml:space="preserve"><value>{scenes}, {minutes}</value></data>
+  <data name="Video_FilledFromNotes" xml:space="preserve"><value>Für {count, plural, one {# Folie} other {# Folien}} hat die KI keinen Text geliefert; dort steht der Text aus den Sprechernotizen bzw. Stichpunkten.</value></data>
+  <data name="Video_ResponseIncomplete" xml:space="preserve"><value>Die Antwort der KI war allerdings unvollständig.</value></data>
+  <data name="Video_CreatedWithNote" xml:space="preserve"><value>✓ Video „{title}“ erstellt ({info}). {note}</value></data>
+  <data name="Video_TipEditNarration" xml:space="preserve"><value>Die Sprechtexte lassen sich je Szene per Doppelklick bearbeiten.</value></data>
+  <data name="Video_Created" xml:space="preserve"><value>✓ Video „{title}“ erstellt ({info}). Mit ▶ abspielen.</value></data>
+  <data name="Video_Cancelled" xml:space="preserve"><value>Die Erstellung des Videos wurde abgebrochen.</value></data>
+  <data name="Video_Failed" xml:space="preserve"><value>⚠️ Fehler beim Erstellen des Videos: {error}</value></data>
+  <data name="Video_SlidesRefreshed" xml:space="preserve"><value>✓ Folien aktualisiert ({count, plural, one {# Folie} other {# Folien}}). Neue Folien haben den Text aus den Sprechernotizen; vorhandene Sprechtexte bleiben erhalten.</value></data>
+  <data name="Video_Deleted" xml:space="preserve"><value>✓ Video „{title}“ gelöscht.</value></data>
+  <data name="Video_FormatMarkdown" xml:space="preserve"><value>Markdown-Datei (*.md)</value></data>
+  <data name="Video_ScriptExported" xml:space="preserve"><value>✓ Sprechtexte exportiert: {file}</value></data>
+  <data name="Video_NoVideo" xml:space="preserve"><value>Bitte zuerst ein Video erstellen oder auswählen.</value></data>
+  <data name="Video_AudioOutdated" xml:space="preserve"><value>Sprechtexte oder Folien wurden geändert – erzeugen Sie das Audio neu (nur geänderte Szenen werden berechnet) oder wählen Sie die Systemstimme.</value></data>
+  <data name="Video_NoLivePlayback" xml:space="preserve"><value>{provider} liest nicht direkt vor – erzeugen Sie zuerst das Audio („{button}“) oder wählen Sie die Systemstimme.</value><comment>{button} = Knopf „Audio erzeugen“</comment></data>
+  <data name="Video_NoNarration" xml:space="preserve"><value>Keine Szene hat einen Sprechtext.</value></data>
+  <data name="Video_EstimateScenes" xml:space="preserve"><value>{scenes} · {estimate}</value><comment>{estimate} = Media_GeminiEstimate</comment></data>
+  <data name="Video_ScenesOfTotal" xml:space="preserve"><value>{count} von {total, plural, one {# Szene} other {# Szenen}}</value></data>
+  <data name="Video_AudioAssembling" xml:space="preserve"><value>Audio wird zusammengesetzt …</value></data>
+  <data name="Video_AudioPreparing" xml:space="preserve"><value>Audio wird vorbereitet …</value></data>
+  <data name="Video_AudioSceneProgress" xml:space="preserve"><value>Szene {number} von {total} (Folie {slide}) wird erzeugt …</value></data>
+  <data name="Video_AudioNothingNew" xml:space="preserve"><value>Keine Szene musste neu berechnet werden.</value></data>
+  <data name="Video_AudioScenesNew" xml:space="preserve"><value>{count, plural, one {# Szene} other {# Szenen}} neu erzeugt.</value></data>
+  <data name="Video_AudioDone" xml:space="preserve"><value>✓ Audio fertig ({duration} Min.). {fresh} Mit ▶ abspielen.</value></data>
+  <data name="Video_AudioCancelled" xml:space="preserve"><value>Die Erzeugung wurde abgebrochen. {done} von {total, plural, one {# Szene ist} other {# Szenen sind}} fertig und bleiben gespeichert – beim nächsten Mal werden nur die übrigen berechnet. Es wurde keine halbe Datei gespeichert.</value></data>
+  <data name="Video_AudioPartialTip" xml:space="preserve"><value>{done} von {total, plural, one {# Szene ist} other {# Szenen sind}} fertig und bleiben gespeichert; es wurde keine halbe Datei gespeichert.</value></data>
+  <data name="Video_AudioFailed" xml:space="preserve"><value>⚠️ Fehler beim Erzeugen des Audios: {error}</value></data>
+  <data name="Video_AudioUnchangedTip" xml:space="preserve"><value>Es wurde keine halbe Datei gespeichert; vorhandene Audiodateien bleiben unverändert.</value></data>
+  <data name="Video_AudioDeleteFailed" xml:space="preserve"><value>⚠️ Die Audiodateien konnten nicht gelöscht werden (noch in Benutzung). Bitte später erneut versuchen.</value></data>
+  <data name="Video_AudioDeleted" xml:space="preserve"><value>✓ Audio gelöscht. Die Sprechtexte bleiben erhalten.</value></data>
+  <data name="Video_SlideCount" xml:space="preserve"><value>{count, plural, one {# Folie} other {# Folien}}</value></data>
+  <data name="Video_SlidePosition" xml:space="preserve"><value>Folie {number} von {total}</value></data>
+  <data name="Video_Progress" xml:space="preserve"><value>{position} / {duration} · {scene}</value><comment>{scene} = Video_SlideCount oder Video_SlidePosition</comment></data>
+  <data name="Video_ProgressApprox" xml:space="preserve"><value>{position} / ca. {duration} · {scene}</value></data>
+  <data name="Video_ProgressFile" xml:space="preserve"><value>{position} / {duration} · {scene} · Audiodatei</value></data>
+  <data name="Video_HtmlEstimateAssemble" xml:space="preserve"><value>{size} · mit Ton ({format}) · Audio wird vorher kostenlos zusammengesetzt</value></data>
+  <data name="Video_HtmlEstimateAudio" xml:space="preserve"><value>{size} · mit Ton ({format})</value></data>
+  <data name="Video_HtmlEstimateSilent" xml:space="preserve"><value>{size} · ohne Ton</value></data>
+  <data name="Video_HtmlBusy" xml:space="preserve"><value>HTML-Datei wird erstellt …</value></data>
+  <data name="Video_HtmlMp3Busy" xml:space="preserve"><value>Ton wird nach MP3 umgewandelt …</value></data>
+  <data name="Video_HtmlWriting" xml:space="preserve"><value>HTML-Datei wird geschrieben …</value></data>
+  <data name="Video_HtmlSavedAudio" xml:space="preserve"><value>✓ HTML-Datei gespeichert ({size} MB, mit Ton als {format}): {file}</value></data>
+  <data name="Video_HtmlSavedSilent" xml:space="preserve"><value>✓ HTML-Datei gespeichert ({size} MB, ohne Ton – die Folien laufen im festen Takt): {file}</value></data>
+  <data name="Video_HtmlFailed" xml:space="preserve"><value>⚠️ Fehler beim HTML-Export: {error}</value></data>
+  <data name="Video_Mp4Unavailable" xml:space="preserve"><value>Der MP4-Export ist in dieser Umgebung nicht verfügbar.</value></data>
+  <data name="Video_Mp4CheckFailed" xml:space="preserve"><value>Die Voraussetzungen für MP4 konnten nicht geprüft werden: {error}</value></data>
+  <data name="Video_Mp4Estimate" xml:space="preserve"><value>{slides} · {duration} Min. · Datei {size} · Export dauert {time} · {audio}</value><comment>{slides} = Video_SlideCount</comment></data>
+  <data name="Video_Mp4WithAudio" xml:space="preserve"><value>mit Ton (AAC)</value></data>
+  <data name="Video_Mp4Silent" xml:space="preserve"><value>ohne Ton, fester Takt</value></data>
+  <data name="Video_Mp4SavedAudio" xml:space="preserve"><value>✓ MP4 gespeichert ({size} MB, mit Ton): {file}</value></data>
+  <data name="Video_Mp4SavedSilent" xml:space="preserve"><value>✓ MP4 gespeichert ({size} MB, ohne Ton – die Folien laufen im festen Takt): {file}</value></data>
+  <data name="Video_Mp4Busy" xml:space="preserve"><value>MP4-Datei wird erstellt …</value></data>
+  <data name="Video_SelectVideo" xml:space="preserve"><value>Bitte zuerst ein Video auswählen.</value></data>
+  <data name="Video_AssembleFirst" xml:space="preserve"><value>Bitte zuerst „{button}“.</value><comment>{button} = Video_AssembleAudio</comment></data>
+  <data name="Video_GenerateAudioFirst" xml:space="preserve"><value>Erst das Audio mit Gemini TTS erzeugen.</value></data>
+  <data name="Video_Mp3TrackProgress" xml:space="preserve"><value>Tonspur wird umgewandelt ({percent} %) …</value></data>
+  <data name="Video_Mp3TrackSaved" xml:space="preserve"><value>✓ Tonspur als MP3 gespeichert: {file}</value></data>
+  <data name="Video_Mp3TrackBusy" xml:space="preserve"><value>Tonspur wird als MP3 gespeichert …</value></data>
+  <data name="Video_ExportCancelled" xml:space="preserve"><value>Der Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert; temporäre Dateien wurden gelöscht.</value></data>
+  <data name="Video_ReportVideoMissing" xml:space="preserve"><value>⚠️ Das Video aus dem Bericht gibt es nicht mehr (gelöscht oder in einem anderen Profil).</value></data>
 </root>

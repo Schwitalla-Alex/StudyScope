@@ -537,7 +537,7 @@ public class ReportViewModel : INotifyPropertyChanged
                 _ when silent == 0 => Loc.Format(VmStrings.Report_AudioAll, ("format", format)),
                 _ => Loc.Format(VmStrings.Report_AudioMixed, ("withAudio", e.VideosWithAudio), ("format", format), ("silent", silent))
             };
-            return Loc.Format(VmStrings.Report_PlayersEstimate, ("size", e.SizeText), ("videos", count), ("audio", audio));
+            return Loc.Format(VmStrings.Report_PlayersEstimate, ("size", MediaTexts.Size(e.Megabytes)), ("videos", count), ("audio", audio));
         }
     }
 

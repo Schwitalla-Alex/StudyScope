@@ -309,7 +309,7 @@ public class VideoViewModelTests
         Assert.That(_vm.CanPlay, Is.False);
         Assert.That(_vm.PlayDisabledReason, Does.Contain("erzeugen Sie zuerst das Audio"));
         Assert.That(_vm.CanGenerateAudio, Is.True, _vm.GenerateAudioDisabledReason);
-        Assert.That(_vm.EstimateText(false), Does.StartWith("3 Szene(n)").And.Contain("MB (WAV)").And.Contain("US-Dollar"));
+        Assert.That(_vm.EstimateText(false), Does.StartWith("3 Szenen").And.Contain("MB (WAV)").And.Contain("US-Dollar"));
     }
 
     [Test]
@@ -367,14 +367,14 @@ public class VideoViewModelTests
         Assert.That(_vm.PlayDisabledReason, Does.Contain("nur geänderte Szenen"));
         Assert.That(_vm.ScenesNeedingAudio, Has.Count.EqualTo(1));
         Assert.That(_vm.EstimateText(false), Does.StartWith("1 von 3 Szenen"));
-        Assert.That(_vm.EstimateText(true), Does.StartWith("3 Szene(n)"));
+        Assert.That(_vm.EstimateText(true), Does.StartWith("3 Szenen"));
 
         await _vm.GenerateAudioAsync();
 
         Assert.That(_gemini.Texts, Is.EqualTo(new[] { "Ganz neuer Text für die letzte Folie." }));
         Assert.That(video.IsAudioOutdated, Is.False);
         Assert.That(await File.ReadAllBytesAsync(_videoService.GetSceneAudioPath(Profile, video, video.Scenes[0])!), Is.EqualTo(untouched));
-        Assert.That(_vm.StatusMessage, Does.Contain("1 Szene(n) neu erzeugt"));
+        Assert.That(_vm.StatusMessage, Does.Contain("1 Szene neu erzeugt"));
 
         // Alle neu (z. B. andere Stimme)
         _gemini.Texts.Clear();
@@ -543,7 +543,7 @@ public class VideoViewModelTests
         Assert.That(_vm.Mp4DisabledReason, Does.Contain("nicht verfügbar"));
     }
 
-    [Test]
+    [Test, SetCulture("de-DE")]
     public async Task Mp4_WithoutGeminiAudio_SilentFixedTimeline_EstimateShown()
     {
         var video = await CreateVideoAsync();
@@ -564,7 +564,7 @@ public class VideoViewModelTests
         Assert.That(vm.IsExportingMedia, Is.False);
     }
 
-    [Test]
+    [Test, SetCulture("de-DE")]
     public async Task Mp4_WithGeminiAudio_UsesAudioFileAndExactStarts_Mp3TrackExport()
     {
         var video = await CreateVideoAsync(gemini: true);

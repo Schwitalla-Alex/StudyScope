@@ -1,9 +1,11 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Globalization;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 using StudyScope.ViewModels.Audio;
 using StudyScope.ViewModels.Mindmap;
 
@@ -24,9 +26,9 @@ public enum AudioScriptExportFormat
 /// </summary>
 public partial class AudioViewModel : INotifyPropertyChanged
 {
-    public const string LocalAiHint = SpeechProviderState.LocalAiHint;
+    public static string LocalAiHint => SpeechProviderState.LocalAiHint;
     public static string GeminiPrivacyHint => SpeechProviderState.GeminiPrivacyHint;
-    public const string NoFileExportHint = SpeechProviderState.NoFileExportHint;
+    public static string NoFileExportHint => SpeechProviderState.NoFileExportHint;
 
     private readonly IAudioScriptService _audioService;
     private readonly IDocumentService _documentService;
@@ -295,7 +297,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     }
 
     private void ShowSaveError(Exception ex) =>
-        ShowStatus($"⚠️ Die Einstellung der Sprachausgabe konnte nicht gespeichert werden: {ex.Message}", isError: true);
+        ShowStatus(Loc.Format(VmStrings.Media_SettingSaveFailed, ("error", ex.Message)), isError: true);
 
     /// <summary>Sprecherrollen des gewählten Beitrags (bzw. des Formulars): Podcast „Moderatorin“/„Experte“, sonst „Sprecherin“.</summary>
     public IReadOnlyList<string> SpeakerRoles => AudioScriptFormats.Speakers(SelectedSummary?.Format ?? Format);
@@ -333,18 +335,18 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (!HasScript) return "Bitte zuerst ein Skript erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
+            if (!HasScript) return VmStrings.Audio_NoScript;
+            if (IsBusy) return VmStrings.Media_Busy;
             var service = CurrentSpeechService;
-            if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
+            if (service == null) return VmStrings.Media_SpeechUnavailable;
             if (!service.SupportsLivePlayback)
             {
                 // Erzeugte Audiodatei abspielen (dafür ist kein Schlüssel nötig)
                 if (SelectedAudioFilePath == null)
-                    return $"{service.DisplayName} liest nicht direkt vor – erzeugen Sie zuerst die Audiodatei („🎙️ Audiodatei erzeugen“) oder wählen Sie die Systemstimme.";
+                    return Loc.Format(VmStrings.Audio_NoLivePlayback, ("provider", MediaTexts.ProviderName(service.Provider)), ("button", VmStrings.Audio_GenerateFile));
                 if (_filePlayer == null)
-                    return "Der Audio-Player ist in dieser Umgebung nicht verfügbar.";
-                return _filePlayer.IsReady ? null : "Der Audio-Player wird noch geladen …";
+                    return VmStrings.Media_PlayerUnavailable;
+                return _filePlayer.IsReady ? null : VmStrings.Media_PlayerLoading;
             }
             return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
@@ -357,10 +359,10 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (!HasScript) return "Bitte zuerst ein Skript erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis die laufende Erstellung abgeschlossen ist.";
+            if (!HasScript) return VmStrings.Audio_NoScript;
+            if (IsBusy) return VmStrings.Media_Busy;
             var service = CurrentSpeechService;
-            if (service == null) return "Die gewählte Sprachausgabe ist nicht verfügbar.";
+            if (service == null) return VmStrings.Media_SpeechUnavailable;
             if (!service.SupportsFileExport || service is not IAudioFileSpeechService) return NoFileExportHint;
             return SpeechProviderState.AvailabilityReason(CurrentAvailability);
         }
@@ -406,15 +408,19 @@ public partial class AudioViewModel : INotifyPropertyChanged
             if (summary == null || summary.Segments.Count == 0) return string.Empty;
             if (UsesFilePlayback && summary.AudioDurationSeconds > 0)
             {
-                var segmentInfo = _currentSegmentIndex < 0 ? $"{summary.Segments.Count} Abschnitte" : $"Abschnitt {_currentSegmentIndex + 1} von {summary.Segments.Count}";
-                return $"{FormatClock(_filePosition)} / {FormatClock(summary.AudioDurationSeconds)} · {segmentInfo} · Audiodatei";
+                var segmentInfo = _currentSegmentIndex < 0
+                    ? Loc.Format(VmStrings.Audio_SegmentCount, ("count", summary.Segments.Count))
+                    : Loc.Format(VmStrings.Audio_SegmentPosition, ("number", _currentSegmentIndex + 1), ("total", summary.Segments.Count));
+                return Loc.Format(VmStrings.Audio_ProgressFile, ("position", FormatClock(_filePosition)), ("duration", FormatClock(summary.AudioDurationSeconds)), ("segments", segmentInfo));
             }
             var position = _currentSegmentIndex < 0 ? 0 : _currentSegmentIndex;
             var remainingWords = summary.Segments.Skip(position).Sum(s => AudioScriptFormats.CountWords(s.Text));
             var minutes = AudioScriptFormats.EstimateMinutes(remainingWords) / Math.Max(SpeechSettings.MinRate, Rate);
             return _currentSegmentIndex < 0
-                ? $"{summary.Segments.Count} Abschnitte · {AudioScriptFormats.FormatMinutes(minutes)}"
-                : $"Abschnitt {position + 1} von {summary.Segments.Count} · noch {AudioScriptFormats.FormatMinutes(minutes)}";
+                ? Loc.Format(VmStrings.Audio_ProgressLive, ("segments", Loc.Format(VmStrings.Audio_SegmentCount, ("count", summary.Segments.Count))), ("minutes", MediaTexts.Minutes(minutes)))
+                : Loc.Format(VmStrings.Audio_ProgressLiveRemaining,
+                    ("segments", Loc.Format(VmStrings.Audio_SegmentPosition, ("number", position + 1), ("total", summary.Segments.Count))),
+                    ("minutes", MediaTexts.Minutes(minutes)));
         }
     }
 
@@ -594,7 +600,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         {
             _fileMode = false;
             _isPlaying = false;
-            ShowStatus($"⚠️ Die Audiodatei konnte nicht abgespielt werden: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Media_FilePlaybackFailed, ("error", ex.Message)), isError: true);
             OnPlayerChanged();
         }
     }
@@ -647,12 +653,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         get
         {
-            if (AudioEstimate is not { } e) return null;
-            var de = CultureInfo.GetCultureInfo("de-DE");
-            var minutes = AudioScriptFormats.FormatMinutes(e.Seconds / 60);
-            var size = e.Megabytes < 10 ? e.Megabytes.ToString("0.0", de) : e.Megabytes.ToString("0", de);
-            var usd = e.Usd < 0.01 ? "unter 0,01" : e.Usd.ToString("0.00", de);
-            return $"{minutes} Audio · ca. {size} MB (WAV) · geschätzt {usd} US-Dollar bei bezahlter Nutzung. {GeminiTtsInfo.FreeTierHint}";
+            return AudioEstimate is { } e ? MediaTexts.GeminiEstimate(e) : null;
         }
     }
 
@@ -688,7 +689,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         IsBusy = true;
         IsGeneratingAudio = true;
         AudioProgress = 0;
-        AudioProgressText = "Audiodatei wird vorbereitet …";
+        AudioProgressText = VmStrings.Audio_FilePreparing;
         ClearStatus();
         _audioCts = new CancellationTokenSource();
         var token = _audioCts.Token;
@@ -700,8 +701,8 @@ public partial class AudioViewModel : INotifyPropertyChanged
             {
                 AudioProgress = p.Fraction;
                 AudioProgressText = p.CompletedParts < p.TotalParts
-                    ? $"Teil {p.CompletedParts + 1} von {p.TotalParts} wird erzeugt …"
-                    : "Audiodatei wird gespeichert …";
+                    ? Loc.Format(VmStrings.Audio_FilePart, ("number", p.CompletedParts + 1), ("total", p.TotalParts))
+                    : VmStrings.Audio_FileSaving;
             });
 
             var oldPath = SelectedAudioFilePath;
@@ -720,22 +721,21 @@ public partial class AudioViewModel : INotifyPropertyChanged
             _currentSegmentIndex = -1;
             _filePosition = 0;
             var size = File.Exists(path) ? new FileInfo(path).Length / 1_000_000.0 : 0;
-            ShowStatus($"✓ Audiodatei erzeugt ({FormatClock(result.DurationSeconds)} Min., {size.ToString("0.0", CultureInfo.GetCultureInfo("de-DE"))} MB). " +
-                       "Mit ▶ abspielen oder als WAV exportieren.", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Audio_FileCreated, ("duration", FormatClock(result.DurationSeconds)), ("size", size.ToString("0.0", CultureInfo.CurrentCulture))), isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erzeugung der Audiodatei wurde abgebrochen. Es wurde keine Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert.", isError: false);
+            ShowStatus(VmStrings.Audio_FileCancelled, isError: false);
         }
         catch (LlmServiceException ex)
         {
             ShowStatus($"⚠️ {ex.Message}", isError: true,
-                new[] { "Es wurde keine halbe Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert." }, ex.Detail);
+                new[] { VmStrings.Audio_FileUnchangedTip }, ex.Detail);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erzeugen der Audiodatei: {ex.Message}", isError: true,
-                new[] { "Es wurde keine halbe Datei gespeichert; eine vorhandene Audiodatei bleibt unverändert." });
+            ShowStatus(Loc.Format(VmStrings.Audio_FileFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Audio_FileUnchangedTip });
         }
         finally
         {
@@ -787,12 +787,12 @@ public partial class AudioViewModel : INotifyPropertyChanged
         _audioService.DeleteAudioFile(_profileName, summary);
         if (summary.HasAudioFile)
         {
-            ShowStatus("⚠️ Die Audiodatei konnte nicht gelöscht werden (noch in Benutzung). Bitte später erneut versuchen.", isError: true);
+            ShowStatus(VmStrings.Audio_FileDeleteFailed, isError: true);
             return;
         }
         await SaveAsync();
         OnScriptChanged();
-        ShowStatus("✓ Audiodatei gelöscht. Das Skript bleibt erhalten.", isError: false);
+        ShowStatus(VmStrings.Audio_FileDeleted, isError: false);
     }
 
     public bool CanExportAudio => SelectedAudioFilePath != null && !IsBusy;
@@ -806,13 +806,13 @@ public partial class AudioViewModel : INotifyPropertyChanged
             await using (var input = File.OpenRead(source))
             await using (var output = File.Create(filePath))
                 await input.CopyToAsync(output);
-            ShowStatus($"✓ Audiodatei exportiert: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Audio_FileExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export der Audiodatei: {ex.Message}", isError: true,
-                new[] { "Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren." });
+            ShowStatus(Loc.Format(VmStrings.Audio_FileExportFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Media_FileOpenTip });
             return false;
         }
     }
@@ -879,7 +879,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht der Audio-Beitrag.", isError: true);
+            ShowStatus(VmStrings.Audio_SelectDocument, isError: true);
             return;
         }
 
@@ -905,13 +905,13 @@ public partial class AudioViewModel : INotifyPropertyChanged
             var result = await _audioService.GenerateAsync(chunks, Format, Length, Topic, fallbackTitle, token);
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Erstellung des Skripts wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.Audio_ScriptCancelled, isError: false);
                 return;
             }
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.AudioScript, "✨ Skript erstellen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.AudioScript, VmStrings.Audio_GenerateScript);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -931,24 +931,26 @@ public partial class AudioViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(Items));
             SelectedSummary = summary;
 
-            var info = $"{summary.Segments.Count} Abschnitte, {AudioScriptFormats.FormatMinutes(summary.EstimatedMinutes)}";
+            var info = Loc.Format(VmStrings.Audio_ScriptInfo,
+                ("segments", Loc.Format(VmStrings.Audio_SegmentCount, ("count", summary.Segments.Count))),
+                ("minutes", MediaTexts.Minutes(summary.EstimatedMinutes)));
             if (result.WasRepaired)
-                ShowStatus($"✓ Skript erstellt ({info}). Die Antwort der KI war allerdings unvollständig – das Ende fehlt eventuell.", isError: false,
-                    new[] { "Das Skript lässt sich direkt bearbeiten und ergänzen.", "Für vollständige Antworten eine kürzere Länge wählen oder einen Schwerpunkt angeben." },
+                ShowStatus(Loc.Format(VmStrings.Audio_ScriptCreatedRepaired, ("info", info)), isError: false,
+                    new[] { VmStrings.Audio_TipEditScript, VmStrings.Audio_TipShorter },
                     isWarning: true);
             else if (result.WasPlainText)
-                ShowStatus($"✓ Skript erstellt ({info}). Die KI hat normalen Text geliefert; er wurde in Abschnitte aufgeteilt.", isError: false,
-                    new[] { "Prüfen Sie Sprecher und Abschnitte und passen Sie sie bei Bedarf an." }, isWarning: true);
+                ShowStatus(Loc.Format(VmStrings.Audio_ScriptCreatedPlain, ("info", info)), isError: false,
+                    new[] { VmStrings.Audio_TipCheckSpeakers }, isWarning: true);
             else
-                ShowStatus($"✓ Skript „{summary.Title}“ erstellt ({info}).", isError: false);
+                ShowStatus(Loc.Format(VmStrings.Audio_ScriptCreated, ("title", summary.Title), ("info", info)), isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung des Skripts wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Audio_ScriptCancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen des Skripts: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Audio_ScriptFailed, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -992,7 +994,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         if (_library.Items.Count == 0)
             IsFormOpen = true;
 
-        ShowStatus($"✓ Beitrag „{item.Title}“ gelöscht.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Audio_Deleted, ("title", item.Title)), isError: false);
     }
 
     public async Task<bool> SetSegmentTextAsync(int index, string text)
@@ -1049,7 +1051,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         var speaker = speakers.Count > 1 ? speakers.FirstOrDefault(s => s != previous) ?? speakers[0] : speakers[0];
 
         await StopAsync();
-        summary.Segments.Insert(position, new AudioSegment { Speaker = speaker, Text = "Neuer Abschnitt." });
+        summary.Segments.Insert(position, new AudioSegment { Speaker = speaker, Text = VmStrings.Audio_NewSegmentText });
         await SaveAsync();
         OnScriptChanged();
         return position;
@@ -1076,7 +1078,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Speichern fehlgeschlagen: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Audio_SaveFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -1085,7 +1087,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     public static string Extension(AudioScriptExportFormat format) => format == AudioScriptExportFormat.Markdown ? "md" : "txt";
 
     public static string FormatDescription(AudioScriptExportFormat format) =>
-        format == AudioScriptExportFormat.Markdown ? "Markdown (*.md)" : "Textdatei (*.txt)";
+        format == AudioScriptExportFormat.Markdown ? VmStrings.Media_FormatMarkdown : VmStrings.Media_FormatText;
 
     public string ExportScript(AudioScriptExportFormat format)
     {
@@ -1100,13 +1102,13 @@ public partial class AudioViewModel : INotifyPropertyChanged
         try
         {
             await File.WriteAllTextAsync(filePath, ExportScript(format));
-            ShowStatus($"✓ Skript exportiert als {FormatDescription(format)}: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Audio_ScriptExported, ("format", FormatDescription(format)), ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true,
-                new[] { "Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren." });
+            ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Media_FileOpenTip });
             return false;
         }
     }

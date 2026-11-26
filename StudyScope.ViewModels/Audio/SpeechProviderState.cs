@@ -1,6 +1,7 @@
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels.Audio;
 
@@ -12,13 +13,11 @@ namespace StudyScope.ViewModels.Audio;
 /// </summary>
 public sealed class SpeechProviderState
 {
-    public const string LocalAiHint =
-        "Das Skript schreibt Ihre lokale KI. Zum Vorlesen nutzen Sie die Systemstimme (offline) oder Gemini TTS (Audiodatei, Podcast mit zwei Stimmen).";
+    public static string LocalAiHint => VmStrings.Speech_LocalAiHint;
 
     public static string GeminiPrivacyHint => VmStrings.Speech_PrivacyHint;
 
-    public const string NoFileExportHint =
-        "Mit der Systemstimme ist kein Dateiexport möglich – sie liest nur direkt vor. Für eine Audiodatei (WAV) wählen Sie Gemini TTS.";
+    public static string NoFileExportHint => VmStrings.Speech_NoFileExportHint;
 
     private readonly IStorageService _storage;
     private readonly IReadOnlyList<ITextToSpeechService> _services;
@@ -74,7 +73,7 @@ public sealed class SpeechProviderState
             ? a
             : _services.Any(s => s.Provider == provider)
                 ? SpeechAvailability.Checking()
-                : SpeechAvailability.Unavailable("Diese Sprachausgabe ist in dieser Version nicht enthalten.");
+                : SpeechAvailability.Unavailable(VmStrings.Speech_NotIncluded);
 
     public SpeechAvailability CurrentAvailability => AvailabilityOf(SelectedProvider);
 
@@ -96,7 +95,7 @@ public sealed class SpeechProviderState
             }
             catch (Exception ex)
             {
-                _availability[service.Provider] = SpeechAvailability.Unavailable($"Prüfung fehlgeschlagen: {ex.Message}");
+                _availability[service.Provider] = SpeechAvailability.Unavailable(Loc.Format(VmStrings.Speech_CheckFailed, ("error", ex.Message)));
             }
         }
 
@@ -171,7 +170,7 @@ public sealed class SpeechProviderState
     /// <summary>Begründung aus der Verfügbarkeit (null = nutzbar).</summary>
     public static string? AvailabilityReason(SpeechAvailability availability) => availability.Status switch
     {
-        SpeechAvailabilityStatus.Checking => "Die Sprachausgabe wird noch geprüft …",
+        SpeechAvailabilityStatus.Checking => VmStrings.Speech_Checking,
         SpeechAvailabilityStatus.Unavailable => string.IsNullOrWhiteSpace(availability.Hint) ? availability.Message : $"{availability.Message} {availability.Hint}",
         _ => null
     };
