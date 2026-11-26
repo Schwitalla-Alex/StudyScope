@@ -13,48 +13,49 @@
 
     <div class="au-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Audio-Zusammenfassung: @DocVm.CurrentProfile</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Audio_Title, ("profile", DocVm.CurrentProfile))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
-                @(AuVm.Items.Count == 0 ? "Noch keine Beiträge" : AuVm.Items.Count == 1 ? "1 Beitrag" : $"{AuVm.Items.Count} Beiträge")
-                · Grundlage: @ActiveDocumentsText
+                @Loc.Format(UiStrings.Common_BasedOn,
+                    ("items", AuVm.Items.Count == 0 ? UiStrings.Audio_NoItems : Loc.Format(UiStrings.Audio_ItemCount, ("count", AuVm.Items.Count))),
+                    ("documents", ActiveDocumentsText))
             </span>
         </div>
         @if (!AuVm.IsFormOpen && !AuVm.IsBusy)
         {
-            <button type="button" class="au-btn" style="background: var(--ss-primary);" @onclick="AuVm.OpenForm">➕ Neuer Beitrag</button>
+            <button type="button" class="au-btn" style="background: var(--ss-primary);" @onclick="AuVm.OpenForm">@UiStrings.Audio_New</button>
         }
     </div>
 
     @if (AuVm.IsExportingMp3)
     {
         <div class="au-info">
-            <div style="font-weight: 600; font-size: 13px;">🎵 MP3 wird gespeichert … @((int)(AuVm.Mp3Progress * 100)) %</div>
+            <div style="font-weight: 600; font-size: 13px;">@Loc.Format(UiStrings.Audio_Mp3Saving, ("percent", (int)(AuVm.Mp3Progress * 100)))</div>
             <div class="au-bar" style="margin-top: 8px;"><div class="au-bar-fill" style="width: @(Percent(AuVm.Mp3Progress))%;"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Beim Abbrechen entsteht keine halbe Datei.</span>
-                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.CancelMp3Export">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Audio_CancelNoHalfFile</span>
+                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.CancelMp3Export">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
     else if (AuVm.IsGeneratingAudio)
     {
         <div class="au-info">
-            <div style="font-weight: 600; font-size: 13px;">🎙️ @(AuVm.CurrentSpeechService?.DisplayName ?? "Sprachausgabe") erzeugt die Audiodatei … @AuVm.AudioProgressText</div>
+            <div style="font-weight: 600; font-size: 13px;">@Loc.Format(UiStrings.Audio_Generating, ("provider", MediaTexts.ProviderName(AuVm.SelectedProvider)), ("progress", AuVm.AudioProgressText))</div>
             <div class="au-bar" style="margin-top: 8px;"><div class="au-bar-fill" style="width: @(Percent(AuVm.AudioProgress))%;"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Lange Skripte werden in mehreren Teilen erzeugt. Beim Abbrechen wird keine Datei gespeichert.</span>
-                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.CancelAudioGeneration">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Audio_GeneratingHint</span>
+                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.CancelAudioGeneration">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
     else if (AuVm.IsBusy)
     {
         <div class="au-info">
-            <div style="font-weight: 600; font-size: 13px;">🎧 KI liest die Dokumente und schreibt das Sprechskript (@AudioScriptFormats.DisplayName(AuVm.Format), @AudioScriptFormats.LengthName(AuVm.Length)) ...</div>
+            <div style="font-weight: 600; font-size: 13px;">@Loc.Format(UiStrings.Audio_BusyScript, ("format", MediaTexts.FormatName(AuVm.Format)), ("length", MediaTexts.LengthName(AuVm.Length)))</div>
             <div class="au-progress"><div class="au-progress-bar"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Je nach Modell und Länge kann das etwas dauern.</span>
-                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.Cancel">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Audio_BusyHint</span>
+                <button type="button" class="au-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="AuVm.Cancel">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
@@ -70,7 +71,7 @@
                 <div style="font-weight: 600;">@AuVm.StatusMessage</div>
                 @if (AuVm.StatusTips.Count > 0)
                 {
-                    <ul style="margin: 4px 0 0 18px; line-height: 1.5;">
+                    <ul style="margin-block: 4px 0; margin-inline: 18px 0; line-height: 1.5;">
                         @foreach (var tip in AuVm.StatusTips)
                         {
                             <li>@tip</li>
@@ -80,12 +81,12 @@
                 @if (!string.IsNullOrEmpty(AuVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">@UiStrings.Common_TechnicalDetails</summary>
                         <pre class="au-details-raw">@AuVm.StatusDetails</pre>
                     </details>
                 }
             </div>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="AuVm.ClearStatus">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="@UiStrings.Common_Dismiss" aria-label="@UiStrings.Common_Dismiss" @onclick="AuVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -95,9 +96,9 @@
             @if (AuVm.IsFormOpen)
             {
                 <div class="au-card" style="border-color: var(--ss-selected-border);">
-                    <h4>➕ Neuer Audio-Beitrag</h4>
+                    <h4>@UiStrings.Audio_FormTitle</h4>
 
-                    <label class="au-label">Format</label>
+                    <label class="au-label">@UiStrings.Audio_Format</label>
                     <div class="au-choices">
                         @foreach (var format in AudioScriptFormats.All)
                         {
@@ -105,41 +106,41 @@
                             <button type="button" class="au-choice @(AuVm.Format == current ? "active" : "")" disabled="@AuVm.IsBusy" @onclick="() => AuVm.Format = current">
                                 <span style="font-size: 18px;">@AudioScriptFormats.Icon(current)</span>
                                 <span>
-                                    <b>@AudioScriptFormats.DisplayName(current)</b>
-                                    <span class="au-desc">@AudioScriptFormats.Description(current)</span>
+                                    <b>@MediaTexts.FormatName(current)</b>
+                                    <span class="au-desc">@MediaTexts.FormatDescription(current)</span>
                                 </span>
                             </button>
                         }
                     </div>
 
-                    <label class="au-label">Länge</label>
+                    <label class="au-label">@UiStrings.Audio_Length</label>
                     <div class="au-lengths">
                         @foreach (var length in AudioScriptFormats.AllLengths)
                         {
                             var current = length;
-                            <button type="button" class="au-length @(AuVm.Length == current ? "active" : "")" disabled="@AuVm.IsBusy" @onclick="() => AuVm.Length = current">@AudioScriptFormats.LengthName(current)</button>
+                            <button type="button" class="au-length @(AuVm.Length == current ? "active" : "")" disabled="@AuVm.IsBusy" @onclick="() => AuVm.Length = current">@MediaTexts.LengthName(current)</button>
                         }
                     </div>
 
-                    <label class="au-label">Schwerpunkt / Thema <span style="font-weight: normal; color: var(--ss-text-muted);">(optional)</span></label>
-                    <input class="au-input" placeholder="z. B. Photosynthese" @bind="AuVm.Topic" @bind:event="oninput" />
-                    <div class="au-meta" style="margin-top: 3px;">Grenzt den Beitrag auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</div>
+                    <label class="au-label">@UiStrings.Audio_TopicLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.Common_OptionalHint</span></label>
+                    <input class="au-input" placeholder="@UiStrings.Audio_TopicPlaceholder" @bind="AuVm.Topic" @bind:event="oninput" />
+                    <div class="au-meta" style="margin-top: 3px;">@UiStrings.Audio_TopicHint</div>
 
-                    <label class="au-label">Titel <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – sonst wählt die KI einen)</span></label>
+                    <label class="au-label">@UiStrings.Common_TitleLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.Common_TitleOptionalHint</span></label>
                     <input class="au-input" @bind="AuVm.CustomTitle" @bind:event="oninput" />
 
                     <button type="button" class="au-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(AuVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
-                        ✨ Skript erstellen
+                        @VmStrings.Audio_GenerateScript
                     </button>
                     @if (ActiveDocumentCount == 0)
                     {
-                        <div class="au-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                        <div class="au-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">@UiStrings.Common_ActivateDocument</div>
                     }
-                    <div class="au-meta" style="margin-top: 6px;">Das Skript schreibt die KI aus Ihren Einstellungen; vorgelesen wird es mit der gewählten Sprachausgabe.</div>
+                    <div class="au-meta" style="margin-top: 6px;">@UiStrings.Audio_FormHint</div>
                     @if (AuVm.Items.Count > 0 && !AuVm.IsBusy)
                     {
-                        <button type="button" class="au-link" style="margin-top: 8px;" @onclick="() => AuVm.IsFormOpen = false">Abbrechen</button>
+                        <button type="button" class="au-link" style="margin-top: 8px;" @onclick="() => AuVm.IsFormOpen = false">@UiStrings.Common_Cancel</button>
                     }
                 </div>
             }
@@ -147,7 +148,7 @@
             @if (AuVm.Items.Count > 0)
             {
                 <div class="au-card">
-                    <h4>🎧 Gespeicherte Beiträge</h4>
+                    <h4>@UiStrings.Audio_Saved</h4>
                     @foreach (var item in AuVm.Items)
                     {
                         var it = item;
@@ -164,23 +165,23 @@
                                 {
                                     <div class="au-item-title" title="@it.Title">@it.Title</div>
                                 }
-                                <div class="au-meta">@AudioScriptFormats.DisplayName(it.Format) · @AudioScriptFormats.FormatMinutes(it.EstimatedMinutes) · @it.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                                <div class="au-meta">@Loc.Format(UiStrings.Audio_ItemMeta, ("format", MediaTexts.FormatName(it.Format)), ("minutes", MediaTexts.Minutes(it.EstimatedMinutes)), ("date", it.CreatedAt.ToString("g")))</div>
                             </div>
                             <div style="display: flex; gap: 2px; flex-shrink: 0;" @onclick:stopPropagation="true">
                                 @if (renameId == it.Id)
                                 {
-                                    <button class="au-icon" title="Übernehmen" @onclick="() => RenameAsync(it.Id)">✔</button>
-                                    <button class="au-icon" title="Abbrechen" @onclick="() => renameId = null">✕</button>
+                                    <button class="au-icon" title="@UiStrings.Common_Apply" aria-label="@UiStrings.Common_Apply" @onclick="() => RenameAsync(it.Id)">✔</button>
+                                    <button class="au-icon" title="@UiStrings.Common_Cancel" aria-label="@UiStrings.Common_Cancel" @onclick="() => renameId = null">✕</button>
                                 }
                                 else if (confirmDeleteId == it.Id)
                                 {
-                                    <button class="au-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(it.Id)">Löschen?</button>
-                                    <button class="au-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
+                                    <button class="au-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(it.Id)">@UiStrings.Common_DeleteConfirm</button>
+                                    <button class="au-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteId = null">✕</button>
                                 }
                                 else
                                 {
-                                    <button class="au-icon" title="Umbenennen" @onclick="() => StartRename(it)">✏️</button>
-                                    <button class="au-icon" title="Beitrag löschen (samt Audiodatei)" @onclick="() => confirmDeleteId = it.Id">🗑️</button>
+                                    <button class="au-icon" title="@UiStrings.Common_Rename" aria-label="@UiStrings.Common_Rename" @onclick="() => StartRename(it)">✏️</button>
+                                    <button class="au-icon" title="@UiStrings.Audio_DeleteItem" aria-label="@UiStrings.Audio_DeleteItem" @onclick="() => confirmDeleteId = it.Id">🗑️</button>
                                 }
                             </div>
                         </div>
@@ -201,42 +202,44 @@
                         <div style="min-width: 0;">
                             <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@summary.Title</div>
                             <div class="au-meta">
-                                @AudioScriptFormats.DisplayName(summary.Format) · @summary.Segments.Count Abschnitte · @summary.WordCount Wörter · @AudioScriptFormats.FormatMinutes(summary.EstimatedMinutes)
+                                @Loc.Format(UiStrings.Audio_HeadMeta, ("format", MediaTexts.FormatName(summary.Format)),
+                                    ("segments", Loc.Format(VmStrings.Audio_SegmentCount, ("count", summary.Segments.Count))),
+                                    ("words", summary.WordCount), ("minutes", MediaTexts.Minutes(summary.EstimatedMinutes)))
                                 @if (!string.IsNullOrWhiteSpace(summary.Topic))
                                 {
-                                    <span> · Schwerpunkt: @summary.Topic</span>
+                                    <span> · @Loc.Format(UiStrings.Audio_FocusMeta, ("topic", summary.Topic))</span>
                                 }
                                 @if (summary.SourceDocuments.Count > 0)
                                 {
-                                    <span> · Quellen: @string.Join(", ", summary.SourceDocuments)</span>
+                                    <span> · @Loc.Format(UiStrings.Common_SourcesMeta, ("sources", string.Join(", ", summary.SourceDocuments)))</span>
                                 }
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="au-btn" style="background: var(--ss-strong);" disabled="@(!AuVm.CanExportScript)" title="Skript als Textdatei speichern" @onclick="() => ExportScriptAsync(AudioScriptExportFormat.Text)">📄 Text</button>
-                            <button type="button" class="au-btn" style="background: var(--ss-info);" disabled="@(!AuVm.CanExportScript)" title="Skript als Markdown speichern" @onclick="() => ExportScriptAsync(AudioScriptExportFormat.Markdown)">📝 Markdown</button>
+                            <button type="button" class="au-btn" style="background: var(--ss-strong);" disabled="@(!AuVm.CanExportScript)" title="@UiStrings.Audio_ExportTextTitle" @onclick="() => ExportScriptAsync(AudioScriptExportFormat.Text)">📄 Text</button>
+                            <button type="button" class="au-btn" style="background: var(--ss-info);" disabled="@(!AuVm.CanExportScript)" title="@UiStrings.Audio_ExportMarkdownTitle" @onclick="() => ExportScriptAsync(AudioScriptExportFormat.Markdown)">📝 Markdown</button>
                         </div>
                     </div>
 
                     <!-- Player -->
                     <div class="au-player">
-                        <button class="au-play-btn" title="Vorheriger Abschnitt" disabled="@(!AuVm.CanPlay || !AuVm.CanGoPrevious)" @onclick="AuVm.PreviousAsync">⏮</button>
-                        <button class="au-play-btn main" title="@(AuVm.PlayDisabledReason ?? (AuVm.IsPlaying && !AuVm.IsPaused ? "Pause" : "Abspielen"))"
+                        <button class="au-play-btn" title="@UiStrings.Audio_PreviousSegment" aria-label="@UiStrings.Audio_PreviousSegment" disabled="@(!AuVm.CanPlay || !AuVm.CanGoPrevious)" @onclick="AuVm.PreviousAsync">⏮</button>
+                        <button class="au-play-btn main" title="@(AuVm.PlayDisabledReason ?? (AuVm.IsPlaying && !AuVm.IsPaused ? UiStrings.Common_Pause : UiStrings.Common_Play))"
                                 disabled="@(!AuVm.CanPlay)" @onclick="AuVm.TogglePlayPauseAsync">
                             @(AuVm.IsPlaying && !AuVm.IsPaused ? "⏸" : "▶")
                         </button>
-                        <button class="au-play-btn" title="Nächster Abschnitt" disabled="@(!AuVm.CanPlay || !AuVm.CanGoNext)" @onclick="AuVm.NextAsync">⏭</button>
-                        <button class="au-play-btn" title="Stopp" disabled="@(!AuVm.IsPlaying)" @onclick="AuVm.StopAsync">⏹</button>
+                        <button class="au-play-btn" title="@UiStrings.Audio_NextSegment" aria-label="@UiStrings.Audio_NextSegment" disabled="@(!AuVm.CanPlay || !AuVm.CanGoNext)" @onclick="AuVm.NextAsync">⏭</button>
+                        <button class="au-play-btn" title="@UiStrings.Common_Stop" aria-label="@UiStrings.Common_Stop" disabled="@(!AuVm.IsPlaying)" @onclick="AuVm.StopAsync">⏹</button>
                         <div style="flex: 1; min-width: 160px;">
                             <div class="au-bar"><div class="au-bar-fill" style="width: @(Percent(AuVm.Progress))%;"></div></div>
-                            <div class="au-meta" style="margin-top: 3px;">@AuVm.ProgressText @(AuVm.IsPaused ? "· pausiert" : "")</div>
+                            <div class="au-meta" style="margin-top: 3px;">@AuVm.ProgressText @(AuVm.IsPaused ? $"· {UiStrings.Common_Paused}" : "")</div>
                         </div>
-                        <label class="au-meta" style="display: inline-flex; align-items: center; gap: 6px;" title="Sprechgeschwindigkeit">
-                            Tempo
+                        <label class="au-meta" style="display: inline-flex; align-items: center; gap: 6px;" title="@UiStrings.Common_TempoTitle">
+                            @UiStrings.Common_Tempo
                             <select class="au-select" value="@AuVm.Rate.ToString("0.##", CultureInfo.InvariantCulture)" @onchange="RateChangedAsync">
                                 @foreach (var rate in Rates)
                                 {
-                                    <option value="@rate.ToString("0.##", CultureInfo.InvariantCulture)">@rate.ToString("0.##", CultureInfo.GetCultureInfo("de-DE"))×</option>
+                                    <option value="@rate.ToString("0.##", CultureInfo.InvariantCulture)">@rate.ToString("0.##", CultureInfo.CurrentCulture)×</option>
                                 }
                             </select>
                         </label>
@@ -264,31 +267,31 @@
                                     <select class="au-select" value="@segment.Speaker" @onchange="e => SpeakerChangedAsync(index, e)" @onblur="() => editSpeakerIndex = null">
                                         @foreach (var choice in AuVm.SpeakerChoices)
                                         {
-                                            <option value="@choice">@choice</option>
+                                            <option value="@choice">@MediaTexts.SpeakerName(choice)</option>
                                         }
                                     </select>
                                 }
                                 else
                                 {
-                                    <button class="au-speaker s@(speakerIndex)" title="Sprecher ändern" @onclick="() => editSpeakerIndex = index">@segment.Speaker</button>
+                                    <button class="au-speaker s@(speakerIndex)" title="@UiStrings.Audio_ChangeSpeaker" @onclick="() => editSpeakerIndex = index">@MediaTexts.SpeakerName(segment.Speaker)</button>
                                 }
                                 @if (isCurrent && AuVm.IsPlaying)
                                 {
-                                    <span class="au-meta" style="color: var(--ss-link); font-weight: 600;">@(AuVm.IsPaused ? "⏸ pausiert" : "🔊 spricht …")</span>
+                                    <span class="au-meta" style="color: var(--ss-link); font-weight: 600;">@(AuVm.IsPaused ? UiStrings.Audio_PausedBadge : UiStrings.Audio_Speaking)</span>
                                 }
                                 <span style="flex: 1;"></span>
                                 <span class="au-seg-tools">
-                                    <button class="au-icon small" title="Ab hier vorlesen" disabled="@(!AuVm.CanPlay)" @onclick="() => PlayFromAsync(index)">▶</button>
-                                    <button class="au-icon small" title="Text bearbeiten" @onclick="() => StartEdit(index, segment.Text)">✏️</button>
-                                    <button class="au-icon small" title="Abschnitt danach einfügen" @onclick="() => AddSegmentAsync(index)">➕</button>
+                                    <button class="au-icon small" title="@UiStrings.Audio_PlayFromHere" aria-label="@UiStrings.Audio_PlayFromHere" disabled="@(!AuVm.CanPlay)" @onclick="() => PlayFromAsync(index)">▶</button>
+                                    <button class="au-icon small" title="@UiStrings.Audio_EditText" aria-label="@UiStrings.Audio_EditText" @onclick="() => StartEdit(index, segment.Text)">✏️</button>
+                                    <button class="au-icon small" title="@UiStrings.Audio_InsertAfter" aria-label="@UiStrings.Audio_InsertAfter" @onclick="() => AddSegmentAsync(index)">➕</button>
                                     @if (confirmDeleteSegment == index)
                                     {
-                                        <button class="au-btn" style="background: var(--ss-danger); padding: 1px 6px; font-size: 11px;" @onclick="() => DeleteSegmentAsync(index)">Löschen?</button>
-                                        <button class="au-icon small" title="Nicht löschen" @onclick="() => confirmDeleteSegment = null">✕</button>
+                                        <button class="au-btn" style="background: var(--ss-danger); padding: 1px 6px; font-size: 11px;" @onclick="() => DeleteSegmentAsync(index)">@UiStrings.Common_DeleteConfirm</button>
+                                        <button class="au-icon small" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteSegment = null">✕</button>
                                     }
                                     else
                                     {
-                                        <button class="au-icon small" title="Abschnitt löschen" @onclick="() => confirmDeleteSegment = index">🗑️</button>
+                                        <button class="au-icon small" title="@UiStrings.Audio_DeleteSegment" aria-label="@UiStrings.Audio_DeleteSegment" @onclick="() => confirmDeleteSegment = index">🗑️</button>
                                     }
                                 </span>
                             </div>
@@ -297,23 +300,23 @@
                                 <textarea id="au-editor" class="au-input" rows="@(Math.Clamp(editText.Length / 90 + 2, 3, 14))" @bind="editText" @bind:event="oninput"
                                           @onkeydown="EditKeyAsync"></textarea>
                                 <div style="display: flex; gap: 6px; margin-top: 4px; align-items: center;">
-                                    <button class="au-btn" style="background: var(--ss-success); padding: 3px 10px;" @onclick="CommitEditAsync">Übernehmen</button>
-                                    <button class="au-link" @onclick="() => editIndex = null">Abbrechen</button>
-                                    <span class="au-meta">Strg+Enter übernimmt, Esc bricht ab.</span>
+                                    <button class="au-btn" style="background: var(--ss-success); padding: 3px 10px;" @onclick="CommitEditAsync">@UiStrings.Common_Apply</button>
+                                    <button class="au-link" @onclick="() => editIndex = null">@UiStrings.Common_Cancel</button>
+                                    <span class="au-meta">@UiStrings.Common_EditHintCtrlEnter</span>
                                 </div>
                             }
                             else
                             {
-                                <div class="au-seg-text" title="Doppelklick zum Bearbeiten" @ondblclick="() => StartEdit(index, segment.Text)">@segment.Text</div>
+                                <div class="au-seg-text" title="@UiStrings.Common_DoubleClickToEdit" @ondblclick="() => StartEdit(index, segment.Text)">@segment.Text</div>
                             }
                         </div>
                     }
-                    <button class="au-link" style="margin: 6px 0 12px 4px;" @onclick="() => AddSegmentAsync(summary.Segments.Count - 1)">➕ Abschnitt am Ende anfügen</button>
+                    <button class="au-link" style="margin-block: 6px 12px; margin-inline: 4px 0;" @onclick="() => AddSegmentAsync(summary.Segments.Count - 1)">@UiStrings.Audio_AppendSegment</button>
                 </div>
             }
             else if (!AuVm.IsFormOpen)
             {
-                <div class="au-empty">Wählen Sie links einen Beitrag aus oder erstellen Sie einen neuen.</div>
+                <div class="au-empty">@UiStrings.Audio_Empty</div>
             }
         </div>
     </div>
@@ -331,7 +334,7 @@
         .au-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
         .au-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .au-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: au-slide 1.4s ease-in-out infinite; }
-        @@keyframes au-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        @@keyframes au-slide { 0% { left: -40%; } 100% { left: 100%; } }  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
         .au-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .au-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .au-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
@@ -344,7 +347,7 @@
         .au-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; font-family: inherit; }
         .au-select { padding: 3px 6px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 12px; font-family: inherit; background: var(--ss-surface); max-width: 100%; }
         .au-choices { display: flex; flex-direction: column; gap: 6px; }
-        .au-choice { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
+        .au-choice { display: flex; gap: 10px; align-items: flex-start; text-align: start; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
         .au-choice.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .au-choice b { display: block; }
         .au-lengths { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -357,7 +360,7 @@
         .au-item.active { background: var(--ss-selected-bg); border-color: var(--ss-selected-border); }
         .au-item-title { font-size: 13px; font-weight: 600; color: var(--ss-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .au-providers { display: flex; gap: 8px; flex-wrap: wrap; }
-        .au-provider { flex: 1 1 240px; display: flex; gap: 8px; align-items: flex-start; text-align: left; padding: 8px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 12.5px; font-family: inherit; color: var(--ss-text); }
+        .au-provider { flex: 1 1 240px; display: flex; gap: 8px; align-items: flex-start; text-align: start; padding: 8px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 12.5px; font-family: inherit; color: var(--ss-text); }
         .au-provider.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .au-provider:disabled { cursor: not-allowed; background: var(--ss-hover); color: var(--ss-text-muted); }
         .au-provider b { display: block; }
@@ -383,8 +386,8 @@
         .au-confirm { background: var(--ss-purple-bg); border: 1px solid var(--ss-purple-border); border-radius: 6px; padding: 9px 12px; }
         .au-hint { margin-top: 8px; font-size: 12px; color: var(--ss-warning-text); background: var(--ss-highlight-bg); border: 1px solid var(--ss-warning-border); border-radius: 4px; padding: 5px 9px; }
         .au-script { display: flex; flex-direction: column; gap: 6px; }
-        .au-seg { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-left: 4px solid var(--ss-border-light); border-radius: 6px; padding: 8px 12px; transition: background 0.2s, border-color 0.2s; }
-        .au-seg.current { background: var(--ss-highlight-bg); border-color: var(--ss-highlight-border); border-left-color: var(--ss-amber); box-shadow: 0 0 0 2px rgba(252,196,25,0.25); }
+        .au-seg { background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-inline-start: 4px solid var(--ss-border-light); border-radius: 6px; padding: 8px 12px; transition: background 0.2s, border-color 0.2s; }
+        .au-seg.current { background: var(--ss-highlight-bg); border-color: var(--ss-highlight-border); border-inline-start-color: var(--ss-amber); box-shadow: 0 0 0 2px rgba(252,196,25,0.25); }
         .au-seg-head { display: flex; gap: 8px; align-items: center; margin-bottom: 3px; }
         .au-seg-tools { display: inline-flex; gap: 1px; opacity: 0.35; }
         .au-seg:hover .au-seg-tools { opacity: 1; }
@@ -411,12 +414,9 @@
 
     private int ActiveDocumentCount => DocVm.Documents.Count(d => d.IsSelected && !d.IsMissing);
 
-    private string ActiveDocumentsText => ActiveDocumentCount switch
-    {
-        0 => "kein Dokument aktiviert",
-        1 => "1 aktiviertes Dokument",
-        var n => $"{n} aktivierte Dokumente"
-    };
+    private string ActiveDocumentsText => ActiveDocumentCount == 0
+        ? UiStrings.Common_NoActiveDocument
+        : Loc.Format(UiStrings.Common_ActiveDocuments, ("count", ActiveDocumentCount));
 
     private static string Percent(double value) => (value * 100).ToString("0.#", CultureInfo.InvariantCulture);
 
@@ -439,8 +439,8 @@
 
         <div class="au-card">
             <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
-                <h4 style="margin: 0;">🔊 Sprachausgabe</h4>
-                <button class="au-link" title="Verfügbarkeit und Stimmen neu prüfen (z. B. nach Installation einer Stimme)" @onclick="RecheckAsync">↻ Neu prüfen</button>
+                <h4 style="margin: 0;">@UiStrings.Speech_PanelTitle</h4>
+                <button class="au-link" title="@UiStrings.Speech_RecheckTitle" @onclick="RecheckAsync">@UiStrings.Speech_Recheck</button>
             </div>
             <div class="au-providers" style="margin-top: 8px;">
                 @foreach (var service in AuVm.SpeechServices)
@@ -450,11 +450,11 @@
                     var (css, icon) = AvailabilityStyle(availability);
                     var selectable = AuVm.CanSelectProvider(provider);
                     <button type="button" class="au-provider @(AuVm.SelectedProvider == provider ? "active" : "")" disabled="@(!selectable)"
-                            title="@(selectable ? service.DisplayName : $"Nicht verfügbar: {availability.Message} {availability.Hint}")"
+                            title="@(selectable ? MediaTexts.ProviderName(provider) : Loc.Format(UiStrings.Speech_NotAvailableTitle, ("message", availability.Message), ("hint", availability.Hint ?? "")))"
                             @onclick="() => AuVm.SetProviderAsync(provider)">
                         <span style="font-size: 16px;">@(provider == SpeechProviderType.SystemVoice ? "🖥️" : "☁️")</span>
                         <span>
-                            <b>@service.DisplayName</b>
+                            <b>@MediaTexts.ProviderName(provider)</b>
                             <span class="au-avail @css">@icon @availability.Message</span>
                         </span>
                     </button>
@@ -462,7 +462,7 @@
             </div>
 
             <div class="au-meta" style="margin-top: 8px;">
-                Aktuell: <b>@(AuVm.CurrentSpeechService?.DisplayName ?? "–")</b> · <span class="au-avail @currentCss" style="display: inline;">@currentIcon @current.Message</span>
+                @UiStrings.Speech_Current <b>@(AuVm.CurrentSpeechService is { } currentService ? MediaTexts.ProviderName(currentService.Provider) : "–")</b> · <span class="au-avail @currentCss" style="display: inline;">@currentIcon @current.Message</span>
             </div>
             @if (!string.IsNullOrWhiteSpace(current.Hint))
             {
@@ -470,7 +470,7 @@
             }
             @if (AuVm.AvailabilityOf(SpeechProviderType.GeminiTts).Status == SpeechAvailabilityStatus.Unavailable)
             {
-                <button type="button" class="au-link" style="margin-top: 6px;" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Gemini TTS einrichten (Einstellungen › Sprachausgabe)</button>
+                <button type="button" class="au-link" style="margin-top: 6px;" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">@UiStrings.Speech_SetupGemini</button>
             }
 
             @if (AuVm.SelectedProvider == SpeechProviderType.SystemVoice)
@@ -478,9 +478,9 @@
                 @if (AuVm.SystemVoices.Count > 0)
                 {
                     <div class="au-voice-row">
-                        <label>Stimme @(podcast ? AuVm.SpeakerRoleName(0) : "")
+                        <label>@(podcast ? Loc.Format(UiStrings.Speech_VoiceFor, ("role", MediaTexts.SpeakerName(AuVm.SpeakerRoleName(0)))) : UiStrings.Speech_Voice)
                             <select class="au-select" value="@AuVm.SpeechSettings.SystemVoicePrimary" @onchange="e => VoiceChangedAsync(0, e)">
-                                <option value="">Automatisch (@VoiceName(AuVm.VoiceForSpeakerIndex(0)))</option>
+                                <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(AuVm.VoiceForSpeakerIndex(0))))</option>
                                 @foreach (var voice in AuVm.SystemVoices)
                                 {
                                     <option value="@voice.Id">@VoiceLabel(voice)</option>
@@ -489,9 +489,9 @@
                         </label>
                         @if (podcast)
                         {
-                            <label>@AuVm.SpeakerRoleName(1)
+                            <label>@MediaTexts.SpeakerName(AuVm.SpeakerRoleName(1))
                                 <select class="au-select" value="@AuVm.SpeechSettings.SystemVoiceSecondary" @onchange="e => VoiceChangedAsync(1, e)">
-                                    <option value="">Automatisch (@VoiceName(AuVm.VoiceForSpeakerIndex(1)))</option>
+                                    <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(AuVm.VoiceForSpeakerIndex(1))))</option>
                                     @foreach (var voice in AuVm.SystemVoices)
                                     {
                                         <option value="@voice.Id">@VoiceLabel(voice)</option>
@@ -505,17 +505,17 @@
                         <div class="au-note info">💡 @voiceHint</div>
                     }
                 }
-                <div class="au-meta" style="margin-top: 6px;">💾 Dateiexport: @AudioViewModel.NoFileExportHint</div>
+                <div class="au-meta" style="margin-top: 6px;">@Loc.Format(UiStrings.Speech_FileExport, ("hint", AudioViewModel.NoFileExportHint))</div>
             }
             else if (AuVm.SelectedProvider == SpeechProviderType.GeminiTts)
             {
-                <div class="au-note info">☁️ Gemini TTS erzeugt eine Audiodatei (WAV), beim Podcast mit zwei Stimmen (Sprecherin/Moderatorin: <b>@AuVm.SpeechSettings.GeminiVoicePrimary</b>, Experte: <b>@AuVm.SpeechSettings.GeminiVoiceSecondary</b>).</div>
+                <div class="au-note info">@LocHtml.Format(UiStrings.Audio_GeminiNote, ("primary", AuVm.SpeechSettings.GeminiVoicePrimary), ("secondary", AuVm.SpeechSettings.GeminiVoiceSecondary))</div>
                 <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px;">
                     <button type="button" class="au-btn" style="background: var(--ss-info);" disabled="@(!AuVm.CurrentAvailability.IsAvailable || AuVm.IsTestingConnection)"
-                            title="Prüft Schlüssel und Modell über die kostenlose Modellabfrage – es wird keine Sprache erzeugt" @onclick="AuVm.TestSpeechConnectionAsync">
-                        @(AuVm.IsTestingConnection ? "Prüfe …" : "🔌 Verbindung testen")
+                            title="@UiStrings.Speech_TestTitle" @onclick="AuVm.TestSpeechConnectionAsync">
+                        @(AuVm.IsTestingConnection ? UiStrings.Speech_Testing : UiStrings.Speech_Test)
                     </button>
-                    <button type="button" class="au-btn" style="background: var(--ss-secondary);" title="Schlüssel, Modell und Stimmen ändern" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">⚙️ Schlüssel, Modell, Stimmen</button>
+                    <button type="button" class="au-btn" style="background: var(--ss-secondary);" title="@UiStrings.Speech_SettingsTitle" @onclick="() => OnOpenSpeechSettings.InvokeAsync()">@UiStrings.Speech_Settings</button>
                 </div>
             }
 
@@ -525,7 +525,7 @@
             }
             @if (AuVm.IsLocalChatAi)
             {
-                <div class="au-note info">ℹ️ @AudioViewModel.LocalAiHint Ollama und LM Studio selbst können keine Sprache erzeugen.</div>
+                <div class="au-note info">@Loc.Format(UiStrings.Speech_LocalAiNote, ("hint", AudioViewModel.LocalAiHint))</div>
             }
         </div>
     };
@@ -551,45 +551,45 @@
             {
                 var exists = AuVm.SelectedAudioFilePath != null;
                 <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                    <span style="font-weight: 600;">🎵 Audiodatei:</span>
+                    <span style="font-weight: 600;">@UiStrings.Audio_FileLabel</span>
                     <span class="au-meta" style="font-size: 12px;">
                         @summary.AudioFileName
-                        @if (summary.AudioDurationSeconds > 0) { <span> · @Clock(summary.AudioDurationSeconds) Min.</span> }
-                        @if (summary.AudioCreatedAt is { } created) { <span> · erzeugt am @created.ToString("dd.MM.yyyy HH:mm")</span> }
+                        @if (summary.AudioDurationSeconds > 0) { <span> · @Loc.Format(UiStrings.Audio_FileDuration, ("duration", Clock(summary.AudioDurationSeconds)))</span> }
+                        @if (summary.AudioCreatedAt is { } created) { <span> · @Loc.Format(UiStrings.Common_CreatedOn, ("date", created.ToString("g")))</span> }
                         @if (!string.IsNullOrWhiteSpace(summary.AudioCreatedWith)) { <span> · @summary.AudioCreatedWith</span> }
                     </span>
                     <span style="flex: 1;"></span>
-                    <button type="button" class="au-btn" style="background: var(--ss-success);" disabled="@(!AuVm.CanExportAudio)" title="Audiodatei (WAV) speichern unter …" @onclick="ExportAudioAsync">💾 WAV exportieren</button>
+                    <button type="button" class="au-btn" style="background: var(--ss-success);" disabled="@(!AuVm.CanExportAudio)" title="@UiStrings.Audio_ExportWavTitle" @onclick="ExportAudioAsync">@UiStrings.Audio_ExportWav</button>
                     <button type="button" class="au-btn" style="background: var(--ss-primary);" disabled="@(!AuVm.CanExportMp3)"
-                            title="@(AuVm.Mp3DisabledReason ?? $"Als MP3 speichern – {AuVm.Mp3EstimateText}")" @onclick="ExportMp3Async">🎵 MP3 exportieren</button>
+                            title="@(AuVm.Mp3DisabledReason ?? Loc.Format(UiStrings.Audio_ExportMp3Title, ("estimate", AuVm.Mp3EstimateText ?? "")))" @onclick="ExportMp3Async">@UiStrings.Audio_ExportMp3</button>
                     @if (confirmDeleteAudio)
                     {
-                        <button type="button" class="au-btn" style="background: var(--ss-danger);" @onclick="DeleteAudioFileAsync">Audiodatei löschen?</button>
-                        <button class="au-icon" title="Nicht löschen" @onclick="() => confirmDeleteAudio = false">✕</button>
+                        <button type="button" class="au-btn" style="background: var(--ss-danger);" @onclick="DeleteAudioFileAsync">@UiStrings.Audio_DeleteFileConfirm</button>
+                        <button class="au-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteAudio = false">✕</button>
                     }
                     else
                     {
-                        <button class="au-icon" title="Nur die Audiodatei löschen (das Skript bleibt)" disabled="@AuVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
+                        <button class="au-icon" title="@UiStrings.Audio_DeleteFileTitle" aria-label="@UiStrings.Audio_DeleteFileTitle" disabled="@AuVm.IsBusy" @onclick="() => confirmDeleteAudio = true">🗑️</button>
                     }
                 </div>
                 @if (exists && AuVm.Mp3DisabledReason is { } mp3Reason && !AuVm.IsBusy)
                 {
                     <div class="au-meta" style="font-size: 11.5px; margin-top: 4px;">
-                        🎵 MP3: @mp3Reason
-                        <button type="button" class="au-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">⚙️ ffmpeg einrichten</button>
+                        @Loc.Format(UiStrings.Audio_Mp3Reason, ("reason", mp3Reason))
+                        <button type="button" class="au-link" @onclick="() => OnOpenExportSettings.InvokeAsync()">@UiStrings.Speech_SetupFfmpeg</button>
                     </div>
                 }
                 @if (!exists)
                 {
-                    <div class="au-hint">⚠️ Die Audiodatei wurde nicht gefunden (verschoben oder gelöscht). Erzeugen Sie sie bei Bedarf neu.</div>
+                    <div class="au-hint">@UiStrings.Audio_FileMissing</div>
                 }
                 else if (summary.IsAudioOutdated)
                 {
-                    <div class="au-hint">✏️ Das Skript wurde nach dem Erzeugen geändert – die Audiodatei enthält noch die alte Fassung. Erzeugen Sie sie neu, damit Ton und Text übereinstimmen.</div>
+                    <div class="au-hint">@UiStrings.Audio_FileOutdated</div>
                 }
                 else if (!AuVm.UsesFilePlayback && service is { SupportsLivePlayback: true })
                 {
-                    <div class="au-meta" style="margin-top: 4px;">▶ liest mit der Systemstimme vor. Zum Abspielen der Audiodatei oben „Gemini TTS“ wählen.</div>
+                    <div class="au-meta" style="margin-top: 4px;">@UiStrings.Audio_LiveWithSystemVoice</div>
                 }
             }
 
@@ -599,19 +599,19 @@
                     @if (confirmGenerateAudio && AuVm.CanGenerateAudio)
                     {
                         <div class="au-confirm">
-                            <div style="font-weight: 600;">🎙️ Audiodatei mit @service!.DisplayName erzeugen?</div>
+                            <div style="font-weight: 600;">@Loc.Format(UiStrings.Audio_ConfirmGenerate, ("provider", MediaTexts.ProviderName(service!.Provider)))</div>
                             @if (AuVm.AudioEstimateText is { } estimate)
                             {
-                                <div class="au-meta" style="margin-top: 3px; font-size: 12px;">Geschätzt: @estimate</div>
+                                <div class="au-meta" style="margin-top: 3px; font-size: 12px;">@Loc.Format(UiStrings.Common_EstimatePrefix, ("estimate", estimate))</div>
                             }
                             @if (summary.HasAudioFile)
                             {
-                                <div class="au-meta" style="margin-top: 3px;">Die vorhandene Audiodatei wird erst ersetzt, wenn die neue vollständig erzeugt ist.</div>
+                                <div class="au-meta" style="margin-top: 3px;">@UiStrings.Audio_ReplaceHint</div>
                             }
-                            <div class="au-meta" style="margin-top: 3px;">🔒 Der Skripttext wird dazu an Google gesendet.</div>
+                            <div class="au-meta" style="margin-top: 3px;">@UiStrings.Audio_SentToGoogle</div>
                             <div style="display: flex; gap: 6px; margin-top: 8px;">
-                                <button type="button" class="au-btn" style="background: var(--ss-success);" @onclick="GenerateAudioAsync">Jetzt erzeugen</button>
-                                <button type="button" class="au-link" @onclick="() => confirmGenerateAudio = false">Abbrechen</button>
+                                <button type="button" class="au-btn" style="background: var(--ss-success);" @onclick="GenerateAudioAsync">@UiStrings.Common_GenerateNow</button>
+                                <button type="button" class="au-link" @onclick="() => confirmGenerateAudio = false">@UiStrings.Common_Cancel</button>
                             </div>
                         </div>
                     }
@@ -619,9 +619,9 @@
                     {
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <button type="button" class="au-btn" style="background: var(--ss-purple);" disabled="@(!AuVm.CanGenerateAudio)"
-                                    title="@(AuVm.GenerateAudioDisabledReason ?? "Audiodatei erzeugen (vorher werden Kosten und Größe angezeigt)")"
+                                    title="@(AuVm.GenerateAudioDisabledReason ?? UiStrings.Audio_GenerateFileTitle)"
                                     @onclick="() => { confirmGenerateAudio = true; confirmDeleteAudio = false; }">
-                                🎙️ @(summary.HasAudioFile ? "Audiodatei neu erzeugen" : "Audiodatei erzeugen")
+                                @(summary.HasAudioFile ? UiStrings.Audio_RegenerateFile : VmStrings.Audio_GenerateFile)
                             </button>
                             @if (AuVm.AudioEstimateText is { } estimate)
                             {
@@ -659,7 +659,7 @@
     private async Task ExportAudioAsync()
     {
         var path = await DesktopDialogs.SaveFileAsync(AuVm.SuggestFileName("wav"), filterExtension: "wav",
-            filterDescription: "WAV-Audiodatei (*.wav)", title: "Audiodatei speichern als...");
+            filterDescription: UiStrings.Audio_FormatWav, title: UiStrings.Audio_SaveWavTitle);
         if (string.IsNullOrWhiteSpace(path))
             return;
         if (!path.EndsWith(".wav", StringComparison.OrdinalIgnoreCase))
@@ -670,7 +670,7 @@
     private async Task ExportMp3Async()
     {
         var path = await DesktopDialogs.SaveFileAsync(AuVm.SuggestFileName("mp3"), filterExtension: "mp3",
-            filterDescription: "MP3-Audiodatei (*.mp3)", title: "Als MP3 speichern unter...");
+            filterDescription: UiStrings.Audio_FormatMp3, title: UiStrings.Audio_SaveMp3Title);
         if (string.IsNullOrWhiteSpace(path))
             return;
         if (!path.EndsWith(".mp3", StringComparison.OrdinalIgnoreCase))
@@ -679,10 +679,10 @@
     }
 
     private string VoiceName(string id) =>
-        AuVm.SystemVoices.FirstOrDefault(v => v.Id == id)?.Name ?? "Standard";
+        AuVm.SystemVoices.FirstOrDefault(v => v.Id == id)?.Name ?? UiStrings.Speech_VoiceDefault;
 
     private static string VoiceLabel(SpeechVoice voice) =>
-        $"{voice.Name} ({voice.Language}{(voice.IsLocal ? "" : ", online")})";
+        voice.IsLocal ? $"{voice.Name} ({voice.Language})" : $"{voice.Name} ({voice.Language}, {UiStrings.Speech_VoiceOnline})";
 
     protected override async Task OnInitializedAsync()
     {
@@ -872,7 +872,7 @@
                 AuVm.SuggestFileName(extension),
                 filterExtension: extension,
                 filterDescription: AudioViewModel.FormatDescription(format),
-                title: "Skript speichern als...");
+                title: UiStrings.Audio_SaveScriptTitle);
 
             if (string.IsNullOrWhiteSpace(path))
                 return;
@@ -884,7 +884,7 @@
         }
         catch (Exception ex)
         {
-            AuVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            AuVm.ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 

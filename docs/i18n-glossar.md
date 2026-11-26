@@ -240,6 +240,11 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | veraltet | outdated | |
 | Schätzung / Dauer / Kosten | estimate / duration / cost | |
 | Einführungspreis | introductory price | |
+| Sprachausgabe (Option) | text-to-speech option | „The selected text-to-speech option …“ |
+| Audiodatei erzeugen | Generate audio file | |
+| Audio zusammensetzen | Combine audio | |
+| Vollbild | full screen | |
+| pausiert | paused | |
 
 ## Schlüssel in den `.resx`-Dateien
 

@@ -1,3 +1,5 @@
+using StudyScope.ViewModels.Resources;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -56,13 +58,13 @@ public partial class VideoViewModel
                 var raw = mp3 ? seconds * IAudioTranscoder.Mp3Kbps * 1000 / 8 : seconds * GeminiTtsInfo.WavBytesPerSecond;
                 var bytes = (long)(raw * 4 / 3) + video.Slides.Count * 1200 + 40 * 1024;
                 var estimate = new VideoHtmlSizeEstimate(bytes, (long)(raw * 4 / 3), 1, 1, mp3);
-                return $"{estimate.SizeText} · mit Ton ({(mp3 ? "MP3" : "WAV")}) · Audio wird vorher kostenlos zusammengesetzt";
+                return Loc.Format(VmStrings.Video_HtmlEstimateAssemble, ("size", MediaTexts.Size(estimate.Megabytes)), ("format", mp3 ? "MP3" : "WAV"));
             }
 
             var e = _videoService.EstimateHtml(_profileName, new[] { video }, mp3);
             return e.VideosWithAudio > 0
-                ? $"{e.SizeText} · mit Ton ({(e.UsesMp3 ? "MP3" : "WAV")})"
-                : $"{e.SizeText} · ohne Ton";
+                ? Loc.Format(VmStrings.Video_HtmlEstimateAudio, ("size", MediaTexts.Size(e.Megabytes)), ("format", e.UsesMp3 ? "MP3" : "WAV"))
+                : Loc.Format(VmStrings.Video_HtmlEstimateSilent, ("size", MediaTexts.Size(e.Megabytes)));
         }
     }
 
@@ -76,34 +78,34 @@ public partial class VideoViewModel
 
         await StopAsync();
         IsBusy = true;
-        BusyText = "HTML-Datei wird erstellt …";
+        BusyText = VmStrings.Video_HtmlBusy;
         ClearStatus();
         var temp = filePath + ".tmp";
         try
         {
             await AssembleIfNeededAsync(video);
-            BusyText = "HTML-Datei wird erstellt …";
+            BusyText = VmStrings.Video_HtmlBusy;
 
             var mp3 = UseMp3 && _videoService.HasCurrentAudio(_profileName, video);
-            if (mp3) BusyText = "Ton wird nach MP3 umgewandelt …";
+            if (mp3) BusyText = VmStrings.Video_HtmlMp3Busy;
             var data = await _videoService.BuildPlayerDataAsync(_profileName, video, mp3 ? _transcoder : null);
-            BusyText = "HTML-Datei wird geschrieben …";
+            BusyText = VmStrings.Video_HtmlWriting;
             var html = _videoService.ExportToHtml(data);
             await File.WriteAllTextAsync(temp, html, new System.Text.UTF8Encoding(false));
             File.Move(temp, filePath, overwrite: true);
 
             var size = new FileInfo(filePath).Length / 1_000_000.0;
-            var sizeText = size < 0.1 ? "unter 0,1" : size.ToString(size < 10 ? "0.0" : "0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
+            var sizeText = MediaTexts.SizeNumber(size);
             ShowStatus(data.HasAudio
-                    ? $"✓ HTML-Datei gespeichert ({sizeText} MB, mit Ton als {(data.AudioMimeType == "audio/mpeg" ? "MP3" : "WAV")}): {filePath}"
-                    : $"✓ HTML-Datei gespeichert ({sizeText} MB, ohne Ton – die Folien laufen im festen Takt): {filePath}",
+                    ? Loc.Format(VmStrings.Video_HtmlSavedAudio, ("size", sizeText), ("format", data.AudioMimeType == "audio/mpeg" ? "MP3" : "WAV"), ("file", filePath))
+                    : Loc.Format(VmStrings.Video_HtmlSavedSilent, ("size", sizeText), ("file", filePath)),
                 isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim HTML-Export: {ex.Message}", isError: true,
-                new[] { "Es wurde keine halbe Datei gespeichert." });
+            ShowStatus(Loc.Format(VmStrings.Video_HtmlFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Media_NoHalfFile });
             return false;
         }
         finally
@@ -120,7 +122,7 @@ public partial class VideoViewModel
     private async Task AssembleIfNeededAsync(VideoDocument video)
     {
         if (!NeedsOnlyAssembly || _videoService.HasCurrentAudio(_profileName, video)) return;
-        BusyText = "Audio wird zusammengesetzt …";
+        BusyText = VmStrings.Video_AudioAssembling;
         var assembly = await _videoService.AssembleAudioAsync(_profileName, video);
         video.AudioFileName = assembly.FileName;
         video.AudioDurationSeconds = assembly.DurationSeconds;
@@ -150,7 +152,7 @@ public partial class VideoViewModel
         }
     }
 
-    private string? _mp3UnavailableReason = "ffmpeg wird gesucht …";
+    private string? _mp3UnavailableReason = VmStrings.Media_FfmpegSearching;
 
     /// <summary>ffmpeg (neu) suchen: MP3 für HTML und Tonspur, MP4 samt Folienzeichner.</summary>
     public async Task RefreshExportAvailabilityAsync(bool refresh = false)
@@ -158,22 +160,22 @@ public partial class VideoViewModel
         await RefreshMp3AvailabilityAsync();
         if (_transcoder == null)
         {
-            _mp3UnavailableReason = "MP3-Export ist in dieser Umgebung nicht verfügbar.";
+            _mp3UnavailableReason = VmStrings.Media_Mp3Unavailable;
         }
         else
         {
             try { _mp3UnavailableReason = await _transcoder.Mp3UnavailableReasonAsync(); }
-            catch (Exception ex) { _mp3UnavailableReason = $"ffmpeg konnte nicht geprüft werden: {ex.Message}"; }
+            catch (Exception ex) { _mp3UnavailableReason = Loc.Format(VmStrings.Media_FfmpegCheckFailed, ("error", ex.Message)); }
         }
         OnPropertyChanged(nameof(Mp3TrackDisabledReason));
 
         if (_mp4 == null)
         {
-            Mp4Status = Mp4Availability.Unavailable("Der MP4-Export ist in dieser Umgebung nicht verfügbar.", null);
+            Mp4Status = Mp4Availability.Unavailable(VmStrings.Video_Mp4Unavailable, null);
             return;
         }
         try { Mp4Status = await _mp4.GetAvailabilityAsync(refresh); }
-        catch (Exception ex) { Mp4Status = Mp4Availability.Unavailable($"Die Voraussetzungen für MP4 konnten nicht geprüft werden: {ex.Message}", null); }
+        catch (Exception ex) { Mp4Status = Mp4Availability.Unavailable(Loc.Format(VmStrings.Video_Mp4CheckFailed, ("error", ex.Message)), null); }
     }
 
     /// <summary>Warum „🎞️ MP4“ gesperrt ist (null = möglich).</summary>
@@ -181,9 +183,9 @@ public partial class VideoViewModel
     {
         get
         {
-            if (!HasVideo) return "Bitte zuerst ein Video erstellen oder auswählen.";
-            if (IsBusy) return "Bitte warten, bis der laufende Vorgang abgeschlossen ist.";
-            if (Mp4Status == null) return "ffmpeg wird gesucht …";
+            if (!HasVideo) return VmStrings.Video_NoVideo;
+            if (IsBusy) return VmStrings.Media_BusyOperation;
+            if (Mp4Status == null) return VmStrings.Media_FfmpegSearching;
             return Mp4Status.IsAvailable ? null : Mp4Status.Message;
         }
     }
@@ -227,8 +229,12 @@ public partial class VideoViewModel
         {
             if (SelectedVideo is not { } video || Mp4Estimate is not { } e) return null;
             var seconds = Math.Max(0, (int)Math.Round(e.DurationSeconds));
-            return $"{video.Slides.Count} Folien · {seconds / 60}:{seconds % 60:00} Min. · Datei {e.SizeText} · Export dauert {e.ExportTimeText} · " +
-                   (HtmlExportHasAudio ? "mit Ton (AAC)" : "ohne Ton, fester Takt");
+            return Loc.Format(VmStrings.Video_Mp4Estimate,
+                ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", video.Slides.Count))),
+                ("duration", $"{seconds / 60}:{seconds % 60:00}"),
+                ("size", MediaTexts.Size(e.Megabytes)),
+                ("time", MediaTexts.ExportTime(e.ExportSeconds)),
+                ("audio", HtmlExportHasAudio ? VmStrings.Video_Mp4WithAudio : VmStrings.Video_Mp4Silent));
         }
     }
 
@@ -265,10 +271,10 @@ public partial class VideoViewModel
             }), token);
             var mb = result.Bytes / 1_000_000.0;
             ShowStatus(result.HasAudio
-                    ? $"✓ MP4 gespeichert ({FormatMb(mb)} MB, mit Ton): {filePath}"
-                    : $"✓ MP4 gespeichert ({FormatMb(mb)} MB, ohne Ton – die Folien laufen im festen Takt): {filePath}",
+                    ? Loc.Format(VmStrings.Video_Mp4SavedAudio, ("size", MediaTexts.SizeNumber(mb)), ("file", filePath))
+                    : Loc.Format(VmStrings.Video_Mp4SavedSilent, ("size", MediaTexts.SizeNumber(mb)), ("file", filePath)),
                 isError: false);
-        }, "MP4-Datei wird erstellt …");
+        }, VmStrings.Video_Mp4Busy);
     }
 
     /// <summary>Warum „Tonspur als MP3“ gesperrt ist (null = möglich).</summary>
@@ -276,10 +282,10 @@ public partial class VideoViewModel
     {
         get
         {
-            if (SelectedVideo is not { } video) return "Bitte zuerst ein Video auswählen.";
-            if (IsBusy) return "Bitte warten, bis der laufende Vorgang abgeschlossen ist.";
+            if (SelectedVideo is not { } video) return VmStrings.Video_SelectVideo;
+            if (IsBusy) return VmStrings.Media_BusyOperation;
             if (!_videoService.HasCurrentAudio(_profileName, video))
-                return NeedsOnlyAssembly ? "Bitte zuerst „Audio zusammensetzen“." : "Erst das Audio mit Gemini TTS erzeugen.";
+                return NeedsOnlyAssembly ? Loc.Format(VmStrings.Video_AssembleFirst, ("button", VmStrings.Video_AssembleAudio)) : VmStrings.Video_GenerateAudioFirst;
             return _mp3UnavailableReason;
         }
     }
@@ -294,9 +300,9 @@ public partial class VideoViewModel
         return await RunMediaExportAsync(async token =>
         {
             await _transcoder.ConvertToMp3FileAsync(source, filePath, video.AudioDurationSeconds,
-                new SyncProgress<double>(p => { ExportProgress = p; ExportProgressText = $"Tonspur wird umgewandelt ({(int)(p * 100)} %) …"; }), token);
-            ShowStatus($"✓ Tonspur als MP3 gespeichert: {filePath}", isError: false);
-        }, "Tonspur wird als MP3 gespeichert …");
+                new SyncProgress<double>(p => { ExportProgress = p; ExportProgressText = Loc.Format(VmStrings.Video_Mp3TrackProgress, ("percent", (int)(p * 100))); }), token);
+            ShowStatus(Loc.Format(VmStrings.Video_Mp3TrackSaved, ("file", filePath)), isError: false);
+        }, VmStrings.Video_Mp3TrackBusy);
     }
 
     private async Task<bool> RunMediaExportAsync(Func<CancellationToken, Task> work, string busyText)
@@ -316,7 +322,7 @@ public partial class VideoViewModel
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Der Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert; temporäre Dateien wurden gelöscht.", isError: false);
+            ShowStatus(VmStrings.Video_ExportCancelled, isError: false);
             return false;
         }
         catch (FfmpegException ex)
@@ -326,7 +332,7 @@ public partial class VideoViewModel
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true, new[] { "Es wurde keine halbe Datei gespeichert." });
+            ShowStatus(Loc.Format(VmStrings.Media_ExportFailed, ("error", ex.Message)), isError: true, new[] { VmStrings.Media_NoHalfFile });
             return false;
         }
         finally
@@ -348,9 +354,6 @@ public partial class VideoViewModel
     {
         public void Report(T value) => report(value);
     }
-
-    private static string FormatMb(double mb) =>
-        mb < 0.1 ? "unter 0,1" : mb.ToString(mb < 10 ? "0.0" : "0", System.Globalization.CultureInfo.GetCultureInfo("de-DE"));
 
     // ---------------- Abspielen aus dem Bericht ----------------
 
@@ -374,7 +377,7 @@ public partial class VideoViewModel
 
         if (_library.Items.All(v => v.Id != id))
         {
-            ShowStatus("⚠️ Das Video aus dem Bericht gibt es nicht mehr (gelöscht oder in einem anderen Profil).", isError: false, isWarning: true);
+            ShowStatus(VmStrings.Video_ReportVideoMissing, isError: false, isWarning: true);
             return;
         }
 

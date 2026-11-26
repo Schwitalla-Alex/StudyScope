@@ -41,6 +41,9 @@ public class LogicalCssTests
         // 3a-3 Datentabelle und Bericht
         "Components/DataTableView.razor",
         "Components/ReportView.razor",
+        // 3a-4 Audio und Video
+        "Components/AudioView.razor",
+        "Components/VideoView.razor",
     };
 
     private static readonly Regex Physical = new(

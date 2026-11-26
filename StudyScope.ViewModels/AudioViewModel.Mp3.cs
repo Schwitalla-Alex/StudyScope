@@ -1,4 +1,6 @@
 using StudyScope.Core.Interfaces;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -6,13 +8,13 @@ namespace StudyScope.ViewModels;
 public partial class AudioViewModel
 {
     private IAudioTranscoder? _transcoder;
-    private string? _mp3UnavailableReason = "ffmpeg wird gesucht …";
+    private string? _mp3UnavailableReason = VmStrings.Media_FfmpegSearching;
 
     /// <summary>Transcoder nachträglich setzen (Composition-Root); ohne Transcoder ist MP3 mit Begründung gesperrt.</summary>
     public void UseTranscoder(IAudioTranscoder? transcoder)
     {
         _transcoder = transcoder;
-        _mp3UnavailableReason = transcoder == null ? "MP3-Export ist in dieser Umgebung nicht verfügbar." : "ffmpeg wird gesucht …";
+        _mp3UnavailableReason = transcoder == null ? VmStrings.Media_Mp3Unavailable : VmStrings.Media_FfmpegSearching;
     }
 
     /// <summary>Sucht ffmpeg (bzw. übernimmt den zwischengespeicherten Stand) und aktualisiert die Freigabe des MP3-Knopfs.</summary>
@@ -20,12 +22,12 @@ public partial class AudioViewModel
     {
         if (_transcoder == null)
         {
-            _mp3UnavailableReason = "MP3-Export ist in dieser Umgebung nicht verfügbar.";
+            _mp3UnavailableReason = VmStrings.Media_Mp3Unavailable;
         }
         else
         {
             try { _mp3UnavailableReason = await _transcoder.Mp3UnavailableReasonAsync(); }
-            catch (Exception ex) { _mp3UnavailableReason = $"ffmpeg konnte nicht geprüft werden: {ex.Message}"; }
+            catch (Exception ex) { _mp3UnavailableReason = Loc.Format(VmStrings.Media_FfmpegCheckFailed, ("error", ex.Message)); }
         }
         OnPropertyChanged(nameof(CanExportMp3));
         OnPropertyChanged(nameof(Mp3DisabledReason));
@@ -36,8 +38,8 @@ public partial class AudioViewModel
     {
         get
         {
-            if (SelectedAudioFilePath == null) return "Erst eine Audiodatei erzeugen (Gemini TTS).";
-            if (IsBusy) return "Bitte warten, bis der laufende Vorgang abgeschlossen ist.";
+            if (SelectedAudioFilePath == null) return VmStrings.Audio_Mp3NeedsFile;
+            if (IsBusy) return VmStrings.Media_BusyOperation;
             return _mp3UnavailableReason;
         }
     }
@@ -62,8 +64,7 @@ public partial class AudioViewModel
             if (summary == null || SelectedAudioFilePath == null) return null;
             var seconds = summary.AudioDurationSeconds > 0 ? summary.AudioDurationSeconds : summary.EstimatedMinutes * 60;
             var mb = seconds * IAudioTranscoder.Mp3Kbps * 1000 / 8 / 1_000_000;
-            var de = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
-            return $"ca. {(mb < 0.1 ? "0,1" : mb.ToString(mb < 10 ? "0.0" : "0", de))} MB (MP3, {IAudioTranscoder.Mp3Kbps} kbit/s mono)";
+            return Loc.Format(VmStrings.Audio_Mp3Estimate, ("size", MediaTexts.MegabyteNumber(Math.Max(0.1, mb))), ("kbps", IAudioTranscoder.Mp3Kbps));
         }
     }
 
@@ -83,12 +84,12 @@ public partial class AudioViewModel
         {
             var seconds = summary.AudioDurationSeconds > 0 ? summary.AudioDurationSeconds : summary.EstimatedMinutes * 60;
             await _transcoder.ConvertToMp3FileAsync(source, filePath, seconds, new Progress<double>(p => Mp3Progress = p), _mp3Cts.Token);
-            ShowStatus($"✓ MP3 exportiert: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Audio_Mp3Exported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Der MP3-Export wurde abgebrochen. Es wurde keine halbe Datei gespeichert.", isError: false);
+            ShowStatus(VmStrings.Audio_Mp3Cancelled, isError: false);
             return false;
         }
         catch (FfmpegException ex)
@@ -98,7 +99,7 @@ public partial class AudioViewModel
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim MP3-Export: {ex.Message}", isError: true, new[] { "Es wurde keine halbe Datei gespeichert." });
+            ShowStatus(Loc.Format(VmStrings.Audio_Mp3Failed, ("error", ex.Message)), isError: true, new[] { VmStrings.Media_NoHalfFile });
             return false;
         }
         finally
