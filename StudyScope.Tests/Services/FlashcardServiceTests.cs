@@ -4,6 +4,7 @@ using NUnit.Framework;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -90,7 +91,7 @@ public class FlashcardServiceTests
         };
 
         // Act
-        var markdown = _service.ExportToMarkdown("TestProfil", cards);
+        var markdown = _service.ExportToMarkdown("TestProfil", cards, TestCultures.De);
 
         // Assert
         Assert.That(markdown, Does.Contain("# Lernkarteikarten: TestProfil"));
@@ -109,7 +110,7 @@ public class FlashcardServiceTests
             new() { Question = "C?", Answer = "c", Status = FlashcardStatus.New }
         };
 
-        var markdown = _service.ExportToMarkdown("Testprofil", cards);
+        var markdown = _service.ExportToMarkdown("Testprofil", cards, TestCultures.De);
 
         Assert.That(markdown, Does.Contain("*Status:* Gelernt").And.Contain("*Status:* Wiederholen").And.Contain("*Status:* Neu"));
         Assert.That(markdown, Does.Not.Contain("Known").And.Not.Contain("Difficult"));

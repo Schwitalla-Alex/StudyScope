@@ -1093,7 +1093,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         var summary = SelectedSummary;
         if (summary == null) return string.Empty;
-        return format == AudioScriptExportFormat.Markdown ? _audioService.ExportToMarkdown(summary) : _audioService.ExportToText(summary);
+        return format == AudioScriptExportFormat.Markdown ? _audioService.ExportToMarkdown(summary, ExportCulture.Current) : _audioService.ExportToText(summary, ExportCulture.Current);
     }
 
     public async Task<bool> ExportScriptAsync(AudioScriptExportFormat format, string filePath)

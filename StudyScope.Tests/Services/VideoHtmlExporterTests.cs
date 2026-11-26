@@ -6,6 +6,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -75,7 +76,7 @@ public class VideoHtmlExporterTests
         var video = Video();
 
         var data = await VideoHtmlExporter.BuildPlayerDataAsync(video, audioPath: null, mp3: null);
-        var html = VideoHtmlExporter.Export(data);
+        var html = VideoHtmlExporter.Export(data, TestCultures.De);
 
         Assert.That(data.HasAudio, Is.False);
         Assert.That(data.NoAudioReason, Does.Contain("keine Gemini-Audiodatei").And.Contain("festen Takt"));
@@ -95,7 +96,7 @@ public class VideoHtmlExporterTests
         var video = Video();
         video.Slides[2].Bullets = Enumerable.Range(1, 12).Select(i => $"Ein ziemlich langer Stichpunkt Nummer {i} mit </script> <b>Text</b>").ToList();
 
-        var html = VideoHtmlExporter.Export(new VideoPlayerData { Video = video, Timeline = VideoTimeline.FromEstimates(video.Scenes, 1) });
+        var html = VideoHtmlExporter.Export(new VideoPlayerData { Video = video, Timeline = VideoTimeline.FromEstimates(video.Scenes, 1) }, TestCultures.De);
 
         Assert.That(html, Does.Contain("<div class=\"pp-slide title ssv-active\""));
         Assert.That(html, Does.Contain("<div class=\"pp-slide\" aria-hidden=\"true\">"));
@@ -112,7 +113,7 @@ public class VideoHtmlExporterTests
 
         Assert.That(VideoHtmlExporter.HasCurrentAudio(video, path), Is.True);
         var data = await VideoHtmlExporter.BuildPlayerDataAsync(video, path, mp3: null);
-        var html = VideoHtmlExporter.Export(data);
+        var html = VideoHtmlExporter.Export(data, TestCultures.De);
 
         Assert.That(data.Audio, Is.EqualTo(await File.ReadAllBytesAsync(path)));
         Assert.That(data.AudioMimeType, Is.EqualTo("audio/wav"));
@@ -152,7 +153,7 @@ public class VideoHtmlExporterTests
 
         Assert.That(transcoder.Converted, Is.EqualTo(new[] { path }));
         Assert.That(data.AudioMimeType, Is.EqualTo("audio/mpeg"));
-        Assert.That(VideoHtmlExporter.Export(data), Does.Contain("data-mime=\"audio/mpeg\">" + Convert.ToBase64String(FakeTranscoder.Bytes)));
+        Assert.That(VideoHtmlExporter.Export(data, TestCultures.De), Does.Contain("data-mime=\"audio/mpeg\">" + Convert.ToBase64String(FakeTranscoder.Bytes)));
 
         var wav = VideoHtmlExporter.EstimateAudioBytes(video, path, mp3: false);
         var mp3 = VideoHtmlExporter.EstimateAudioBytes(video, path, mp3: true);
@@ -162,6 +163,7 @@ public class VideoHtmlExporterTests
     }
 
     [Test]
+    [SetCulture("de-DE")] // SizeText schreibt Zahlen im Format der Oberfläche
     public void Estimate_WavAboutFourMegabytesPerMinute_SilentVideosSmall()
     {
         var (video, path) = VideoWithAudio();
@@ -204,12 +206,12 @@ public class VideoHtmlExporterTests
         var studio = new ReportStudioContent { VideoScripts = new[] { video } };
         var service = new ReportService(new FakeLlmService(), _tempDir);
 
-        var inApp = service.ExportToHtml(Report(), studio, new ReportHtmlOptions { InApp = true });
-        var file = service.ExportToHtml(Report(), studio);
+        var inApp = service.ExportToHtml(Report(), studio, new ReportHtmlOptions { InApp = true }, TestCultures.De);
+        var file = service.ExportToHtml(Report(), studio, TestCultures.De);
 
         Assert.That(inApp, Does.Contain($"data-video-id=\"{video.Id}\"").And.Contain("studyscope-play-video").And.Contain("Video abspielen"));
         Assert.That(file, Does.Not.Contain("data-video-id").And.Not.Contain("ssv-player"));
-        Assert.That(file, Is.EqualTo(service.ExportToHtml(Report(), studio, ReportHtmlOptions.Default)));
+        Assert.That(file, Is.EqualTo(service.ExportToHtml(Report(), studio, ReportHtmlOptions.Default, TestCultures.De)));
     }
 
     [Test]
@@ -224,7 +226,7 @@ public class VideoHtmlExporterTests
             [silent.Id] = await VideoHtmlExporter.BuildPlayerDataAsync(silent, null, null)
         };
 
-        var html = new ReportService(new FakeLlmService(), _tempDir).ExportToHtml(Report(), studio, new ReportHtmlOptions { VideoPlayers = players });
+        var html = new ReportService(new FakeLlmService(), _tempDir).ExportToHtml(Report(), studio, new ReportHtmlOptions { VideoPlayers = players }, TestCultures.De);
 
         Assert.That(Regex.Matches(html, "<div class=\"ssv-player\"").Count, Is.EqualTo(2));
         Assert.That(Regex.Matches(html, "class=\"ssv-audio\"").Count, Is.EqualTo(1), "Ton nur beim Video mit aktueller Audiodatei");

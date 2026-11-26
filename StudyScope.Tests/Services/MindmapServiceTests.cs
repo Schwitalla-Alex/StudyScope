@@ -2,6 +2,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -407,7 +408,7 @@ public class MindmapServiceTests
             }
         };
 
-        var md = service.ExportToMarkdown(mindmap);
+        var md = service.ExportToMarkdown(mindmap, TestCultures.De);
 
         Assert.That(md, Does.Contain("# Wurzel"));
         Assert.That(md, Does.Contain("## Ast"));

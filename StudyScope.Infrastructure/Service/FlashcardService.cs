@@ -1,4 +1,7 @@
-﻿
+﻿using StudyScope.Infrastructure.Resources;
+using StudyScope.Core.Localization;
+using System.Globalization;
+
 using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
@@ -113,19 +116,15 @@ public class FlashcardService : IFlashcardService
         return Path.Combine(AppPaths.UserDataDirectory, "Flashcards", $"{profileName}.json");
     }
 
-    /// <summary>Deutsche Bezeichnung des Lernstands – wie in der Oberfläche (Neu, Gelernt, Wiederholen).</summary>
-    public static string StatusDisplayName(FlashcardStatus status) => status switch
-    {
-        FlashcardStatus.Known => "Gelernt",
-        FlashcardStatus.Difficult => "Wiederholen",
-        _ => "Neu"
-    };
+    /// <summary>Bezeichnung des Lernstands in der Sprache des Exports – wie in der Oberfläche (Neu, Gelernt, Wiederholen).</summary>
+    public static string StatusDisplayName(FlashcardStatus status) => ExportNames.FlashcardStatus(status);
 
-    public string ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards)
+    public string ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new System.Text.StringBuilder();
-        sb.AppendLine($"# Lernkarteikarten: {profileName}");
-        sb.AppendLine($"*Erstellt am: {DateTime.Now:dd.MM.yyyy HH:mm}*");
+        sb.AppendLine($"# {Loc.Format(ExportStrings.Flashcards_Title, ("profile", profileName))}");
+        sb.AppendLine($"*{Loc.Format(ExportStrings.Flashcards_CreatedAt, ("date", ExportNames.DateTime(DateTime.Now)))}*");
         sb.AppendLine();
         sb.AppendLine("---");
         sb.AppendLine();
@@ -133,11 +132,11 @@ public class FlashcardService : IFlashcardService
         int index = 1;
         foreach (var card in flashcards)
         {
-            sb.AppendLine($"### Frage {index}: {card.Question}");
+            sb.AppendLine($"### {Loc.Format(ExportStrings.Flashcards_QuestionHeading, ("number", index), ("question", card.Question))}");
             sb.AppendLine();
-            sb.AppendLine($"**Antwort:** {card.Answer}");
+            sb.AppendLine($"**{ExportStrings.Flashcards_AnswerLabel}** {card.Answer}");
             sb.AppendLine();
-            sb.AppendLine($"*Status:* {StatusDisplayName(card.Status)}");
+            sb.AppendLine($"*{ExportStrings.Flashcards_StatusLabel}* {StatusDisplayName(card.Status)}");
             sb.AppendLine();
             sb.AppendLine("---");
             sb.AppendLine();

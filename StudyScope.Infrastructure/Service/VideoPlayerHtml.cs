@@ -3,7 +3,9 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -14,6 +16,8 @@ namespace StudyScope.Infrastructure.Services;
 /// Überblendung, Stichpunkt-Einblendung, Play/Pause, Vor/Zurück, Fortschrittsleiste, Vollbild, Tastatur. Der Ton liegt
 /// base64-kodiert in einem <c>&lt;script type="application/octet-stream"&gt;</c> und wird erst beim ersten Abspielen zu
 /// einer Blob-URL (schneller als eine riesige data:-URL im Attribut, Springen funktioniert in allen Browsern).
+/// Bedientexte stehen in der Sprache, die der Aufrufer per <see cref="CultureScope"/> gesetzt hat; Texte, die das Skript
+/// erst im Browser wechselt, liegen als <c>data-t-*</c>-Attribute am Player.
 /// </summary>
 public static class VideoPlayerHtml
 {
@@ -50,26 +54,30 @@ public static class VideoPlayerHtml
         var timeline = data.Timeline;
         var count = Math.Min(video.Scenes.Count, video.Slides.Count);
 
-        sb.Append($"<div class=\"ssv-player\" tabindex=\"0\" role=\"region\" aria-label=\"Video: {H(video.Title)}\">");
+        var play = H(ExportStrings.Player_Play);
+        var slideOf = Loc.Format(ExportStrings.Player_SlideOf, ("number", "{n}"), ("total", "{t}"));
+        sb.Append($"<div class=\"ssv-player\" tabindex=\"0\" role=\"region\" aria-label=\"{H(Loc.Format(ExportStrings.Player_Region, ("title", video.Title)))}\"");
+        sb.Append($" data-t-play=\"{play}\" data-t-pause=\"{H(ExportStrings.Player_Pause)}\" data-t-slide=\"{H(slideOf)}\">");
         sb.Append("<div class=\"ssv-stage\">");
         for (var i = 0; i < count; i++)
             AppendSlide(sb, video.Slides[i], i + 1, count, video.PresentationTitle, i == 0);
-        sb.Append("<button type=\"button\" class=\"ssv-big-play\" data-act=\"play\" title=\"Abspielen\" aria-label=\"Abspielen\">▶</button>");
+        sb.Append($"<button type=\"button\" class=\"ssv-big-play\" data-act=\"play\" title=\"{play}\" aria-label=\"{play}\">▶</button>");
         sb.Append("</div>");
 
         sb.Append("<div class=\"ssv-bar\">");
-        sb.Append("<button type=\"button\" data-act=\"prev\" title=\"Vorige Folie (←)\" aria-label=\"Vorige Folie\">⏮</button>");
-        sb.Append("<button type=\"button\" data-act=\"play\" class=\"ssv-play\" title=\"Abspielen / Pause (Leertaste)\" aria-label=\"Abspielen\">▶</button>");
-        sb.Append("<button type=\"button\" data-act=\"next\" title=\"Nächste Folie (→)\" aria-label=\"Nächste Folie\">⏭</button>");
-        sb.Append("<input type=\"range\" class=\"ssv-seek\" min=\"0\" max=\"1000\" step=\"1\" value=\"0\" aria-label=\"Fortschritt\">");
+        sb.Append($"<button type=\"button\" data-act=\"prev\" title=\"{H(ExportStrings.Player_PreviousSlideTitle)}\" aria-label=\"{H(ExportStrings.Player_PreviousSlide)}\">⏮</button>");
+        sb.Append($"<button type=\"button\" data-act=\"play\" class=\"ssv-play\" title=\"{H(ExportStrings.Player_PlayPauseTitle)}\" aria-label=\"{play}\">▶</button>");
+        sb.Append($"<button type=\"button\" data-act=\"next\" title=\"{H(ExportStrings.Player_NextSlideTitle)}\" aria-label=\"{H(ExportStrings.Player_NextSlide)}\">⏭</button>");
+        sb.Append($"<input type=\"range\" class=\"ssv-seek\" min=\"0\" max=\"1000\" step=\"1\" value=\"0\" aria-label=\"{H(ExportStrings.Player_Progress)}\">");
         sb.Append($"<span class=\"ssv-time\">0:00 / {Clock(timeline.Total)}</span>");
-        sb.Append($"<span class=\"ssv-scene\">Folie 1 / {count}</span>");
-        sb.Append(data.HasAudio ? string.Empty : "<span class=\"ssv-mute\" title=\"Ohne Ton\">🔇</span>");
-        sb.Append("<button type=\"button\" data-act=\"fs\" title=\"Vollbild (F, Esc beendet)\" aria-label=\"Vollbild\">⛶</button>");
+        sb.Append($"<span class=\"ssv-scene\">{H(Loc.Format(ExportStrings.Player_SlideOf, ("number", 1), ("total", count)))}</span>");
+        sb.Append(data.HasAudio ? string.Empty : $"<span class=\"ssv-mute\" title=\"{H(ExportStrings.Player_NoAudio)}\">🔇</span>");
+        sb.Append($"<button type=\"button\" data-act=\"fs\" title=\"{H(ExportStrings.Player_FullScreenTitle)}\" aria-label=\"{H(ExportStrings.Player_FullScreen)}\">⛶</button>");
         sb.Append("</div>");
 
+        // Hinweis in der Sprache des Exports neu bilden (NoAudioReason der Player-Daten steht in der Oberflächensprache)
         if (!data.HasAudio)
-            sb.Append($"<div class=\"ssv-hint\">🔇 {H(data.NoAudioReason ?? NoAudioDefault)}</div>");
+            sb.Append($"<div class=\"ssv-hint\">🔇 {H(VideoHtmlExporter.NoAudioReason(video, audioPath: null))}</div>");
 
         sb.Append("<script type=\"application/json\" class=\"ssv-data\">").Append(TimelineJson(timeline, count, data.HasAudio)).Append("</script>");
         if (data.HasAudio)
@@ -106,9 +114,6 @@ public static class VideoPlayerHtml
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
-    /// <summary>Hinweis, wenn es keine aktuelle Gemini-Audiodatei gibt.</summary>
-    public const string NoAudioDefault =
-        "Ohne Ton: Es gibt keine aktuelle Gemini-Audiodatei. Die Folien laufen im festen Takt der geschätzten Sprechdauer.";
 
     /// <summary>Eine Folie wie <c>SlideView.razor</c> (Klassen aus <see cref="SlideLayout.CssClass"/>).</summary>
     private static void AppendSlide(StringBuilder sb, PresentationSlide slide, int number, int total, string presentationTitle, bool active)
@@ -150,7 +155,7 @@ public static class VideoPlayerHtml
 .ssv-stage { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; background: #000; cursor: pointer; }
 .ssv-stage > .pp-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.6s ease; }
 .ssv-stage > .pp-slide.ssv-active { opacity: 1; }
-.ssv-big-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 76px; height: 76px; border-radius: 50%; border: none; background: rgba(0, 123, 255, 0.9); color: #fff; font-size: 30px; line-height: 76px; padding: 0 0 0 6px; cursor: pointer; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35); }
+.ssv-big-play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); /* ss:physisch – mittig */ width: 76px; height: 76px; border-radius: 50%; border: none; background: rgba(0, 123, 255, 0.9); color: #fff; font-size: 30px; line-height: 76px; padding: 0 0 0 6px; cursor: pointer; box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35); }
 .ssv-big-play:hover { background: #0069d9; }
 .ssv-player.ssv-started .ssv-big-play { display: none; }
 .ssv-bar { display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: #212529; font-size: 13px; }
@@ -177,6 +182,7 @@ public static class VideoPlayerHtml
 
   function Player(root) {
     var data = JSON.parse(root.querySelector('script.ssv-data').textContent);
+    var texts = root.dataset;
     var slides = Array.prototype.slice.call(root.querySelectorAll('.ssv-stage > .pp-slide'));
     var count = slides.length;
     var seek = root.querySelector('.ssv-seek');
@@ -211,12 +217,12 @@ public static class VideoPlayerHtml
       for (var k = 0; k < items.length; k++) items[k].classList.toggle('pp-bullet-hidden', k >= n);
       if (!st.seeking) seek.value = data.total > 0 ? Math.round(Math.min(1, st.pos / data.total) * 1000) : 0;
       timeText.textContent = clock(st.pos) + ' / ' + clock(data.total);
-      sceneText.textContent = 'Folie ' + (i + 1) + ' / ' + count;
+      sceneText.textContent = (texts.tSlide || '{n} / {t}').replace('{n}', i + 1).replace('{t}', count);
       var playing = st.state === 'playing';
       playButtons.forEach(function (b) {
         if (b.classList.contains('ssv-big-play')) return;
         b.textContent = playing ? '⏸' : '▶';
-        b.setAttribute('aria-label', playing ? 'Pause' : 'Abspielen');
+        b.setAttribute('aria-label', playing ? (texts.tPause || '⏸') : (texts.tPlay || '▶'));
       });
     }
 

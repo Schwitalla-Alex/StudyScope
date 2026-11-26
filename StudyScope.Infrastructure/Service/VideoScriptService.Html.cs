@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 
@@ -19,5 +20,5 @@ public partial class VideoScriptService
         CancellationToken cancellationToken = default) =>
         VideoHtmlExporter.BuildPlayerDataAsync(video, GetAudioFilePath(profileName, video), mp3, cancellationToken);
 
-    public string ExportToHtml(VideoPlayerData data) => VideoHtmlExporter.Export(data);
+    public string ExportToHtml(VideoPlayerData data, CultureInfo culture) => VideoHtmlExporter.Export(data, culture);
 }

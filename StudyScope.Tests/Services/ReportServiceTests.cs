@@ -4,6 +4,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -256,7 +257,7 @@ public class ReportServiceTests
         var service = new ReportService(new FixedLlm(""), _tempDir);
         var path = Path.Combine(_tempDir, "Bericht.docx");
 
-        await service.ExportToDocxAsync(SampleReport(), SampleStudio(), path);
+        await service.ExportToDocxAsync(SampleReport(), SampleStudio(), path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         var names = zip.Entries.Select(e => e.FullName).ToList();
@@ -283,7 +284,7 @@ public class ReportServiceTests
     {
         var service = new ReportService(new FixedLlm(""), _tempDir);
 
-        var md = service.ExportToMarkdown(SampleReport(), SampleStudio());
+        var md = service.ExportToMarkdown(SampleReport(), SampleStudio(), TestCultures.De);
 
         Assert.That(md, Does.StartWith("# Zellbiologie"));
         Assert.That(md, Does.Contain("## Aufbau"));
@@ -301,7 +302,7 @@ public class ReportServiceTests
         var report = SampleReport();
         report.Embeds.Quiz = true;
 
-        var text = service.ExportToPlainText(report, SampleStudio());
+        var text = service.ExportToPlainText(report, SampleStudio(), TestCultures.De);
 
         Assert.That(text, Does.StartWith("ZELLBIOLOGIE"));
         Assert.That(text, Does.Not.Contain("**"));
@@ -317,7 +318,7 @@ public class ReportServiceTests
         report.Title = "Zellen <script>alert(1)</script>";
         report.Embeds.Quiz = true;
 
-        var html = service.ExportToHtml(report, SampleStudio());
+        var html = service.ExportToHtml(report, SampleStudio(), TestCultures.De);
 
         Assert.That(html, Does.StartWith("<!DOCTYPE html>"));
         Assert.That(html, Does.Not.Contain("<script>alert(1)</script>"));

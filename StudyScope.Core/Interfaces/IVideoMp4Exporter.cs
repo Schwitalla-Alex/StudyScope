@@ -1,4 +1,5 @@
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -42,17 +43,9 @@ public sealed record Mp4ExportEstimate(int FrameCount, double DurationSeconds, l
 {
     public double Megabytes => FileBytes / 1_000_000.0;
 
-    /// <summary>„ca. 4,2 MB“.</summary>
-    public string SizeText
-    {
-        get
-        {
-            var de = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
-            if (Megabytes < 0.1) return "unter 0,1 MB";
-            return Megabytes < 10 ? $"ca. {Megabytes.ToString("0.0", de)} MB" : $"ca. {Megabytes.ToString("0", de)} MB";
-        }
-    }
+    /// <summary>„ca. 4,2 MB“ in der aktuellen Sprache.</summary>
+    public string SizeText => MediaFormat.Size(Megabytes);
 
     /// <summary>„unter 1 Min.“, „ca. 3 Min.“ (aufgerundet, damit der Export eher früher fertig ist als angekündigt).</summary>
-    public string ExportTimeText => ExportSeconds < 45 ? "unter 1 Min." : $"ca. {Math.Max(1, (int)Math.Ceiling(ExportSeconds / 60))} Min.";
+    public string ExportTimeText => MediaFormat.MinutesRoundedUp(ExportSeconds);
 }

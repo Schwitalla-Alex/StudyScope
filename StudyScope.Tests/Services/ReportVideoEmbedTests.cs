@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -95,9 +96,9 @@ public class ReportVideoEmbedTests
         var service = Service();
         foreach (var report in new[] { Report(null), Report(false) })
         {
-            Assert.That(service.ExportToMarkdown(report, studio), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToPlainText(report, studio), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToHtml(report, studio), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty)));
+            Assert.That(service.ExportToMarkdown(report, studio, TestCultures.De), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToPlainText(report, studio, TestCultures.De), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToHtml(report, studio, TestCultures.De), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty, TestCultures.De)));
         }
     }
 
@@ -110,7 +111,7 @@ public class ReportVideoEmbedTests
 
         Assert.That(studio.HasAny, Is.False);
         var service = Service();
-        Assert.That(service.ExportToMarkdown(Report(true), studio), Is.EqualTo(service.ExportToMarkdown(Report(true), ReportStudioContent.Empty)));
+        Assert.That(service.ExportToMarkdown(Report(true), studio, TestCultures.De), Is.EqualTo(service.ExportToMarkdown(Report(true), ReportStudioContent.Empty, TestCultures.De)));
     }
 
     [Test]
@@ -118,8 +119,8 @@ public class ReportVideoEmbedTests
     {
         var service = Service();
 
-        var md = service.ExportToMarkdown(Report(true), Studio(Video()));
-        var text = service.ExportToPlainText(Report(true), Studio(Video()));
+        var md = service.ExportToMarkdown(Report(true), Studio(Video()), TestCultures.De);
+        var text = service.ExportToPlainText(Report(true), Studio(Video()), TestCultures.De);
 
         Assert.That(md, Does.Contain("## 🎬 Zellen erklärt").And.Contain("**Folie 2: Aufbau**")
             .And.Contain("Jede Zelle hat einen Kern und eine Membran.").And.Contain("Video: Zellen erklärt").And.Contain("3 Folien"));
@@ -148,7 +149,7 @@ public class ReportVideoEmbedTests
     public void Html_ScriptIsCollapsible_AndNoMediaEmbedded()
     {
         // WebUtility.HtmlEncode schreibt Umlaute als Zeichenreferenz (&#228;) – geprüft wird der dekodierte Text
-        var html = System.Net.WebUtility.HtmlDecode(Service().ExportToHtml(Report(true), Studio(Video())));
+        var html = System.Net.WebUtility.HtmlDecode(Service().ExportToHtml(Report(true), Studio(Video()), TestCultures.De));
 
         Assert.That(html, Does.Contain("<details class=\"audio-script video-script\">").And.Contain("id=\"video\"")
             .And.Contain("Video: Zellen erklärt").And.Contain("🎬 Video-Skript").And.Contain("Folie 2: Aufbau"));
@@ -160,7 +161,7 @@ public class ReportVideoEmbedTests
     {
         var path = Path.Combine(_tempDir, "bericht.docx");
 
-        await Service().ExportToDocxAsync(Report(true), Studio(Video()), path);
+        await Service().ExportToDocxAsync(Report(true), Studio(Video()), path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         using var stream = zip.GetEntry("word/document.xml")!.Open();

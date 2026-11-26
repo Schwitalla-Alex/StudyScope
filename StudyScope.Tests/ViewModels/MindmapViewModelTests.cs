@@ -435,7 +435,7 @@ public class MindmapViewModelTests
             return Task.CompletedTask;
         }
 
-        public string ExportToMarkdown(MindmapDocument mindmap) => "# " + mindmap.Root.Title;
+        public string ExportToMarkdown(MindmapDocument mindmap, System.Globalization.CultureInfo culture) => "# " + mindmap.Root.Title;
     }
 
     private sealed class FakeDocumentService : IDocumentService

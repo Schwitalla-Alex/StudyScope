@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text;
 using StudyScope.Core.Common;
@@ -101,50 +102,53 @@ public static class VideoHtmlExporter
         return new VideoPlayerData { Video = video, Timeline = TimelineFor(video, withAudio: true), Audio = audio, AudioMimeType = mime };
     }
 
-    /// <summary>Eigenständige HTML-Seite eines Videos.</summary>
-    public static string Export(VideoPlayerData data)
+    /// <summary>Eigenständige HTML-Seite eines Videos (Texte, <c>lang</c> und <c>dir</c> in der übergebenen Sprache).</summary>
+    public static string Export(VideoPlayerData data, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var video = data.Video;
         var sb = new StringBuilder();
-        sb.Append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\">\n");
+        sb.Append($"<!DOCTYPE html>\n<html lang=\"{H(CultureScope.HtmlLanguageTag(culture))}\" dir=\"{CultureScope.Direction(culture)}\">\n<head>\n<meta charset=\"utf-8\">\n");
         sb.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
         sb.Append($"<meta name=\"generator\" content=\"StudyScope\">\n<title>{H(video.Title)}</title>\n");
         sb.Append("<style>\n").Append(PageCss).Append('\n').Append(VideoPlayerHtml.Css).Append("\n</style>\n</head>\n<body>\n<main class=\"page\">\n");
 
-        sb.Append($"<header><div class=\"badge\">🎬 Video</div><h1>{H(video.Title)}</h1>");
+        sb.Append($"<header><div class=\"badge\">{H(ExportStrings.Video_Badge)}</div><h1>{H(video.Title)}</h1>");
         sb.Append($"<div class=\"meta\">{H(MetaLine(data))}</div></header>\n");
 
         VideoPlayerHtml.AppendPlayer(sb, data);
 
-        sb.Append("<div class=\"keys\">Tastatur (nach Klick in den Player): Leertaste Play/Pause · ← → Folie zurück/vor · Pos1/Ende · F Vollbild</div>\n");
+        sb.Append($"<div class=\"keys\">{H(ExportStrings.Video_Keys)}</div>\n");
 
         var scenes = video.Scenes.Select((s, i) => (Scene: s, Index: i)).Where(x => x.Scene.HasNarration).ToList();
         if (scenes.Count > 0)
         {
-            sb.Append("<details class=\"script\"><summary>📝 Sprechtexte je Folie</summary><div class=\"script-body\">");
+            sb.Append($"<details class=\"script\"><summary>📝 {H(ExportStrings.Video_NarrationPerSlide)}</summary><div class=\"script-body\">");
             foreach (var (scene, index) in scenes)
                 sb.Append($"<p><b>{H(ReportVideoScripts.SceneHeading(video, index))}</b><br>{H(scene.Narration.Trim()).Replace("\n", "<br>")}</p>");
             sb.Append("</div></details>\n");
         }
 
-        sb.Append("<footer>Erstellt mit StudyScope</footer>\n</main>\n<script>\n").Append(VideoPlayerHtml.Script).Append("\n</script>\n</body>\n</html>\n");
+        sb.Append($"<footer>{H(ExportStrings.Export_CreatedWith)}</footer>\n</main>\n<script>\n").Append(VideoPlayerHtml.Script).Append("\n</script>\n</body>\n</html>\n");
         return sb.ToString();
     }
 
-    /// <summary>„8 Folien · 3:12 Min. · mit Ton (Gemini TTS) · Quellen: …“</summary>
+    /// <summary>„8 Folien · 3:12 Min. · mit Ton (Gemini TTS) · Quellen: …“ in der aktuellen Sprache.</summary>
     public static string MetaLine(VideoPlayerData data)
     {
         var video = data.Video;
         var parts = new List<string>
         {
-            $"{video.Slides.Count} {(video.Slides.Count == 1 ? "Folie" : "Folien")}",
-            $"{VideoPlayerHtml.Clock(data.Timeline.Total)} Min."
+            Loc.Format(ExportStrings.Export_SlideCount, ("count", video.Slides.Count)),
+            Loc.Format(ExportStrings.Video_Duration, ("time", VideoPlayerHtml.Clock(data.Timeline.Total)))
         };
-        parts.Add(data.HasAudio
-            ? $"mit Ton{(string.IsNullOrWhiteSpace(video.AudioCreatedWith) ? string.Empty : $" ({video.AudioCreatedWith})")}"
-            : "ohne Ton");
+        parts.Add(!data.HasAudio
+            ? ExportStrings.Video_WithoutAudio
+            : string.IsNullOrWhiteSpace(video.AudioCreatedWith)
+                ? ExportStrings.Video_WithAudio
+                : Loc.Format(ExportStrings.Video_WithAudioBy, ("provider", video.AudioCreatedWith)));
         if (video.SourceDocuments.Count > 0)
-            parts.Add($"Quellen: {string.Join(", ", video.SourceDocuments)}");
+            parts.Add(ExportNames.Sources(video.SourceDocuments));
         return string.Join(" · ", parts);
     }
 

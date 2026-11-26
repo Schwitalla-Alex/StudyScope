@@ -25,6 +25,9 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 - Der Hinweis bei Verbindungsproblemen nennt den Knopf in den KI-Einstellungen jetzt richtig („Speichern & Verbinden“ statt „Speichern & Prüfen“), und die leere Karteikarten-Ansicht spricht von Dokumenten statt nur von PDF-Dokumenten.
 - Datum und Uhrzeit bei Mindmap und Präsentation („Erstellt am …“) sowie in den Listen der Datentabellen, Berichte, Audio-Beiträge und Videos richten sich nach der Sprache der Oberfläche; ebenso die alphabetische Sortierung in der Datentabelle und die Zahlen in Größen- und Kostenschätzungen.
 - Die Meldung nach einer unvollständigen KI-Antwort in der Datentabelle nennt den Knopf jetzt richtig („✨ Weitere Zeilen ergänzen“ statt „➕ Weitere Zeilen ergänzen“).
+- Auch die Exporte sind für weitere Sprachen vorbereitet: Überschriften, Beschriftungen und Bedientexte in Bericht (Word, HTML, Markdown, Text), Präsentation (PowerPoint), Datentabelle (Excel, CSV, Markdown), Karteikarten, Mindmap sowie Audio- und Video-Skripten und im HTML-Videoplayer folgen der Sprache der Oberfläche. Word- und PowerPoint-Dateien tragen diese Sprache auch für die Rechtschreibprüfung. Ihre eigenen Inhalte (Titel, Texte der KI) bleiben unverändert.
+- CSV-Dateien der Datentabelle verwenden das Trennzeichen passend zu Ihren Ländereinstellungen: Semikolon bei Dezimalkomma (z. B. Deutschland), sonst Komma – so öffnet Excel die Datei direkt in Spalten.
+- Die feste Spalte „Quelle“ der Datentabelle heißt in Ansicht und Exporten so wie in der Sprache der Oberfläche; als Name einer eigenen Spalte ist sie in jeder verfügbaren Sprache reserviert.
 
 ## [1.1.1] – 2026-11
 

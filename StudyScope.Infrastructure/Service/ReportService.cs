@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using StudyScope.Core.Common;
@@ -371,25 +372,25 @@ public class ReportService : IReportService
 
     // ---------------- Exporte ----------------
 
-    public async Task ExportToDocxAsync(Report report, ReportStudioContent studio, string filePath)
+    public async Task ExportToDocxAsync(Report report, ReportStudioContent studio, string filePath, CultureInfo culture)
     {
         using var buffer = new MemoryStream();
-        DocxWriter.Write(report, studio.Filter(report.Embeds), buffer);
+        DocxWriter.Write(report, studio.Filter(report.Embeds), culture, buffer);
         buffer.Position = 0;
 
         await using var file = File.Create(filePath);
         await buffer.CopyToAsync(file);
     }
 
-    public string ExportToMarkdown(Report report, ReportStudioContent studio) =>
-        ReportTextExporter.ToMarkdown(report, studio.Filter(report.Embeds));
+    public string ExportToMarkdown(Report report, ReportStudioContent studio, CultureInfo culture) =>
+        ReportTextExporter.ToMarkdown(report, studio.Filter(report.Embeds), culture);
 
-    public string ExportToPlainText(Report report, ReportStudioContent studio) =>
-        ReportTextExporter.ToPlainText(report, studio.Filter(report.Embeds));
+    public string ExportToPlainText(Report report, ReportStudioContent studio, CultureInfo culture) =>
+        ReportTextExporter.ToPlainText(report, studio.Filter(report.Embeds), culture);
 
-    public string ExportToHtml(Report report, ReportStudioContent studio) =>
-        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds));
+    public string ExportToHtml(Report report, ReportStudioContent studio, CultureInfo culture) =>
+        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds), culture);
 
-    public string ExportToHtml(Report report, ReportStudioContent studio, ReportHtmlOptions options) =>
-        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds), options);
+    public string ExportToHtml(Report report, ReportStudioContent studio, ReportHtmlOptions options, CultureInfo culture) =>
+        ReportHtmlExporter.Export(report, studio.Filter(report.Embeds), culture, options);
 }

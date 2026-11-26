@@ -420,7 +420,7 @@ public class DataTableViewModel : INotifyPropertyChanged
         foreach (var part in (text ?? string.Empty).Split(new[] { ',', ';', '|', '\n' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             if (part.Length > 0 && !result.Contains(part, StringComparer.OrdinalIgnoreCase) &&
-                !string.Equals(part, DataTableDocument.SourceColumnName, StringComparison.OrdinalIgnoreCase))
+                !DataTableDocument.IsReservedColumnName(part))
                 result.Add(part);
         }
         return result.Take(DataTableDocument.MaxColumns).ToList();
@@ -539,8 +539,8 @@ public class DataTableViewModel : INotifyPropertyChanged
             return VmStrings.DataTable_ColumnNameEmpty;
         if (n.Length > MaxColumnNameLength)
             return Loc.Format(VmStrings.DataTable_ColumnNameTooLong, ("max", MaxColumnNameLength));
-        if (string.Equals(n, DataTableDocument.SourceColumnName, StringComparison.OrdinalIgnoreCase))
-            return Loc.Format(VmStrings.DataTable_ColumnNameReserved, ("name", DataTableDocument.SourceColumnName));
+        if (DataTableDocument.IsReservedColumnName(n))
+            return Loc.Format(VmStrings.DataTable_ColumnNameReserved, ("name", n));
         if (SelectedTable != null && SelectedTable.Columns.Where((_, i) => i != exceptColumn).Any(c => string.Equals(c, n, StringComparison.OrdinalIgnoreCase)))
             return Loc.Format(VmStrings.DataTable_ColumnNameExists, ("name", n));
         return null;
@@ -663,13 +663,13 @@ public class DataTableViewModel : INotifyPropertyChanged
             switch (format)
             {
                 case DataTableExportFormat.Csv:
-                    await File.WriteAllBytesAsync(filePath, _dataTableService.ExportToCsv(table, rows));
+                    await File.WriteAllBytesAsync(filePath, _dataTableService.ExportToCsv(table, rows, ExportCulture.Current));
                     break;
                 case DataTableExportFormat.Excel:
-                    await _dataTableService.ExportToXlsxAsync(table, rows, filePath);
+                    await _dataTableService.ExportToXlsxAsync(table, rows, filePath, ExportCulture.Current);
                     break;
                 default:
-                    await File.WriteAllTextAsync(filePath, _dataTableService.ExportToMarkdown(table, rows));
+                    await File.WriteAllTextAsync(filePath, _dataTableService.ExportToMarkdown(table, rows, ExportCulture.Current));
                     break;
             }
 

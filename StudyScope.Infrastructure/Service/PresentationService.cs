@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Globalization;
+using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -343,11 +344,11 @@ public class PresentationService : IPresentationService
 
     // ---------------- Export ----------------
 
-    public async Task ExportToPptxAsync(PresentationDocument presentation, string filePath)
+    public async Task ExportToPptxAsync(PresentationDocument presentation, string filePath, CultureInfo culture)
     {
         // Erst in den Speicher schreiben, damit bei einem Fehler keine halbe Datei zurückbleibt
         using var buffer = new MemoryStream();
-        PptxWriter.Write(presentation, buffer);
+        PptxWriter.Write(presentation, culture, buffer);
         buffer.Position = 0;
 
         await using var file = File.Create(filePath);

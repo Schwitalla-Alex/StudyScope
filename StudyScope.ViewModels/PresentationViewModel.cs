@@ -281,7 +281,7 @@ public class PresentationViewModel : INotifyPropertyChanged
 
         try
         {
-            await _presentationService.ExportToPptxAsync(Presentation, filePath);
+            await _presentationService.ExportToPptxAsync(Presentation, filePath, ExportCulture.Current);
             ShowStatus(Loc.Format(VmStrings.Presentation_PptxExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }

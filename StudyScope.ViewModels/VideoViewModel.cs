@@ -667,7 +667,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         if (video == null) return false;
         try
         {
-            var text = format == VideoScriptExportFormat.Markdown ? _videoService.ExportToMarkdown(video) : _videoService.ExportToText(video);
+            var text = format == VideoScriptExportFormat.Markdown ? _videoService.ExportToMarkdown(video, ExportCulture.Current) : _videoService.ExportToText(video, ExportCulture.Current);
             await File.WriteAllTextAsync(filePath, text, new System.Text.UTF8Encoding(true));
             ShowStatus(Loc.Format(VmStrings.Video_ScriptExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;

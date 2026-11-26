@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -33,11 +34,14 @@ public interface IDataTableService
     Task<DataTableLibrary> LoadLibraryAsync(string profileName);
     Task SaveLibraryAsync(string profileName, DataTableLibrary library);
 
-    /// <summary>CSV mit Semikolon als Trennzeichen, UTF-8 mit BOM (Excel zeigt Umlaute richtig).</summary>
-    byte[] ExportToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows);
+    /// <summary>
+    /// CSV als UTF-8 mit BOM (Excel zeigt Umlaute richtig). Trennzeichen nach dem regionalen Format des Benutzers
+    /// (Semikolon bei Dezimalkomma, sonst Komma), Kopf der Quellspalte in <paramref name="culture"/>.
+    /// </summary>
+    byte[] ExportToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture);
 
     /// <summary>Excel-Arbeitsmappe (.xlsx) mit fixierter Kopfzeile und Autofilter.</summary>
-    Task ExportToXlsxAsync(DataTableDocument table, IReadOnlyList<DataTableRow> rows, string filePath);
+    Task ExportToXlsxAsync(DataTableDocument table, IReadOnlyList<DataTableRow> rows, string filePath, CultureInfo culture);
 
-    string ExportToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows);
+    string ExportToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture);
 }

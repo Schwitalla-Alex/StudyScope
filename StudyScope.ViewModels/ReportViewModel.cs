@@ -486,7 +486,7 @@ public class ReportViewModel : INotifyPropertyChanged
     {
         CurrentHtml = SelectedReport == null
             ? string.Empty
-            : _reportService.ExportToHtml(SelectedReport, GetStudioContent(SelectedReport), new ReportHtmlOptions { InApp = true });
+            : _reportService.ExportToHtml(SelectedReport, GetStudioContent(SelectedReport), new ReportHtmlOptions { InApp = true }, ExportCulture.Current);
         OnPropertyChanged(nameof(CanEmbedVideoPlayers));
         OnPropertyChanged(nameof(VideoPlayersEstimateText));
     }
@@ -582,17 +582,17 @@ public class ReportViewModel : INotifyPropertyChanged
             switch (format)
             {
                 case ReportExportFormat.Word:
-                    await _reportService.ExportToDocxAsync(SelectedReport, studio, filePath);
+                    await _reportService.ExportToDocxAsync(SelectedReport, studio, filePath, ExportCulture.Current);
                     break;
                 case ReportExportFormat.Markdown:
-                    await File.WriteAllTextAsync(filePath, _reportService.ExportToMarkdown(SelectedReport, studio));
+                    await File.WriteAllTextAsync(filePath, _reportService.ExportToMarkdown(SelectedReport, studio, ExportCulture.Current));
                     break;
                 case ReportExportFormat.Text:
-                    await File.WriteAllTextAsync(filePath, _reportService.ExportToPlainText(SelectedReport, studio));
+                    await File.WriteAllTextAsync(filePath, _reportService.ExportToPlainText(SelectedReport, studio, ExportCulture.Current));
                     break;
                 default:
                     var options = await BuildHtmlExportOptionsAsync();
-                    var html = _reportService.ExportToHtml(SelectedReport, studio, options);
+                    var html = _reportService.ExportToHtml(SelectedReport, studio, options, ExportCulture.Current);
                     if (options.VideoPlayers.Count == 0)
                     {
                         await File.WriteAllTextAsync(filePath, html);

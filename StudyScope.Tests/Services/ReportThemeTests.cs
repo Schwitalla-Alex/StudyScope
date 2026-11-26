@@ -1,5 +1,6 @@
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -20,7 +21,7 @@ public class ReportThemeTests
     [Test]
     public void InApp_ContainsDarkBlockAndThemeSync()
     {
-        var html = ReportHtmlExporter.Export(Report(), new ReportStudioContent(), new ReportHtmlOptions { InApp = true });
+        var html = ReportHtmlExporter.Export(Report(), new ReportStudioContent(), TestCultures.De, new ReportHtmlOptions { InApp = true });
 
         Assert.Multiple(() =>
         {
@@ -35,13 +36,13 @@ public class ReportThemeTests
     [Test]
     public void FileExport_StaysLight()
     {
-        var html = ReportHtmlExporter.Export(Report(), new ReportStudioContent());
+        var html = ReportHtmlExporter.Export(Report(), new ReportStudioContent(), TestCultures.De);
 
         Assert.Multiple(() =>
         {
             Assert.That(html, Does.Not.Contain("data-theme"));
             Assert.That(html, Does.Not.Contain("parent.document"));
-            Assert.That(html, Is.EqualTo(ReportHtmlExporter.Export(Report(), new ReportStudioContent(), ReportHtmlOptions.Default)));
+            Assert.That(html, Is.EqualTo(ReportHtmlExporter.Export(Report(), new ReportStudioContent(), TestCultures.De, ReportHtmlOptions.Default)));
         });
     }
 

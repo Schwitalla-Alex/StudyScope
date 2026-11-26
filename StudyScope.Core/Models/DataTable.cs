@@ -1,3 +1,7 @@
+using System.Globalization;
+using StudyScope.Core.Localization;
+using StudyScope.Core.Resources;
+
 namespace StudyScope.Core.Models;
 
 /// <summary>Vorlage einer Datentabelle – bestimmt, welche Angaben die KI heraussucht.</summary>
@@ -43,8 +47,39 @@ public class DataTableDocument
     /// <summary>Höchstzahl an Spalten je Tabelle (ohne die Quelle).</summary>
     public const int MaxColumns = 20;
 
-    /// <summary>Anzeigename der festen Quellspalte in Ansicht und Exporten.</summary>
-    public const string SourceColumnName = "Quelle";
+    /// <summary>
+    /// Anzeigename der festen Quellspalte in Ansicht und Exporten, in der aktuellen Sprache („Quelle“, „Source“).
+    /// Gespeichert wird nur das Feld <see cref="DataTableRow.Source"/>, nie dieser Name.
+    /// </summary>
+    public static string SourceColumnName => CoreStrings.DataTable_SourceColumn;
+
+    /// <summary>
+    /// Der Name ist als Spaltenname reserviert: der Name der Quellspalte in irgendeiner verfügbaren Sprache (ohne
+    /// Groß-/Kleinschreibung), damit nach einem Sprachwechsel keine zweite Spalte „Quelle“/„Source“ entsteht.
+    /// </summary>
+    public static bool IsReservedColumnName(string? name)
+    {
+        var n = name?.Trim();
+        if (string.IsNullOrEmpty(n)) return false;
+        return SourceColumnNames().Any(s => string.Equals(s, n, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>Name der Quellspalte in der neutralen Sprache, der Oberflächensprache und jeder Sprache neben dem Programm.</summary>
+    public static IReadOnlyCollection<string> SourceColumnNames()
+    {
+        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        void Add(CultureInfo culture)
+        {
+            var value = CoreStrings.ResourceManager.GetString(nameof(CoreStrings.DataTable_SourceColumn), culture);
+            if (!string.IsNullOrWhiteSpace(value)) names.Add(value.Trim());
+        }
+
+        Add(CultureInfo.InvariantCulture);
+        Add(CultureInfo.CurrentUICulture);
+        foreach (var name in UiLanguage.AvailableCultures(AppContext.BaseDirectory, typeof(CoreStrings).Assembly.GetName().Name!))
+            Add(CultureInfo.GetCultureInfo(name));
+        return names;
+    }
 
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = string.Empty;

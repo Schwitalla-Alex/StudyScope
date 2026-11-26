@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Export_CreatedWith" xml:space="preserve"><value>Erstellt mit StudyScope</value><comment>Fußzeile exportierter HTML-Seiten</comment></data>
+  <data name="Export_CreatedAt" xml:space="preserve"><value>erstellt am {date}</value><comment>Teil einer Kopfzeile nach „·“; {date} ist Datum (ggf. mit Uhrzeit) im Format der Exportsprache</comment></data>
+  <data name="Export_Sources" xml:space="preserve"><value>Quellen: {sources}</value><comment>{sources} = Dateinamen, durch Komma getrennt</comment></data>
+  <data name="Export_Topic" xml:space="preserve"><value>Thema: {topic}</value><comment>Thema einer Datentabelle</comment></data>
+  <data name="Export_Focus" xml:space="preserve"><value>Schwerpunkt: {topic}</value><comment>Schwerpunkt eines Audio-Skripts</comment></data>
+  <data name="Export_RowCount" xml:space="preserve"><value>{count, plural, one {# Zeile} other {# Zeilen}}</value></data>
+  <data name="Export_RowsTruncated" xml:space="preserve"><value>erste {shown} von {total} Zeilen – vollständig im Reiter „Datentabelle“</value><comment>Eingebettete Datentabelle wurde gekürzt</comment></data>
+  <data name="Export_SegmentCount" xml:space="preserve"><value>{count, plural, one {# Abschnitt} other {# Abschnitte}}</value><comment>Abschnitte eines Audio-Skripts</comment></data>
+  <data name="Export_SlideCount" xml:space="preserve"><value>{count, plural, one {# Folie} other {# Folien}}</value></data>
+  <data name="Export_SlideHeading" xml:space="preserve"><value>Folie {number}: {title}</value><comment>Folie einer Präsentation im Bericht</comment></data>
+  <data name="Export_AudioFile" xml:space="preserve"><value>Audiodatei: {file}</value><comment>Die Audiodatei wird nicht eingebettet, nur ihr Name genannt</comment></data>
+  <data name="Export_NarratedWith" xml:space="preserve"><value>vertont mit {provider}</value><comment>{provider} = Name der Sprachausgabe, z. B. Gemini TTS</comment></data>
+  <data name="Export_VideoInApp" xml:space="preserve"><value>Video: {title} (abspielbar im Reiter „Video“)</value></data>
+  <data name="Export_QuestionLine" xml:space="preserve"><value>F: {text}</value><comment>Kurzform „Frage“ vor einer Frage in Text-/Markdown-Exporten</comment></data>
+  <data name="Export_AnswerLine" xml:space="preserve"><value>A: {text}</value><comment>Kurzform „Antwort“</comment></data>
+  <data name="ReportTemplate_StudyGuide" xml:space="preserve"><value>Lernübersicht</value></data>
+  <data name="ReportTemplate_Briefing" xml:space="preserve"><value>Zusammenfassung / Briefing</value></data>
+  <data name="ReportTemplate_Glossary" xml:space="preserve"><value>Glossar</value></data>
+  <data name="ReportTemplate_Faq" xml:space="preserve"><value>FAQ</value></data>
+  <data name="ReportTemplate_Custom" xml:space="preserve"><value>Eigene Vorgabe</value></data>
+  <data name="DtTemplate_Terms" xml:space="preserve"><value>Begriffe &amp; Definitionen</value></data>
+  <data name="DtTemplate_Comparison" xml:space="preserve"><value>Vergleich</value></data>
+  <data name="DtTemplate_Timeline" xml:space="preserve"><value>Zeitleiste</value></data>
+  <data name="DtTemplate_People" xml:space="preserve"><value>Personen &amp; Beiträge</value></data>
+  <data name="DtTemplate_Formulas" xml:space="preserve"><value>Formeln &amp; Kennzahlen</value></data>
+  <data name="DtTemplate_Custom" xml:space="preserve"><value>Eigene Vorgabe</value></data>
+  <data name="AudioFormat_Summary" xml:space="preserve"><value>Zusammenfassung</value></data>
+  <data name="AudioFormat_Podcast" xml:space="preserve"><value>Podcast-Gespräch</value></data>
+  <data name="AudioFormat_Briefing" xml:space="preserve"><value>Kurz-Briefing</value></data>
+  <data name="Speaker_Narrator" xml:space="preserve"><value>Sprecherin</value><comment>Gespeicherte Rolle „Sprecherin“</comment></data>
+  <data name="Speaker_Host" xml:space="preserve"><value>Moderatorin</value><comment>Gespeicherte Rolle „Moderatorin“</comment></data>
+  <data name="Speaker_Expert" xml:space="preserve"><value>Experte</value><comment>Gespeicherte Rolle „Experte“</comment></data>
+  <data name="Report_Contents" xml:space="preserve"><value>Inhalt</value><comment>Überschrift des Inhaltsverzeichnisses</comment></data>
+  <data name="Report_Terms" xml:space="preserve"><value>Begriffe</value></data>
+  <data name="Report_Term" xml:space="preserve"><value>Begriff</value><comment>Spaltenkopf (Word)</comment></data>
+  <data name="Report_Explanation" xml:space="preserve"><value>Erklärung</value><comment>Spaltenkopf (Word)</comment></data>
+  <data name="Report_Takeaway" xml:space="preserve"><value>Merksatz:</value><comment>Vor dem Merksatz eines Abschnitts</comment></data>
+  <data name="Report_Mindmap" xml:space="preserve"><value>Mindmap</value></data>
+  <data name="Report_Flashcards" xml:space="preserve"><value>Karteikarten</value></data>
+  <data name="Report_FlashcardsCount" xml:space="preserve"><value>Karteikarten ({count})</value></data>
+  <data name="Report_SelfTest" xml:space="preserve"><value>Selbsttest</value></data>
+  <data name="Report_Solutions" xml:space="preserve"><value>Lösungen</value><comment>Überschrift (Word)</comment></data>
+  <data name="Report_SolutionsLine" xml:space="preserve"><value>Lösungen: {solutions}</value><comment>{solutions} = „1. A · 2. B, C …“</comment></data>
+  <data name="Report_SolutionLine" xml:space="preserve"><value>Lösung: {solution}</value></data>
+  <data name="Report_Presentation" xml:space="preserve"><value>Präsentation</value></data>
+  <data name="Report_PresentationHeading" xml:space="preserve"><value>Präsentation – {title}</value></data>
+  <data name="Report_DataTables" xml:space="preserve"><value>{count, plural, one {Datentabelle} other {Datentabellen}}</value><comment>Abschnittsüberschrift</comment></data>
+  <data name="Report_DataTableHeading" xml:space="preserve"><value>Datentabelle – {title}</value></data>
+  <data name="Report_AudioScripts" xml:space="preserve"><value>{count, plural, one {Audio-Skript} other {Audio-Skripte}}</value><comment>Abschnittsüberschrift</comment></data>
+  <data name="Report_AudioScriptHeading" xml:space="preserve"><value>Audio-Skript – {title}</value></data>
+  <data name="Report_VideoScripts" xml:space="preserve"><value>{count, plural, one {Video-Skript} other {Video-Skripte}}</value><comment>Abschnittsüberschrift ohne eingebetteten Player</comment></data>
+  <data name="Report_Videos" xml:space="preserve"><value>{count, plural, one {Video} other {Videos}}</value><comment>Abschnittsüberschrift mit eingebettetem Player</comment></data>
+  <data name="Report_VideoScriptHeading" xml:space="preserve"><value>Video-Skript – {title}</value></data>
+  <data name="Report_TypeTrueFalse" xml:space="preserve"><value>(Wahr oder falsch?)</value><comment>Fragetyp hinter der Frage</comment></data>
+  <data name="Report_TypeMultiple" xml:space="preserve"><value>(mehrere Antworten richtig)</value><comment>Fragetyp hinter der Frage</comment></data>
+  <data name="Report_Question" xml:space="preserve"><value>Frage</value><comment>Vorderseite einer Karteikarte</comment></data>
+  <data name="Report_Answer" xml:space="preserve"><value>Antwort</value><comment>Rückseite einer Karteikarte</comment></data>
+  <data name="Report_Notes" xml:space="preserve"><value>Notizen:</value><comment>Sprechernotizen einer Folie (Druck)</comment></data>
+  <data name="Report_HintMindmap" xml:space="preserve"><value>Klicken Sie auf ein Thema, um es auf- oder zuzuklappen.</value></data>
+  <data name="Report_ExpandAll" xml:space="preserve"><value>Alle aufklappen</value></data>
+  <data name="Report_CollapseAll" xml:space="preserve"><value>Alle zuklappen</value></data>
+  <data name="Report_HintFlashcards" xml:space="preserve"><value>Klicken Sie auf eine Karte, um die Antwort zu sehen.</value></data>
+  <data name="Report_FlipAll" xml:space="preserve"><value>Alle umdrehen</value></data>
+  <data name="Report_FlipCard" xml:space="preserve"><value>Karte umdrehen</value><comment>Vorlesetext (aria-label) einer Karte</comment></data>
+  <data name="Report_HintQuiz" xml:space="preserve"><value>Wählen Sie Ihre Antwort und klicken Sie auf „Prüfen“.</value><comment>Nennt den Knopf Report_Check</comment></data>
+  <data name="Report_Check" xml:space="preserve"><value>Prüfen</value><comment>Knopf im Selbsttest</comment></data>
+  <data name="Report_ChooseAnswer" xml:space="preserve"><value>Bitte eine Antwort wählen.</value></data>
+  <data name="Report_Correct" xml:space="preserve"><value>✓ Richtig!</value></data>
+  <data name="Report_Wrong" xml:space="preserve"><value>✗ Leider falsch.</value></data>
+  <data name="Report_QuizScore" xml:space="preserve"><value>{right} von {checked} richtig ({questions})</value><comment>Wird im Browser ausgefüllt; {questions} = Report_QuestionCount</comment></data>
+  <data name="Report_QuestionCount" xml:space="preserve"><value>{count, plural, one {# Frage} other {# Fragen}}</value></data>
+  <data name="Report_Previous" xml:space="preserve"><value>◀ Zurück</value><comment>Folien blättern</comment></data>
+  <data name="Report_Next" xml:space="preserve"><value>Weiter ▶</value><comment>Folien blättern</comment></data>
+  <data name="Report_HintDataTable" xml:space="preserve"><value>Klicken Sie auf eine Spaltenüberschrift, um nach dieser Spalte zu sortieren (erneuter Klick: absteigend).</value></data>
+  <data name="Report_Sort" xml:space="preserve"><value>Sortieren</value><comment>Tooltip einer Spaltenüberschrift</comment></data>
+  <data name="Report_HintAudio" xml:space="preserve"><value>Sprechtext der Audio-Beiträge – zum Aufklappen anklicken.</value></data>
+  <data name="Report_HintVideoPlayer" xml:space="preserve"><value>Mit ▶ abspielen; der Sprechtext je Folie steht darunter zum Aufklappen.</value></data>
+  <data name="Report_HintVideo" xml:space="preserve"><value>Sprechtext der Videos je Folie – zum Aufklappen anklicken.</value></data>
+  <data name="Report_PlayVideo" xml:space="preserve"><value>▶ Video abspielen</value><comment>Nur in der App</comment></data>
+  <data name="Report_PlayVideoTitle" xml:space="preserve"><value>Wechselt in den Reiter „Video“ und spielt dieses Video ab</value></data>
+  <data name="Docx_StyleQuestion" xml:space="preserve"><value>StudyScope Frage</value><comment>Name einer Word-Formatvorlage</comment></data>
+  <data name="Docx_StyleOption" xml:space="preserve"><value>StudyScope Antwortmöglichkeit</value><comment>Name einer Word-Formatvorlage</comment></data>
+  <data name="Docx_StyleTakeaway" xml:space="preserve"><value>StudyScope Merksatz</value><comment>Name einer Word-Formatvorlage</comment></data>
+  <data name="Docx_StyleTable" xml:space="preserve"><value>StudyScope Tabelle</value><comment>Name einer Word-Tabellenformatvorlage</comment></data>
+  <data name="Pptx_LayoutBlank" xml:space="preserve"><value>Leer</value><comment>Name des Folienlayouts</comment></data>
+  <data name="Pptx_ShapeTitle" xml:space="preserve"><value>Titel</value><comment>Name einer Form (Auswahlbereich in PowerPoint)</comment></data>
+  <data name="Pptx_ShapeSubtitle" xml:space="preserve"><value>Untertitel</value><comment>Name einer Form</comment></data>
+  <data name="Pptx_ShapeAccent" xml:space="preserve"><value>Akzent</value><comment>Name einer Form</comment></data>
+  <data name="Pptx_ShapeContent" xml:space="preserve"><value>Inhalt</value><comment>Name einer Form</comment></data>
+  <data name="Pptx_ShapeFooter" xml:space="preserve"><value>Fußzeile</value><comment>Name einer Form</comment></data>
+  <data name="Pptx_ShapeSlideNumber" xml:space="preserve"><value>Foliennummer</value><comment>Name einer Form</comment></data>
+  <data name="Pptx_ShapeSlideImage" xml:space="preserve"><value>Folienbildplatzhalter</value><comment>Name einer Form (Notizenseite)</comment></data>
+  <data name="Pptx_ShapeNotes" xml:space="preserve"><value>Notizenplatzhalter</value><comment>Name einer Form (Notizenseite)</comment></data>
+  <data name="Xlsx_DefaultSheetName" xml:space="preserve"><value>Datentabelle</value><comment>Blattname, wenn die Tabelle keinen Titel hat (höchstens 31 Zeichen)</comment></data>
+  <data name="Flashcards_Title" xml:space="preserve"><value>Lernkarteikarten: {profile}</value><comment>Überschrift des Markdown-Exports</comment></data>
+  <data name="Flashcards_CreatedAt" xml:space="preserve"><value>Erstellt am: {date}</value></data>
+  <data name="Flashcards_QuestionHeading" xml:space="preserve"><value>Frage {number}: {question}</value></data>
+  <data name="Flashcards_AnswerLabel" xml:space="preserve"><value>Antwort:</value></data>
+  <data name="Flashcards_StatusLabel" xml:space="preserve"><value>Status:</value></data>
+  <data name="Flashcards_StatusNew" xml:space="preserve"><value>Neu</value><comment>Lernstand</comment></data>
+  <data name="Flashcards_StatusKnown" xml:space="preserve"><value>Gelernt</value><comment>Lernstand</comment></data>
+  <data name="Flashcards_StatusDifficult" xml:space="preserve"><value>Wiederholen</value><comment>Lernstand</comment></data>
+  <data name="Mindmap_SourcesLine" xml:space="preserve"><value>Quellen: {sources} – erstellt am {date}</value></data>
+  <data name="Video_Badge" xml:space="preserve"><value>🎬 Video</value></data>
+  <data name="Video_Keys" xml:space="preserve"><value>Tastatur (nach Klick in den Player): Leertaste Play/Pause · ← → Folie zurück/vor · Pos1/Ende · F Vollbild</value></data>
+  <data name="Video_NarrationPerSlide" xml:space="preserve"><value>Sprechtexte je Folie</value></data>
+  <data name="Video_Duration" xml:space="preserve"><value>{time} Min.</value><comment>{time} = Dauer als m:ss</comment></data>
+  <data name="Video_WithAudio" xml:space="preserve"><value>mit Ton</value></data>
+  <data name="Video_WithAudioBy" xml:space="preserve"><value>mit Ton ({provider})</value></data>
+  <data name="Video_WithoutAudio" xml:space="preserve"><value>ohne Ton</value></data>
+  <data name="Player_Region" xml:space="preserve"><value>Video: {title}</value><comment>Vorlesetext (aria-label) des Players</comment></data>
+  <data name="Player_Play" xml:space="preserve"><value>Abspielen</value></data>
+  <data name="Player_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Player_PlayPauseTitle" xml:space="preserve"><value>Abspielen / Pause (Leertaste)</value><comment>Tooltip</comment></data>
+  <data name="Player_PreviousSlide" xml:space="preserve"><value>Vorige Folie</value></data>
+  <data name="Player_PreviousSlideTitle" xml:space="preserve"><value>Vorige Folie (←)</value><comment>Tooltip</comment></data>
+  <data name="Player_NextSlide" xml:space="preserve"><value>Nächste Folie</value></data>
+  <data name="Player_NextSlideTitle" xml:space="preserve"><value>Nächste Folie (→)</value><comment>Tooltip</comment></data>
+  <data name="Player_Progress" xml:space="preserve"><value>Fortschritt</value><comment>Vorlesetext der Fortschrittsleiste</comment></data>
+  <data name="Player_SlideOf" xml:space="preserve"><value>Folie {number} / {total}</value><comment>Wird im Browser ausgefüllt</comment></data>
+  <data name="Player_NoAudio" xml:space="preserve"><value>Ohne Ton</value><comment>Tooltip des Symbols 🔇</comment></data>
+  <data name="Player_FullScreen" xml:space="preserve"><value>Vollbild</value></data>
+  <data name="Player_FullScreenTitle" xml:space="preserve"><value>Vollbild (F, Esc beendet)</value><comment>Tooltip</comment></data>
+</root>

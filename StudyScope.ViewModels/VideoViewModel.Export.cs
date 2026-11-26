@@ -90,7 +90,7 @@ public partial class VideoViewModel
             if (mp3) BusyText = VmStrings.Video_HtmlMp3Busy;
             var data = await _videoService.BuildPlayerDataAsync(_profileName, video, mp3 ? _transcoder : null);
             BusyText = VmStrings.Video_HtmlWriting;
-            var html = _videoService.ExportToHtml(data);
+            var html = _videoService.ExportToHtml(data, ExportCulture.Current);
             await File.WriteAllTextAsync(temp, html, new System.Text.UTF8Encoding(false));
             File.Move(temp, filePath, overwrite: true);
 

@@ -47,7 +47,7 @@ public static class MediaTexts
         _ => VmStrings.SpeechProvider_System
     };
 
-    /// <summary>„ca. 7 Min.“ bzw. „unter 1 Min.“ (wie <see cref="AudioScriptFormats.FormatMinutes"/>, übersetzt).</summary>
+    /// <summary>„ca. 7 Min.“ bzw. „unter 1 Min.“ (wie <see cref="MediaFormat.Minutes"/>).</summary>
     public static string Minutes(double minutes) => MediaFormat.Minutes(minutes);
 
     /// <summary>Zahl in Megabyte: unter 10 mit einer Nachkommastelle, sonst ganzzahlig (Formatkultur der Oberfläche).</summary>
