@@ -3,7 +3,9 @@ using System.IO.Compression;
 using System.Security;
 using System.Text;
 using System.Xml;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -12,6 +14,7 @@ namespace StudyScope.Infrastructure.Services;
 /// Aufbau: ein Folienmaster mit leerem Layout, je Folie Textfelder mit fester Formatierung (keine Platzhalter),
 /// Sprechernotizen über einen Notizenmaster. Format 16:9 (33,867 × 19,05 cm).
 /// Geprüft mit python-pptx und LibreOffice Impress; Struktur entspricht dem Mindestumfang, den PowerPoint erwartet.
+/// Sprache der Texte (<c>a:rPr lang</c>, <c>dc:language</c>) und die Namen von Layout und Formen folgen der übergebenen Sprache.
 /// </summary>
 public static class PptxWriter
 {
@@ -36,8 +39,9 @@ public static class PptxWriter
     private const string RelBase = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
     private const string CtBase = "application/vnd.openxmlformats-officedocument.presentationml";
 
-    public static void Write(PresentationDocument presentation, Stream output)
+    public static void Write(PresentationDocument presentation, CultureInfo culture, Stream output)
     {
+        using var scope = CultureScope.Use(culture);
         var slides = presentation.Slides.Count > 0
             ? presentation.Slides
             : new List<PresentationSlide> { new() { Kind = SlideKind.Title, Title = presentation.Title } };
@@ -102,6 +106,9 @@ public static class PptxWriter
         }
     }
 
+    /// <summary>Sprachkennung der Texte (Rechtschreibprüfung in PowerPoint) aus der Exportsprache des <see cref="CultureScope"/>.</summary>
+    private static string Lang => CultureScope.SpecificLanguageTag(CultureInfo.CurrentUICulture);
+
     // ---------------- Paket-Teile ----------------
 
     private static string ContentTypes(int slideCount)
@@ -147,7 +154,7 @@ public static class PptxWriter
         return "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" " +
                "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" " +
                "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-               $"<dc:title>{Esc(presentation.Title)}</dc:title><dc:creator>StudyScope</dc:creator>" +
+               $"<dc:title>{Esc(presentation.Title)}</dc:title><dc:creator>StudyScope</dc:creator><dc:language>{Lang}</dc:language>" +
                $"<dcterms:created xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:created>" +
                $"<dcterms:modified xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:modified>" +
                "</cp:coreProperties>";
@@ -194,20 +201,20 @@ public static class PptxWriter
 
     private static string SlideLayout() =>
         $"<p:sldLayout {Namespaces} type=\"blank\" preserve=\"1\">" +
-        $"<p:cSld name=\"Leer\"><p:spTree>{GroupHeader}</p:spTree></p:cSld>" +
+        $"<p:cSld name=\"{Esc(ExportStrings.Pptx_LayoutBlank)}\"><p:spTree>{GroupHeader}</p:spTree></p:cSld>" +
         "<p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:sldLayout>";
 
     private static string NotesMaster() =>
         $"<p:notesMaster {Namespaces}>" +
         "<p:cSld><p:bg><p:bgRef idx=\"1001\"><a:schemeClr val=\"bg1\"/></p:bgRef></p:bg><p:spTree>" + GroupHeader +
-        "<p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"Folienbildplatzhalter\"/><p:cNvSpPr><a:spLocks noGrp=\"1\" noRot=\"1\" noChangeAspect=\"1\"/></p:cNvSpPr>" +
+        "<p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"" + Esc(ExportStrings.Pptx_ShapeSlideImage) + "\"/><p:cNvSpPr><a:spLocks noGrp=\"1\" noRot=\"1\" noChangeAspect=\"1\"/></p:cNvSpPr>" +
         "<p:nvPr><p:ph type=\"sldImg\" idx=\"2\"/></p:nvPr></p:nvSpPr>" +
         "<p:spPr><a:xfrm><a:off x=\"381000\" y=\"685800\"/><a:ext cx=\"6096000\" cy=\"3429000\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom>" +
         "<a:noFill/><a:ln w=\"12700\"><a:solidFill><a:prstClr val=\"black\"/></a:solidFill></a:ln></p:spPr></p:sp>" +
-        "<p:sp><p:nvSpPr><p:cNvPr id=\"3\" name=\"Notizenplatzhalter\"/><p:cNvSpPr><a:spLocks noGrp=\"1\"/></p:cNvSpPr>" +
+        "<p:sp><p:nvSpPr><p:cNvPr id=\"3\" name=\"" + Esc(ExportStrings.Pptx_ShapeNotes) + "\"/><p:cNvSpPr><a:spLocks noGrp=\"1\"/></p:cNvSpPr>" +
         "<p:nvPr><p:ph type=\"body\" sz=\"quarter\" idx=\"3\"/></p:nvPr></p:nvSpPr>" +
         "<p:spPr><a:xfrm><a:off x=\"685800\" y=\"4343400\"/><a:ext cx=\"5486400\" cy=\"4114800\"/></a:xfrm><a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom></p:spPr>" +
-        "<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang=\"de-DE\"/></a:p></p:txBody></p:sp>" +
+        "<p:txBody><a:bodyPr/><a:lstStyle/><a:p><a:endParaRPr lang=\"" + Lang + "\"/></a:p></p:txBody></p:sp>" +
         "</p:spTree></p:cSld>" + ClrMap +
         "<p:notesStyle><a:lvl1pPr marL=\"0\" algn=\"l\" defTabSz=\"914400\" rtl=\"0\" eaLnBrk=\"1\" latinLnBrk=\"0\" hangingPunct=\"1\">" +
         "<a:defRPr sz=\"1200\" kern=\"1200\"><a:solidFill><a:schemeClr val=\"tx1\"/></a:solidFill>" +
@@ -217,14 +224,14 @@ public static class PptxWriter
     private static string NotesSlide(string notes)
     {
         var paragraphs = string.IsNullOrWhiteSpace(notes)
-            ? "<a:p><a:endParaRPr lang=\"de-DE\"/></a:p>"
+            ? "<a:p><a:endParaRPr lang=\"" + Lang + "\"/></a:p>"
             : string.Concat(notes.Replace("\r", "").Split('\n').Select(line =>
-                $"<a:p><a:r><a:rPr lang=\"de-DE\" dirty=\"0\"/><a:t>{Esc(line)}</a:t></a:r></a:p>"));
+                $"<a:p><a:r><a:rPr lang=\"{Lang}\" dirty=\"0\"/><a:t>{Esc(line)}</a:t></a:r></a:p>"));
 
         return $"<p:notes {Namespaces}><p:cSld><p:spTree>" + GroupHeader +
-               "<p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"Folienbildplatzhalter\"/><p:cNvSpPr><a:spLocks noGrp=\"1\" noRot=\"1\" noChangeAspect=\"1\"/></p:cNvSpPr>" +
+               "<p:sp><p:nvSpPr><p:cNvPr id=\"2\" name=\"" + Esc(ExportStrings.Pptx_ShapeSlideImage) + "\"/><p:cNvSpPr><a:spLocks noGrp=\"1\" noRot=\"1\" noChangeAspect=\"1\"/></p:cNvSpPr>" +
                "<p:nvPr><p:ph type=\"sldImg\"/></p:nvPr></p:nvSpPr><p:spPr/></p:sp>" +
-               "<p:sp><p:nvSpPr><p:cNvPr id=\"3\" name=\"Notizenplatzhalter\"/><p:cNvSpPr><a:spLocks noGrp=\"1\"/></p:cNvSpPr>" +
+               "<p:sp><p:nvSpPr><p:cNvPr id=\"3\" name=\"" + Esc(ExportStrings.Pptx_ShapeNotes) + "\"/><p:cNvSpPr><a:spLocks noGrp=\"1\"/></p:cNvSpPr>" +
                "<p:nvPr><p:ph type=\"body\" idx=\"1\"/></p:nvPr></p:nvSpPr><p:spPr/>" +
                $"<p:txBody><a:bodyPr/><a:lstStyle/>{paragraphs}</p:txBody></p:sp>" +
                "</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr></p:notes>";
@@ -240,31 +247,31 @@ public static class PptxWriter
 
         if (isTitle)
         {
-            shapes.Append(TextBox(id++, "Titel", Margin, 2057400, SlideWidth - 2 * Margin, 1600200, "b",
+            shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeTitle, Margin, 2057400, SlideWidth - 2 * Margin, 1600200, "b",
                 Paragraph(slide.Title, FitTitleSize(slide.Title, 4400, 40), bold: true, color: "FFFFFF")));
-            shapes.Append(Rectangle(id++, "Akzent", Margin, 3794760, 1371600, 54864, ColorAccent));
+            shapes.Append(Rectangle(id++, ExportStrings.Pptx_ShapeAccent, Margin, 3794760, 1371600, 54864, ColorAccent));
             if (!string.IsNullOrWhiteSpace(slide.Subtitle))
             {
-                shapes.Append(TextBox(id++, "Untertitel", Margin, 3977640, SlideWidth - 2 * Margin, 1097280, "t",
+                shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeSubtitle, Margin, 3977640, SlideWidth - 2 * Margin, 1097280, "t",
                     Paragraph(slide.Subtitle, 2000, bold: false, color: ColorLight)));
             }
         }
         else
         {
-            shapes.Append(TextBox(id++, "Titel", Margin, 457200, SlideWidth - 2 * Margin, 868680, "b",
+            shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeTitle, Margin, 457200, SlideWidth - 2 * Margin, 868680, "b",
                 Paragraph(slide.Title, FitTitleSize(slide.Title, 3200, 55), bold: true, color: ColorText)));
-            shapes.Append(Rectangle(id++, "Akzent", Margin, 1417320, 1097280, 45720, ColorAccent));
+            shapes.Append(Rectangle(id++, ExportStrings.Pptx_ShapeAccent, Margin, 1417320, 1097280, 45720, ColorAccent));
 
             var bodySize = FitBulletSize(slide.Bullets);
             var bullets = slide.Bullets.Count == 0
-                ? "<a:p><a:endParaRPr lang=\"de-DE\"/></a:p>"
+                ? "<a:p><a:endParaRPr lang=\"" + Lang + "\"/></a:p>"
                 : string.Concat(slide.Bullets.Select(b => BulletParagraph(b, bodySize)));
-            shapes.Append(TextBox(id++, "Inhalt", Margin, 1645920, SlideWidth - 2 * Margin, 4206240, "t", bullets));
+            shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeContent, Margin, 1645920, SlideWidth - 2 * Margin, 4206240, "t", bullets));
 
             // Fußzeile: Titel der Präsentation links, Foliennummer rechts
-            shapes.Append(TextBox(id++, "Fußzeile", Margin, 6217920, 7315200, 320040, "ctr",
+            shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeFooter, Margin, 6217920, 7315200, 320040, "ctr",
                 Paragraph(presentationTitle, 1100, bold: false, color: ColorMuted)));
-            shapes.Append(TextBox(id++, "Foliennummer", SlideWidth - Margin - 1828800, 6217920, 1828800, 320040, "ctr",
+            shapes.Append(TextBox(id++, ExportStrings.Pptx_ShapeSlideNumber, SlideWidth - Margin - 1828800, 6217920, 1828800, 320040, "ctr",
                 Paragraph($"{number} / {total}", 1100, bold: false, color: ColorMuted, align: "r")));
         }
 
@@ -276,14 +283,14 @@ public static class PptxWriter
     }
 
     private static string TextBox(int id, string name, long x, long y, long cx, long cy, string anchor, string paragraphs) =>
-        $"<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"{name}\"/><p:cNvSpPr txBox=\"1\"/><p:nvPr/></p:nvSpPr>" +
+        $"<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"{Esc(name)}\"/><p:cNvSpPr txBox=\"1\"/><p:nvPr/></p:nvSpPr>" +
         $"<p:spPr><a:xfrm><a:off x=\"{x}\" y=\"{y}\"/><a:ext cx=\"{cx}\" cy=\"{cy}\"/></a:xfrm>" +
         "<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:noFill/></p:spPr>" +
         $"<p:txBody><a:bodyPr wrap=\"square\" lIns=\"0\" tIns=\"0\" rIns=\"0\" bIns=\"0\" anchor=\"{anchor}\"><a:noAutofit/></a:bodyPr>" +
         $"<a:lstStyle/>{paragraphs}</p:txBody></p:sp>";
 
     private static string Rectangle(int id, string name, long x, long y, long cx, long cy, string color) =>
-        $"<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"{name}\"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>" +
+        $"<p:sp><p:nvSpPr><p:cNvPr id=\"{id}\" name=\"{Esc(name)}\"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr>" +
         $"<p:spPr><a:xfrm><a:off x=\"{x}\" y=\"{y}\"/><a:ext cx=\"{cx}\" cy=\"{cy}\"/></a:xfrm>" +
         $"<a:prstGeom prst=\"rect\"><a:avLst/></a:prstGeom><a:solidFill><a:srgbClr val=\"{color}\"/></a:solidFill><a:ln><a:noFill/></a:ln></p:spPr></p:sp>";
 
@@ -296,7 +303,7 @@ public static class PptxWriter
         $"{Run(text, size, bold: false, color: ColorText)}</a:p>";
 
     private static string Run(string text, int size, bool bold, string color) =>
-        $"<a:r><a:rPr lang=\"de-DE\" sz=\"{size}\" b=\"{(bold ? 1 : 0)}\" dirty=\"0\">" +
+        $"<a:r><a:rPr lang=\"{Lang}\" sz=\"{size}\" b=\"{(bold ? 1 : 0)}\" dirty=\"0\">" +
         $"<a:solidFill><a:srgbClr val=\"{color}\"/></a:solidFill><a:latin typeface=\"{FontName}\"/><a:cs typeface=\"{FontName}\"/></a:rPr>" +
         $"<a:t>{Esc(text)}</a:t></a:r>";
 

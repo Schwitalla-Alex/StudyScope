@@ -608,30 +608,39 @@ public partial class VideoScriptService : IVideoScriptService
 
     // ---------------- Export ----------------
 
-    public string ExportToText(VideoDocument video)
+    /// <summary>„8 Folien · ca. 3 Min. · erstellt am 26.11.2026“ in der aktuellen Sprache.</summary>
+    private static string ExportMetaLine(VideoDocument video) =>
+        string.Join(" · ",
+            Loc.Format(ExportStrings.Export_SlideCount, ("count", video.Scenes.Count)),
+            MediaFormat.Minutes(AudioScriptFormats.EstimateMinutes(video.WordCount)),
+            ExportNames.CreatedOn(video.CreatedAt));
+
+    public string ExportToText(VideoDocument video, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.AppendLine(video.Title);
-        sb.AppendLine($"{video.Scenes.Count} Folien · {AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(video.WordCount))} · erstellt am {video.CreatedAt:dd.MM.yyyy}");
+        sb.AppendLine(ExportMetaLine(video));
         for (var i = 0; i < video.Scenes.Count; i++)
         {
             sb.AppendLine();
-            sb.AppendLine($"Folie {i + 1}: {video.SlideAt(i)?.Title}");
+            sb.AppendLine(ReportVideoScripts.SceneHeading(video, i));
             sb.AppendLine(video.Scenes[i].Narration);
         }
         return sb.ToString();
     }
 
-    public string ExportToMarkdown(VideoDocument video)
+    public string ExportToMarkdown(VideoDocument video, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.AppendLine($"# {video.Title}");
         sb.AppendLine();
-        sb.AppendLine($"*{video.Scenes.Count} Folien · {AudioScriptFormats.FormatMinutes(AudioScriptFormats.EstimateMinutes(video.WordCount))} · erstellt am {video.CreatedAt:dd.MM.yyyy}*");
+        sb.AppendLine($"*{ExportMetaLine(video)}*");
         for (var i = 0; i < video.Scenes.Count; i++)
         {
             sb.AppendLine();
-            sb.AppendLine($"## Folie {i + 1}: {video.SlideAt(i)?.Title}");
+            sb.AppendLine($"## {ReportVideoScripts.SceneHeading(video, i)}");
             sb.AppendLine();
             sb.AppendLine(video.Scenes[i].Narration);
         }

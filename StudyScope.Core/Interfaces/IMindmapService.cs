@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -16,5 +17,5 @@ public interface IMindmapService
     Task DeleteMindmapAsync(string profileName);
 
     /// <summary>Gliederung als Markdown (Überschriften/Aufzählung), z. B. für Obsidian oder Markmap.</summary>
-    string ExportToMarkdown(MindmapDocument mindmap);
+    string ExportToMarkdown(MindmapDocument mindmap, CultureInfo culture);
 }

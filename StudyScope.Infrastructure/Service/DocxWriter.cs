@@ -3,14 +3,17 @@ using System.IO.Compression;
 using System.Security;
 using System.Text;
 using System.Xml;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
 /// <summary>
 /// Schreibt einen Bericht als Word-Dokument (.docx, Office Open XML) ohne Zusatzbibliothek.
 /// Nutzt die Word-Formatvorlagen „Titel“, „Überschrift 1–3“ und „Aufzählung“, damit Inhaltsverzeichnis
-/// und Navigationsbereich in Word funktionieren. Begriffe und Karteikarten stehen in Tabellen.
+/// und Navigationsbereich in Word funktionieren. Begriffe und Karteikarten stehen in Tabellen. Feste Texte, Namen der
+/// eigenen Formatvorlagen und die Dokumentsprache (<c>w:lang</c>, für die Rechtschreibprüfung) folgen der übergebenen Sprache.
 /// Geprüft mit python-docx und LibreOffice Writer.
 /// </summary>
 public static class DocxWriter
@@ -31,8 +34,10 @@ public static class DocxWriter
     private const int Margin = 1417;
     private const int TextWidth = PageWidth - 2 * Margin;
 
-    public static void Write(Report report, ReportStudioContent studio, Stream output)
+    public static void Write(Report report, ReportStudioContent studio, CultureInfo culture, Stream output)
     {
+        using var scope = CultureScope.Use(culture);
+        var language = CultureScope.SpecificLanguageTag(culture);
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
         Add(zip, "[Content_Types].xml",
@@ -61,14 +66,14 @@ public static class DocxWriter
         Add(zip, "docProps/core.xml",
             "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" " +
             "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-            $"<dc:title>{Esc(report.Title)}</dc:title><dc:creator>StudyScope</dc:creator>" +
+            $"<dc:title>{Esc(report.Title)}</dc:title><dc:creator>StudyScope</dc:creator><dc:language>{language}</dc:language>" +
             $"<dcterms:created xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:created><dcterms:modified xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:modified>" +
             "</cp:coreProperties>");
         Add(zip, "docProps/app.xml",
             "<Properties xmlns=\"http://schemas.openxmlformats.org/officeDocument/2006/extended-properties\"><Application>StudyScope</Application></Properties>");
 
         Add(zip, "word/settings.xml", $"<w:settings xmlns:w=\"{NsW}\"><w:defaultTabStop w:val=\"708\"/><w:characterSpacingControl w:val=\"doNotCompress\"/></w:settings>");
-        Add(zip, "word/styles.xml", Styles());
+        Add(zip, "word/styles.xml", Styles(language, culture.TextInfo.IsRightToLeft));
         Add(zip, "word/numbering.xml", Numbering());
         Add(zip, "word/document.xml", Document(report, studio));
     }
@@ -97,8 +102,8 @@ public static class DocxWriter
 
             if (section.Terms.Count > 0)
             {
-                body.Append(Paragraph("Heading3", Run("Begriffe")));
-                body.Append(Table(new[] { "Begriff", "Erklärung" }, section.Terms.Select(t => new[] { t.Term, t.Definition }), new[] { 0.3, 0.7 }));
+                body.Append(Paragraph("Heading3", Run(ExportStrings.Report_Terms)));
+                body.Append(Table(new[] { ExportStrings.Report_Term, ExportStrings.Report_Explanation }, section.Terms.Select(t => new[] { t.Term, t.Definition }), new[] { 0.3, 0.7 }));
             }
 
             foreach (var q in section.Questions)
@@ -108,7 +113,7 @@ public static class DocxWriter
             }
 
             if (!string.IsNullOrWhiteSpace(section.Takeaway))
-                body.Append(Paragraph("Takeaway", Run("Merksatz: ", bold: true) + Text(section.Takeaway)));
+                body.Append(Paragraph("Takeaway", Run(ExportStrings.Report_Takeaway + " ", bold: true) + Text(section.Takeaway)));
         }
 
         AppendStudio(body, studio);
@@ -129,19 +134,19 @@ public static class DocxWriter
 
         if (studio.Mindmap != null)
         {
-            body.Append(Paragraph("Heading1", Run("Mindmap")));
+            body.Append(Paragraph("Heading1", Run(ExportStrings.Report_Mindmap)));
             AppendTree(body, studio.Mindmap.Root, 0);
         }
 
         if (studio.Flashcards.Count > 0)
         {
-            body.Append(Paragraph("Heading1", Run($"Karteikarten ({studio.Flashcards.Count})")));
-            body.Append(Table(new[] { "Frage", "Antwort" }, studio.Flashcards.Select(c => new[] { c.Question, c.Answer }), new[] { 0.45, 0.55 }));
+            body.Append(Paragraph("Heading1", Run(Loc.Format(ExportStrings.Report_FlashcardsCount, ("count", studio.Flashcards.Count)))));
+            body.Append(Table(new[] { ExportStrings.Report_Question, ExportStrings.Report_Answer }, studio.Flashcards.Select(c => new[] { c.Question, c.Answer }), new[] { 0.45, 0.55 }));
         }
 
         if (studio.QuizQuestions.Count > 0)
         {
-            body.Append(Paragraph("Heading1", Run("Selbsttest")));
+            body.Append(Paragraph("Heading1", Run(ExportStrings.Report_SelfTest)));
             for (var i = 0; i < studio.QuizQuestions.Count; i++)
             {
                 var q = studio.QuizQuestions[i];
@@ -150,17 +155,17 @@ public static class DocxWriter
                     body.Append(Paragraph("Option", Run($"{ReportTextExporter.Letter(o)})  {q.Options[o]}")));
             }
 
-            body.Append(Paragraph("Heading3", Run("Lösungen")));
-            body.Append(Paragraph(null, Run(string.Join("   ", studio.QuizQuestions.Select((q, i) => $"{i + 1}. {ReportTextExporter.Solution(q)}")))));
+            body.Append(Paragraph("Heading3", Run(ExportStrings.Report_Solutions)));
+            body.Append(Paragraph(null, Run(ReportTextExporter.SolutionList(studio.QuizQuestions, "   "))));
         }
 
         if (studio.Presentation is { Slides.Count: > 0 } presentation)
         {
-            body.Append(Paragraph("Heading1", Run($"Präsentation – {presentation.Title}")));
+            body.Append(Paragraph("Heading1", Run(Loc.Format(ExportStrings.Report_PresentationHeading, ("title", presentation.Title)))));
             for (var i = 0; i < presentation.Slides.Count; i++)
             {
                 var slide = presentation.Slides[i];
-                body.Append(Paragraph("Heading3", Run($"Folie {i + 1}: {slide.Title}")));
+                body.Append(Paragraph("Heading3", Run(Loc.Format(ExportStrings.Export_SlideHeading, ("number", i + 1), ("title", slide.Title)))));
                 if (!string.IsNullOrWhiteSpace(slide.Subtitle))
                     body.Append(Paragraph(null, Run(slide.Subtitle, color: ColorMuted)));
                 foreach (var bullet in slide.Bullets)
@@ -171,7 +176,7 @@ public static class DocxWriter
         var tables = studio.DataTables.Where(t => t.Rows.Count > 0).ToList();
         if (tables.Count > 0)
         {
-            body.Append(Paragraph("Heading1", Run(tables.Count == 1 ? "Datentabelle" : "Datentabellen")));
+            body.Append(Paragraph("Heading1", Run(Loc.Format(ExportStrings.Report_DataTables, ("count", tables.Count)))));
             foreach (var embedded in tables)
             {
                 body.Append(Paragraph("Heading2", Run(embedded.Table.Title)));
@@ -184,20 +189,20 @@ public static class DocxWriter
 
         foreach (var audio in studio.AudioScripts.Where(a => a.Segments.Count > 0))
         {
-            body.Append(Paragraph("Heading1", Run($"Audio-Skript – {audio.Title}")));
+            body.Append(Paragraph("Heading1", Run(Loc.Format(ExportStrings.Report_AudioScriptHeading, ("title", audio.Title)))));
             body.Append(Paragraph(null, Run(ReportTextExporter.AudioMeta(audio), color: ColorMuted)));
             var speakers = audio.Speakers.Count > 1;
             foreach (var segment in audio.Segments)
             {
                 body.Append(speakers
-                    ? Paragraph(null, Run($"{segment.Speaker}: ", bold: true) + Run(segment.Text))
+                    ? Paragraph(null, Run($"{ExportNames.Speaker(segment.Speaker)}: ", bold: true) + Run(segment.Text))
                     : Paragraph(null, Run(segment.Text)));
             }
         }
 
         foreach (var video in studio.VideoScripts.Where(ReportVideoScripts.HasNarration))
         {
-            body.Append(Paragraph("Heading1", Run($"Video-Skript – {video.Title}")));
+            body.Append(Paragraph("Heading1", Run(Loc.Format(ExportStrings.Report_VideoScriptHeading, ("title", video.Title)))));
             body.Append(Paragraph(null, Run(ReportTextExporter.VideoMeta(video), color: ColorMuted)));
             for (var i = 0; i < video.Scenes.Count; i++)
             {
@@ -325,11 +330,15 @@ public static class DocxWriter
 
     // ---------------- Formatvorlagen ----------------
 
-    private static string Styles() =>
+    /// <summary>
+    /// Formatvorlagen. Die Standardsprache <c>w:lang</c> kommt aus der Exportsprache (bei Rechts-nach-links-Sprachen
+    /// zusätzlich als <c>w:bidi</c>); die Namen der eingebauten Vorlagen bleiben englisch (Word übersetzt sie selbst).
+    /// </summary>
+    private static string Styles(string language, bool rightToLeft) =>
         $"<w:styles xmlns:w=\"{NsW}\">" +
         "<w:docDefaults><w:rPrDefault><w:rPr>" +
         $"<w:rFonts w:ascii=\"{Font}\" w:hAnsi=\"{Font}\" w:eastAsia=\"{Font}\" w:cs=\"{Font}\"/><w:color w:val=\"{ColorText}\"/>" +
-        "<w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:lang w:val=\"de-DE\"/></w:rPr></w:rPrDefault>" +
+        $"<w:sz w:val=\"22\"/><w:szCs w:val=\"22\"/><w:lang w:val=\"{language}\"{(rightToLeft ? $" w:bidi=\"{language}\"" : string.Empty)}/></w:rPr></w:rPrDefault>" +
         "<w:pPrDefault><w:pPr><w:spacing w:after=\"120\" w:line=\"276\" w:lineRule=\"auto\"/></w:pPr></w:pPrDefault></w:docDefaults>" +
         "<w:style w:type=\"paragraph\" w:default=\"1\" w:styleId=\"Normal\"><w:name w:val=\"Normal\"/><w:qFormat/></w:style>" +
         Style("Title", "Title", "<w:spacing w:after=\"60\"/>", "<w:b/><w:sz w:val=\"48\"/><w:szCs w:val=\"48\"/>", outline: null) +
@@ -342,13 +351,13 @@ public static class DocxWriter
         Style("Heading3", "heading 3", "<w:keepNext/><w:spacing w:before=\"200\" w:after=\"60\"/>",
             "<w:b/><w:sz w:val=\"23\"/><w:szCs w:val=\"23\"/>", outline: 2) +
         Style("ListBullet", "List Bullet", "<w:spacing w:after=\"60\"/>", string.Empty, outline: null) +
-        Style("Question", "StudyScope Frage", "<w:keepNext/><w:spacing w:before=\"160\" w:after=\"40\"/>", string.Empty, outline: null) +
-        Style("Option", "StudyScope Antwortmöglichkeit", "<w:spacing w:after=\"20\"/><w:ind w:left=\"567\"/>", string.Empty, outline: null) +
-        Style("Takeaway", "StudyScope Merksatz",
+        Style("Question", Esc(ExportStrings.Docx_StyleQuestion), "<w:keepNext/><w:spacing w:before=\"160\" w:after=\"40\"/>", string.Empty, outline: null) +
+        Style("Option", Esc(ExportStrings.Docx_StyleOption), "<w:spacing w:after=\"20\"/><w:ind w:left=\"567\"/>", string.Empty, outline: null) +
+        Style("Takeaway", Esc(ExportStrings.Docx_StyleTakeaway),
             "<w:pBdr><w:left w:val=\"single\" w:sz=\"24\" w:space=\"8\" w:color=\"" + ColorAccent + "\"/></w:pBdr>" +
             "<w:shd w:val=\"clear\" w:color=\"auto\" w:fill=\"EAF3FF\"/><w:spacing w:before=\"120\" w:after=\"200\"/><w:ind w:left=\"170\" w:right=\"170\"/>",
             string.Empty, outline: null) +
-        "<w:style w:type=\"table\" w:styleId=\"StudyScopeTable\"><w:name w:val=\"StudyScope Tabelle\"/><w:tblPr>" +
+        $"<w:style w:type=\"table\" w:styleId=\"StudyScopeTable\"><w:name w:val=\"{Esc(ExportStrings.Docx_StyleTable)}\"/><w:tblPr>" +
         "<w:tblBorders><w:top w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/><w:left w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/>" +
         "<w:bottom w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/><w:right w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/>" +
         "<w:insideH w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/><w:insideV w:val=\"single\" w:sz=\"4\" w:color=\"DEE2E6\"/></w:tblBorders>" +

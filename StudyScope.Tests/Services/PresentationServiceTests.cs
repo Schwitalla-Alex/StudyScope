@@ -4,6 +4,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -270,7 +271,7 @@ public class PresentationServiceTests
         presentation.Slides[2].Bullets.Add("Sonderzeichen & <Klammern> \"Zitat\" – Emoji 🔬");
         var path = Path.Combine(_tempDir, "test.pptx");
 
-        await service.ExportToPptxAsync(presentation, path);
+        await service.ExportToPptxAsync(presentation, path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         var names = zip.Entries.Select(e => e.FullName).ToHashSet();

@@ -213,7 +213,4 @@ public static class AudioScriptFormats
 
     public static double EstimateMinutes(int words) => words / WordsPerMinute;
 
-    /// <summary>Dauer als „ca. 7 Min.“ bzw. „unter 1 Min.“.</summary>
-    public static string FormatMinutes(double minutes) =>
-        minutes < 1 ? "unter 1 Min." : $"ca. {Math.Max(1, (int)Math.Round(minutes))} Min.";
 }

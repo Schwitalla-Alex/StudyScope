@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -121,9 +122,9 @@ public class ReportDataTableEmbedTests
 
         foreach (var report in new[] { Report(null), Report(false) })
         {
-            Assert.That(service.ExportToMarkdown(report, Studio(table)), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToPlainText(report, Studio(table)), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToHtml(report, Studio(table)), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty)));
+            Assert.That(service.ExportToMarkdown(report, Studio(table), TestCultures.De), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToPlainText(report, Studio(table), TestCultures.De), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToHtml(report, Studio(table), TestCultures.De), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty, TestCultures.De)));
         }
     }
 
@@ -134,7 +135,7 @@ public class ReportDataTableEmbedTests
     {
         var path = Path.Combine(_tempDir, "bericht.docx");
 
-        await Service().ExportToDocxAsync(Report(true), Studio(Timeline()), path);
+        await Service().ExportToDocxAsync(Report(true), Studio(Timeline()), path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         using var stream = zip.GetEntry("word/document.xml")!.Open();
@@ -167,7 +168,7 @@ public class ReportDataTableEmbedTests
         table.Columns.AddRange(new[] { "Ort", "Person" }); // > 4 Spalten → kompakte Schrift
         foreach (var row in table.Rows) row.Cells.AddRange(new[] { "Paris", "" });
 
-        await Service().ExportToDocxAsync(Report(true), Studio(table), path);
+        await Service().ExportToDocxAsync(Report(true), Studio(table), path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         using var stream = zip.GetEntry("word/document.xml")!.Open();
@@ -196,8 +197,8 @@ public class ReportDataTableEmbedTests
         var table = Timeline(rows: 7);
         var service = Service();
 
-        var md = service.ExportToMarkdown(Report(true), Studio(table, take: 5));
-        var text = service.ExportToPlainText(Report(true), Studio(table, take: 5));
+        var md = service.ExportToMarkdown(Report(true), Studio(table, take: 5), TestCultures.De);
+        var text = service.ExportToPlainText(Report(true), Studio(table, take: 5), TestCultures.De);
 
         Assert.That(md, Does.Contain("## 📊 Zeitleiste Revolution"));
         Assert.That(md, Does.Contain("| Datum | Ereignis | Bedeutung | Quelle |"));
@@ -214,7 +215,7 @@ public class ReportDataTableEmbedTests
     [Test]
     public void Html_HasSortableTable_WithKindsAndSortKeys()
     {
-        var html = Service().ExportToHtml(Report(true), Studio(Timeline()));
+        var html = Service().ExportToHtml(Report(true), Studio(Timeline()), TestCultures.De);
 
         Assert.That(html, Does.Contain("id=\"datentabellen\""));
         Assert.That(html, Does.Contain("<a href=\"#datentabellen\">"));
@@ -231,7 +232,7 @@ public class ReportDataTableEmbedTests
         var table = Timeline();
         table.Rows[0].Cells[1] = "<img src=x onerror=alert(1)>";
 
-        var html = Service().ExportToHtml(Report(true), Studio(table));
+        var html = Service().ExportToHtml(Report(true), Studio(table), TestCultures.De);
 
         Assert.That(html, Does.Not.Contain("<img src=x"));
         Assert.That(html, Does.Contain("&lt;img src=x onerror=alert(1)&gt;"));

@@ -1,3 +1,6 @@
+using StudyScope.Infrastructure.Resources;
+using StudyScope.Core.Localization;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -622,35 +625,37 @@ public partial class AudioScriptService : IAudioScriptService
     {
         var parts = new List<string>
         {
-            AudioScriptFormats.DisplayName(summary.Format),
-            AudioScriptFormats.FormatMinutes(summary.EstimatedMinutes)
+            ExportNames.Format(summary.Format),
+            MediaFormat.Minutes(summary.EstimatedMinutes)
         };
         if (!string.IsNullOrWhiteSpace(summary.Topic))
-            parts.Add($"Schwerpunkt: {summary.Topic}");
-        parts.Add($"erstellt am {summary.CreatedAt:dd.MM.yyyy}");
+            parts.Add(Loc.Format(ExportStrings.Export_Focus, ("topic", summary.Topic)));
+        parts.Add(ExportNames.CreatedOn(summary.CreatedAt));
         return string.Join(" · ", parts);
     }
 
-    public string ExportToText(AudioSummary summary)
+    public string ExportToText(AudioSummary summary, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.AppendLine(summary.Title);
         sb.AppendLine(MetaLine(summary));
         if (summary.SourceDocuments.Count > 0)
-            sb.AppendLine($"Quellen: {string.Join(", ", summary.SourceDocuments)}");
+            sb.AppendLine(ExportNames.Sources(summary.SourceDocuments));
 
         var withSpeakers = ShowSpeakers(summary);
         foreach (var segment in summary.Segments)
         {
             sb.AppendLine();
-            sb.AppendLine(withSpeakers ? $"{segment.Speaker}: {segment.Text}" : segment.Text);
+            sb.AppendLine(withSpeakers ? $"{ExportNames.Speaker(segment.Speaker)}: {segment.Text}" : segment.Text);
         }
 
         return sb.ToString();
     }
 
-    public string ExportToMarkdown(AudioSummary summary)
+    public string ExportToMarkdown(AudioSummary summary, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.Append("# ").AppendLine(EscapeMarkdown(summary.Title));
         sb.AppendLine();
@@ -658,7 +663,7 @@ public partial class AudioScriptService : IAudioScriptService
         if (summary.SourceDocuments.Count > 0)
         {
             sb.AppendLine();
-            sb.Append("*Quellen: ").Append(EscapeMarkdown(string.Join(", ", summary.SourceDocuments))).AppendLine("*");
+            sb.Append('*').Append(EscapeMarkdown(ExportNames.Sources(summary.SourceDocuments))).AppendLine("*");
         }
 
         var withSpeakers = ShowSpeakers(summary);
@@ -666,7 +671,7 @@ public partial class AudioScriptService : IAudioScriptService
         {
             sb.AppendLine();
             sb.AppendLine(withSpeakers
-                ? $"**{EscapeMarkdown(segment.Speaker)}:** {EscapeMarkdown(segment.Text)}"
+                ? $"**{EscapeMarkdown(ExportNames.Speaker(segment.Speaker))}:** {EscapeMarkdown(segment.Text)}"
                 : EscapeMarkdown(segment.Text));
         }
 

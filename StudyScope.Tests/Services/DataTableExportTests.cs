@@ -4,6 +4,7 @@ using System.Xml.Linq;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -49,7 +50,7 @@ public class DataTableExportTests
     {
         var table = SampleTable();
 
-        var bytes = DataTableExporter.ToCsvBytes(table, table.Rows);
+        var bytes = DataTableExporter.ToCsvBytes(table, table.Rows, TestCultures.De, ';');
 
         Assert.That(bytes.Take(3), Is.EqualTo(new byte[] { 0xEF, 0xBB, 0xBF }), "UTF-8-BOM für Excel");
         var text = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
@@ -66,7 +67,7 @@ public class DataTableExportTests
         var table = SampleTable();
         var rows = new[] { table.Rows[2], table.Rows[0] };
 
-        var csv = DataTableExporter.ToCsv(table, rows);
+        var csv = DataTableExporter.ToCsv(table, rows, TestCultures.De, ';');
 
         var lines = csv.Split("\r\n", StringSplitOptions.RemoveEmptyEntries);
         Assert.That(lines, Has.Length.EqualTo(3));
@@ -81,7 +82,7 @@ public class DataTableExportTests
     {
         var table = SampleTable();
 
-        var md = DataTableExporter.ToMarkdown(table, table.Rows);
+        var md = DataTableExporter.ToMarkdown(table, table.Rows, TestCultures.De);
 
         Assert.That(md, Does.StartWith("# Größen: Übersicht [Test]"));
         Assert.That(md, Does.Contain("| Größe | Wert | Hinweis | Quelle |"));
@@ -100,7 +101,7 @@ public class DataTableExportTests
         var service = new DataTableService(new FakeLlmService(), _tempDir);
         var path = Path.Combine(_tempDir, "tabelle.xlsx");
 
-        await service.ExportToXlsxAsync(table, table.Rows, path);
+        await service.ExportToXlsxAsync(table, table.Rows, path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         var names = zip.Entries.Select(e => e.FullName).ToList();
@@ -146,7 +147,7 @@ public class DataTableExportTests
         table.Rows.Add(new DataTableRow { Cells = new List<string> { "x\u0001y", "" } });
 
         using var buffer = new MemoryStream();
-        XlsxWriter.Write(table, table.Rows, buffer);
+        XlsxWriter.Write(table, table.Rows, TestCultures.De, buffer);
         buffer.Position = 0;
         using var zip = new ZipArchive(buffer, ZipArchiveMode.Read);
 

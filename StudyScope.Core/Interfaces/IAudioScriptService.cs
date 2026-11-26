@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -35,6 +36,6 @@ public interface IAudioScriptService
     /// <summary>Pfad, unter dem eine neu erzeugte Audiodatei (WAV) eines Beitrags gespeichert wird.</summary>
     string GetTargetAudioFilePath(string profileName, AudioSummary summary);
 
-    string ExportToText(AudioSummary summary);
-    string ExportToMarkdown(AudioSummary summary);
+    string ExportToText(AudioSummary summary, CultureInfo culture);
+    string ExportToMarkdown(AudioSummary summary, CultureInfo culture);
 }

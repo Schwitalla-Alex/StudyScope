@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -50,8 +51,8 @@ public interface IVideoScriptService
     void DeleteAllAudio(string profileName, VideoDocument video);
 
     /// <summary>Sprechtexte als Text bzw. Markdown (je Folie).</summary>
-    string ExportToText(VideoDocument video);
-    string ExportToMarkdown(VideoDocument video);
+    string ExportToText(VideoDocument video, CultureInfo culture);
+    string ExportToMarkdown(VideoDocument video, CultureInfo culture);
 
     // ---------------- HTML-Player (Video-Export und Bericht) ----------------
 
@@ -69,5 +70,5 @@ public interface IVideoScriptService
         CancellationToken cancellationToken = default);
 
     /// <summary>Eigenständige HTML-Seite mit Player und Sprechtexten.</summary>
-    string ExportToHtml(VideoPlayerData data);
+    string ExportToHtml(VideoPlayerData data, CultureInfo culture);
 }

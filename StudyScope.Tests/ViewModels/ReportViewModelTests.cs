@@ -544,10 +544,10 @@ public class ReportViewModelTests
         public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveMindmapAsync(string profileName, MindmapDocument mindmap) => Task.CompletedTask;
         public Task DeleteMindmapAsync(string profileName) => Task.CompletedTask;
-        string IMindmapService.ExportToMarkdown(MindmapDocument mindmap) => string.Empty;
+        string IMindmapService.ExportToMarkdown(MindmapDocument mindmap, System.Globalization.CultureInfo culture) => string.Empty;
         public Task<List<Flashcard>> GenerateFlashcardsAsync(IEnumerable<string> contextChunks, int count = 5) => throw new NotSupportedException();
         public Task SaveFlashcardsAsync(string profileName, IEnumerable<Flashcard> flashcards) => Task.CompletedTask;
-        string IFlashcardService.ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards) => string.Empty;
+        string IFlashcardService.ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards, System.Globalization.CultureInfo culture) => string.Empty;
         public Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task<QuizQuestionGenerationResult> GenerateQuestionsAsync(QuizTopic topic, IReadOnlyList<string> topicChunks, int count, IReadOnlyCollection<QuizQuestionType> allowedTypes, int batchIndex, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveLibraryAsync(string profileName, QuizLibrary library) => Task.CompletedTask;
@@ -555,7 +555,7 @@ public class ReportViewModelTests
         public PresentationDocument CreateFromMindmap(MindmapDocument mindmap) => new();
         public Task SavePresentationAsync(string profileName, PresentationDocument presentation) => Task.CompletedTask;
         public Task DeletePresentationAsync(string profileName) => Task.CompletedTask;
-        public Task ExportToPptxAsync(PresentationDocument presentation, string filePath) => Task.CompletedTask;
+        public Task ExportToPptxAsync(PresentationDocument presentation, string filePath, System.Globalization.CultureInfo culture) => Task.CompletedTask;
     }
 
     private sealed class FakeDocumentService : IDocumentService

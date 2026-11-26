@@ -28,4 +28,7 @@
   <data name="Media_SizeApprox" xml:space="preserve"><value>ca. {size} MB</value><comment>{size} = Zahl in der Schreibweise der Oberflächensprache</comment></data>
   <data name="Media_SizeUnder" xml:space="preserve"><value>unter {size} MB</value></data>
   <data name="Media_Under" xml:space="preserve"><value>unter {value}</value></data>
+  <data name="DataTable_SourceColumn" xml:space="preserve"><value>Quelle</value><comment>Feste letzte Spalte der Datentabelle (Ansicht und Exporte); gespeichert wird das Feld Source, der Name ist je Sprache reserviert</comment></data>
+  <data name="Report_SceneHeading" xml:space="preserve"><value>Folie {number}: {title}</value><comment>Überschrift eines Sprechtexts je Folie in Exporten</comment></data>
+  <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Folie {number}</value><comment>Wie Report_SceneHeading, wenn die Folie keinen Titel hat</comment></data>
 </root>

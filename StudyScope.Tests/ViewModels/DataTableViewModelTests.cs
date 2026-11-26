@@ -340,6 +340,7 @@ public class DataTableViewModelTests
     // ---------- Export ----------
 
     [Test]
+    [SetCulture("de-DE")] // CSV-Trennzeichen folgt dem regionalen Format (Semikolon bei Dezimalkomma)
     public async Task Export_AllRowsInSortOrder_ByDefault_OrOnlyFiltered()
     {
         await CreateTableAsync("b", "c", "a");

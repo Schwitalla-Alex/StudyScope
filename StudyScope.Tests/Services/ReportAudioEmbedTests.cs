@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -86,9 +87,9 @@ public class ReportAudioEmbedTests
         var service = Service();
         foreach (var report in new[] { Report(null), Report(false) })
         {
-            Assert.That(service.ExportToMarkdown(report, studio), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToPlainText(report, studio), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty)));
-            Assert.That(service.ExportToHtml(report, studio), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty)));
+            Assert.That(service.ExportToMarkdown(report, studio, TestCultures.De), Is.EqualTo(service.ExportToMarkdown(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToPlainText(report, studio, TestCultures.De), Is.EqualTo(service.ExportToPlainText(report, ReportStudioContent.Empty, TestCultures.De)));
+            Assert.That(service.ExportToHtml(report, studio, TestCultures.De), Is.EqualTo(service.ExportToHtml(report, ReportStudioContent.Empty, TestCultures.De)));
         }
     }
 
@@ -97,8 +98,8 @@ public class ReportAudioEmbedTests
     {
         var service = Service();
 
-        var md = service.ExportToMarkdown(Report(true), Studio(Podcast()));
-        var text = service.ExportToPlainText(Report(true), Studio(Podcast()));
+        var md = service.ExportToMarkdown(Report(true), Studio(Podcast()), TestCultures.De);
+        var text = service.ExportToPlainText(Report(true), Studio(Podcast()), TestCultures.De);
 
         Assert.That(md, Does.Contain("## 🎧 Zellen im Gespräch").And.Contain("**Experte:** Die kleinste Einheit des Lebens.")
             .And.Contain("Audiodatei: Zellen_1234abcd.wav").And.Contain("Podcast-Gespräch"));
@@ -115,7 +116,7 @@ public class ReportAudioEmbedTests
             Segments = new List<AudioSegment> { new() { Speaker = "Sprecherin", Text = "Nur ein Sprecher." } }
         };
 
-        var md = Service().ExportToMarkdown(Report(true), Studio(audio));
+        var md = Service().ExportToMarkdown(Report(true), Studio(audio), TestCultures.De);
 
         Assert.That(md, Does.Contain("Nur ein Sprecher.").And.Not.Contain("Audiodatei:").And.Not.Contain("**Sprecherin:**"));
     }
@@ -123,7 +124,7 @@ public class ReportAudioEmbedTests
     [Test]
     public void Html_ScriptIsCollapsible_AndAudioNotEmbedded()
     {
-        var html = Service().ExportToHtml(Report(true), Studio(Podcast()));
+        var html = Service().ExportToHtml(Report(true), Studio(Podcast()), TestCultures.De);
 
         Assert.That(html, Does.Contain("<details class=\"audio-script\">").And.Contain("id=\"audio\"")
             .And.Contain("Audiodatei: Zellen_1234abcd.wav").And.Contain("🎧 Audio-Skript"));
@@ -135,7 +136,7 @@ public class ReportAudioEmbedTests
     {
         var path = Path.Combine(_tempDir, "bericht.docx");
 
-        await Service().ExportToDocxAsync(Report(true), Studio(Podcast()), path);
+        await Service().ExportToDocxAsync(Report(true), Studio(Podcast()), path, TestCultures.De);
 
         using var zip = ZipFile.OpenRead(path);
         using var stream = zip.GetEntry("word/document.xml")!.Open();

@@ -239,7 +239,7 @@ public class MindmapViewModel : INotifyPropertyChanged
         ShowStatus(VmStrings.Mindmap_Deleted, isError: false);
     }
 
-    public string GetMarkdownExport() => Mindmap == null ? string.Empty : _mindmapService.ExportToMarkdown(Mindmap);
+    public string GetMarkdownExport() => Mindmap == null ? string.Empty : _mindmapService.ExportToMarkdown(Mindmap, ExportCulture.Current);
 
     // ---------------- Interaktion ----------------
 

@@ -663,19 +663,20 @@ public class DataTableService : IDataTableService
 
     // ---------------- Exporte ----------------
 
-    public byte[] ExportToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows) =>
-        DataTableExporter.ToCsvBytes(table, rows);
+    /// <summary>Trennzeichen nach dem regionalen Format des Benutzers (vor dem Umschalten auf die Exportsprache).</summary>
+    public byte[] ExportToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture) =>
+        DataTableExporter.ToCsvBytes(table, rows, culture, DataTableExporter.CsvSeparator(CultureInfo.CurrentCulture));
 
-    public async Task ExportToXlsxAsync(DataTableDocument table, IReadOnlyList<DataTableRow> rows, string filePath)
+    public async Task ExportToXlsxAsync(DataTableDocument table, IReadOnlyList<DataTableRow> rows, string filePath, CultureInfo culture)
     {
         using var buffer = new MemoryStream();
-        XlsxWriter.Write(table, rows, buffer);
+        XlsxWriter.Write(table, rows, culture, buffer);
         buffer.Position = 0;
 
         await using var file = File.Create(filePath);
         await buffer.CopyToAsync(file);
     }
 
-    public string ExportToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows) =>
-        DataTableExporter.ToMarkdown(table, rows);
+    public string ExportToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture) =>
+        DataTableExporter.ToMarkdown(table, rows, culture);
 }

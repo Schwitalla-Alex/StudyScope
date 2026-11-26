@@ -3,7 +3,9 @@ using System.IO.Compression;
 using System.Security;
 using System.Text;
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -11,6 +13,7 @@ namespace StudyScope.Infrastructure.Services;
 /// Schreibt eine Datentabelle als Excel-Arbeitsmappe (.xlsx, Office Open XML) ohne Zusatzbibliothek:
 /// ein Tabellenblatt mit fetter, fixierter Kopfzeile, Autofilter, geschätzten Spaltenbreiten und Zeilenumbruch.
 /// Texte stehen als Inline-Strings in den Zellen (keine sharedStrings nötig), eindeutige Zahlen als Zahlenzellen.
+/// Kopf der Quellspalte, Blattname ohne Titel und <c>dc:language</c> folgen der übergebenen Sprache.
 /// Prüfbar mit openpyxl bzw. LibreOffice Calc.
 /// </summary>
 public static class XlsxWriter
@@ -23,8 +26,9 @@ public static class XlsxWriter
     /// <summary>Excel erlaubt höchstens 32 767 Zeichen je Zelle.</summary>
     private const int MaxCellChars = 32767;
 
-    public static void Write(DataTableDocument table, IReadOnlyList<DataTableRow> rows, Stream output)
+    public static void Write(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture, Stream output)
     {
+        using var scope = CultureScope.Use(culture);
         using var zip = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
 
         Add(zip, "[Content_Types].xml",
@@ -51,7 +55,7 @@ public static class XlsxWriter
         Add(zip, "docProps/core.xml",
             "<cp:coreProperties xmlns:cp=\"http://schemas.openxmlformats.org/package/2006/metadata/core-properties\" " +
             "xmlns:dc=\"http://purl.org/dc/elements/1.1/\" xmlns:dcterms=\"http://purl.org/dc/terms/\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" +
-            $"<dc:title>{Esc(table.Title)}</dc:title><dc:creator>StudyScope</dc:creator>" +
+            $"<dc:title>{Esc(table.Title)}</dc:title><dc:creator>StudyScope</dc:creator><dc:language>{CultureScope.SpecificLanguageTag(culture)}</dc:language>" +
             $"<dcterms:created xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:created><dcterms:modified xsi:type=\"dcterms:W3CDTF\">{created}</dcterms:modified>" +
             "</cp:coreProperties>");
         Add(zip, "docProps/app.xml",
@@ -175,7 +179,7 @@ public static class XlsxWriter
     public static string SheetName(string? title)
     {
         var name = new string((title ?? string.Empty).Where(c => "[]:*?/\\".IndexOf(c) < 0 && !char.IsControl(c)).ToArray()).Trim().Trim('\'');
-        if (name.Length == 0) name = "Datentabelle";
+        if (name.Length == 0) name = ExportStrings.Xlsx_DefaultSheetName;
         return name.Length > 31 ? name[..31].TrimEnd() : name;
     }
 

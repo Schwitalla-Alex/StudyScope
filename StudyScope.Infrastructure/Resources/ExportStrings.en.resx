@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Export_CreatedWith" xml:space="preserve"><value>Created with StudyScope</value></data>
+  <data name="Export_CreatedAt" xml:space="preserve"><value>created {date}</value></data>
+  <data name="Export_Sources" xml:space="preserve"><value>Sources: {sources}</value></data>
+  <data name="Export_Topic" xml:space="preserve"><value>Topic: {topic}</value></data>
+  <data name="Export_Focus" xml:space="preserve"><value>Focus: {topic}</value></data>
+  <data name="Export_RowCount" xml:space="preserve"><value>{count, plural, one {# row} other {# rows}}</value></data>
+  <data name="Export_RowsTruncated" xml:space="preserve"><value>first {shown} of {total} rows – full table in the “Data table” tab</value></data>
+  <data name="Export_SegmentCount" xml:space="preserve"><value>{count, plural, one {# segment} other {# segments}}</value></data>
+  <data name="Export_SlideCount" xml:space="preserve"><value>{count, plural, one {# slide} other {# slides}}</value></data>
+  <data name="Export_SlideHeading" xml:space="preserve"><value>Slide {number}: {title}</value></data>
+  <data name="Export_AudioFile" xml:space="preserve"><value>Audio file: {file}</value></data>
+  <data name="Export_NarratedWith" xml:space="preserve"><value>narrated with {provider}</value></data>
+  <data name="Export_VideoInApp" xml:space="preserve"><value>Video: {title} (playable in the “Video” tab)</value></data>
+  <data name="Export_QuestionLine" xml:space="preserve"><value>Q: {text}</value></data>
+  <data name="Export_AnswerLine" xml:space="preserve"><value>A: {text}</value></data>
+  <data name="ReportTemplate_StudyGuide" xml:space="preserve"><value>Study guide</value></data>
+  <data name="ReportTemplate_Briefing" xml:space="preserve"><value>Summary / briefing</value></data>
+  <data name="ReportTemplate_Glossary" xml:space="preserve"><value>Glossary</value></data>
+  <data name="ReportTemplate_Faq" xml:space="preserve"><value>FAQ</value></data>
+  <data name="ReportTemplate_Custom" xml:space="preserve"><value>Custom instructions</value></data>
+  <data name="DtTemplate_Terms" xml:space="preserve"><value>Terms &amp; definitions</value></data>
+  <data name="DtTemplate_Comparison" xml:space="preserve"><value>Comparison</value></data>
+  <data name="DtTemplate_Timeline" xml:space="preserve"><value>Timeline</value></data>
+  <data name="DtTemplate_People" xml:space="preserve"><value>People &amp; contributions</value></data>
+  <data name="DtTemplate_Formulas" xml:space="preserve"><value>Formulas &amp; key figures</value></data>
+  <data name="DtTemplate_Custom" xml:space="preserve"><value>Custom instructions</value></data>
+  <data name="AudioFormat_Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="AudioFormat_Podcast" xml:space="preserve"><value>Podcast conversation</value></data>
+  <data name="AudioFormat_Briefing" xml:space="preserve"><value>Short briefing</value></data>
+  <data name="Speaker_Narrator" xml:space="preserve"><value>Narrator</value></data>
+  <data name="Speaker_Host" xml:space="preserve"><value>Host</value></data>
+  <data name="Speaker_Expert" xml:space="preserve"><value>Expert</value></data>
+  <data name="Report_Contents" xml:space="preserve"><value>Contents</value></data>
+  <data name="Report_Terms" xml:space="preserve"><value>Terms</value></data>
+  <data name="Report_Term" xml:space="preserve"><value>Term</value></data>
+  <data name="Report_Explanation" xml:space="preserve"><value>Explanation</value></data>
+  <data name="Report_Takeaway" xml:space="preserve"><value>Key takeaway:</value></data>
+  <data name="Report_Mindmap" xml:space="preserve"><value>Mind map</value></data>
+  <data name="Report_Flashcards" xml:space="preserve"><value>Flashcards</value></data>
+  <data name="Report_FlashcardsCount" xml:space="preserve"><value>Flashcards ({count})</value></data>
+  <data name="Report_SelfTest" xml:space="preserve"><value>Self-test</value></data>
+  <data name="Report_Solutions" xml:space="preserve"><value>Solutions</value></data>
+  <data name="Report_SolutionsLine" xml:space="preserve"><value>Solutions: {solutions}</value></data>
+  <data name="Report_SolutionLine" xml:space="preserve"><value>Solution: {solution}</value></data>
+  <data name="Report_Presentation" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Report_PresentationHeading" xml:space="preserve"><value>Presentation – {title}</value></data>
+  <data name="Report_DataTables" xml:space="preserve"><value>{count, plural, one {Data table} other {Data tables}}</value></data>
+  <data name="Report_DataTableHeading" xml:space="preserve"><value>Data table – {title}</value></data>
+  <data name="Report_AudioScripts" xml:space="preserve"><value>{count, plural, one {Audio script} other {Audio scripts}}</value></data>
+  <data name="Report_AudioScriptHeading" xml:space="preserve"><value>Audio script – {title}</value></data>
+  <data name="Report_VideoScripts" xml:space="preserve"><value>{count, plural, one {Video script} other {Video scripts}}</value></data>
+  <data name="Report_Videos" xml:space="preserve"><value>{count, plural, one {Video} other {Videos}}</value></data>
+  <data name="Report_VideoScriptHeading" xml:space="preserve"><value>Video script – {title}</value></data>
+  <data name="Report_TypeTrueFalse" xml:space="preserve"><value>(True or false?)</value></data>
+  <data name="Report_TypeMultiple" xml:space="preserve"><value>(more than one answer is correct)</value></data>
+  <data name="Report_Question" xml:space="preserve"><value>Question</value></data>
+  <data name="Report_Answer" xml:space="preserve"><value>Answer</value></data>
+  <data name="Report_Notes" xml:space="preserve"><value>Notes:</value></data>
+  <data name="Report_HintMindmap" xml:space="preserve"><value>Click a topic to expand or collapse it.</value></data>
+  <data name="Report_ExpandAll" xml:space="preserve"><value>Expand all</value></data>
+  <data name="Report_CollapseAll" xml:space="preserve"><value>Collapse all</value></data>
+  <data name="Report_HintFlashcards" xml:space="preserve"><value>Click a card to see the answer.</value></data>
+  <data name="Report_FlipAll" xml:space="preserve"><value>Flip all</value></data>
+  <data name="Report_FlipCard" xml:space="preserve"><value>Flip card</value></data>
+  <data name="Report_HintQuiz" xml:space="preserve"><value>Choose your answer and click “Check”.</value></data>
+  <data name="Report_Check" xml:space="preserve"><value>Check</value></data>
+  <data name="Report_ChooseAnswer" xml:space="preserve"><value>Please choose an answer.</value></data>
+  <data name="Report_Correct" xml:space="preserve"><value>✓ Correct!</value></data>
+  <data name="Report_Wrong" xml:space="preserve"><value>✗ Incorrect.</value></data>
+  <data name="Report_QuizScore" xml:space="preserve"><value>{right} of {checked} correct ({questions})</value></data>
+  <data name="Report_QuestionCount" xml:space="preserve"><value>{count, plural, one {# question} other {# questions}}</value></data>
+  <data name="Report_Previous" xml:space="preserve"><value>◀ Back</value></data>
+  <data name="Report_Next" xml:space="preserve"><value>Next ▶</value></data>
+  <data name="Report_HintDataTable" xml:space="preserve"><value>Click a column heading to sort by that column (click again for descending order).</value></data>
+  <data name="Report_Sort" xml:space="preserve"><value>Sort</value></data>
+  <data name="Report_HintAudio" xml:space="preserve"><value>Narration of the audio episodes – click to expand.</value></data>
+  <data name="Report_HintVideoPlayer" xml:space="preserve"><value>Press ▶ to play; the narration for each slide is below (click to expand).</value></data>
+  <data name="Report_HintVideo" xml:space="preserve"><value>Narration of the videos for each slide – click to expand.</value></data>
+  <data name="Report_PlayVideo" xml:space="preserve"><value>▶ Play video</value></data>
+  <data name="Report_PlayVideoTitle" xml:space="preserve"><value>Switches to the “Video” tab and plays this video</value></data>
+  <data name="Docx_StyleQuestion" xml:space="preserve"><value>StudyScope Question</value></data>
+  <data name="Docx_StyleOption" xml:space="preserve"><value>StudyScope Answer option</value></data>
+  <data name="Docx_StyleTakeaway" xml:space="preserve"><value>StudyScope Key takeaway</value></data>
+  <data name="Docx_StyleTable" xml:space="preserve"><value>StudyScope Table</value></data>
+  <data name="Pptx_LayoutBlank" xml:space="preserve"><value>Blank</value></data>
+  <data name="Pptx_ShapeTitle" xml:space="preserve"><value>Title</value></data>
+  <data name="Pptx_ShapeSubtitle" xml:space="preserve"><value>Subtitle</value></data>
+  <data name="Pptx_ShapeAccent" xml:space="preserve"><value>Accent</value></data>
+  <data name="Pptx_ShapeContent" xml:space="preserve"><value>Content</value></data>
+  <data name="Pptx_ShapeFooter" xml:space="preserve"><value>Footer</value></data>
+  <data name="Pptx_ShapeSlideNumber" xml:space="preserve"><value>Slide number</value></data>
+  <data name="Pptx_ShapeSlideImage" xml:space="preserve"><value>Slide image placeholder</value></data>
+  <data name="Pptx_ShapeNotes" xml:space="preserve"><value>Notes placeholder</value></data>
+  <data name="Xlsx_DefaultSheetName" xml:space="preserve"><value>Data table</value></data>
+  <data name="Flashcards_Title" xml:space="preserve"><value>Flashcards: {profile}</value></data>
+  <data name="Flashcards_CreatedAt" xml:space="preserve"><value>Created: {date}</value></data>
+  <data name="Flashcards_QuestionHeading" xml:space="preserve"><value>Question {number}: {question}</value></data>
+  <data name="Flashcards_AnswerLabel" xml:space="preserve"><value>Answer:</value></data>
+  <data name="Flashcards_StatusLabel" xml:space="preserve"><value>Status:</value></data>
+  <data name="Flashcards_StatusNew" xml:space="preserve"><value>New</value></data>
+  <data name="Flashcards_StatusKnown" xml:space="preserve"><value>Learned</value></data>
+  <data name="Flashcards_StatusDifficult" xml:space="preserve"><value>Review</value></data>
+  <data name="Mindmap_SourcesLine" xml:space="preserve"><value>Sources: {sources} – created {date}</value></data>
+  <data name="Video_Badge" xml:space="preserve"><value>🎬 Video</value></data>
+  <data name="Video_Keys" xml:space="preserve"><value>Keyboard (after clicking into the player): Space play/pause · ← → previous/next slide · Home/End · F full screen</value></data>
+  <data name="Video_NarrationPerSlide" xml:space="preserve"><value>Narration per slide</value></data>
+  <data name="Video_Duration" xml:space="preserve"><value>{time} min</value></data>
+  <data name="Video_WithAudio" xml:space="preserve"><value>with sound</value></data>
+  <data name="Video_WithAudioBy" xml:space="preserve"><value>with sound ({provider})</value></data>
+  <data name="Video_WithoutAudio" xml:space="preserve"><value>without sound</value></data>
+  <data name="Player_Region" xml:space="preserve"><value>Video: {title}</value></data>
+  <data name="Player_Play" xml:space="preserve"><value>Play</value></data>
+  <data name="Player_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="Player_PlayPauseTitle" xml:space="preserve"><value>Play / pause (Space)</value></data>
+  <data name="Player_PreviousSlide" xml:space="preserve"><value>Previous slide</value></data>
+  <data name="Player_PreviousSlideTitle" xml:space="preserve"><value>Previous slide (←)</value></data>
+  <data name="Player_NextSlide" xml:space="preserve"><value>Next slide</value></data>
+  <data name="Player_NextSlideTitle" xml:space="preserve"><value>Next slide (→)</value></data>
+  <data name="Player_Progress" xml:space="preserve"><value>Progress</value></data>
+  <data name="Player_SlideOf" xml:space="preserve"><value>Slide {number} / {total}</value></data>
+  <data name="Player_NoAudio" xml:space="preserve"><value>No sound</value></data>
+  <data name="Player_FullScreen" xml:space="preserve"><value>Full screen</value></data>
+  <data name="Player_FullScreenTitle" xml:space="preserve"><value>Full screen (F, Esc to exit)</value></data>
+</root>

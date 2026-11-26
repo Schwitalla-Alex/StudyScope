@@ -1,15 +1,24 @@
+using System.Globalization;
 using System.Text;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
-/// <summary>Bericht als Markdown oder reiner Text – inklusive der eingebetteten Studio-Inhalte.</summary>
+/// <summary>
+/// Bericht als Markdown oder reiner Text – inklusive der eingebetteten Studio-Inhalte. Feste Texte stehen in der
+/// übergebenen Sprache (<see cref="ExportStrings"/>). Die öffentlichen Hilfen (<see cref="MetaLine"/>,
+/// <see cref="DataTableMeta"/>, <see cref="AudioMeta"/>, <see cref="VideoMeta"/>, <see cref="TypeHint"/>) nutzen die Sprache,
+/// die der Aufrufer per <see cref="CultureScope"/> gesetzt hat (Word- und HTML-Export verwenden sie mit).
+/// </summary>
 public static class ReportTextExporter
 {
     // ---------------- Markdown ----------------
 
-    public static string ToMarkdown(Report report, ReportStudioContent studio)
+    public static string ToMarkdown(Report report, ReportStudioContent studio, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.AppendLine($"# {report.Title}");
         sb.AppendLine();
@@ -45,7 +54,7 @@ public static class ReportTextExporter
 
             if (section.Terms.Count > 0)
             {
-                sb.AppendLine("**Begriffe**");
+                sb.AppendLine($"**{ExportStrings.Report_Terms}**");
                 sb.AppendLine();
                 foreach (var term in section.Terms)
                     sb.AppendLine(string.IsNullOrWhiteSpace(term.Definition) ? $"- **{term.Term}**" : $"- **{term.Term}:** {term.Definition}");
@@ -54,14 +63,14 @@ public static class ReportTextExporter
 
             foreach (var q in section.Questions)
             {
-                sb.AppendLine($"**F: {q.Question}**  ");
-                sb.AppendLine($"A: {q.Answer}");
+                sb.AppendLine($"**{Loc.Format(ExportStrings.Export_QuestionLine, ("text", q.Question))}**  ");
+                sb.AppendLine(Loc.Format(ExportStrings.Export_AnswerLine, ("text", q.Answer)));
                 sb.AppendLine();
             }
 
             if (!string.IsNullOrWhiteSpace(section.Takeaway))
             {
-                sb.AppendLine($"> 💡 **Merksatz:** {section.Takeaway}");
+                sb.AppendLine($"> 💡 **{ExportStrings.Report_Takeaway}** {section.Takeaway}");
                 sb.AppendLine();
             }
         }
@@ -74,7 +83,7 @@ public static class ReportTextExporter
     {
         if (studio.Mindmap != null)
         {
-            sb.AppendLine("## Mindmap");
+            sb.AppendLine($"## {ExportStrings.Report_Mindmap}");
             sb.AppendLine();
             AppendTreeMarkdown(sb, studio.Mindmap.Root, 0);
             sb.AppendLine();
@@ -82,7 +91,7 @@ public static class ReportTextExporter
 
         if (studio.Flashcards.Count > 0)
         {
-            sb.AppendLine($"## Karteikarten ({studio.Flashcards.Count})");
+            sb.AppendLine($"## {Loc.Format(ExportStrings.Report_FlashcardsCount, ("count", studio.Flashcards.Count))}");
             sb.AppendLine();
             foreach (var card in studio.Flashcards)
             {
@@ -94,7 +103,7 @@ public static class ReportTextExporter
 
         if (studio.QuizQuestions.Count > 0)
         {
-            sb.AppendLine("## Selbsttest");
+            sb.AppendLine($"## {ExportStrings.Report_SelfTest}");
             sb.AppendLine();
             for (var i = 0; i < studio.QuizQuestions.Count; i++)
             {
@@ -104,18 +113,18 @@ public static class ReportTextExporter
                     sb.AppendLine($"   - {Letter(o)}) {q.Options[o]}");
             }
             sb.AppendLine();
-            sb.AppendLine("**Lösungen:** " + string.Join(" · ", studio.QuizQuestions.Select((q, i) => $"{i + 1}. {Solution(q)}")));
+            sb.AppendLine($"**{Loc.Format(ExportStrings.Report_SolutionsLine, ("solutions", SolutionList(studio.QuizQuestions, " · ")))}**");
             sb.AppendLine();
         }
 
         if (studio.Presentation is { Slides.Count: > 0 } presentation)
         {
-            sb.AppendLine($"## Präsentation – {presentation.Title}");
+            sb.AppendLine($"## {Loc.Format(ExportStrings.Report_PresentationHeading, ("title", presentation.Title))}");
             sb.AppendLine();
             for (var i = 0; i < presentation.Slides.Count; i++)
             {
                 var slide = presentation.Slides[i];
-                sb.AppendLine($"### Folie {i + 1}: {slide.Title}");
+                sb.AppendLine($"### {Loc.Format(ExportStrings.Export_SlideHeading, ("number", i + 1), ("title", slide.Title))}");
                 if (!string.IsNullOrWhiteSpace(slide.Subtitle))
                     sb.AppendLine($"*{slide.Subtitle}*");
                 foreach (var bullet in slide.Bullets)
@@ -143,7 +152,7 @@ public static class ReportTextExporter
             var speakers = audio.Speakers.Count > 1;
             foreach (var segment in audio.Segments)
             {
-                sb.AppendLine(speakers ? $"**{segment.Speaker}:** {segment.Text}" : segment.Text);
+                sb.AppendLine(speakers ? $"**{ExportNames.Speaker(segment.Speaker)}:** {segment.Text}" : segment.Text);
                 sb.AppendLine();
             }
         }
@@ -175,10 +184,11 @@ public static class ReportTextExporter
 
     // ---------------- Reiner Text ----------------
 
-    public static string ToPlainText(Report report, ReportStudioContent studio)
+    public static string ToPlainText(Report report, ReportStudioContent studio, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
-        sb.AppendLine(report.Title.ToUpperInvariant());
+        sb.AppendLine(report.Title.ToUpper(culture));
         sb.AppendLine(new string('=', Math.Min(80, Math.Max(10, report.Title.Length))));
         sb.AppendLine(MetaLine(report));
         sb.AppendLine();
@@ -206,7 +216,7 @@ public static class ReportTextExporter
 
             if (section.Terms.Count > 0)
             {
-                sb.AppendLine("Begriffe:");
+                sb.AppendLine($"{ExportStrings.Report_Terms}:");
                 foreach (var term in section.Terms)
                     sb.AppendLine(string.IsNullOrWhiteSpace(term.Definition) ? $"  {term.Term}" : $"  {term.Term}: {term.Definition}");
                 sb.AppendLine();
@@ -214,39 +224,39 @@ public static class ReportTextExporter
 
             foreach (var q in section.Questions)
             {
-                sb.AppendLine($"F: {q.Question}");
-                sb.AppendLine($"A: {q.Answer}");
+                sb.AppendLine(Loc.Format(ExportStrings.Export_QuestionLine, ("text", q.Question)));
+                sb.AppendLine(Loc.Format(ExportStrings.Export_AnswerLine, ("text", q.Answer)));
                 sb.AppendLine();
             }
 
             if (!string.IsNullOrWhiteSpace(section.Takeaway))
             {
-                sb.AppendLine($"Merksatz: {section.Takeaway}");
+                sb.AppendLine($"{ExportStrings.Report_Takeaway} {section.Takeaway}");
                 sb.AppendLine();
             }
         }
 
         if (studio.Mindmap != null)
         {
-            Heading(sb, "Mindmap");
+            Heading(sb, ExportStrings.Report_Mindmap);
             AppendTreeText(sb, studio.Mindmap.Root, 0);
             sb.AppendLine();
         }
 
         if (studio.Flashcards.Count > 0)
         {
-            Heading(sb, $"Karteikarten ({studio.Flashcards.Count})");
+            Heading(sb, Loc.Format(ExportStrings.Report_FlashcardsCount, ("count", studio.Flashcards.Count)));
             foreach (var card in studio.Flashcards)
             {
-                sb.AppendLine($"F: {card.Question}");
-                sb.AppendLine($"A: {card.Answer}");
+                sb.AppendLine(Loc.Format(ExportStrings.Export_QuestionLine, ("text", card.Question)));
+                sb.AppendLine(Loc.Format(ExportStrings.Export_AnswerLine, ("text", card.Answer)));
                 sb.AppendLine();
             }
         }
 
         if (studio.QuizQuestions.Count > 0)
         {
-            Heading(sb, "Selbsttest");
+            Heading(sb, ExportStrings.Report_SelfTest);
             for (var i = 0; i < studio.QuizQuestions.Count; i++)
             {
                 var q = studio.QuizQuestions[i];
@@ -255,17 +265,17 @@ public static class ReportTextExporter
                     sb.AppendLine($"   {Letter(o)}) {q.Options[o]}");
                 sb.AppendLine();
             }
-            sb.AppendLine("Lösungen: " + string.Join("  ", studio.QuizQuestions.Select((q, i) => $"{i + 1}. {Solution(q)}")));
+            sb.AppendLine(Loc.Format(ExportStrings.Report_SolutionsLine, ("solutions", SolutionList(studio.QuizQuestions, "  "))));
             sb.AppendLine();
         }
 
         if (studio.Presentation is { Slides.Count: > 0 } presentation)
         {
-            Heading(sb, $"Präsentation – {presentation.Title}");
+            Heading(sb, Loc.Format(ExportStrings.Report_PresentationHeading, ("title", presentation.Title)));
             for (var i = 0; i < presentation.Slides.Count; i++)
             {
                 var slide = presentation.Slides[i];
-                sb.AppendLine($"Folie {i + 1}: {slide.Title}");
+                sb.AppendLine(Loc.Format(ExportStrings.Export_SlideHeading, ("number", i + 1), ("title", slide.Title)));
                 foreach (var bullet in slide.Bullets)
                     sb.AppendLine($"  • {bullet}");
                 sb.AppendLine();
@@ -274,7 +284,7 @@ public static class ReportTextExporter
 
         foreach (var embedded in studio.DataTables.Where(t => t.Rows.Count > 0))
         {
-            Heading(sb, $"Datentabelle – {embedded.Table.Title}");
+            Heading(sb, Loc.Format(ExportStrings.Report_DataTableHeading, ("title", embedded.Table.Title)));
             sb.AppendLine(DataTableMeta(embedded));
             sb.AppendLine();
             DataTableExporter.AppendPlainText(sb, embedded.Table, embedded.Rows);
@@ -283,20 +293,20 @@ public static class ReportTextExporter
 
         foreach (var audio in studio.AudioScripts.Where(a => a.Segments.Count > 0))
         {
-            Heading(sb, $"Audio-Skript – {audio.Title}");
+            Heading(sb, Loc.Format(ExportStrings.Report_AudioScriptHeading, ("title", audio.Title)));
             sb.AppendLine(AudioMeta(audio));
             sb.AppendLine();
             var speakers = audio.Speakers.Count > 1;
             foreach (var segment in audio.Segments)
             {
-                sb.AppendLine(speakers ? $"{segment.Speaker}: {segment.Text}" : segment.Text);
+                sb.AppendLine(speakers ? $"{ExportNames.Speaker(segment.Speaker)}: {segment.Text}" : segment.Text);
                 sb.AppendLine();
             }
         }
 
         foreach (var video in studio.VideoScripts.Where(ReportVideoScripts.HasNarration))
         {
-            Heading(sb, $"Video-Skript – {video.Title}");
+            Heading(sb, Loc.Format(ExportStrings.Report_VideoScriptHeading, ("title", video.Title)));
             sb.AppendLine(VideoMeta(video));
             sb.AppendLine();
             for (var i = 0; i < video.Scenes.Count; i++)
@@ -325,22 +335,27 @@ public static class ReportTextExporter
             AppendTreeText(sb, child, level + 1);
     }
 
-    // ---------------- gemeinsam ----------------
+    // ---------------- gemeinsam (Sprache aus CultureScope des Aufrufers) ----------------
 
+    /// <summary>„Lernübersicht · erstellt am 26.11.2026 14:30 · Quellen: …“.</summary>
     public static string MetaLine(Report report)
     {
-        var sources = report.SourceDocuments.Count > 0 ? $" · Quellen: {string.Join(", ", report.SourceDocuments)}" : string.Empty;
-        return $"{ReportTemplates.DisplayName(report.Template)} · erstellt am {report.CreatedAt:dd.MM.yyyy HH:mm}{sources}";
+        var parts = new List<string> { ExportNames.Template(report.Template), ExportNames.CreatedAt(report.CreatedAt) };
+        if (report.SourceDocuments.Count > 0)
+            parts.Add(ExportNames.Sources(report.SourceDocuments));
+        return string.Join(" · ", parts);
     }
 
     /// <summary>Kurzbeschreibung einer eingebetteten Datentabelle („Zeitleiste · 12 Zeilen“ bzw. „erste 50 von 120 Zeilen“).</summary>
     public static string DataTableMeta(ReportDataTable embedded)
     {
-        var rows = embedded.IsTruncated
-            ? $"erste {embedded.Rows.Count} von {embedded.TotalRows} Zeilen – vollständig im Reiter „Datentabelle“"
-            : $"{embedded.Rows.Count} {(embedded.Rows.Count == 1 ? "Zeile" : "Zeilen")}";
-        var topic = string.IsNullOrWhiteSpace(embedded.Table.Topic) ? string.Empty : $" · Thema: {embedded.Table.Topic}";
-        return $"{DataTableTemplates.DisplayName(embedded.Table.Template)}{topic} · {rows}";
+        var parts = new List<string> { ExportNames.Template(embedded.Table.Template) };
+        if (!string.IsNullOrWhiteSpace(embedded.Table.Topic))
+            parts.Add(Loc.Format(ExportStrings.Export_Topic, ("topic", embedded.Table.Topic)));
+        parts.Add(embedded.IsTruncated
+            ? Loc.Format(ExportStrings.Export_RowsTruncated, ("shown", embedded.Rows.Count), ("total", embedded.TotalRows))
+            : Loc.Format(ExportStrings.Export_RowCount, ("count", embedded.Rows.Count)));
+        return string.Join(" · ", parts);
     }
 
     /// <summary>Kurzbeschreibung eines eingebetteten Audio-Skripts, mit „Audiodatei: …“, wenn eine erzeugt wurde.</summary>
@@ -348,14 +363,14 @@ public static class ReportTextExporter
     {
         var parts = new List<string>
         {
-            AudioScriptFormats.DisplayName(audio.Format),
-            $"{audio.Segments.Count} {(audio.Segments.Count == 1 ? "Abschnitt" : "Abschnitte")}",
-            AudioScriptFormats.FormatMinutes(audio.EstimatedMinutes)
+            ExportNames.Format(audio.Format),
+            Loc.Format(ExportStrings.Export_SegmentCount, ("count", audio.Segments.Count)),
+            MediaFormat.Minutes(audio.EstimatedMinutes)
         };
         if (!string.IsNullOrWhiteSpace(audio.Topic))
-            parts.Add($"Schwerpunkt: {audio.Topic}");
+            parts.Add(Loc.Format(ExportStrings.Export_Focus, ("topic", audio.Topic)));
         if (audio.HasAudioFile)
-            parts.Add($"Audiodatei: {audio.AudioFileName}");
+            parts.Add(Loc.Format(ExportStrings.Export_AudioFile, ("file", audio.AudioFileName)));
         return string.Join(" · ", parts);
     }
 
@@ -369,12 +384,12 @@ public static class ReportTextExporter
         var minutes = hasCurrentAudio ? video.AudioDurationSeconds / 60 : AudioScriptFormats.EstimateMinutes(video.WordCount);
         var parts = new List<string>
         {
-            $"{video.Scenes.Count} {(video.Scenes.Count == 1 ? "Folie" : "Folien")}",
-            AudioScriptFormats.FormatMinutes(minutes)
+            Loc.Format(ExportStrings.Export_SlideCount, ("count", video.Scenes.Count)),
+            MediaFormat.Minutes(minutes)
         };
         if (hasCurrentAudio && !string.IsNullOrWhiteSpace(video.AudioCreatedWith))
-            parts.Add($"vertont mit {video.AudioCreatedWith}");
-        parts.Add($"Video: {video.Title} (abspielbar im Reiter „Video“)");
+            parts.Add(Loc.Format(ExportStrings.Export_NarratedWith, ("provider", video.AudioCreatedWith)));
+        parts.Add(Loc.Format(ExportStrings.Export_VideoInApp, ("title", video.Title)));
         return string.Join(" · ", parts);
     }
 
@@ -382,10 +397,14 @@ public static class ReportTextExporter
 
     public static string Solution(QuizQuestion q) => string.Join(", ", q.CorrectIndices.Select(i => q.Type == QuizQuestionType.TrueFalse ? q.Options[i] : Letter(i)));
 
+    /// <summary>„1. A · 2. B, C“ (Trennzeichen je Format).</summary>
+    public static string SolutionList(IReadOnlyList<QuizQuestion> questions, string separator) =>
+        string.Join(separator, questions.Select((q, i) => $"{i + 1}. {Solution(q)}"));
+
     public static string TypeHint(QuizQuestion q) => q.Type switch
     {
-        QuizQuestionType.TrueFalse => " (Wahr oder falsch?)",
-        QuizQuestionType.MultipleChoice => " (mehrere Antworten richtig)",
+        QuizQuestionType.TrueFalse => " " + ExportStrings.Report_TypeTrueFalse,
+        QuizQuestionType.MultipleChoice => " " + ExportStrings.Report_TypeMultiple,
         _ => string.Empty
     };
 }

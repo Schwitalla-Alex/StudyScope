@@ -1,4 +1,6 @@
 using System.Text.Json.Serialization;
+using StudyScope.Core.Localization;
+using StudyScope.Core.Resources;
 
 namespace StudyScope.Core.Models;
 
@@ -191,11 +193,13 @@ public static class ReportVideoScripts
     /// <summary>Das Video hat mindestens eine Szene mit Sprechtext (sonst wird es nicht eingebettet).</summary>
     public static bool HasNarration(VideoDocument video) => video.Scenes.Any(s => s.HasNarration);
 
-    /// <summary>Überschrift einer Szene: „Folie 3: Titel“ bzw. „Folie 3“, wenn die Folie keinen Titel hat.</summary>
+    /// <summary>Überschrift einer Szene: „Folie 3: Titel“ bzw. „Folie 3“, wenn die Folie keinen Titel hat (in der aktuellen Sprache).</summary>
     public static string SceneHeading(VideoDocument video, int index)
     {
         var title = video.SlideAt(index)?.Title?.Trim() ?? string.Empty;
-        return title.Length > 0 ? $"Folie {index + 1}: {title}" : $"Folie {index + 1}";
+        return title.Length > 0
+            ? Loc.Format(CoreStrings.Report_SceneHeading, ("number", index + 1), ("title", title))
+            : Loc.Format(CoreStrings.Report_SceneHeadingNoTitle, ("number", index + 1));
     }
 }
 

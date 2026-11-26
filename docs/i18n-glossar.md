@@ -252,6 +252,29 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Vollbild | full screen | |
 | pausiert | paused | |
 
+## Exporte
+
+| Deutsch | Englisch | Hinweis |
+|---|---|---|
+| Inhalt (Inhaltsverzeichnis) | Contents | Bericht HTML |
+| F: / A: | Q: / A: | Frage/Antwort in Text- und Markdown-Exporten |
+| Lösung / Lösungen | Solution / Solutions | Selbsttest |
+| Prüfen | Check | Knopf im Selbsttest der HTML-Datei |
+| Richtig! / Leider falsch. | Correct! / Incorrect. | Auswertung (wie Quiz) |
+| (mehrere Antworten richtig) | (more than one answer is correct) | Fragetyp |
+| Alle aufklappen / zuklappen | Expand all / Collapse all | Mindmap im Bericht |
+| Alle umdrehen | Flip all | Karteikarten im Bericht |
+| Erstellt mit StudyScope | Created with StudyScope | Fußzeile |
+| erstellt am … | created … | Kopfzeile, Datum im Format der Exportsprache |
+| Quellen: … | Sources: … | |
+| vertont mit … | narrated with … | Video-Skript |
+| mit Ton / ohne Ton | with sound / without sound | wie „Without sound: …“ der Meldungen |
+| Sprechtexte je Folie | Narration per slide | |
+| Vorige / Nächste Folie | Previous / Next slide | HTML-Player |
+| Leertaste / Pos1 / Ende | Space / Home / End | Tastenhinweis im Player |
+| Formatvorlage „StudyScope Frage“ | “StudyScope Question” | Name in Word |
+| Formen „Titel“, „Fußzeile“, „Foliennummer“ | “Title”, “Footer”, “Slide number” | Auswahlbereich in PowerPoint |
+
 ## Schlüssel in den `.resx`-Dateien
 
 - Aufbau `Bereich_Element[_Variante]`, z. B. `Menu_OpenFile`, `Settings_Ai_Title`, `Chat_Send`, `Quiz_Result_Score`. Unterstriche statt Punkte, weil daraus Eigenschaften der Ressourcenklasse werden.

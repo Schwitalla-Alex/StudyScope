@@ -3,6 +3,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
+using StudyScope.Tests.Common;
 
 namespace StudyScope.Tests.Services;
 
@@ -385,9 +386,9 @@ public class AudioScriptServiceTests
             SourceDocuments = { "a.txt" }
         };
 
-        var text = service.ExportToText(podcast);
-        var markdown = service.ExportToMarkdown(podcast);
-        var singleText = service.ExportToText(single);
+        var text = service.ExportToText(podcast, TestCultures.De);
+        var markdown = service.ExportToMarkdown(podcast, TestCultures.De);
+        var singleText = service.ExportToText(single, TestCultures.De);
 
         Assert.That(text, Does.StartWith("Gespräch"));
         Assert.That(text, Does.Contain("Moderatorin: Frage?"));

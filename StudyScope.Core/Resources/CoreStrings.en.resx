@@ -28,4 +28,7 @@
   <data name="Media_SizeApprox" xml:space="preserve"><value>approx. {size} MB</value></data>
   <data name="Media_SizeUnder" xml:space="preserve"><value>under {size} MB</value></data>
   <data name="Media_Under" xml:space="preserve"><value>under {value}</value></data>
+  <data name="DataTable_SourceColumn" xml:space="preserve"><value>Source</value></data>
+  <data name="Report_SceneHeading" xml:space="preserve"><value>Slide {number}: {title}</value></data>
+  <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Slide {number}</value></data>
 </root>

@@ -1,12 +1,19 @@
+using System.Globalization;
 using System.Text;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
-/// <summary>Textexporte einer Datentabelle: CSV (für Excel) und Markdown. Die Quelle steht immer als letzte Spalte.</summary>
+/// <summary>
+/// Textexporte einer Datentabelle: CSV (für Excel) und Markdown. Die Quelle steht immer als letzte Spalte, ihr Name
+/// („Quelle“, „Source“) folgt der Sprache des Exports (<see cref="Header"/> liest die per <see cref="CultureScope"/>
+/// gesetzte Sprache).
+/// </summary>
 public static class DataTableExporter
 {
-    /// <summary>Kopfzeile: Spalten der Tabelle plus „Quelle“.</summary>
+    /// <summary>Kopfzeile: Spalten der Tabelle plus Name der Quellspalte in der aktuellen Sprache.</summary>
     public static List<string> Header(DataTableDocument table) =>
         table.Columns.Append(DataTableDocument.SourceColumnName).ToList();
 
@@ -19,50 +26,61 @@ public static class DataTableExporter
 
     // ---------------- CSV ----------------
 
-    /// <summary>CSV mit Semikolon (deutsches Excel) und CRLF-Zeilenenden; Felder mit Trennzeichen, Anführungszeichen oder Umbruch in Anführungszeichen.</summary>
-    public static string ToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows)
+    /// <summary>
+    /// Trennzeichen für Excel: Semikolon bei Formaten mit Dezimalkomma (deutsches Excel erwartet es), sonst Komma.
+    /// Maßgeblich ist das regionale Format des Benutzers, nicht die Sprache der Überschriften – Excel liest CSV nach den
+    /// Ländereinstellungen des Rechners.
+    /// </summary>
+    public static char CsvSeparator(CultureInfo formatCulture) =>
+        formatCulture.NumberFormat.NumberDecimalSeparator == "," ? ';' : ',';
+
+    /// <summary>CSV mit CRLF-Zeilenenden; Felder mit Trennzeichen, Anführungszeichen oder Umbruch in Anführungszeichen.</summary>
+    public static string ToCsv(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture, char separator)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
-        AppendCsvLine(sb, Header(table));
+        AppendCsvLine(sb, Header(table), separator);
         foreach (var row in rows)
-            AppendCsvLine(sb, Values(table, row));
+            AppendCsvLine(sb, Values(table, row), separator);
         return sb.ToString();
     }
 
     /// <summary>CSV als UTF-8 mit BOM, damit Excel die Umlaute richtig erkennt.</summary>
-    public static byte[] ToCsvBytes(DataTableDocument table, IReadOnlyList<DataTableRow> rows)
+    public static byte[] ToCsvBytes(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture, char separator)
     {
         var encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
-        return encoding.GetPreamble().Concat(encoding.GetBytes(ToCsv(table, rows))).ToArray();
+        return encoding.GetPreamble().Concat(encoding.GetBytes(ToCsv(table, rows, culture, separator))).ToArray();
     }
 
-    private static void AppendCsvLine(StringBuilder sb, IEnumerable<string> values)
+    private static void AppendCsvLine(StringBuilder sb, IEnumerable<string> values, char separator)
     {
-        sb.Append(string.Join(";", values.Select(EscapeCsv)));
+        sb.Append(string.Join(separator, values.Select(v => EscapeCsv(v, separator))));
         sb.Append("\r\n");
     }
 
-    public static string EscapeCsv(string? value)
+    public static string EscapeCsv(string? value, char separator = ';')
     {
         var v = (value ?? string.Empty).Replace("\r\n", "\n");
-        return v.IndexOfAny(new[] { ';', '"', '\n', '\r' }) >= 0 || v.StartsWith(' ') || v.EndsWith(' ')
+        return v.IndexOfAny(new[] { separator, '"', '\n', '\r' }) >= 0 || v.StartsWith(' ') || v.EndsWith(' ')
             ? "\"" + v.Replace("\"", "\"\"") + "\""
             : v;
     }
 
     // ---------------- Markdown ----------------
 
-    public static string ToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows, bool includeTitle = true)
+    public static string ToMarkdown(DataTableDocument table, IReadOnlyList<DataTableRow> rows, CultureInfo culture, bool includeTitle = true)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         if (includeTitle)
         {
             sb.AppendLine($"# {table.Title}");
             sb.AppendLine();
-            var meta = $"*{DataTableTemplates.DisplayName(table.Template)}";
-            if (!string.IsNullOrWhiteSpace(table.Topic)) meta += $" · Thema: {table.Topic}";
-            meta += $" · {rows.Count} {(rows.Count == 1 ? "Zeile" : "Zeilen")}*";
-            sb.AppendLine(meta);
+            var parts = new List<string> { ExportNames.Template(table.Template) };
+            if (!string.IsNullOrWhiteSpace(table.Topic))
+                parts.Add(Loc.Format(ExportStrings.Export_Topic, ("topic", table.Topic)));
+            parts.Add(Loc.Format(ExportStrings.Export_RowCount, ("count", rows.Count)));
+            sb.AppendLine($"*{string.Join(" · ", parts)}*");
             sb.AppendLine();
         }
 
@@ -70,7 +88,7 @@ public static class DataTableExporter
         return sb.ToString();
     }
 
-    /// <summary>Nur die Tabelle (für Berichte).</summary>
+    /// <summary>Nur die Tabelle (für Berichte; Sprache der Quellspalte aus dem <see cref="CultureScope"/> des Aufrufers).</summary>
     public static void AppendMarkdownTable(StringBuilder sb, DataTableDocument table, IReadOnlyList<DataTableRow> rows)
     {
         var header = Header(table);

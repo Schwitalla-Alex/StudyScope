@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json.Serialization;
+using StudyScope.Core.Localization;
 
 namespace StudyScope.Core.Models;
 
@@ -232,14 +233,6 @@ public sealed record VideoHtmlSizeEstimate(long TotalBytes, long AudioBytes, int
     /// <summary>Megabyte (10^6 Byte, wie bei der Gemini-Schätzung).</summary>
     public double Megabytes => TotalBytes / 1_000_000.0;
 
-    /// <summary>„ca. 12,3 MB“ (ab 10 MB ganzzahlig, sehr kleine Dateien „unter 0,1 MB“).</summary>
-    public string SizeText
-    {
-        get
-        {
-            var de = System.Globalization.CultureInfo.GetCultureInfo("de-DE");
-            if (Megabytes < 0.1) return "unter 0,1 MB";
-            return Megabytes < 10 ? $"ca. {Megabytes.ToString("0.0", de)} MB" : $"ca. {Megabytes.ToString("0", de)} MB";
-        }
-    }
+    /// <summary>„ca. 12,3 MB“ (ab 10 MB ganzzahlig, sehr kleine Dateien „unter 0,1 MB“) in der aktuellen Sprache.</summary>
+    public string SizeText => MediaFormat.Size(Megabytes);
 }

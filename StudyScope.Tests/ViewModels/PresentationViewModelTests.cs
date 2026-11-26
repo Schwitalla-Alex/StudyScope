@@ -270,7 +270,7 @@ public class PresentationViewModelTests
             return Task.CompletedTask;
         }
 
-        public Task ExportToPptxAsync(PresentationDocument presentation, string filePath) =>
+        public Task ExportToPptxAsync(PresentationDocument presentation, string filePath, System.Globalization.CultureInfo culture) =>
             ExportThrows ? throw new IOException("Datei ist gesperrt") : Task.CompletedTask;
     }
 
@@ -284,7 +284,7 @@ public class PresentationViewModelTests
         public Task<MindmapDocument?> LoadMindmapAsync(string profileName) => Task.FromResult(Mindmap);
         public Task SaveMindmapAsync(string profileName, MindmapDocument mindmap) => Task.CompletedTask;
         public Task DeleteMindmapAsync(string profileName) => Task.CompletedTask;
-        public string ExportToMarkdown(MindmapDocument mindmap) => string.Empty;
+        public string ExportToMarkdown(MindmapDocument mindmap, System.Globalization.CultureInfo culture) => string.Empty;
     }
 
     private sealed class FakeDocumentService : IDocumentService

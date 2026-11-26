@@ -21,13 +21,20 @@
     <ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
   </ItemGroup>
 
-  <!-- Texte (Meldungen): neutrale Sprache Deutsch, typisierte Klasse InfraStrings wird beim Bauen erzeugt -->
+  <!-- Texte (Meldungen InfraStrings, Exporte ExportStrings): neutrale Sprache Deutsch, typisierte Klassen werden beim Bauen erzeugt -->
   <ItemGroup>
     <EmbeddedResource Update="Resources\InfraStrings.resx">
       <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
       <StronglyTypedNamespace>StudyScope.Infrastructure.Resources</StronglyTypedNamespace>
       <StronglyTypedClassName>InfraStrings</StronglyTypedClassName>
       <StronglyTypedFileName>$(IntermediateOutputPath)InfraStrings.Designer.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources\ExportStrings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>StudyScope.Infrastructure.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>ExportStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)ExportStrings.Designer.cs</StronglyTypedFileName>
       <PublicClass>true</PublicClass>
     </EmbeddedResource>
   </ItemGroup>

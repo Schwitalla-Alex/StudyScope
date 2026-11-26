@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using StudyScope.Infrastructure.Resources;
+using StudyScope.Core.Localization;
+using System.Globalization;
+using System.Text;
 using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
@@ -261,8 +264,9 @@ public class MindmapService : IMindmapService
 
     // ---------------- Export ----------------
 
-    public string ExportToMarkdown(MindmapDocument mindmap)
+    public string ExportToMarkdown(MindmapDocument mindmap, CultureInfo culture)
     {
+        using var scope = CultureScope.Use(culture);
         var sb = new StringBuilder();
         sb.AppendLine($"# {mindmap.Root.Title}");
         if (!string.IsNullOrWhiteSpace(mindmap.Root.Summary))
@@ -274,7 +278,7 @@ public class MindmapService : IMindmapService
         sb.AppendLine();
         if (mindmap.SourceDocuments.Count > 0)
         {
-            sb.AppendLine($"*Quellen: {string.Join(", ", mindmap.SourceDocuments)} – erstellt am {mindmap.CreatedAt:dd.MM.yyyy HH:mm}*");
+            sb.AppendLine($"*{Loc.Format(ExportStrings.Mindmap_SourcesLine, ("sources", string.Join(", ", mindmap.SourceDocuments)), ("date", ExportNames.DateTime(mindmap.CreatedAt)))}*");
             sb.AppendLine();
         }
 

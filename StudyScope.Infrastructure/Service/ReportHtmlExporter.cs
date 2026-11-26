@@ -2,7 +2,9 @@
 using System.Net;
 using System.Text;
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -12,17 +14,20 @@ namespace StudyScope.Infrastructure.Services;
 /// als .html exportiert. Interaktiv: Inhaltsverzeichnis, aufklappbare FAQ und Mindmap,
 /// umdrehbare Karteikarten, Selbsttest mit Auswertung, Folien zum Durchblättern und sortierbare Datentabellen.
 /// Beim Drucken (PDF) wird alles aufgeklappt und mit Lösungen ausgegeben.
+/// Alle festen Texte (auch die des eingebetteten Skripts, als <c>data-t-*</c>-Attribute am <c>&lt;main&gt;</c>) folgen der
+/// übergebenen Sprache, ebenso <c>lang</c> und <c>dir</c>; das CSS verwendet logische Eigenschaften (rechts-nach-links vorbereitet).
 /// </summary>
 public static class ReportHtmlExporter
 {
-    public static string Export(Report report, ReportStudioContent studio, ReportHtmlOptions? options = null)
+    public static string Export(Report report, ReportStudioContent studio, CultureInfo culture, ReportHtmlOptions? options = null)
     {
+        using var scope = CultureScope.Use(culture);
         options ??= ReportHtmlOptions.Default;
         var videoScripts = studio.VideoScripts.Where(ReportVideoScripts.HasNarration).ToList();
         var withPlayers = videoScripts.Any(v => options.VideoPlayers.ContainsKey(v.Id));
 
         var sb = new StringBuilder();
-        sb.Append("<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\">\n");
+        sb.Append($"<!DOCTYPE html>\n<html lang=\"{H(CultureScope.HtmlLanguageTag(culture))}\" dir=\"{CultureScope.Direction(culture)}\">\n<head>\n<meta charset=\"utf-8\">\n");
         sb.Append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n");
         sb.Append($"<meta name=\"generator\" content=\"StudyScope\">\n<title>{H(report.Title)}</title>\n");
         sb.Append("<style>\n").Append(Css);
@@ -31,11 +36,11 @@ public static class ReportHtmlExporter
         sb.Append("\n</style>\n");
         // Nur in der App: Farbschema der App übernehmen (auch bei Wechsel zur Laufzeit); exportierte Dateien bleiben hell
         if (options.InApp) sb.Append("<script>").Append(AppThemeScript).Append("</script>\n");
-        sb.Append("</head>\n<body>\n<main class=\"report\">\n");
+        sb.Append("</head>\n<body>\n<main class=\"report\"").Append(ScriptTexts(studio.QuizQuestions.Count)).Append(">\n");
 
         // Kopf
         sb.Append("<header class=\"head\">");
-        sb.Append($"<div class=\"badge\">{H(ReportTemplates.Icon(report.Template))} {H(ReportTemplates.DisplayName(report.Template))}</div>");
+        sb.Append($"<div class=\"badge\">{H(ReportTemplates.Icon(report.Template))} {H(ExportNames.Template(report.Template))}</div>");
         sb.Append($"<h1>{H(report.Title)}</h1>");
         sb.Append($"<div class=\"meta\">{H(ReportTextExporter.MetaLine(report))}</div>");
         if (!string.IsNullOrWhiteSpace(report.Summary))
@@ -49,19 +54,19 @@ public static class ReportHtmlExporter
             if (!string.IsNullOrWhiteSpace(report.Sections[i].Heading))
                 toc.Add(($"abschnitt-{i + 1}", report.Sections[i].Heading));
         }
-        if (studio.Mindmap != null) toc.Add(("mindmap", "🧠 Mindmap"));
-        if (studio.Flashcards.Count > 0) toc.Add(("karteikarten", "🎴 Karteikarten"));
-        if (studio.QuizQuestions.Count > 0) toc.Add(("selbsttest", "❓ Selbsttest"));
-        if (studio.Presentation is { Slides.Count: > 0 }) toc.Add(("praesentation", "📽️ Präsentation"));
+        if (studio.Mindmap != null) toc.Add(("mindmap", $"🧠 {ExportStrings.Report_Mindmap}"));
+        if (studio.Flashcards.Count > 0) toc.Add(("karteikarten", $"🎴 {ExportStrings.Report_Flashcards}"));
+        if (studio.QuizQuestions.Count > 0) toc.Add(("selbsttest", $"❓ {ExportStrings.Report_SelfTest}"));
+        if (studio.Presentation is { Slides.Count: > 0 }) toc.Add(("praesentation", $"📽️ {ExportStrings.Report_Presentation}"));
         var dataTables = studio.DataTables.Where(t => t.Rows.Count > 0).ToList();
-        if (dataTables.Count > 0) toc.Add(("datentabellen", dataTables.Count == 1 ? "📊 Datentabelle" : "📊 Datentabellen"));
+        if (dataTables.Count > 0) toc.Add(("datentabellen", $"📊 {Loc.Format(ExportStrings.Report_DataTables, ("count", dataTables.Count))}"));
         var audioScripts = studio.AudioScripts.Where(a => a.Segments.Count > 0).ToList();
-        if (audioScripts.Count > 0) toc.Add(("audio", audioScripts.Count == 1 ? "🎧 Audio-Skript" : "🎧 Audio-Skripte"));
-        if (videoScripts.Count > 0) toc.Add(("video", videoScripts.Count == 1 ? "🎬 Video-Skript" : "🎬 Video-Skripte"));
+        if (audioScripts.Count > 0) toc.Add(("audio", $"🎧 {Loc.Format(ExportStrings.Report_AudioScripts, ("count", audioScripts.Count))}"));
+        if (videoScripts.Count > 0) toc.Add(("video", $"🎬 {Loc.Format(ExportStrings.Report_VideoScripts, ("count", videoScripts.Count))}"));
 
         if (toc.Count > 1)
         {
-            sb.Append("<nav class=\"toc\"><div class=\"toc-title\">Inhalt</div><ol>");
+            sb.Append($"<nav class=\"toc\"><div class=\"toc-title\">{H(ExportStrings.Report_Contents)}</div><ol>");
             foreach (var (id, title) in toc)
                 sb.Append($"<li><a href=\"#{id}\">{H(title)}</a></li>");
             sb.Append("</ol></nav>\n");
@@ -80,11 +85,25 @@ public static class ReportHtmlExporter
         if (audioScripts.Count > 0) AppendAudioScripts(sb, audioScripts);
         if (videoScripts.Count > 0) AppendVideoScripts(sb, videoScripts, options);
 
-        sb.Append("<footer class=\"foot\">Erstellt mit StudyScope</footer>\n");
+        sb.Append($"<footer class=\"foot\">{H(ExportStrings.Export_CreatedWith)}</footer>\n");
         sb.Append("</main>\n<script>\n").Append(Script);
         if (withPlayers) sb.Append('\n').Append(VideoPlayerHtml.Script);
         sb.Append("\n</script>\n</body>\n</html>\n");
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Texte, die das eingebettete Skript erst im Browser einsetzt, als <c>data-t-*</c>-Attribute. Platzhalter für Werte,
+    /// die erst beim Prüfen feststehen, werden als <c>{r}</c>/<c>{c}</c> eingesetzt und im Skript ersetzt – die Wortstellung
+    /// bleibt so in jeder Sprache die der Übersetzung.
+    /// </summary>
+    private static string ScriptTexts(int questionCount)
+    {
+        var score = Loc.Format(ExportStrings.Report_QuizScore, ("right", "{r}"), ("checked", "{c}"),
+            ("questions", Loc.Format(ExportStrings.Report_QuestionCount, ("count", questionCount))));
+        return $" data-t-score=\"{H(score)}\" data-t-choose=\"{H(ExportStrings.Report_ChooseAnswer)}\"" +
+               $" data-t-correct=\"{H(ExportStrings.Report_Correct)}\" data-t-wrong=\"{H(ExportStrings.Report_Wrong)}\"" +
+               $" data-t-expand=\"{H(ExportStrings.Report_ExpandAll)}\" data-t-collapse=\"{H(ExportStrings.Report_CollapseAll)}\"";
     }
 
     private static void AppendSection(StringBuilder sb, ReportSection section, int number)
@@ -106,7 +125,7 @@ public static class ReportHtmlExporter
 
         if (section.Terms.Count > 0)
         {
-            sb.Append("<div class=\"terms\"><div class=\"label\">Begriffe</div><dl>");
+            sb.Append($"<div class=\"terms\"><div class=\"label\">{H(ExportStrings.Report_Terms)}</div><dl>");
             foreach (var term in section.Terms)
                 sb.Append($"<dt>{H(term.Term)}</dt><dd>{Text(term.Definition)}</dd>");
             sb.Append("</dl></div>");
@@ -121,15 +140,15 @@ public static class ReportHtmlExporter
         }
 
         if (!string.IsNullOrWhiteSpace(section.Takeaway))
-            sb.Append($"<div class=\"takeaway\"><b>💡 Merksatz:</b> {Text(section.Takeaway)}</div>");
+            sb.Append($"<div class=\"takeaway\"><b>💡 {H(ExportStrings.Report_Takeaway)}</b> {Text(section.Takeaway)}</div>");
 
         sb.Append("</section>\n");
     }
 
     private static void AppendMindmap(StringBuilder sb, MindmapDocument mindmap)
     {
-        sb.Append("<section class=\"section studio\" id=\"mindmap\"><h2>🧠 Mindmap</h2>");
-        sb.Append("<div class=\"hint\">Klicken Sie auf ein Thema, um es auf- oder zuzuklappen. <button type=\"button\" class=\"link\" data-action=\"mm-all\">Alle aufklappen</button></div>");
+        sb.Append($"<section class=\"section studio\" id=\"mindmap\"><h2>🧠 {H(ExportStrings.Report_Mindmap)}</h2>");
+        sb.Append($"<div class=\"hint\">{H(ExportStrings.Report_HintMindmap)} <button type=\"button\" class=\"link\" data-action=\"mm-all\">{H(ExportStrings.Report_ExpandAll)}</button></div>");
         sb.Append("<div class=\"mindmap\">");
         AppendNode(sb, mindmap.Root, 0, 0);
         sb.Append("</div></section>\n");
@@ -155,14 +174,14 @@ public static class ReportHtmlExporter
 
     private static void AppendFlashcards(StringBuilder sb, IReadOnlyList<Flashcard> cards)
     {
-        sb.Append($"<section class=\"section studio\" id=\"karteikarten\"><h2>🎴 Karteikarten <span class=\"count\">{cards.Count}</span></h2>");
-        sb.Append("<div class=\"hint\">Klicken Sie auf eine Karte, um die Antwort zu sehen. <button type=\"button\" class=\"link\" data-action=\"fc-all\">Alle umdrehen</button></div>");
+        sb.Append($"<section class=\"section studio\" id=\"karteikarten\"><h2>🎴 {H(ExportStrings.Report_Flashcards)} <span class=\"count\">{cards.Count}</span></h2>");
+        sb.Append($"<div class=\"hint\">{H(ExportStrings.Report_HintFlashcards)} <button type=\"button\" class=\"link\" data-action=\"fc-all\">{H(ExportStrings.Report_FlipAll)}</button></div>");
         sb.Append("<div class=\"cards\">");
         foreach (var card in cards)
         {
-            sb.Append("<div class=\"card\" tabindex=\"0\" role=\"button\" aria-label=\"Karte umdrehen\"><div class=\"card-inner\">");
-            sb.Append($"<div class=\"card-face front\"><div class=\"card-label\">Frage</div><div class=\"card-text\">{Text(card.Question)}</div></div>");
-            sb.Append($"<div class=\"card-face back\"><div class=\"card-label\">Antwort</div><div class=\"card-text\">{Text(card.Answer)}</div></div>");
+            sb.Append($"<div class=\"card\" tabindex=\"0\" role=\"button\" aria-label=\"{H(ExportStrings.Report_FlipCard)}\"><div class=\"card-inner\">");
+            sb.Append($"<div class=\"card-face front\"><div class=\"card-label\">{H(ExportStrings.Report_Question)}</div><div class=\"card-text\">{Text(card.Question)}</div></div>");
+            sb.Append($"<div class=\"card-face back\"><div class=\"card-label\">{H(ExportStrings.Report_Answer)}</div><div class=\"card-text\">{Text(card.Answer)}</div></div>");
             sb.Append("</div></div>");
         }
         sb.Append("</div></section>\n");
@@ -170,8 +189,8 @@ public static class ReportHtmlExporter
 
     private static void AppendQuiz(StringBuilder sb, IReadOnlyList<QuizQuestion> questions)
     {
-        sb.Append("<section class=\"section studio\" id=\"selbsttest\"><h2>❓ Selbsttest</h2>");
-        sb.Append($"<div class=\"hint\">Wählen Sie Ihre Antwort und klicken Sie auf „Prüfen“. <span class=\"score\" data-total=\"{questions.Count}\"></span></div>");
+        sb.Append($"<section class=\"section studio\" id=\"selbsttest\"><h2>❓ {H(ExportStrings.Report_SelfTest)}</h2>");
+        sb.Append($"<div class=\"hint\">{H(ExportStrings.Report_HintQuiz)} <span class=\"score\" data-total=\"{questions.Count}\"></span></div>");
 
         for (var i = 0; i < questions.Count; i++)
         {
@@ -185,10 +204,10 @@ public static class ReportHtmlExporter
                 sb.Append($"<label class=\"quiz-opt\" data-index=\"{o}\"><input type=\"{inputType}\" name=\"q{i}\" value=\"{o}\">");
                 sb.Append($"<span class=\"quiz-letter\">{ReportTextExporter.Letter(o)}</span><span>{H(q.Options[o])}</span></label>");
             }
-            sb.Append("<div class=\"quiz-actions\"><button type=\"button\" class=\"btn\" data-action=\"quiz-check\">Prüfen</button><span class=\"quiz-result\"></span></div>");
+            sb.Append($"<div class=\"quiz-actions\"><button type=\"button\" class=\"btn\" data-action=\"quiz-check\">{H(ExportStrings.Report_Check)}</button><span class=\"quiz-result\"></span></div>");
             if (!string.IsNullOrWhiteSpace(q.Explanation))
                 sb.Append($"<div class=\"quiz-expl\">💡 {Text(q.Explanation)}</div>");
-            sb.Append($"<div class=\"quiz-solution\">Lösung: {H(ReportTextExporter.Solution(q))}</div>");
+            sb.Append($"<div class=\"quiz-solution\">{H(Loc.Format(ExportStrings.Report_SolutionLine, ("solution", ReportTextExporter.Solution(q))))}</div>");
             sb.Append("</div>");
         }
 
@@ -198,7 +217,7 @@ public static class ReportHtmlExporter
     private static void AppendPresentation(StringBuilder sb, PresentationDocument presentation)
     {
         var total = presentation.Slides.Count;
-        sb.Append($"<section class=\"section studio\" id=\"praesentation\"><h2>📽️ Präsentation <span class=\"count\">{total} Folien</span></h2>");
+        sb.Append($"<section class=\"section studio\" id=\"praesentation\"><h2>📽️ {H(ExportStrings.Report_Presentation)} <span class=\"count\">{H(Loc.Format(ExportStrings.Export_SlideCount, ("count", total)))}</span></h2>");
         sb.Append("<div class=\"deck\" tabindex=\"0\">");
         for (var i = 0; i < total; i++)
         {
@@ -217,13 +236,13 @@ public static class ReportHtmlExporter
             }
             sb.Append($"<div class=\"slide-nr\">{i + 1} / {total}</div>");
             if (!string.IsNullOrWhiteSpace(slide.Notes))
-                sb.Append($"<div class=\"slide-notes\"><b>Notizen:</b> {H(slide.Notes)}</div>");
+                sb.Append($"<div class=\"slide-notes\"><b>{H(ExportStrings.Report_Notes)}</b> {H(slide.Notes)}</div>");
             sb.Append("</div>");
         }
         sb.Append("</div>");
-        sb.Append("<div class=\"deck-nav\"><button type=\"button\" class=\"btn light\" data-action=\"slide-prev\">◀ Zurück</button>");
+        sb.Append($"<div class=\"deck-nav\"><button type=\"button\" class=\"btn light\" data-action=\"slide-prev\">{H(ExportStrings.Report_Previous)}</button>");
         sb.Append($"<span class=\"deck-pos\">1 / {total}</span>");
-        sb.Append("<button type=\"button\" class=\"btn light\" data-action=\"slide-next\">Weiter ▶</button></div>");
+        sb.Append($"<button type=\"button\" class=\"btn light\" data-action=\"slide-next\">{H(ExportStrings.Report_Next)}</button></div>");
         sb.Append("</section>\n");
     }
 
@@ -233,8 +252,8 @@ public static class ReportHtmlExporter
     /// </summary>
     private static void AppendDataTables(StringBuilder sb, IReadOnlyList<ReportDataTable> tables)
     {
-        sb.Append($"<section class=\"section studio\" id=\"datentabellen\"><h2>📊 {(tables.Count == 1 ? "Datentabelle" : "Datentabellen")}</h2>");
-        sb.Append("<div class=\"hint\">Klicken Sie auf eine Spaltenüberschrift, um nach dieser Spalte zu sortieren (erneuter Klick: absteigend).</div>");
+        sb.Append($"<section class=\"section studio\" id=\"datentabellen\"><h2>📊 {H(Loc.Format(ExportStrings.Report_DataTables, ("count", tables.Count)))}</h2>");
+        sb.Append($"<div class=\"hint\">{H(ExportStrings.Report_HintDataTable)}</div>");
 
         for (var t = 0; t < tables.Count; t++)
         {
@@ -252,7 +271,7 @@ public static class ReportHtmlExporter
             for (var c = 0; c < header.Count; c++)
             {
                 var kind = kinds[c] switch { DataTableColumnKind.Number => "num", DataTableColumnKind.Date => "date", _ => "text" };
-                sb.Append($"<th data-kind=\"{kind}\" tabindex=\"0\" role=\"button\" title=\"Sortieren\"{(c == header.Count - 1 ? " class=\"src\"" : string.Empty)}>");
+                sb.Append($"<th data-kind=\"{kind}\" tabindex=\"0\" role=\"button\" title=\"{H(ExportStrings.Report_Sort)}\"{(c == header.Count - 1 ? " class=\"src\"" : string.Empty)}>");
                 sb.Append($"{H(header[c])}<span class=\"arrow\"></span></th>");
             }
             sb.Append("</tr></thead><tbody>");
@@ -278,8 +297,8 @@ public static class ReportHtmlExporter
     /// <summary>Sprechskripte als einklappbare Blöcke (die Audiodatei wird nicht eingebettet, nur ihr Name genannt).</summary>
     private static void AppendAudioScripts(StringBuilder sb, IReadOnlyList<AudioSummary> scripts)
     {
-        sb.Append($"<section class=\"section studio\" id=\"audio\"><h2>🎧 {(scripts.Count == 1 ? "Audio-Skript" : "Audio-Skripte")}</h2>");
-        sb.Append("<div class=\"hint\">Sprechtext der Audio-Beiträge – zum Aufklappen anklicken.</div>");
+        sb.Append($"<section class=\"section studio\" id=\"audio\"><h2>🎧 {H(Loc.Format(ExportStrings.Report_AudioScripts, ("count", scripts.Count)))}</h2>");
+        sb.Append($"<div class=\"hint\">{H(ExportStrings.Report_HintAudio)}</div>");
         foreach (var audio in scripts)
         {
             var speakers = audio.Speakers.Count > 1;
@@ -290,7 +309,7 @@ public static class ReportHtmlExporter
             {
                 sb.Append("<p>");
                 if (speakers)
-                    sb.Append($"<b class=\"audio-speaker\">{H(segment.Speaker)}:</b> ");
+                    sb.Append($"<b class=\"audio-speaker\">{H(ExportNames.Speaker(segment.Speaker))}:</b> ");
                 sb.Append(Text(segment.Text)).Append("</p>");
             }
             sb.Append("</div></details>");
@@ -305,10 +324,9 @@ public static class ReportHtmlExporter
     private static void AppendVideoScripts(StringBuilder sb, IReadOnlyList<VideoDocument> videos, ReportHtmlOptions options)
     {
         var anyPlayer = videos.Any(v => options.VideoPlayers.ContainsKey(v.Id));
-        sb.Append($"<section class=\"section studio\" id=\"video\"><h2>🎬 {(videos.Count == 1 ? (anyPlayer ? "Video" : "Video-Skript") : (anyPlayer ? "Videos" : "Video-Skripte"))}</h2>");
-        sb.Append(anyPlayer
-            ? "<div class=\"hint\">Mit ▶ abspielen; der Sprechtext je Folie steht darunter zum Aufklappen.</div>"
-            : "<div class=\"hint\">Sprechtext der Videos je Folie – zum Aufklappen anklicken.</div>");
+        var heading = Loc.Format(anyPlayer ? ExportStrings.Report_Videos : ExportStrings.Report_VideoScripts, ("count", videos.Count));
+        sb.Append($"<section class=\"section studio\" id=\"video\"><h2>🎬 {H(heading)}</h2>");
+        sb.Append($"<div class=\"hint\">{H(anyPlayer ? ExportStrings.Report_HintVideoPlayer : ExportStrings.Report_HintVideo)}</div>");
         foreach (var video in videos)
         {
             if (options.VideoPlayers.TryGetValue(video.Id, out var player))
@@ -322,8 +340,8 @@ public static class ReportHtmlExporter
             sb.Append($"<span class=\"audio-title\">{H(video.Title)}</span><span class=\"meta-small\">{H(ReportTextExporter.VideoMeta(video))}</span>");
             if (options.InApp)
             {
-                sb.Append($"<span><button type=\"button\" class=\"video-play\" data-video-id=\"{H(video.Id)}\" title=\"Wechselt in den Reiter „Video“ und spielt dieses Video ab\" ");
-                sb.Append("onclick=\"event.preventDefault();event.stopPropagation();window.parent.postMessage({type:'studyscope-play-video',id:this.dataset.videoId},'*');\">▶ Video abspielen</button></span>");
+                sb.Append($"<span><button type=\"button\" class=\"video-play\" data-video-id=\"{H(video.Id)}\" title=\"{H(ExportStrings.Report_PlayVideoTitle)}\" ");
+                sb.Append($"onclick=\"event.preventDefault();event.stopPropagation();window.parent.postMessage({{type:'studyscope-play-video',id:this.dataset.videoId}},'*');\">{H(ExportStrings.Report_PlayVideo)}</button></span>");
             }
             sb.Append("</summary>");
             sb.Append("<div class=\"audio-body\">");
@@ -356,7 +374,7 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .summary { font-size: 16px; margin-top: 16px; }
 .toc { background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 12px 18px; margin: 20px 0; }
 .toc-title { font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
-.toc ol { margin: 6px 0 0; padding-left: 22px; columns: 2; column-gap: 28px; }
+.toc ol { margin: 6px 0 0; padding-inline-start: 22px; columns: 2; column-gap: 28px; }
 .toc a { color: var(--text); text-decoration: none; } .toc a:hover { color: var(--accent); text-decoration: underline; }
 .section { margin-top: 30px; scroll-margin-top: 10px; }
 .studio { border-top: 1px solid var(--line); padding-top: 24px; }
@@ -369,12 +387,13 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .terms dt:first-of-type, .terms dd:first-of-type { border-top: none; }
 .faq details { border: 1px solid var(--line); border-radius: 8px; margin: 8px 0; background: #fff; }
 .faq summary { cursor: pointer; padding: 10px 14px; font-weight: 600; list-style: none; }
-.faq summary::before { content: "▸"; color: var(--accent); margin-right: 8px; display: inline-block; transition: transform .15s; }
+.faq summary::before { content: "▸"; color: var(--accent); margin-inline-end: 8px; display: inline-block; transition: transform .15s; }
+[dir="rtl"] .faq summary::before { transform: scaleX(-1); }
 .faq details[open] summary::before { transform: rotate(90deg); }
-.faq .answer { padding: 0 14px 12px 32px; }
-.takeaway { background: #eaf3ff; border-left: 4px solid var(--accent); border-radius: 6px; padding: 10px 14px; margin: 16px 0; }
+.faq .answer { padding-block: 0 12px; padding-inline: 32px 14px; }
+.takeaway { background: #eaf3ff; border-inline-start: 4px solid var(--accent); border-radius: 6px; padding: 10px 14px; margin: 16px 0; }
 .hint { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
-.count { font-size: 13px; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.count { font-size: 13px; color: var(--muted); font-weight: 400; margin-inline-start: 6px; }
 .link { background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; font: inherit; text-decoration: underline; }
 .btn { background: var(--accent); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font: inherit; font-weight: 600; cursor: pointer; }
 .btn.light { background: #fff; color: #495057; border: 1px solid #ced4da; }
@@ -382,13 +401,13 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 
 .mindmap { font-size: 14px; }
 .mm-node { margin: 4px 0 4px 0; }
-.mm-children { margin-left: 22px; padding-left: 12px; border-left: 2px solid var(--line); }
+.mm-children { margin-inline-start: 22px; padding-inline-start: 12px; border-inline-start: 2px solid var(--line); }
 .mm-node > summary, .mm-node.leaf { cursor: pointer; list-style: none; padding: 5px 10px; border-radius: 8px; border: 1.5px solid var(--line); background: #fff; display: block; }
 .mm-node.leaf { cursor: default; }
 .mm-node > summary::-webkit-details-marker { display: none; }
 .mm-title { font-weight: 600; }
 .mm-sum { display: block; color: var(--muted); font-size: 13px; }
-.mm-count { float: right; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; }
+.mm-count { float: inline-end; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; padding: 0 7px; }
 .mm-node[open] > summary .mm-count { background: var(--soft); }
 .mm-node.d0 > summary { background: #343a40; color: #fff; border-color: #343a40; } .mm-node.d0 > summary .mm-sum { color: #ced4da; }
 .mm-node.d0 > summary .mm-count, .mm-node.d0[open] > summary .mm-count { color: #ced4da; background: transparent; border-color: #6c757d; }
@@ -408,8 +427,8 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 
 .quiz { border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; margin: 12px 0; }
 .quiz-q { font-weight: 600; margin-bottom: 8px; }
-.quiz-nr { display: inline-block; min-width: 24px; height: 24px; border-radius: 12px; background: var(--accent); color: #fff; text-align: center; font-size: 12px; line-height: 24px; margin-right: 8px; }
-.quiz-type { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-left: 32px; }
+.quiz-nr { display: inline-block; min-width: 24px; height: 24px; border-radius: 12px; background: var(--accent); color: #fff; text-align: center; font-size: 12px; line-height: 24px; margin-inline-end: 8px; }
+.quiz-type { display: block; font-weight: 400; font-size: 12px; color: var(--muted); margin-inline-start: 32px; }
 .quiz-opt { display: flex; gap: 10px; align-items: center; padding: 7px 10px; margin: 5px 0; border: 1.5px solid var(--line); border-radius: 8px; cursor: pointer; }
 .quiz-opt:hover { border-color: #9ec5fe; }
 .quiz-opt input { margin: 0; }
@@ -429,12 +448,12 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .slide.active { display: block; }
 .slide-title { font-size: 3.6cqw; font-weight: 700; line-height: 1.2; }
 .slide-accent { width: 9cqw; height: .45cqw; background: var(--accent); margin: 1.2cqw 0 2.2cqw; }
-.slide ul { margin: 0; padding-left: 3cqw; } .slide li { font-size: 2.5cqw; margin-bottom: 1cqw; } .slide li::marker { color: var(--accent); }
+.slide ul { margin: 0; padding-inline-start: 3cqw; } .slide li { font-size: 2.5cqw; margin-bottom: 1cqw; } .slide li::marker { color: var(--accent); }
 .slide.title-slide { background: #343a40; color: #fff; display: none; flex-direction: column; justify-content: center; padding-top: 0; }
 .slide.title-slide.active { display: flex; }
 .slide.title-slide .slide-title { font-size: 4.8cqw; }
 .slide-sub { font-size: 2.2cqw; color: #ced4da; }
-.slide-nr { position: absolute; right: 6%; bottom: 3%; font-size: 1.3cqw; color: var(--muted); }
+.slide-nr { position: absolute; inset-inline-end: 6%; bottom: 3%; font-size: 1.3cqw; color: var(--muted); }
 .slide-notes { display: none; }
 .deck-nav { display: flex; gap: 12px; justify-content: center; align-items: center; margin-top: 10px; }
 .deck-pos { color: var(--muted); font-size: 13px; min-width: 60px; text-align: center; }
@@ -454,10 +473,10 @@ h2 { font-size: 20px; margin: 0 0 10px; color: var(--accent); }
 .meta-small { color: var(--muted); font-size: 12.5px; margin-bottom: 8px; }
 .dt-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
 table.dt { border-collapse: collapse; width: 100%; font-size: 13.5px; }
-table.dt th { background: #e9f2ff; text-align: left; padding: 7px 10px; border-bottom: 2px solid #9ec5fe; cursor: pointer; user-select: none; white-space: nowrap; }
+table.dt th { background: #e9f2ff; text-align: start; padding: 7px 10px; border-bottom: 2px solid #9ec5fe; cursor: pointer; user-select: none; white-space: nowrap; }
 table.dt th:hover { background: #d8e8ff; }
 table.dt th:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-table.dt th .arrow { color: var(--accent); font-size: 11px; margin-left: 4px; }
+table.dt th .arrow { color: var(--accent); font-size: 11px; margin-inline-start: 4px; }
 table.dt td { padding: 6px 10px; border-top: 1px solid var(--line); vertical-align: top; }
 table.dt tbody tr:nth-child(even) td { background: var(--soft); }
 table.dt .src { color: var(--muted); font-size: 12px; }
@@ -490,7 +509,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
   table.dt th .arrow { display: none; }
   table.dt th, table.dt td { border: 1px solid #bbb; }
   table.dt th, table.dt tbody tr:nth-child(even) td { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .slide-notes { display: block; position: absolute; left: 6%; right: 6%; bottom: 7%; font-size: 1.6cqw; color: var(--muted); }
+  .slide-notes { display: block; position: absolute; inset-inline: 6%; bottom: 7%; font-size: 1.6cqw; color: var(--muted); }
   .mm-node.d0 > summary, .card-face.back, .takeaway, .terms dt { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 """;
@@ -550,6 +569,10 @@ table.dt .src { color: var(--muted); font-size: 12px; }
 
     private const string Script = """
 (function () {
+  // Texte in der Sprache des Exports (data-t-* am <main>)
+  var texts = (document.querySelector('main.report') || document.documentElement).dataset;
+  var lang = document.documentElement.lang || undefined;
+
   // Karteikarten umdrehen (Klick, Enter, Leertaste)
   document.querySelectorAll('.card').forEach(function (card) {
     var flip = function () { card.classList.toggle('flipped'); };
@@ -563,7 +586,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
     if (!score) return;
     var checked = document.querySelectorAll('.quiz.checked').length;
     var right = document.querySelectorAll('.quiz.checked.right').length;
-    score.textContent = checked ? (right + ' von ' + checked + ' richtig (' + score.dataset.total + ' Fragen)') : '';
+    score.textContent = checked ? (texts.tScore || '{r} / {c}').replace('{r}', right).replace('{c}', checked) : '';
   };
 
   document.addEventListener('click', function (e) {
@@ -577,7 +600,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
       var options = quiz.querySelectorAll('.quiz-opt');
       var selected = [];
       options.forEach(function (opt) { if (opt.querySelector('input').checked) selected.push(Number(opt.dataset.index)); });
-      if (!selected.length) { quiz.querySelector('.quiz-result').textContent = 'Bitte eine Antwort wählen.'; return; }
+      if (!selected.length) { quiz.querySelector('.quiz-result').textContent = texts.tChoose || ''; return; }
       var right = selected.length === correct.length && selected.every(function (i) { return correct.indexOf(i) >= 0; });
       options.forEach(function (opt) {
         var i = Number(opt.dataset.index), isSel = selected.indexOf(i) >= 0, isCor = correct.indexOf(i) >= 0;
@@ -586,7 +609,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
         opt.querySelector('input').disabled = true;
       });
       var result = quiz.querySelector('.quiz-result');
-      result.textContent = right ? '✓ Richtig!' : '✗ Leider falsch.';
+      result.textContent = right ? (texts.tCorrect || '✓') : (texts.tWrong || '✗');
       result.className = 'quiz-result ' + (right ? 'ok' : 'no');
       quiz.classList.add('checked');
       if (right) quiz.classList.add('right');
@@ -604,7 +627,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
       var nodes = document.querySelectorAll('.mindmap details');
       var anyClosed = Array.prototype.some.call(nodes, function (d) { return !d.open; });
       nodes.forEach(function (d) { d.open = anyClosed; });
-      button.textContent = anyClosed ? 'Alle zuklappen' : 'Alle aufklappen';
+      button.textContent = anyClosed ? (texts.tCollapse || '−') : (texts.tExpand || '+');
     }
 
     if (action === 'slide-prev' || action === 'slide-next') {
@@ -649,7 +672,7 @@ table.dt .src { color: var(--muted); font-size: 12px; }
       if (!ta || !tb) return (!ta && !tb) ? a.i - b.i : (!ta ? 1 : -1);
       var r;
       if ((kind === 'num' || kind === 'date') && a.cell.dataset.sort && b.cell.dataset.sort) r = Number(a.cell.dataset.sort) - Number(b.cell.dataset.sort);
-      else r = ta.localeCompare(tb, 'de', { sensitivity: 'base', numeric: true });
+      else r = ta.localeCompare(tb, lang, { sensitivity: 'base', numeric: true });
       if (desc) r = -r;
       return r || a.i - b.i;
     });

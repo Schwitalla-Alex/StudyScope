@@ -1,3 +1,4 @@
+using System.Globalization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Core.Interfaces;
@@ -22,5 +23,5 @@ public interface IPresentationService
     Task DeletePresentationAsync(string profileName);
 
     /// <summary>Schreibt die Präsentation als PowerPoint-Datei (.pptx, 16:9, mit Sprechernotizen).</summary>
-    Task ExportToPptxAsync(PresentationDocument presentation, string filePath);
+    Task ExportToPptxAsync(PresentationDocument presentation, string filePath, CultureInfo culture);
 }
