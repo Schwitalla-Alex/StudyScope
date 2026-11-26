@@ -82,4 +82,56 @@ public class MindmapStatusTextsTests
     {
         Assert.That(MindmapStatusTexts.LooksLikeServiceError(text), Is.EqualTo(expected));
     }
+
+    /// <summary>Jeder Gegenstand hat in jeder Sprache eine eigene Wortform (nicht den Rückfall „other“ des ICU-select).</summary>
+    [TestCase("de-DE", "kein Ergebnis", "dem erwarteten Ergebnis", "ein Ergebnis")]
+    [TestCase("en", "nothing", "the expected result", "a result")]
+    public void EverySubject_HasOwnWordForm(string culture, string fallbackNone, string fallbackWith, string fallbackFor)
+    {
+        var previous = System.Globalization.CultureInfo.CurrentUICulture;
+        System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo(culture);
+        try
+        {
+            foreach (var subject in Enum.GetValues<GenerationSubject>())
+            {
+                var invalid = MindmapStatusTexts.ForFailure(MindmapFailureReason.InvalidJson, "x", subject, "Knopf").Message;
+                var plain = MindmapStatusTexts.ForFailure(MindmapFailureReason.NoJson, "Gerne!", subject, "Knopf").Message;
+                var service = MindmapStatusTexts.ForFailure(MindmapFailureReason.NoJson, "error 401", subject, "Knopf").Message;
+                var topics = MindmapStatusTexts.ForFailure(MindmapFailureReason.NoTopics, "[]", subject, "Knopf").Message;
+
+                Assert.That(invalid, Does.Not.Contain(fallbackNone), $"{subject} (unvollständig)");
+                Assert.That(service, Does.Not.Contain(fallbackNone), $"{subject} (Dienstfehler)");
+                Assert.That(plain, Does.Not.Contain(fallbackWith), $"{subject} (Text statt JSON)");
+                Assert.That(topics, Does.Not.Contain(fallbackFor), $"{subject} (keine Themen)");
+            }
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = previous;
+        }
+    }
+
+    [Test]
+    public void WordForms_FollowTheLanguage()
+    {
+        Assert.That(MindmapStatusTexts.ForFailure(MindmapFailureReason.InvalidJson, "x", GenerationSubject.Quiz, "▶ Quiz starten").Message, Does.Contain("kein Quiz"));
+        Assert.That(MindmapStatusTexts.ForFailure(MindmapFailureReason.NoJson, "Gerne!", GenerationSubject.Report, "Knopf").Message, Does.Contain("einem Bericht"));
+        Assert.That(MindmapStatusTexts.ForFailure(MindmapFailureReason.InvalidJson, "x", GenerationSubject.Quiz, "▶ Quiz starten").Tips[0], Does.Contain("„▶ Quiz starten“"));
+    }
+
+    [Test]
+    [SetUICulture("en")]
+    public void WordForms_English()
+    {
+        Assert.That(MindmapStatusTexts.ForFailure(MindmapFailureReason.InvalidJson, "x", GenerationSubject.AudioScript, "Generate").Message, Does.Contain("no audio script"));
+        Assert.That(MindmapStatusTexts.ForFailure(MindmapFailureReason.NoJson, "Sure!", GenerationSubject.AudioScript, "Generate").Message, Does.Contain("an audio script"));
+        Assert.That(MindmapStatusTexts.ForSuccess(1, wasRepaired: false).Message, Does.Contain("1 topic generated"));
+        Assert.That(MindmapStatusTexts.ForSuccess(24, wasRepaired: true).Tips[0], Does.Contain("“Regenerate”"));
+    }
+
+    [Test]
+    public void Success_SingularForOneTopic()
+    {
+        Assert.That(MindmapStatusTexts.ForSuccess(1, wasRepaired: false).Message, Does.Contain("mit 1 Thema erstellt"));
+    }
 }

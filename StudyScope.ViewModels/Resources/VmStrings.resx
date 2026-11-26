@@ -89,4 +89,87 @@
   <data name="Chat_Log_Unrated" xml:space="preserve"><value>— Unbewertet</value></data>
   <data name="Chat_Log_Rating" xml:space="preserve"><value>[Bewertung: {rating}]</value></data>
   <data name="Speech_PrivacyHint" xml:space="preserve"><value>Datenschutz: Bei Gemini TTS wird der Skripttext an Google gesendet. In der kostenlosen Stufe kann Google die Eingaben zur Verbesserung seiner Dienste verwenden.</value></data>
+  <data name="Common_Regenerate" xml:space="preserve"><value>Neu erstellen</value></data>
+  <data name="GenStatus_TipFewerDocuments" xml:space="preserve"><value>Aktivieren Sie weniger Dokumente gleichzeitig, damit die Antwort kürzer wird.</value></data>
+  <data name="GenStatus_TipOtherModel" xml:space="preserve"><value>Wählen Sie in den Einstellungen ein größeres oder anderes Modell. Kleine lokale Modelle brechen lange Antworten oft ab.</value></data>
+  <data name="GenStatus_TipCheckSettings" xml:space="preserve"><value>Prüfen Sie in den Einstellungen Verbindung, Modell und gegebenenfalls den API-Schlüssel („Speichern &amp; Verbinden“).</value></data>
+  <data name="GenStatus_TipRetry" xml:space="preserve"><value>Klicken Sie erneut auf „{button}“ – die KI antwortet jedes Mal etwas anders.</value><comment>{button} = Beschriftung des Erstellen-Knopfs</comment></data>
+  <data name="GenStatus_NoContent" xml:space="preserve"><value>⚠️ Aus den gewählten Dokumenten konnte kein Text gelesen werden.</value></data>
+  <data name="GenStatus_NoContent_Tip" xml:space="preserve"><value>Prüfen Sie, ob die Dateien noch vorhanden sind und Text enthalten (eingescannte PDFs ohne Texterkennung enthalten nur Bilder).</value></data>
+  <data name="GenStatus_EmptyResponse" xml:space="preserve"><value>⚠️ Die KI hat keine Antwort geliefert.</value></data>
+  <data name="GenStatus_EmptyResponse_TipLocal" xml:space="preserve"><value>Bei lokalen Modellen: Läuft Ollama bzw. LM Studio und ist das Modell geladen?</value></data>
+  <data name="GenStatus_ServiceError" xml:space="preserve"><value>⚠️ Der KI-Dienst hat einen Fehler gemeldet, daher konnte {subject, select, mindmap {keine Mindmap} presentation {keine Präsentation} topicList {keine Themenliste} quiz {kein Quiz} audioScript {kein Audio-Skript} dataTable {keine Datentabelle} newRows {keine neuen Zeilen} report {kein Bericht} videoScript {kein Video-Skript} other {kein Ergebnis}} erstellt werden.</value><comment>{subject} = was erzeugt werden sollte (GenerationSubject)</comment></data>
+  <data name="GenStatus_ServiceMessage" xml:space="preserve"><value>Meldung des Dienstes: „{message}“</value></data>
+  <data name="GenStatus_PlainText" xml:space="preserve"><value>⚠️ Die KI hat mit normalem Text statt mit {subject, select, mindmap {einer Mindmap} presentation {einer Präsentation} topicList {einer Themenliste} quiz {einem Quiz} audioScript {einem Audio-Skript} dataTable {einer Datentabelle} newRows {neuen Zeilen} report {einem Bericht} videoScript {einem Video-Skript} other {dem erwarteten Ergebnis}} geantwortet.</value><comment>{subject} = was erzeugt werden sollte (GenerationSubject)</comment></data>
+  <data name="GenStatus_NoTopics" xml:space="preserve"><value>⚠️ Die KI hat in den Dokumenten keine Themen für {subject, select, mindmap {eine Mindmap} presentation {eine Präsentation} topicList {eine Themenliste} quiz {ein Quiz} audioScript {ein Audio-Skript} dataTable {eine Datentabelle} newRows {neue Zeilen} report {einen Bericht} videoScript {ein Video-Skript} other {ein Ergebnis}} gefunden.</value><comment>{subject} = was erzeugt werden sollte (GenerationSubject)</comment></data>
+  <data name="GenStatus_NoTopics_Tip" xml:space="preserve"><value>Verwenden Sie Dokumente mit mehr Fließtext.</value></data>
+  <data name="GenStatus_InvalidJson" xml:space="preserve"><value>⚠️ Die Antwort der KI war unvollständig oder fehlerhaft, daher konnte {subject, select, mindmap {keine Mindmap} presentation {keine Präsentation} topicList {keine Themenliste} quiz {kein Quiz} audioScript {kein Audio-Skript} dataTable {keine Datentabelle} newRows {keine neuen Zeilen} report {kein Bericht} videoScript {kein Video-Skript} other {kein Ergebnis}} erstellt werden.</value><comment>{subject} = was erzeugt werden sollte (GenerationSubject)</comment></data>
+  <data name="Mindmap_Create" xml:space="preserve"><value>Mindmap erstellen</value></data>
+  <data name="Mindmap_Success" xml:space="preserve"><value>✓ Mindmap mit {count, plural, one {# Thema} other {# Themen}} erstellt. Klicken Sie auf ein Thema für Details.</value></data>
+  <data name="Mindmap_SuccessRepaired" xml:space="preserve"><value>✓ Mindmap mit {count, plural, one {# Thema} other {# Themen}} erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Themen.</value></data>
+  <data name="Mindmap_SuccessRepaired_TipRegenerate" xml:space="preserve"><value>Für eine vollständige Mindmap auf „{button}“ klicken – die KI antwortet jedes Mal etwas anders.</value></data>
+  <data name="Mindmap_SuccessRepaired_TipFewer" xml:space="preserve"><value>Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird.</value></data>
+  <data name="Mindmap_NoDocuments" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um eine Mindmap zu erstellen.</value></data>
+  <data name="Mindmap_Cancelled" xml:space="preserve"><value>Die Erstellung der Mindmap wurde abgebrochen.</value></data>
+  <data name="Mindmap_Error" xml:space="preserve"><value>⚠️ Fehler beim Erstellen der Mindmap: {error}</value></data>
+  <data name="Mindmap_Deleted" xml:space="preserve"><value>✓ Die Mindmap dieses Profils wurde gelöscht.</value></data>
+  <data name="Mindmap_SourceInfo" xml:space="preserve"><value>Erstellt am {date}</value></data>
+  <data name="Mindmap_SourceInfoWithSources" xml:space="preserve"><value>Erstellt am {date} aus: {sources}</value><comment>{sources} = Dateinamen, durch Komma getrennt</comment></data>
+  <data name="Mindmap_Zoom" xml:space="preserve"><value>{percent} %</value></data>
+  <data name="Mindmap_QuestionOverview" xml:space="preserve"><value>Gib mir einen Überblick über „{topic}“ anhand meiner Unterlagen.</value><comment>Frage, die als Benutzerfrage in den Chat geht</comment></data>
+  <data name="Mindmap_QuestionInContext" xml:space="preserve"><value>Erkläre mir „{topic}“ im Zusammenhang mit „{parent}“ anhand meiner Unterlagen.</value><comment>Frage, die als Benutzerfrage in den Chat geht</comment></data>
+  <data name="Presentation_GenerateAi" xml:space="preserve"><value>Mit KI erstellen</value></data>
+  <data name="Presentation_Present" xml:space="preserve"><value>▶ Vortragen</value></data>
+  <data name="Presentation_DefaultFileName" xml:space="preserve"><value>Präsentation</value><comment>Dateiname, wenn die Präsentation keinen Titel hat</comment></data>
+  <data name="Presentation_SourceInfo" xml:space="preserve"><value>{count, plural, one {# Folie} other {# Folien}}, erstellt am {date} {origin, select, mindmap {aus der Mindmap} other {von der KI}}</value><comment>{origin} = mindmap oder ai</comment></data>
+  <data name="Presentation_SourceInfoWithSources" xml:space="preserve"><value>{count, plural, one {# Folie} other {# Folien}}, erstellt am {date} {origin, select, mindmap {aus der Mindmap} other {von der KI}} – Quellen: {sources}</value><comment>{origin} = mindmap oder ai</comment></data>
+  <data name="Presentation_NoDocuments" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um eine Präsentation zu erstellen.</value></data>
+  <data name="Presentation_Cancelled" xml:space="preserve"><value>Die Erstellung der Präsentation wurde abgebrochen.</value></data>
+  <data name="Presentation_Success" xml:space="preserve"><value>✓ Präsentation mit {count, plural, one {# Folie} other {# Folien}} erstellt. Mit „{button}“ starten Sie den Vortragsmodus.</value></data>
+  <data name="Presentation_SuccessRepaired" xml:space="preserve"><value>✓ Präsentation mit {count, plural, one {# Folie} other {# Folien}} erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Folien.</value></data>
+  <data name="Presentation_SuccessRepaired_Tip" xml:space="preserve"><value>Für eine vollständige Präsentation erneut erstellen oder weniger Folien bzw. Dokumente wählen.</value></data>
+  <data name="Presentation_Error" xml:space="preserve"><value>⚠️ Fehler beim Erstellen der Präsentation: {error}</value></data>
+  <data name="Presentation_NoMindmap" xml:space="preserve"><value>⚠️ Für dieses Profil gibt es noch keine Mindmap.</value></data>
+  <data name="Presentation_NoMindmap_TipCreate" xml:space="preserve"><value>Erstellen Sie zuerst im Reiter „🧠 {tab}“ eine Mindmap.</value><comment>{tab} = Name des Reiters</comment></data>
+  <data name="Presentation_NoMindmap_TipAi" xml:space="preserve"><value>Oder lassen Sie die Präsentation mit „✨ {button}“ direkt aus den Dokumenten erzeugen.</value></data>
+  <data name="Presentation_FromMindmapDone" xml:space="preserve"><value>✓ Präsentation mit {count, plural, one {# Folie} other {# Folien}} aus der Mindmap erstellt.</value></data>
+  <data name="Presentation_Deleted" xml:space="preserve"><value>✓ Die Präsentation dieses Profils wurde gelöscht.</value></data>
+  <data name="Presentation_PptxExported" xml:space="preserve"><value>✓ Erfolgreich als PowerPoint exportiert: {file}</value></data>
+  <data name="Presentation_PptxError" xml:space="preserve"><value>⚠️ Fehler beim PowerPoint-Export: {error}</value></data>
+  <data name="Presentation_PptxError_Tip" xml:space="preserve"><value>Ist die Datei noch in PowerPoint geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
+  <data name="Quiz_NewTopic" xml:space="preserve"><value>➕ Neues Thema</value></data>
+  <data name="Quiz_SuggestTopics" xml:space="preserve"><value>✨ Themen vorschlagen</value></data>
+  <data name="Quiz_Start" xml:space="preserve"><value>▶ Quiz starten</value></data>
+  <data name="Quiz_FormNameMissing" xml:space="preserve"><value>Bitte einen Namen für das Thema eingeben.</value></data>
+  <data name="Quiz_FormNameExists" xml:space="preserve"><value>Ein Thema „{name}“ gibt es bereits.</value></data>
+  <data name="Quiz_FormNoDocuments" xml:space="preserve"><value>Bitte mindestens ein Dokument auswählen, aus dem die Fragen stammen sollen.</value></data>
+  <data name="Quiz_TopicSaved" xml:space="preserve"><value>✓ Thema „{name}“ gespeichert.</value></data>
+  <data name="Quiz_TopicCreated" xml:space="preserve"><value>✓ Thema „{name}“ angelegt. Fragen werden beim ersten Quiz erzeugt.</value></data>
+  <data name="Quiz_TopicDeleted" xml:space="preserve"><value>✓ Thema „{name}“ gelöscht.</value></data>
+  <data name="Quiz_QuestionsReset" xml:space="preserve"><value>✓ Die Fragen zu „{name}“ wurden verworfen. Beim nächsten Quiz werden neue erzeugt.</value></data>
+  <data name="Quiz_SuggestNoDocuments" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus, damit die KI Themen vorschlagen kann.</value></data>
+  <data name="Quiz_SuggestProgress" xml:space="preserve"><value>🧠 KI liest die Dokumente und sucht Themen …</value></data>
+  <data name="Quiz_SuggestCancelled" xml:space="preserve"><value>Die Themensuche wurde abgebrochen.</value></data>
+  <data name="Quiz_SuggestOnlyKnown" xml:space="preserve"><value>Die KI hat nur Themen gefunden, die es schon gibt.</value></data>
+  <data name="Quiz_SuggestError" xml:space="preserve"><value>⚠️ Fehler bei der Themensuche: {error}</value></data>
+  <data name="Quiz_SuggestionsAccepted" xml:space="preserve"><value>✓ {count, plural, one {# Thema} other {# Themen}} übernommen und für das nächste Quiz ausgewählt.</value></data>
+  <data name="Quiz_NoTopicSelected" xml:space="preserve"><value>⚠️ Bitte wählen Sie mindestens ein Thema für das Quiz aus.</value></data>
+  <data name="Quiz_NoTopicSelected_Tip" xml:space="preserve"><value>Legen Sie mit „{newTopic}“ ein Thema an oder lassen Sie mit „{suggest}“ welche erstellen.</value><comment>{newTopic}, {suggest} = Beschriftungen der Knöpfe</comment></data>
+  <data name="Quiz_NoTypeSelected" xml:space="preserve"><value>⚠️ Bitte mindestens einen Fragetyp auswählen.</value></data>
+  <data name="Quiz_GenerateProgress" xml:space="preserve"><value>✨ KI erstellt Fragen zu „{topic}“ … ({done} von {total} neuen Fragen)</value></data>
+  <data name="Quiz_NoQuestions" xml:space="preserve"><value>⚠️ Für die gewählten Themen und Fragetypen gibt es keine Fragen.</value></data>
+  <data name="Quiz_NoQuestions_Tip" xml:space="preserve"><value>Wählen Sie weitere Fragetypen oder Themen aus.</value></data>
+  <data name="Quiz_Partial" xml:space="preserve"><value>Es konnten nur {count} von {requested} Fragen erstellt werden – das Quiz startet mit diesen.</value></data>
+  <data name="Quiz_Partial_Tip" xml:space="preserve"><value>Für mehr Fragen: weitere Dokumente zum Thema hinzufügen oder ein größeres Modell wählen.</value></data>
+  <data name="Quiz_RunningNote" xml:space="preserve"><value>Das Quiz läuft. Hinweis:</value></data>
+  <data name="Quiz_RepairedNote" xml:space="preserve"><value>Eine Antwort der KI war unvollständig oder fehlerhaft; es wurden nur vollständige Fragen übernommen.</value></data>
+  <data name="Quiz_GenerateCancelled" xml:space="preserve"><value>Die Erstellung der Fragen wurde abgebrochen. Bereits erzeugte Fragen bleiben im Fragenpool erhalten.</value></data>
+  <data name="Quiz_StartError" xml:space="preserve"><value>⚠️ Fehler beim Starten des Quiz: {error}</value></data>
+  <data name="Quiz_MissingDocuments" xml:space="preserve"><value>Nicht gefunden (verschoben oder gelöscht?): {files}. Passen Sie die Dokumente des Themas über ✏️ an.</value><comment>{files} = Dateinamen, durch Komma getrennt</comment></data>
+  <data name="Quiz_NoWrongQuestions" xml:space="preserve"><value>Es gibt keine falsch beantworteten Fragen zum Wiederholen.</value></data>
+  <data name="Quiz_HistoryCleared" xml:space="preserve"><value>✓ Der Verlauf wurde gelöscht.</value></data>
+  <data name="Quiz_Verdict_Excellent" xml:space="preserve"><value>Hervorragend! 🎉</value></data>
+  <data name="Quiz_Verdict_VeryGood" xml:space="preserve"><value>Sehr gut gemacht! 👍</value></data>
+  <data name="Quiz_Verdict_Good" xml:space="preserve"><value>Gut – mit etwas Wiederholung sitzt es bald. 💪</value></data>
+  <data name="Quiz_Verdict_KeepGoing" xml:space="preserve"><value>Da geht noch mehr – wiederholen Sie die falschen Fragen. 📚</value></data>
 </root>

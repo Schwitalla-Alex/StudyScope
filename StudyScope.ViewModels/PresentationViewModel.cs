@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Mindmap;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -57,9 +59,12 @@ public class PresentationViewModel : INotifyPropertyChanged
             if (Presentation == null)
                 return string.Empty;
 
-            var origin = Presentation.Origin == PresentationOrigin.Mindmap ? "aus der Mindmap" : "von der KI";
-            var sources = Presentation.SourceDocuments.Count > 0 ? $" – Quellen: {string.Join(", ", Presentation.SourceDocuments)}" : string.Empty;
-            return $"{Slides.Count} Folien, erstellt am {Presentation.CreatedAt:dd.MM.yyyy HH:mm} {origin}{sources}";
+            var origin = Presentation.Origin == PresentationOrigin.Mindmap ? "mindmap" : "ai";
+            var date = Presentation.CreatedAt.ToString("g");
+            return Presentation.SourceDocuments.Count > 0
+                ? Loc.Format(VmStrings.Presentation_SourceInfoWithSources, ("count", Slides.Count), ("date", date), ("origin", origin),
+                    ("sources", string.Join(", ", Presentation.SourceDocuments)))
+                : Loc.Format(VmStrings.Presentation_SourceInfo, ("count", Slides.Count), ("date", date), ("origin", origin));
         }
     }
 
@@ -166,7 +171,7 @@ public class PresentationViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um eine Präsentation zu erstellen.", isError: true);
+            ShowStatus(VmStrings.Presentation_NoDocuments, isError: true);
             return;
         }
 
@@ -189,13 +194,13 @@ public class PresentationViewModel : INotifyPropertyChanged
 
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Erstellung der Präsentation wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.Presentation_Cancelled, isError: false);
                 return;
             }
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Präsentation", "Mit KI erstellen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.Presentation, VmStrings.Presentation_GenerateAi);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -209,21 +214,21 @@ public class PresentationViewModel : INotifyPropertyChanged
 
             if (result.WasRepaired)
             {
-                ShowStatus($"✓ Präsentation mit {presentation.Slides.Count} Folien erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Folien.",
-                    isError: false, new[] { "Für eine vollständige Präsentation erneut erstellen oder weniger Folien bzw. Dokumente wählen." }, isWarning: true);
+                ShowStatus(Loc.Format(VmStrings.Presentation_SuccessRepaired, ("count", presentation.Slides.Count)),
+                    isError: false, new[] { VmStrings.Presentation_SuccessRepaired_Tip }, isWarning: true);
             }
             else
             {
-                ShowStatus($"✓ Präsentation mit {presentation.Slides.Count} Folien erstellt. Mit „▶ Vortragen“ starten Sie den Vortragsmodus.", isError: false);
+                ShowStatus(Loc.Format(VmStrings.Presentation_Success, ("count", presentation.Slides.Count), ("button", VmStrings.Presentation_Present)), isError: false);
             }
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung der Präsentation wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Presentation_Cancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen der Präsentation: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Presentation_Error, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -243,8 +248,12 @@ public class PresentationViewModel : INotifyPropertyChanged
         var mindmap = await _mindmapService.LoadMindmapAsync(profileName);
         if (mindmap == null)
         {
-            ShowStatus("⚠️ Für dieses Profil gibt es noch keine Mindmap.", isError: true,
-                new[] { "Erstellen Sie zuerst im Reiter „🧠 Mindmap“ eine Mindmap.", "Oder lassen Sie die Präsentation mit „✨ Mit KI erstellen“ direkt aus den Dokumenten erzeugen." });
+            ShowStatus(VmStrings.Presentation_NoMindmap, isError: true,
+                new[]
+                {
+                    Loc.Format(VmStrings.Presentation_NoMindmap_TipCreate, ("tab", VmStrings.Tab_Mindmap)),
+                    Loc.Format(VmStrings.Presentation_NoMindmap_TipAi, ("button", VmStrings.Presentation_GenerateAi))
+                });
             return;
         }
 
@@ -252,7 +261,7 @@ public class PresentationViewModel : INotifyPropertyChanged
         presentation.CreatedAt = DateTime.Now;
         await _presentationService.SavePresentationAsync(profileName, presentation);
         Presentation = presentation;
-        ShowStatus($"✓ Präsentation mit {presentation.Slides.Count} Folien aus der Mindmap erstellt.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Presentation_FromMindmapDone, ("count", presentation.Slides.Count)), isError: false);
     }
 
     public void CancelGeneration() => _generationCts?.Cancel();
@@ -262,7 +271,7 @@ public class PresentationViewModel : INotifyPropertyChanged
         StopPresenting();
         await _presentationService.DeletePresentationAsync(profileName);
         Presentation = null;
-        ShowStatus("✓ Die Präsentation dieses Profils wurde gelöscht.", isError: false);
+        ShowStatus(VmStrings.Presentation_Deleted, isError: false);
     }
 
     public async Task<bool> ExportToPptxAsync(string filePath)
@@ -273,13 +282,13 @@ public class PresentationViewModel : INotifyPropertyChanged
         try
         {
             await _presentationService.ExportToPptxAsync(Presentation, filePath);
-            ShowStatus($"✓ Erfolgreich als PowerPoint exportiert: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Presentation_PptxExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim PowerPoint-Export: {ex.Message}", isError: true,
-                new[] { "Ist die Datei noch in PowerPoint geöffnet? Dann bitte schließen und erneut exportieren." });
+            ShowStatus(Loc.Format(VmStrings.Presentation_PptxError, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Presentation_PptxError_Tip });
             return false;
         }
     }
@@ -287,7 +296,7 @@ public class PresentationViewModel : INotifyPropertyChanged
     /// <summary>Dateiname ohne unzulässige Zeichen, z. B. für den Speichern-Dialog.</summary>
     public string SuggestFileName(string extension)
     {
-        var name = string.IsNullOrWhiteSpace(Presentation?.Title) ? "Präsentation" : Presentation!.Title;
+        var name = string.IsNullOrWhiteSpace(Presentation?.Title) ? VmStrings.Presentation_DefaultFileName : Presentation!.Title;
         foreach (var c in Path.GetInvalidFileNameChars().Concat(new[] { '/', '\\', ':', '*', '?', '"', '<', '>', '|' }))
             name = name.Replace(c, '_');
         name = name.Length > 60 ? name[..60] : name;

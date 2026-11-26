@@ -157,4 +157,196 @@
   <data name="Dialog_TextFiles" xml:space="preserve"><value>Text files (*.txt)</value></data>
   <data name="Dialog_CsvFiles" xml:space="preserve"><value>CSV files (*.csv)</value></data>
   <data name="Dialog_SelectDocument" xml:space="preserve"><value>Select document</value></data>
+  <data name="Common_PrintPdf" xml:space="preserve"><value>🖨️ Print / PDF</value></data>
+  <data name="Common_ExportMd" xml:space="preserve"><value>📄 Export (.md)</value></data>
+  <data name="Common_ExportMdTitle" xml:space="preserve"><value>Export as Markdown</value></data>
+  <data name="Common_Back" xml:space="preserve"><value>Back</value></data>
+  <data name="Common_Next" xml:space="preserve"><value>Next</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Common_WhatYouCanDo" xml:space="preserve"><value>What you can do:</value></data>
+  <data name="Common_Tip" xml:space="preserve"><value>Tip:</value></data>
+  <data name="Common_TechnicalDetailsAi" xml:space="preserve"><value>Technical details (AI response)</value></data>
+  <data name="Common_PrintDialogFailed" xml:space="preserve"><value>⚠️ The print dialog could not be opened: {error}</value></data>
+  <data name="Common_Exported" xml:space="preserve"><value>✓ Exported to: {file}</value></data>
+  <data name="Common_ExportFailed" xml:space="preserve"><value>⚠️ Could not export: {error}</value></data>
+  <data name="Common_GenerationWait" xml:space="preserve"><value>Depending on the model and document size, this may take a while.</value></data>
+  <data name="Flashcards_Title" xml:space="preserve"><value>Flashcards: {profile}</value></data>
+  <data name="Flashcards_Summary" xml:space="preserve"><value>{count, plural, one {# card} other {# cards}} | Card {progress}</value></data>
+  <data name="Flashcards_Count" xml:space="preserve"><value>Number:</value></data>
+  <data name="Flashcards_Generating" xml:space="preserve"><value>Generating…</value></data>
+  <data name="Flashcards_Generate" xml:space="preserve"><value>✨ Generate new cards</value></data>
+  <data name="Flashcards_PrintTitle" xml:space="preserve"><value>Print or save as PDF</value></data>
+  <data name="Flashcards_DeleteAll" xml:space="preserve"><value>🗑️ Delete all</value></data>
+  <data name="Flashcards_DeleteAllTitle" xml:space="preserve"><value>Delete all cards in this profile</value></data>
+  <data name="Flashcards_Mode_Title" xml:space="preserve"><value>Generate new cards</value></data>
+  <data name="Flashcards_Mode_Question" xml:space="preserve"><value>{existing, plural, one {There is already # card} other {There are already # cards}}. How should the {count} new cards be added?</value></data>
+  <data name="Flashcards_Mode_Append" xml:space="preserve"><value>&lt;strong&gt;Add to deck&lt;/strong&gt; (recommended)</value></data>
+  <data name="Flashcards_Mode_AppendHint" xml:space="preserve"><value>Existing cards and your learning progress are kept. Questions that already exist are skipped.</value></data>
+  <data name="Flashcards_Mode_Replace" xml:space="preserve"><value>Replace deck</value></data>
+  <data name="Flashcards_Mode_ReplaceHint" xml:space="preserve"><value>All existing cards are replaced by the new ones.</value></data>
+  <data name="Flashcards_Mode_ReplaceWarning" xml:space="preserve"><value>⚠️ Warning: {count, plural, one {The existing card will be} other {The # existing cards will be}} deleted – including learning progress ({known} learned, {difficult} to review). This cannot be undone.</value></data>
+  <data name="Flashcards_Mode_AddCards" xml:space="preserve"><value>Add cards</value></data>
+  <data name="Flashcards_GeneratingInfo" xml:space="preserve"><value>🧠 The AI is analyzing passages and writing flashcards…</value></data>
+  <data name="Flashcards_GeneratingWait" xml:space="preserve"><value>Depending on your hardware and context size, this may take a few seconds.</value></data>
+  <data name="Flashcards_Filter_All" xml:space="preserve"><value>All ({count})</value></data>
+  <data name="Flashcards_Filter_Difficult" xml:space="preserve"><value>🔴 Review ({count})</value></data>
+  <data name="Flashcards_Filter_New" xml:space="preserve"><value>⚪ New ({count})</value></data>
+  <data name="Flashcards_Filter_Known" xml:space="preserve"><value>🟢 Learned ({count})</value></data>
+  <data name="Flashcards_Empty" xml:space="preserve"><value>No matching flashcards.</value></data>
+  <data name="Flashcards_EmptyHint" xml:space="preserve"><value>Select at least one document on the left and click “✨ Generate new cards” above.</value></data>
+  <data name="Flashcards_Answer" xml:space="preserve"><value>ANSWER</value></data>
+  <data name="Flashcards_Question" xml:space="preserve"><value>QUESTION</value></data>
+  <data name="Flashcards_Status" xml:space="preserve"><value>Status: {status}</value></data>
+  <data name="Flashcards_Status_Known" xml:space="preserve"><value>🟢 Learned</value></data>
+  <data name="Flashcards_Status_Difficult" xml:space="preserve"><value>🔴 Review</value></data>
+  <data name="Flashcards_Status_New" xml:space="preserve"><value>⚪ New</value></data>
+  <data name="Flashcards_FlipHint" xml:space="preserve"><value>Click or press [Space] to flip</value></data>
+  <data name="Flashcards_DidNotKnow" xml:space="preserve"><value>✕ Didn't know [1]</value></data>
+  <data name="Flashcards_Knew" xml:space="preserve"><value>✓ Knew it [2]</value></data>
+  <data name="Flashcards_Reveal" xml:space="preserve"><value>Reveal [Space]</value></data>
+  <data name="Flashcards_KeyboardHelp" xml:space="preserve"><value>Keyboard navigation active: &lt;b&gt;Space&lt;/b&gt;: Flip | &lt;b&gt;← / →&lt;/b&gt;: Next/Back | &lt;b&gt;1&lt;/b&gt;: Didn't know | &lt;b&gt;2&lt;/b&gt;: Knew it</value></data>
+  <data name="Flashcards_PrintQuestion" xml:space="preserve"><value>Question:</value></data>
+  <data name="Flashcards_PrintAnswer" xml:space="preserve"><value>Answer:</value></data>
+  <data name="Flashcards_NoDocuments" xml:space="preserve"><value>⚠️ Select at least one document in the list on the left to generate flashcards.</value></data>
+  <data name="Flashcards_SkippedDuplicates" xml:space="preserve"><value>{count, plural, one {# duplicate question was} other {# duplicate questions were}} skipped.</value></data>
+  <data name="Flashcards_Replaced" xml:space="preserve"><value>✓ The deck was replaced by {count, plural, one {# new flashcard} other {# new flashcards}}.</value></data>
+  <data name="Flashcards_Added" xml:space="preserve"><value>✓ {count, plural, one {# new flashcard was} other {# new flashcards were}} added.</value></data>
+  <data name="Flashcards_OnlyDuplicates" xml:space="preserve"><value>⚠️ The AI only returned questions that are already in the deck – nothing was added. Try again or select other documents.</value></data>
+  <data name="Flashcards_NothingUsable" xml:space="preserve"><value>⚠️ The AI did not return any usable flashcards. Click “Generate new cards” again.</value></data>
+  <data name="Flashcards_KeptExisting" xml:space="preserve"><value>Your existing cards remain unchanged.</value></data>
+  <data name="Flashcards_Error" xml:space="preserve"><value>⚠️ Could not generate the flashcards: {error}</value></data>
+  <data name="Flashcards_ExportFileName" xml:space="preserve"><value>Flashcards_{profile}_{stamp}.md</value></data>
+  <data name="Flashcards_ExportTitle" xml:space="preserve"><value>Export flashcards as…</value></data>
+  <data name="Flashcards_Cleared" xml:space="preserve"><value>✓ All flashcards for this profile were deleted.</value></data>
+  <data name="Mindmap_Title" xml:space="preserve"><value>Mind map: {name}</value></data>
+  <data name="Mindmap_NoneForProfile" xml:space="preserve"><value>No mind map for this profile yet</value></data>
+  <data name="Mindmap_CreateTitle" xml:space="preserve"><value>Generate a mind map from the documents selected on the left</value></data>
+  <data name="Mindmap_ExpandAll" xml:space="preserve"><value>⊞ Expand all</value></data>
+  <data name="Mindmap_ExpandAllTitle" xml:space="preserve"><value>Expand all branches</value></data>
+  <data name="Mindmap_CollapseAll" xml:space="preserve"><value>⊟ Collapse all</value></data>
+  <data name="Mindmap_CollapseAllTitle" xml:space="preserve"><value>Show main branches only</value></data>
+  <data name="Mindmap_ZoomOut" xml:space="preserve"><value>Zoom out</value></data>
+  <data name="Mindmap_ZoomReset" xml:space="preserve"><value>Reset zoom</value></data>
+  <data name="Mindmap_ZoomIn" xml:space="preserve"><value>Zoom in</value></data>
+  <data name="Mindmap_PrintTitle" xml:space="preserve"><value>Print the mind map as a graphic or save it as PDF (the current view is printed – click “Expand all” first if needed)</value></data>
+  <data name="Mindmap_ExportTitle" xml:space="preserve"><value>Export as Markdown outline</value></data>
+  <data name="Mindmap_DeleteTitle" xml:space="preserve"><value>Delete the mind map for this profile</value></data>
+  <data name="Mindmap_GeneratingInfo" xml:space="preserve"><value>🧠 The AI is analyzing the documents and organizing the topics…</value></data>
+  <data name="Mindmap_Empty" xml:space="preserve"><value>No mind map yet.</value></data>
+  <data name="Mindmap_EmptyHint" xml:space="preserve"><value>Select one or more documents on the left and click “✨ {button}” above. The AI then arranges the content as a topic tree.</value></data>
+  <data name="Mindmap_PrintSource" xml:space="preserve"><value>{source} · Profile: {profile}</value></data>
+  <data name="Mindmap_Collapse" xml:space="preserve"><value>Collapse</value></data>
+  <data name="Mindmap_ExpandChildren" xml:space="preserve"><value>{count, plural, one {Expand # subtopic} other {Expand # subtopics}}</value></data>
+  <data name="Mindmap_NoSummary" xml:space="preserve"><value>No short description available.</value></data>
+  <data name="Mindmap_Subtopics" xml:space="preserve"><value>Subtopics:</value></data>
+  <data name="Mindmap_AskInChat" xml:space="preserve"><value>💬 Explain in chat</value></data>
+  <data name="Mindmap_AskInChatTitle" xml:space="preserve"><value>Ask about this topic in the chat (based on your materials)</value></data>
+  <data name="Mindmap_DoubleClickTip" xml:space="preserve"><value>Tip: Double-click a topic to expand or collapse it.</value></data>
+  <data name="Mindmap_ExportFileName" xml:space="preserve"><value>MindMap_{profile}_{stamp}.md</value></data>
+  <data name="Mindmap_ExportDialogTitle" xml:space="preserve"><value>Export mind map as…</value></data>
+  <data name="Presentation_Title" xml:space="preserve"><value>Presentation: {profile}</value></data>
+  <data name="Presentation_NoneForProfile" xml:space="preserve"><value>No presentation for this profile yet</value></data>
+  <data name="Presentation_ReplaceWarning" xml:space="preserve"><value>The existing presentation will be replaced.</value></data>
+  <data name="Presentation_Replace" xml:space="preserve"><value>Replace</value></data>
+  <data name="Presentation_Slides" xml:space="preserve"><value>Slides:</value></data>
+  <data name="Presentation_SlidesTitle" xml:space="preserve"><value>Number of content slides for “{button}”</value></data>
+  <data name="Presentation_GenerateTitle" xml:space="preserve"><value>The AI creates slides with bullet points and speaker notes from the documents selected on the left</value></data>
+  <data name="Presentation_FromMindmap" xml:space="preserve"><value>🧠 From mind map</value></data>
+  <data name="Presentation_FromMindmapTitle" xml:space="preserve"><value>Derive slides from the mind map of this profile (no AI, instant)</value></data>
+  <data name="Presentation_PresentTitle" xml:space="preserve"><value>Start presenting from the first slide (Esc ends)</value></data>
+  <data name="Presentation_PrintTitle" xml:space="preserve"><value>Print slides or save as PDF (one slide per page)</value></data>
+  <data name="Presentation_PptxTitle" xml:space="preserve"><value>Save as PowerPoint file (.pptx) – with speaker notes</value></data>
+  <data name="Presentation_DeleteTitle" xml:space="preserve"><value>Delete the presentation for this profile</value></data>
+  <data name="Presentation_GeneratingInfo" xml:space="preserve"><value>📽️ The AI is structuring the content and writing the slides…</value></data>
+  <data name="Presentation_Empty" xml:space="preserve"><value>No presentation yet.</value></data>
+  <data name="Presentation_EmptyHint" xml:space="preserve"><value>&lt;b&gt;✨ {ai}:&lt;/b&gt; The AI writes slides with bullet points and speaker notes from the documents selected on the left.&lt;br /&gt;&lt;b&gt;{mindmap}:&lt;/b&gt; The mind map of this profile is turned into slides instantly – each main branch becomes a slide.</value></data>
+  <data name="Presentation_SlideOf" xml:space="preserve"><value>Slide {progress}</value></data>
+  <data name="Presentation_PresentFromHere" xml:space="preserve"><value>▶ Present from here</value></data>
+  <data name="Presentation_PresentFromHereTitle" xml:space="preserve"><value>Start presenting from this slide</value></data>
+  <data name="Presentation_SpeakerNotes" xml:space="preserve"><value>Speaker notes</value></data>
+  <data name="Presentation_NoNotes" xml:space="preserve"><value>No notes for this slide.</value></data>
+  <data name="Presentation_PresentHint" xml:space="preserve"><value>{progress} · → / click: next · ←: back · Esc: exit</value></data>
+  <data name="Presentation_PptxFilter" xml:space="preserve"><value>PowerPoint presentation (*.pptx)</value></data>
+  <data name="Presentation_SaveAs" xml:space="preserve"><value>Save presentation as…</value></data>
+  <data name="Quiz_Title" xml:space="preserve"><value>Quiz: {profile}</value></data>
+  <data name="Quiz_NoTopicsYet" xml:space="preserve"><value>No topics created yet</value></data>
+  <data name="Quiz_Summary" xml:space="preserve"><value>{topics, plural, one {# topic} other {# topics}} · {questions, plural, one {# question} other {# questions}} in the pool · {runs, plural, one {# round} other {# rounds}} in the history</value></data>
+  <data name="Quiz_NewTopicTitle" xml:space="preserve"><value>Create your own topic with documents</value></data>
+  <data name="Quiz_SuggestTitle" xml:space="preserve"><value>The AI suggests topics from the documents selected on the left</value></data>
+  <data name="Quiz_BusyHint" xml:space="preserve"><value>Questions are saved once generated and reused in later quiz rounds.</value></data>
+  <data name="Quiz_EditTopic" xml:space="preserve"><value>✏️ Edit topic</value></data>
+  <data name="Quiz_Name" xml:space="preserve"><value>Name</value></data>
+  <data name="Quiz_NamePlaceholder" xml:space="preserve"><value>e.g. Photosynthesis</value></data>
+  <data name="Quiz_Description" xml:space="preserve"><value>What is it about?</value></data>
+  <data name="Quiz_DescriptionHint" xml:space="preserve"><value>(optional – helps the AI find matching passages)</value></data>
+  <data name="Quiz_DescriptionPlaceholder" xml:space="preserve"><value>e.g. light reactions, Calvin cycle and chloroplasts</value></data>
+  <data name="Quiz_Documents" xml:space="preserve"><value>Documents the questions come from</value></data>
+  <data name="Quiz_NoDocuments" xml:space="preserve"><value>This profile has no documents yet. Add documents on the left first.</value></data>
+  <data name="Quiz_NotFound" xml:space="preserve"><value>(not found)</value></data>
+  <data name="Quiz_Suggestions" xml:space="preserve"><value>✨ Topic suggestions from the AI</value></data>
+  <data name="Quiz_SuggestionsHint" xml:space="preserve"><value>Check the topics you want to add. They are based on the documents currently selected.</value></data>
+  <data name="Quiz_AcceptSelected" xml:space="preserve"><value>Add selected</value></data>
+  <data name="Quiz_Dismiss" xml:space="preserve"><value>Discard</value></data>
+  <data name="Quiz_Topics" xml:space="preserve"><value>📚 Topics</value></data>
+  <data name="Quiz_SelectAll" xml:space="preserve"><value>select all</value></data>
+  <data name="Quiz_SelectNone" xml:space="preserve"><value>none</value></data>
+  <data name="Quiz_Empty" xml:space="preserve"><value>&lt;b&gt;No topics yet.&lt;/b&gt;&lt;br /&gt;Create a topic yourself with &lt;b&gt;{newTopic}&lt;/b&gt; (name + documents)&lt;br /&gt;or let the AI find topics in the documents selected on the left with &lt;b&gt;{suggest}&lt;/b&gt;.</value></data>
+  <data name="Quiz_SelectForQuiz" xml:space="preserve"><value>Select for the quiz</value></data>
+  <data name="Quiz_AiBadge" xml:space="preserve"><value>AI</value></data>
+  <data name="Quiz_TopicPool" xml:space="preserve"><value>❓ {count, plural, one {# question} other {# questions}} in the pool</value></data>
+  <data name="Quiz_TopicStats" xml:space="preserve"><value>from {count, plural, one {# answer} other {# answers}}</value></data>
+  <data name="Quiz_Percent" xml:space="preserve"><value>{percent}%</value></data>
+  <data name="Quiz_DeleteConfirm" xml:space="preserve"><value>Delete?</value></data>
+  <data name="Quiz_DontDelete" xml:space="preserve"><value>Don't delete</value></data>
+  <data name="Quiz_EditTopicTitle" xml:space="preserve"><value>Edit topic (name, description, documents)</value></data>
+  <data name="Quiz_ResetQuestionsTitle" xml:space="preserve"><value>Discard question pool – the AI generates new questions for the next quiz</value></data>
+  <data name="Quiz_DeleteTopicTitle" xml:space="preserve"><value>Delete topic</value></data>
+  <data name="Quiz_SelectedTopics" xml:space="preserve"><value>Selected topics: &lt;b&gt;{selected}&lt;/b&gt; of {total}</value></data>
+  <data name="Quiz_QuestionCount" xml:space="preserve"><value>Number of questions ({min}–{max})</value></data>
+  <data name="Quiz_Mode" xml:space="preserve"><value>Mode</value></data>
+  <data name="Quiz_LearnMode" xml:space="preserve"><value>🎓 Practice mode</value></data>
+  <data name="Quiz_LearnModeHint" xml:space="preserve"><value>Feedback and explanation after each question</value></data>
+  <data name="Quiz_ExamMode" xml:space="preserve"><value>📝 Exam mode</value></data>
+  <data name="Quiz_ExamModeHint" xml:space="preserve"><value>Answer all questions, results at the end</value></data>
+  <data name="Quiz_QuestionTypes" xml:space="preserve"><value>Question types</value></data>
+  <data name="Quiz_Type_Single" xml:space="preserve"><value>Multiple choice – one correct answer</value></data>
+  <data name="Quiz_Type_TrueFalse" xml:space="preserve"><value>True / False</value></data>
+  <data name="Quiz_Type_Multiple" xml:space="preserve"><value>Several correct answers</value></data>
+  <data name="Quiz_StartWithCount" xml:space="preserve"><value>▶ Start quiz with {count, plural, one {# question} other {# questions}}</value></data>
+  <data name="Quiz_StartHint" xml:space="preserve"><value>The AI generates missing questions automatically (in batches of 10). Generated questions are saved and reused – new and recently missed questions come first.</value></data>
+  <data name="Quiz_History" xml:space="preserve"><value>📈 History</value></data>
+  <data name="Quiz_ReallyDelete" xml:space="preserve"><value>Really delete</value></data>
+  <data name="Quiz_No" xml:space="preserve"><value>No</value></data>
+  <data name="Quiz_ClearHistory" xml:space="preserve"><value>Clear history</value></data>
+  <data name="Quiz_NoHistory" xml:space="preserve"><value>No quiz rounds played yet.</value></data>
+  <data name="Quiz_HistoryDateFormat" xml:space="preserve"><value>M/d h:mm tt</value></data>
+  <data name="Quiz_ShowLess" xml:space="preserve"><value>show less</value></data>
+  <data name="Quiz_ShowAll" xml:space="preserve"><value>show all {count}</value></data>
+  <data name="Quiz_QuestionOf" xml:space="preserve"><value>Question {number} of {total}</value></data>
+  <data name="Quiz_CorrectSoFar" xml:space="preserve"><value>{correct} of {checked} correct</value></data>
+  <data name="Quiz_AbortConfirm" xml:space="preserve"><value>Cancel the quiz? The result will not be saved.</value></data>
+  <data name="Quiz_AbortYes" xml:space="preserve"><value>Yes, cancel</value></data>
+  <data name="Quiz_KeepPlaying" xml:space="preserve"><value>Keep playing</value></data>
+  <data name="Quiz_Abort" xml:space="preserve"><value>Cancel quiz</value></data>
+  <data name="Quiz_DotTitle" xml:space="preserve"><value>Question {number}</value></data>
+  <data name="Quiz_DotTitleAnswered" xml:space="preserve"><value>Question {number} (answered)</value></data>
+  <data name="Quiz_Hint_TrueFalse" xml:space="preserve"><value>Is the statement true or false?</value></data>
+  <data name="Quiz_Hint_Multiple" xml:space="preserve"><value>Several answers are correct ({count}) – select all correct ones.</value></data>
+  <data name="Quiz_Hint_Single" xml:space="preserve"><value>One answer is correct.</value></data>
+  <data name="Quiz_Correct" xml:space="preserve"><value>✓ Correct!</value></data>
+  <data name="Quiz_Wrong" xml:space="preserve"><value>✗ Incorrect.</value></data>
+  <data name="Quiz_NotAnswered" xml:space="preserve"><value>✗ Not answered.</value></data>
+  <data name="Quiz_KeyboardLearn" xml:space="preserve"><value>Keyboard: {keys} to choose, Enter to check/continue</value></data>
+  <data name="Quiz_KeyboardExam" xml:space="preserve"><value>Keyboard: {keys} to choose, Enter to continue</value></data>
+  <data name="Quiz_CheckAnswer" xml:space="preserve"><value>Check answer</value></data>
+  <data name="Quiz_ShowResult" xml:space="preserve"><value>Show result</value></data>
+  <data name="Quiz_Unanswered" xml:space="preserve"><value>{count, plural, one {# question unanswered – counts} other {# questions unanswered – count}} as incorrect.</value></data>
+  <data name="Quiz_SubmitAnyway" xml:space="preserve"><value>Submit anyway</value></data>
+  <data name="Quiz_Submit" xml:space="preserve"><value>✔ Submit</value></data>
+  <data name="Quiz_ScoreOf" xml:space="preserve"><value>{correct} of {total}</value></data>
+  <data name="Quiz_RetryWrong" xml:space="preserve"><value>🔁 Retry incorrect ({count})</value></data>
+  <data name="Quiz_BackToLibrary" xml:space="preserve"><value>Back to overview / new quiz</value></data>
+  <data name="Quiz_AllWithSolutions" xml:space="preserve"><value>All questions with solutions</value></data>
+  <data name="Quiz_OnlyWrong" xml:space="preserve"><value>show incorrect only</value></data>
+  <data name="Quiz_YourAnswer" xml:space="preserve"><value>← Your answer</value></data>
 </root>

@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Mindmap;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -49,8 +51,9 @@ public class MindmapViewModel : INotifyPropertyChanged
 
     public string SourceInfoText => Mindmap == null
         ? string.Empty
-        : $"Erstellt am {Mindmap.CreatedAt:dd.MM.yyyy HH:mm}" +
-          (Mindmap.SourceDocuments.Count > 0 ? $" aus: {string.Join(", ", Mindmap.SourceDocuments)}" : string.Empty);
+        : Mindmap.SourceDocuments.Count > 0
+            ? Loc.Format(VmStrings.Mindmap_SourceInfoWithSources, ("date", Mindmap.CreatedAt.ToString("g")), ("sources", string.Join(", ", Mindmap.SourceDocuments)))
+            : Loc.Format(VmStrings.Mindmap_SourceInfo, ("date", Mindmap.CreatedAt.ToString("g")));
 
     private MindmapLayoutResult _layout = MindmapLayoutResult.Empty;
     public MindmapLayoutResult Layout
@@ -119,7 +122,7 @@ public class MindmapViewModel : INotifyPropertyChanged
         }
     }
 
-    public string ZoomText => $"{Zoom * 100:0} %";
+    public string ZoomText => Loc.Format(VmStrings.Mindmap_Zoom, ("percent", Math.Round(Zoom * 100)));
 
     private MindmapNode? _selectedNode;
     public MindmapNode? SelectedNode
@@ -157,7 +160,7 @@ public class MindmapViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus, um eine Mindmap zu erstellen.", isError: true);
+            ShowStatus(VmStrings.Mindmap_NoDocuments, isError: true);
             return;
         }
 
@@ -187,7 +190,7 @@ public class MindmapViewModel : INotifyPropertyChanged
 
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Erstellung der Mindmap wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.Mindmap_Cancelled, isError: false);
                 return;
             }
 
@@ -213,11 +216,11 @@ public class MindmapViewModel : INotifyPropertyChanged
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung der Mindmap wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Mindmap_Cancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen der Mindmap: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Mindmap_Error, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -233,7 +236,7 @@ public class MindmapViewModel : INotifyPropertyChanged
     {
         await _mindmapService.DeleteMindmapAsync(profileName);
         SetMindmap(null);
-        ShowStatus("✓ Die Mindmap dieses Profils wurde gelöscht.", isError: false);
+        ShowStatus(VmStrings.Mindmap_Deleted, isError: false);
     }
 
     public string GetMarkdownExport() => Mindmap == null ? string.Empty : _mindmapService.ExportToMarkdown(Mindmap);
@@ -278,7 +281,8 @@ public class MindmapViewModel : INotifyPropertyChanged
 
     /// <summary>
     /// Formuliert eine Frage zum Knoten für den Chat. Der übergeordnete Ast wird mitgenannt,
-    /// damit die Stichwortsuche im Chat die passenden Textstellen findet.
+    /// damit die Stichwortsuche im Chat die passenden Textstellen findet. Die Frage folgt der Oberflächensprache
+    /// (sie ist eine Benutzerfrage); die Stichwortsuche kennt deutsche und englische Füllwörter.
     /// </summary>
     public string BuildQuestionFor(MindmapNode node)
     {
@@ -286,8 +290,8 @@ public class MindmapViewModel : INotifyPropertyChanged
         var parent = path.Count >= 2 ? path[^2] : null;
 
         return parent == null
-            ? $"Gib mir einen Überblick über „{node.Title}“ anhand meiner Unterlagen."
-            : $"Erkläre mir „{node.Title}“ im Zusammenhang mit „{parent.Title}“ anhand meiner Unterlagen.";
+            ? Loc.Format(VmStrings.Mindmap_QuestionOverview, ("topic", node.Title))
+            : Loc.Format(VmStrings.Mindmap_QuestionInContext, ("topic", node.Title), ("parent", parent.Title));
     }
 
     // ---------------- intern ----------------

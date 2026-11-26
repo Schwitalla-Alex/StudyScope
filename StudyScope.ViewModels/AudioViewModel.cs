@@ -911,8 +911,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, "Audio-Skript", "✨ Skript erstellen",
-                    "kein Audio-Skript", "einem Audio-Skript", "ein Audio-Skript");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.AudioScript, "✨ Skript erstellen");
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
