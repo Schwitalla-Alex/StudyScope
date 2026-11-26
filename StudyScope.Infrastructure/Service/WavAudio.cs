@@ -1,5 +1,7 @@
 using System.Buffers.Binary;
 using System.Text;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -31,7 +33,7 @@ public static class WavAudio
         var mime = (mimeType ?? string.Empty).Trim().ToLowerInvariant();
         if (mime.Length > 0 && !mime.StartsWith("audio/l16") && !mime.StartsWith("audio/pcm") && !mime.StartsWith("audio/wav")
             && !mime.StartsWith("audio/x-wav") && !mime.StartsWith("audio/wave"))
-            throw new InvalidDataException($"Nicht unterstütztes Audioformat „{mimeType}“.");
+            throw new InvalidDataException(Loc.Format(InfraStrings.Wav_UnsupportedFormat, ("mime", mimeType ?? "")));
 
         var rate = sampleRate ?? RateFromMime(mime) ?? DefaultSampleRate;
         var samples = data.Length % 2 == 0 ? data : data[..^1];
@@ -67,7 +69,7 @@ public static class WavAudio
             {
                 var format = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(start, 2));
                 if (format != 1 && format != -2) // 1 = PCM, 0xFFFE = Extensible
-                    throw new InvalidDataException($"Die WAV-Datei ist komprimiert (Format {format}).");
+                    throw new InvalidDataException(Loc.Format(InfraStrings.Wav_Compressed, ("format", format.ToString(System.Globalization.CultureInfo.InvariantCulture))));
                 channels = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(start + 2, 2));
                 rate = BinaryPrimitives.ReadInt32LittleEndian(data.AsSpan(start + 4, 4));
                 bits = BinaryPrimitives.ReadInt16LittleEndian(data.AsSpan(start + 14, 2));
@@ -81,9 +83,9 @@ public static class WavAudio
         }
 
         if (samples == null)
-            throw new InvalidDataException("Die WAV-Daten enthalten keinen Audioteil.");
+            throw new InvalidDataException(InfraStrings.Wav_NoData);
         if (bits is not null and not 16)
-            throw new InvalidDataException($"Nicht unterstützte Bittiefe ({bits} Bit).");
+            throw new InvalidDataException(Loc.Format(InfraStrings.Wav_UnsupportedBits, ("bits", bits.Value.ToString(System.Globalization.CultureInfo.InvariantCulture))));
 
         return new PcmAudio(samples, rate ?? DefaultSampleRate, channels ?? 1, 16);
     }
@@ -143,7 +145,8 @@ public sealed class WavFileWriter : IDisposable
             Format = audio with { Samples = Array.Empty<byte>() };
         else if (Format.SampleRate != audio.SampleRate || Format.Channels != audio.Channels || Format.BitsPerSample != audio.BitsPerSample)
             throw new InvalidDataException(
-                $"Die Audioteile haben unterschiedliche Formate ({Format.SampleRate} Hz/{Format.Channels} Kanal vs. {audio.SampleRate} Hz/{audio.Channels} Kanal).");
+                Loc.Format(InfraStrings.Wav_FormatMismatch, ("rate", Format.SampleRate.ToString(System.Globalization.CultureInfo.InvariantCulture)), ("channels", Format.Channels.ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                    ("otherRate", audio.SampleRate.ToString(System.Globalization.CultureInfo.InvariantCulture)), ("otherChannels", audio.Channels.ToString(System.Globalization.CultureInfo.InvariantCulture))));
 
         _stream.Write(audio.Samples);
         _dataLength += audio.Samples.Length;

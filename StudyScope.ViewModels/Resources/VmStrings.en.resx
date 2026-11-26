@@ -255,11 +255,6 @@
   <data name="Report_Exported" xml:space="preserve"><value>✓ Exported as {format}: {file}</value></data>
   <data name="Report_ExportFailed" xml:space="preserve"><value>⚠️ Could not export: {error}</value></data>
   <data name="Report_TipFileOpen" xml:space="preserve"><value>Is the file still open in another program? Close it and export again.</value></data>
-  <data name="Media_MinutesApprox" xml:space="preserve"><value>approx. {count} min</value></data>
-  <data name="Media_MinutesUnderOne" xml:space="preserve"><value>under 1 min</value></data>
-  <data name="Media_SizeApprox" xml:space="preserve"><value>approx. {size} MB</value></data>
-  <data name="Media_SizeUnder" xml:space="preserve"><value>under {size} MB</value></data>
-  <data name="Media_Under" xml:space="preserve"><value>under {value}</value></data>
   <data name="Media_GeminiEstimate" xml:space="preserve"><value>{minutes} of audio · approx. {size} MB (WAV) · estimated {usd} US dollars with paid usage. The free tier of Google AI Studio incurs no costs (daily limits).</value></data>
   <data name="Media_SettingSaveFailed" xml:space="preserve"><value>⚠️ Could not save the text-to-speech setting: {error}</value></data>
   <data name="Media_Busy" xml:space="preserve"><value>Wait until the current generation has finished.</value></data>
@@ -406,4 +401,16 @@
   <data name="Video_Mp3TrackBusy" xml:space="preserve"><value>Saving audio track as MP3…</value></data>
   <data name="Video_ExportCancelled" xml:space="preserve"><value>The export was canceled. No partial file was saved; temporary files were deleted.</value></data>
   <data name="Video_ReportVideoMissing" xml:space="preserve"><value>⚠️ The video from the report no longer exists (deleted or in another profile).</value></data>
+  <data name="Speech_Recheck" xml:space="preserve"><value>↻ Check again</value></data>
+  <data name="Voice_WindowsInstallHint" xml:space="preserve"><value>Install a German voice on Windows: Settings › Time &amp; language › Language &amp; region › German › Language options › download “Text-to-speech” (Windows 11 alternatively: Time &amp; language › Speech › Manage voices › Add voices). Then restart StudyScope.</value></data>
+  <data name="Voice_LinuxNoSpeech" xml:space="preserve"><value>On Linux, the built-in browser component (WebKitGTK) often does not support text-to-speech. Use Gemini TTS instead – it also creates an audio file.</value></data>
+  <data name="Voice_NotSupported" xml:space="preserve"><value>Your system does not provide text-to-speech.</value></data>
+  <data name="Voice_UseGemini" xml:space="preserve"><value>Use Gemini TTS to generate the episode as an audio file.</value></data>
+  <data name="Voice_NoneInstalled" xml:space="preserve"><value>No voice is installed.</value></data>
+  <data name="Voice_NoGerman" xml:space="preserve"><value>Ready – but no German voice was found; the text is read aloud with a voice for another language.</value></data>
+  <data name="Voice_OnlyOnline" xml:space="preserve"><value>Ready – {count, plural, one {# German online voice} other {# German online voices}}. Online voices send the text to the vendor (Microsoft); no German offline voice is installed.</value></data>
+  <data name="Voice_Ready" xml:space="preserve"><value>Ready – {count, plural, one {# German voice} other {# German voices}} available.</value></data>
+  <data name="Voice_WindowsMoreVoices" xml:space="preserve"><value>More German voices (e.g. “Stefan”) on Windows: Settings › Time &amp; language › Language &amp; region › German › Language options › download “Text-to-speech”. Then use “{recheck}” here or restart StudyScope.</value></data>
+  <data name="Voice_OnlyOneGerman" xml:space="preserve"><value>Only one German voice is installed for two speakers – both sound the same.</value></data>
+  <data name="Voice_NoMatchingGender" xml:space="preserve"><value>No {gender, select, male {male} other {female}} German voice installed for “{role}” – “{voice}” is used.</value></data>
 </root>

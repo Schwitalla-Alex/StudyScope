@@ -1,4 +1,6 @@
 using StudyScope.Core.Interfaces;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -19,7 +21,7 @@ public class FfmpegAudioTranscoder : IAudioTranscoder
     {
         var status = await _ffmpeg.GetStatusAsync(cancellationToken: cancellationToken);
         if (!status.IsAvailable) return $"{status.Message} {status.Hint}";
-        return status.HasMp3 ? null : $"Diesem ffmpeg fehlt der MP3-Encoder (libmp3lame). {status.Hint}";
+        return status.HasMp3 ? null : Loc.Format(InfraStrings.Ffmpeg_NoMp3, ("hint", status.Hint ?? ""));
     }
 
     public async Task<byte[]> ConvertToMp3Async(string wavPath, CancellationToken cancellationToken = default)

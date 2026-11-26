@@ -1,4 +1,6 @@
-﻿namespace StudyScope.Core.Common;
+﻿using StudyScope.Core.Localization;
+using StudyScope.Core.Resources;
+namespace StudyScope.Core.Common;
 
 /// <summary>
 /// Prüft Profilnamen, bevor daraus ein Dateiname wird. Die Regeln gelten bewusst auf allen
@@ -27,25 +29,25 @@ public static class ProfileNameValidator
         var trimmed = name?.Trim() ?? string.Empty;
 
         if (trimmed.Length == 0)
-            return "Bitte geben Sie einen Namen ein.";
+            return CoreStrings.Profile_NameEmpty;
 
         if (trimmed.Length > MaxLength)
-            return $"Der Name darf höchstens {MaxLength} Zeichen lang sein.";
+            return Loc.Format(CoreStrings.Profile_NameTooLong, ("max", MaxLength));
 
         var invalid = trimmed.Where(c => InvalidCharacters.Contains(c) || char.IsControl(c)).Distinct().ToList();
         if (invalid.Count > 0)
         {
             var shown = string.Join(" ", invalid.Where(c => !char.IsControl(c)));
             return string.IsNullOrEmpty(shown)
-                ? "Der Name enthält unzulässige Steuerzeichen."
-                : $"Der Name darf diese Zeichen nicht enthalten: {shown}";
+                ? CoreStrings.Profile_NameControlChars
+                : Loc.Format(CoreStrings.Profile_NameInvalidChars, ("chars", shown));
         }
 
         if (trimmed.EndsWith('.'))
-            return "Der Name darf nicht mit einem Punkt enden.";
+            return CoreStrings.Profile_NameEndsWithDot;
 
         if (IsReservedName(trimmed))
-            return $"„{trimmed}“ ist ein reservierter Systemname und kann nicht verwendet werden.";
+            return Loc.Format(CoreStrings.Profile_NameReserved, ("name", trimmed));
 
         return null;
     }

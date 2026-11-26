@@ -2,6 +2,8 @@ using System.Diagnostics;
 using System.Text;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -66,23 +68,23 @@ public class FfmpegService : IFfmpegService
             var mp3 = FfmpegArguments.HasEncoder(encoders, "libmp3lame");
 
             var notCustom = hasCustom && !customCandidates.Contains(candidate, StringComparer.OrdinalIgnoreCase)
-                ? $" Der eingetragene Pfad „{customPath!.Trim()}“ funktioniert nicht – verwendet wird das automatisch gefundene ffmpeg."
+                ? " " + Loc.Format(InfraStrings.Ffmpeg_CustomPathIgnored, ("path", customPath!.Trim()))
                 : string.Empty;
             var missing = new List<string>();
             if (!h264) missing.Add("H.264 (libx264)");
             if (!aac) missing.Add("AAC");
             if (!mp3) missing.Add("MP3 (libmp3lame)");
             var abilities = $"MP4 {(h264 && aac ? "✓" : "✗")} · MP3 {(mp3 ? "✓" : "✗")}";
-            var message = $"ffmpeg {parsed} gefunden: {candidate} ({abilities}).{notCustom}";
+            var message = Loc.Format(InfraStrings.Ffmpeg_Found, ("version", parsed), ("path", candidate), ("abilities", abilities)) + notCustom;
             var missingHint = missing.Count == 0
                 ? null
-                : $"Diesem ffmpeg fehlt {string.Join(", ", missing)}. Installieren Sie eine vollständige Ausgabe – {hint}";
+                : Loc.Format(InfraStrings.Ffmpeg_Missing, ("codecs", string.Join(", ", missing)), ("hint", hint));
             return new FfmpegStatus(true, candidate, parsed, h264, aac, mp3, message, missingHint);
         }
 
         return hasCustom
-            ? FfmpegStatus.NotFound($"ffmpeg wurde unter „{customPath!.Trim()}“ nicht gefunden oder startet nicht – und auch sonst nicht auf diesem Rechner.", hint)
-            : FfmpegStatus.NotFound("ffmpeg wurde auf diesem Rechner nicht gefunden (PATH" + (OperatingSystem.IsWindows() ? ", WinGet-Ordner" : ", /usr/bin") + ").", hint);
+            ? FfmpegStatus.NotFound(Loc.Format(InfraStrings.Ffmpeg_NotFoundCustom, ("path", customPath!.Trim())), hint)
+            : FfmpegStatus.NotFound(OperatingSystem.IsWindows() ? InfraStrings.Ffmpeg_NotFoundWindows : InfraStrings.Ffmpeg_NotFoundLinux, hint);
     }
 
     /// <summary>Startet ffmpeg kurz zur Prüfung; liefert die Ausgabe oder null (startet nicht, Zeitüberschreitung, Fehlercode).</summary>
@@ -151,7 +153,7 @@ public class FfmpegService : IFfmpegService
         }
         catch (Exception ex)
         {
-            throw new FfmpegException($"ffmpeg konnte nicht gestartet werden: {ex.Message}", status.ExecutablePath, ex);
+            throw new FfmpegException(Loc.Format(InfraStrings.Ffmpeg_StartFailed, ("error", ex.Message)), status.ExecutablePath, ex);
         }
 
         using var registration = cancellationToken.Register(() => Kill(process));
@@ -189,8 +191,7 @@ public class FfmpegService : IFfmpegService
             string detail;
             lock (errorTail) detail = string.Join(Environment.NewLine, errorTail);
             throw new FfmpegException(
-                $"ffmpeg hat mit einem Fehler abgebrochen (Code {process.ExitCode}). Es wurde keine halbe Datei gespeichert. " +
-                "Prüfen Sie freien Speicherplatz und Schreibrechte im Zielordner; die technische Meldung steht in den Details.",
+                Loc.Format(InfraStrings.Ffmpeg_Failed, ("code", process.ExitCode.ToString(System.Globalization.CultureInfo.InvariantCulture))),
                 detail);
         }
     }

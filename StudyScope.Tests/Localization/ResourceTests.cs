@@ -84,7 +84,7 @@ public class ResourceTests
     public void ResourceSets_AreFound()
     {
         var names = Sets().Select(s => s.Name).ToList();
-        Assert.That(names, Does.Contain("UiStrings").And.Contain("VmStrings"));
+        Assert.That(names, Does.Contain("UiStrings").And.Contain("VmStrings").And.Contain("CoreStrings").And.Contain("InfraStrings"));
     }
 
     [Test]

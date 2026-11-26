@@ -1,5 +1,7 @@
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels.Audio;
 
@@ -17,28 +19,23 @@ public enum VoiceGender
 /// </summary>
 public static class SystemVoiceRules
 {
-    public const string WindowsGermanVoiceHint =
-        "Deutsche Stimme unter Windows installieren: Einstellungen › Zeit und Sprache › Sprache und Region › Deutsch › Sprachoptionen › " +
-        "bei „Sprachausgabe“ bzw. „Text-zu-Sprache“ herunterladen (Windows 11 alternativ: Zeit und Sprache › Spracherkennung › Stimmen verwalten › Stimmen hinzufügen). " +
-        "Danach StudyScope neu starten.";
+    public static string WindowsGermanVoiceHint => VmStrings.Voice_WindowsInstallHint;
 
-    public const string LinuxNoSpeechHint =
-        "Unter Linux unterstützt die eingebaute Browser-Komponente (WebKitGTK) die Sprachausgabe häufig nicht. " +
-        "Nutzen Sie stattdessen Gemini TTS – damit entsteht zugleich eine Audiodatei.";
+    public static string LinuxNoSpeechHint => VmStrings.Voice_LinuxNoSpeech;
 
     public static SpeechAvailability Evaluate(bool supported, IReadOnlyList<SpeechVoice> voices, bool isLinux)
     {
         if (!supported)
         {
             return SpeechAvailability.Unavailable(
-                "Ihre Systemumgebung stellt keine Sprachausgabe bereit.",
-                isLinux ? LinuxNoSpeechHint : "Nutzen Sie Gemini TTS, um den Beitrag als Audiodatei zu erzeugen.");
+                VmStrings.Voice_NotSupported,
+                isLinux ? LinuxNoSpeechHint : VmStrings.Voice_UseGemini);
         }
 
         if (voices.Count == 0)
         {
             return SpeechAvailability.Unavailable(
-                "Es ist keine Stimme installiert.",
+                VmStrings.Voice_NoneInstalled,
                 isLinux ? LinuxNoSpeechHint : WindowsGermanVoiceHint);
         }
 
@@ -46,7 +43,7 @@ public static class SystemVoiceRules
         if (german.Count == 0)
         {
             return SpeechAvailability.Warning(
-                "Bereit – aber keine deutsche Stimme gefunden; der Text wird mit einer fremdsprachigen Stimme vorgelesen.",
+                VmStrings.Voice_NoGerman,
                 isLinux ? null : WindowsGermanVoiceHint);
         }
 
@@ -54,15 +51,12 @@ public static class SystemVoiceRules
         if (local == 0)
         {
             return SpeechAvailability.Warning(
-                $"Bereit – {CountText(german.Count, "deutsche Online-Stimme", "deutsche Online-Stimmen")}. " +
-                "Online-Stimmen senden den Text an den Hersteller (Microsoft); offline ist keine deutsche Stimme installiert.",
+                Loc.Format(VmStrings.Voice_OnlyOnline, ("count", german.Count)),
                 isLinux ? null : WindowsGermanVoiceHint);
         }
 
-        return SpeechAvailability.Ready($"Bereit – {CountText(german.Count, "deutsche Stimme", "deutsche Stimmen")} verfügbar.");
+        return SpeechAvailability.Ready(Loc.Format(VmStrings.Voice_Ready, ("count", german.Count)));
     }
-
-    private static string CountText(int count, string singular, string plural) => count == 1 ? $"1 {singular}" : $"{count} {plural}";
 
     /// <summary>Deutsche zuerst, dabei Offline- vor Online-Stimmen, sonst alphabetisch.</summary>
     public static List<SpeechVoice> Order(IEnumerable<SpeechVoice> voices) =>
@@ -139,9 +133,7 @@ public static class SystemVoiceRules
         _ => VoiceGender.Unknown
     };
 
-    public const string WindowsMoreVoicesHint =
-        "Weitere deutsche Stimmen (z. B. „Stefan“) unter Windows: Einstellungen › Zeit und Sprache › Sprache und Region › Deutsch › " +
-        "Sprachoptionen › bei „Sprachausgabe“ bzw. „Text-zu-Sprache“ herunterladen. Danach hier „↻ Neu prüfen“ bzw. StudyScope neu starten.";
+    public static string WindowsMoreVoicesHint => Loc.Format(VmStrings.Voice_WindowsMoreVoices, ("recheck", VmStrings.Speech_Recheck));
 
     /// <summary>
     /// Hinweis, wenn die automatisch gewählte Stimme des zweiten Sprechers nicht passt: nur eine deutsche Stimme
@@ -160,10 +152,10 @@ public static class SystemVoiceRules
 
         string message;
         if (secondaryId == primaryId || !second.IsGerman)
-            message = $"Für zwei Sprecher ist nur eine deutsche Stimme installiert – beide klingen gleich.";
+            message = VmStrings.Voice_OnlyOneGerman;
         else if (wanted != VoiceGender.Unknown && GuessGender(second) != wanted)
-            message = $"Keine {(wanted == VoiceGender.Male ? "männliche" : "weibliche")} deutsche Stimme für „{roleName}“ installiert – " +
-                      $"es wird „{ShortName(second)}“ verwendet.";
+            message = Loc.Format(VmStrings.Voice_NoMatchingGender, ("gender", wanted == VoiceGender.Male ? "male" : "female"),
+                ("role", MediaTexts.SpeakerName(roleName)), ("voice", ShortName(second)));
         else
             return null;
 

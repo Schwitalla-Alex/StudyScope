@@ -17,4 +17,15 @@
     <EmbeddedResource Include="Languages\**\*.txt" WithCulture="false" />
   </ItemGroup>
 
+  <!-- Texte (Meldungen): neutrale Sprache Deutsch, typisierte Klasse CoreStrings wird beim Bauen erzeugt -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\CoreStrings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>StudyScope.Core.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>CoreStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)CoreStrings.Designer.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

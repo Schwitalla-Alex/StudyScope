@@ -1,3 +1,5 @@
+using StudyScope.Core.Localization;
+using StudyScope.Core.Resources;
 namespace StudyScope.Core.Common;
 
 /// <summary>
@@ -34,22 +36,22 @@ public class LlmServiceException : Exception
     {
         var hint = statusCode switch
         {
-            400 => "Die Anfrage wurde abgelehnt. Bitte Modell und Einstellungen prüfen.",
-            401 or 403 => "Der API-Schlüssel wurde abgelehnt. Bitte den Schlüssel in den Einstellungen prüfen.",
-            404 => "Modell oder Adresse wurde nicht gefunden. Bitte Modell und Server-URL in den Einstellungen prüfen.",
-            408 or 504 => "Der KI-Dienst hat nicht rechtzeitig geantwortet. Bitte später erneut versuchen.",
-            429 => "Zu viele Anfragen oder das Kontingent ist erschöpft. Bitte kurz warten und erneut versuchen.",
-            >= 500 => "Der KI-Dienst ist gerade gestört oder überlastet. Bitte in einigen Minuten erneut versuchen.",
-            _ => "Der KI-Dienst hat die Anfrage nicht beantwortet."
+            400 => CoreStrings.Llm_Http400,
+            401 or 403 => CoreStrings.Llm_Http401,
+            404 => CoreStrings.Llm_Http404,
+            408 or 504 => CoreStrings.Llm_Http408,
+            429 => CoreStrings.Llm_Http429,
+            >= 500 => CoreStrings.Llm_Http5xx,
+            _ => CoreStrings.Llm_HttpOther
         };
 
-        return new LlmServiceException($"{providerName} meldet einen Fehler (HTTP {statusCode}). {hint}",
+        return new LlmServiceException(Loc.Format(CoreStrings.Llm_HttpError, ("provider", providerName), ("status", statusCode.ToString(System.Globalization.CultureInfo.InvariantCulture)), ("hint", hint)),
             providerName, statusCode, Shorten(responseBody));
     }
 
     /// <summary>Erzeugt die Ausnahme für einen Netzwerkfehler (Dienst nicht erreichbar).</summary>
     public static LlmServiceException FromNetworkError(string providerName, Exception exception) =>
-        new($"{providerName} ist nicht erreichbar. Bitte Internetverbindung bzw. Server-Adresse prüfen ({exception.Message}).",
+        new(Loc.Format(CoreStrings.Llm_NotReachable, ("provider", providerName), ("error", exception.Message)),
             providerName, null, exception.Message, exception);
 
     private static string Shorten(string? text)

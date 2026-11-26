@@ -477,7 +477,6 @@
   <data name="Common_EstimatePrefix" xml:space="preserve"><value>Geschätzt: {estimate}</value></data>
   <data name="Speech_PanelTitle" xml:space="preserve"><value>🔊 Sprachausgabe</value></data>
   <data name="Speech_RecheckTitle" xml:space="preserve"><value>Verfügbarkeit und Stimmen neu prüfen (z. B. nach Installation einer Stimme)</value></data>
-  <data name="Speech_Recheck" xml:space="preserve"><value>↻ Neu prüfen</value></data>
   <data name="Speech_NotAvailableTitle" xml:space="preserve"><value>Nicht verfügbar: {message} {hint}</value></data>
   <data name="Speech_Current" xml:space="preserve"><value>Aktuell:</value></data>
   <data name="Speech_SetupGemini" xml:space="preserve"><value>⚙️ Gemini TTS einrichten (Einstellungen › Sprachausgabe)</value></data>

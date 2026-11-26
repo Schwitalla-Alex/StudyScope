@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Llm_ProviderCustom" xml:space="preserve"><value>The custom AI service</value></data>
+  <data name="Llm_Timeout" xml:space="preserve"><value>{provider} did not respond in time (timeout). Check the internet connection and try again.</value></data>
+  <data name="Llm_TimeoutSeconds" xml:space="preserve"><value>{provider} did not respond in time (timeout after {seconds} s). Try again or activate fewer documents.</value></data>
+  <data name="Llm_NoProvider" xml:space="preserve"><value>No valid AI provider configured.</value></data>
+  <data name="Llm_UnexpectedResponse" xml:space="preserve"><value>{provider} returned an unexpected response. Check the model and server URL in the settings.</value></data>
+  <data name="Llm_GeminiNoKey" xml:space="preserve"><value>No API key is stored for Google Gemini. Enter one in the settings.</value></data>
+  <data name="Tts_DisplayName" xml:space="preserve"><value>Google Gemini TTS (cloud, audio file)</value></data>
+  <data name="Tts_MissingKeyHint" xml:space="preserve"><value>Enter a Gemini API key under ⚙️ Settings › Text-to-speech (available for free in Google AI Studio). The profile's chat AI can stay as it is.</value></data>
+  <data name="Tts_KeyFromChat" xml:space="preserve"><value>key from the profile's AI settings (Google Gemini)</value></data>
+  <data name="Tts_KeyOwn" xml:space="preserve"><value>separate text-to-speech key</value></data>
+  <data name="Tts_KeyNone" xml:space="preserve"><value>no key</value></data>
+  <data name="Tts_ReadyChatKey" xml:space="preserve"><value>Ready – key from the profile's AI settings (Google Gemini).</value></data>
+  <data name="Tts_ReadyOwnKey" xml:space="preserve"><value>Ready – separate text-to-speech key.</value></data>
+  <data name="Tts_NoKey" xml:space="preserve"><value>No API key for Gemini TTS.</value></data>
+  <data name="Tts_NoKeyWithHint" xml:space="preserve"><value>No API key for Gemini TTS. {hint}</value></data>
+  <data name="Tts_Multilingual" xml:space="preserve"><value>multilingual</value></data>
+  <data name="Tts_TestTimeout" xml:space="preserve"><value>{provider} did not respond in time (timeout after {seconds} s). Check the internet connection and try again.</value></data>
+  <data name="Tts_TestSuccess" xml:space="preserve"><value>✓ Connection to Gemini TTS successful – model “{model}” is available ({source}). The test did not incur any costs.</value></data>
+  <data name="Tts_EmptyScript" xml:space="preserve"><value>The script is empty – there is nothing to read aloud.</value></data>
+  <data name="Tts_UnexpectedFormat" xml:space="preserve"><value>{provider} returned audio in an unexpected format. Try again.</value></data>
+  <data name="Tts_UnexpectedFormatMime" xml:space="preserve"><value>{provider} returned audio in an unexpected format ({mime}). Try again.</value></data>
+  <data name="Tts_RequestTimeout" xml:space="preserve"><value>{provider} did not respond in time (timeout after {minutes, plural, one {# minute} other {# minutes}}). Try again; shorten the text for very long segments.</value></data>
+  <data name="Tts_UnexpectedResponse" xml:space="preserve"><value>{provider} returned an unexpected response. Try again.</value></data>
+  <data name="Tts_NoAudio" xml:space="preserve"><value>{provider} returned no audio data. The text may have been blocked by the content filter or the model does not generate speech. Try again, rephrase the segment or check the model name under ⚙️ Settings › Text-to-speech.</value></data>
+  <data name="Tts_KeyRejected" xml:space="preserve"><value>The Gemini API key was rejected (invalid or expired). Check the key under ⚙️ Settings › Text-to-speech or in the AI settings – you can get a new key for free in Google AI Studio.</value></data>
+  <data name="Tts_KeyNoAccess" xml:space="preserve"><value>The Gemini API key has no access to text-to-speech (HTTP {status}). Check in Google AI Studio whether the key is active and the Gemini API is enabled for the project.</value></data>
+  <data name="Tts_ModelNotFound" xml:space="preserve"><value>The model “{model}” was not found at Gemini. Check the model name under ⚙️ Settings › Text-to-speech (default: {default}).</value></data>
+  <data name="Tts_Quota" xml:space="preserve"><value>The Gemini TTS quota is used up or too many requests were made (HTTP 429). The free tier has per-minute and daily limits: wait a while (or until tomorrow) and try again, or enable billing in Google AI Studio.</value></data>
+  <data name="Tts_Region" xml:space="preserve"><value>Gemini TTS is not available in your region for this key (HTTP 400). Check availability in Google AI Studio.</value></data>
+  <data name="Tts_BadRequest" xml:space="preserve"><value>Gemini rejected the request (HTTP 400). The model “{model}” may not generate speech – check the model name under ⚙️ Settings › Text-to-speech (default: {default}).</value></data>
+  <data name="Tts_ServerError" xml:space="preserve"><value>Gemini TTS is currently overloaded or down (HTTP {status}). Try again in a few minutes.</value></data>
+  <data name="Ffmpeg_CustomPathIgnored" xml:space="preserve"><value>The path entered, “{path}”, does not work – the automatically found ffmpeg is used.</value></data>
+  <data name="Ffmpeg_Found" xml:space="preserve"><value>ffmpeg {version} found: {path} ({abilities}).</value></data>
+  <data name="Ffmpeg_Missing" xml:space="preserve"><value>This ffmpeg lacks {codecs}. Install a full build – {hint}</value></data>
+  <data name="Ffmpeg_NotFoundCustom" xml:space="preserve"><value>ffmpeg was not found at “{path}” or does not start – and not anywhere else on this computer either.</value></data>
+  <data name="Ffmpeg_NotFoundWindows" xml:space="preserve"><value>ffmpeg was not found on this computer (PATH, WinGet folder).</value></data>
+  <data name="Ffmpeg_NotFoundLinux" xml:space="preserve"><value>ffmpeg was not found on this computer (PATH, /usr/bin).</value></data>
+  <data name="Ffmpeg_StartFailed" xml:space="preserve"><value>Could not start ffmpeg: {error}</value></data>
+  <data name="Ffmpeg_Failed" xml:space="preserve"><value>ffmpeg stopped with an error (code {code}). No partial file was saved. Check the free disk space and write permissions in the target folder; the technical message is in the details.</value></data>
+  <data name="Ffmpeg_NoMp3" xml:space="preserve"><value>This ffmpeg lacks the MP3 encoder (libmp3lame). {hint}</value></data>
+  <data name="Mp4_NoH264" xml:space="preserve"><value>This ffmpeg cannot write MP4 with H.264 and AAC.</value></data>
+  <data name="Mp4_FontconfigHint" xml:space="preserve"><value>On Linux, the MP4 export needs the fontconfig library: “sudo apt install libfontconfig1”, then restart StudyScope.</value></data>
+  <data name="Mp4_ReinstallHint" xml:space="preserve"><value>Reinstall StudyScope (the libSkiaSharp file is missing or damaged).</value></data>
+  <data name="Mp4_SkiaFailed" xml:space="preserve"><value>The graphics library for the slide images (SkiaSharp) cannot be loaded: {error}</value></data>
+  <data name="Mp4_SkiaDisabled" xml:space="preserve"><value>SkiaSharp is disabled (STUDYSCOPE_DISABLE_SKIA=1).</value></data>
+  <data name="Mp4_Ready" xml:space="preserve"><value>Ready – ffmpeg {version}.</value></data>
+  <data name="Mp4_NoSlides" xml:space="preserve"><value>The video has no slides.</value></data>
+  <data name="Mp4_Rendering" xml:space="preserve"><value>Drawing slide images ({done} of {total})…</value></data>
+  <data name="Mp4_Encoding" xml:space="preserve"><value>Encoding video…</value></data>
+  <data name="Mp4_EncodingPercent" xml:space="preserve"><value>Encoding video ({percent}%)…</value></data>
+  <data name="Mp4_Done" xml:space="preserve"><value>Done.</value></data>
+  <data name="Video_NoAudioOutdated" xml:space="preserve"><value>Without sound: the Gemini audio file is outdated (narration or slides were changed). The slides advance at a fixed pace based on the estimated speaking time ({minutes}).</value></data>
+  <data name="Video_NoAudioMissing" xml:space="preserve"><value>Without sound: there is no Gemini audio file (the system voice cannot be recorded). The slides advance at a fixed pace based on the estimated speaking time ({minutes}).</value></data>
+  <data name="Video_SceneAudioMissing" xml:space="preserve"><value>The current audio file for slide {number} is missing. Generate the audio file again.</value></data>
+  <data name="Video_NoNarrationToAssemble" xml:space="preserve"><value>The video contains no narration – there is nothing to combine.</value></data>
+  <data name="Wav_UnsupportedFormat" xml:space="preserve"><value>Unsupported audio format “{mime}”.</value></data>
+  <data name="Wav_Compressed" xml:space="preserve"><value>The WAV file is compressed (format {format}).</value></data>
+  <data name="Wav_NoData" xml:space="preserve"><value>The WAV data contains no audio chunk.</value></data>
+  <data name="Wav_UnsupportedBits" xml:space="preserve"><value>Unsupported bit depth ({bits} bit).</value></data>
+  <data name="Wav_FormatMismatch" xml:space="preserve"><value>The audio parts have different formats ({rate} Hz/{channels} channel vs. {otherRate} Hz/{otherChannels} channel).</value></data>
+</root>

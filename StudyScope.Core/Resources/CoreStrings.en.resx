@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Llm_Http400" xml:space="preserve"><value>The request was rejected. Check the model and settings.</value></data>
+  <data name="Llm_Http401" xml:space="preserve"><value>The API key was rejected. Check the key in the settings.</value></data>
+  <data name="Llm_Http404" xml:space="preserve"><value>The model or address was not found. Check the model and server URL in the settings.</value></data>
+  <data name="Llm_Http408" xml:space="preserve"><value>The AI service did not respond in time. Try again later.</value></data>
+  <data name="Llm_Http429" xml:space="preserve"><value>Too many requests or the quota is used up. Wait a moment and try again.</value></data>
+  <data name="Llm_Http5xx" xml:space="preserve"><value>The AI service is currently down or overloaded. Try again in a few minutes.</value></data>
+  <data name="Llm_HttpOther" xml:space="preserve"><value>The AI service did not answer the request.</value></data>
+  <data name="Llm_HttpError" xml:space="preserve"><value>{provider} reports an error (HTTP {status}). {hint}</value></data>
+  <data name="Llm_NotReachable" xml:space="preserve"><value>{provider} cannot be reached. Check the internet connection or server address ({error}).</value></data>
+  <data name="Profile_NameEmpty" xml:space="preserve"><value>Enter a name.</value></data>
+  <data name="Profile_NameTooLong" xml:space="preserve"><value>The name can be at most {max} characters long.</value></data>
+  <data name="Profile_NameControlChars" xml:space="preserve"><value>The name contains invalid control characters.</value></data>
+  <data name="Profile_NameInvalidChars" xml:space="preserve"><value>The name must not contain these characters: {chars}</value></data>
+  <data name="Profile_NameEndsWithDot" xml:space="preserve"><value>The name must not end with a period.</value></data>
+  <data name="Profile_NameReserved" xml:space="preserve"><value>“{name}” is a reserved system name and cannot be used.</value></data>
+  <data name="Ffmpeg_InstallLinux" xml:space="preserve"><value>Install ffmpeg: in the terminal, run “{command}” (Fedora: “sudo dnf install ffmpeg”), then use “Find/test ffmpeg” in Settings › Export.</value></data>
+  <data name="Ffmpeg_InstallWindows" xml:space="preserve"><value>Install ffmpeg: in the command prompt, run “{command}”, then restart StudyScope or use “Find/test ffmpeg” in Settings › Export. Alternatively, enter the path to ffmpeg.exe there.</value></data>
+  <data name="Ffmpeg_Purpose" xml:space="preserve"><value>ffmpeg is a free program for converting audio and video. StudyScope does not ship it but uses it if it is installed: for the MP4 export of videos and the MP3 export of audio episodes (also as a smaller audio track in HTML exports).</value></data>
+  <data name="Speech_CheckingDefault" xml:space="preserve"><value>Checking text-to-speech…</value></data>
+  <data name="Media_MinutesApprox" xml:space="preserve"><value>approx. {count} min</value></data>
+  <data name="Media_MinutesUnderOne" xml:space="preserve"><value>under 1 min</value></data>
+  <data name="Media_SizeApprox" xml:space="preserve"><value>approx. {size} MB</value></data>
+  <data name="Media_SizeUnder" xml:space="preserve"><value>under {size} MB</value></data>
+  <data name="Media_Under" xml:space="preserve"><value>under {value}</value></data>
+</root>

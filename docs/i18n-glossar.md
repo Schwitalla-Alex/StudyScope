@@ -241,6 +241,12 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Schätzung / Dauer / Kosten | estimate / duration / cost | |
 | Einführungspreis | introductory price | |
 | Sprachausgabe (Option) | text-to-speech option | „The selected text-to-speech option …“ |
+| Windows: Einstellungen › Zeit und Sprache › Sprache und Region › Sprachoptionen | Settings › Time & language › Language & region › Language options | Menüpfade wie im Windows der jeweiligen Sprache |
+| Windows 11: Zeit und Sprache › Spracherkennung › Stimmen verwalten › Stimmen hinzufügen | Time & language › Speech › Manage voices › Add voices | |
+| „Sprachausgabe“ bzw. „Text-zu-Sprache“ (Windows-Sprachpaket) | “Text-to-speech” | |
+| Kontingent | quota | Gemini |
+| kostenlose Stufe | free tier | Gemini |
+| Zeitüberschreitung | timeout | |
 | Audiodatei erzeugen | Generate audio file | |
 | Audio zusammensetzen | Combine audio | |
 | Vollbild | full screen | |

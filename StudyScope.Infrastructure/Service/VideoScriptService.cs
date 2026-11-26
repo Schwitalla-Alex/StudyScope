@@ -5,6 +5,8 @@ using System.Text.RegularExpressions;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -494,12 +496,12 @@ public partial class VideoScriptService : IVideoScriptService
 
             var path = GetSceneAudioPath(profileName, video, scene);
             if (path == null || scene.NeedsAudio)
-                throw new InvalidOperationException($"Für Folie {i + 1} fehlt die aktuelle Audiodatei. Bitte die Audiodatei erneut erzeugen.");
+                throw new InvalidOperationException(Loc.Format(InfraStrings.Video_SceneAudioMissing, ("number", i + 1)));
             sources.Add(path);
         }
 
         if (sources.All(s => s == null))
-            throw new InvalidOperationException("Das Video enthält keinen Sprechtext – es gibt nichts zusammenzusetzen.");
+            throw new InvalidOperationException(InfraStrings.Video_NoNarrationToAssemble);
 
         var directory = GetVideoDirectory(profileName, video);
         var target = Path.Combine(directory, CombinedAudioFileName);
