@@ -172,4 +172,87 @@
   <data name="Quiz_Verdict_VeryGood" xml:space="preserve"><value>Very well done! 👍</value></data>
   <data name="Quiz_Verdict_Good" xml:space="preserve"><value>Good – with a little review it will stick soon. 💪</value></data>
   <data name="Quiz_Verdict_KeepGoing" xml:space="preserve"><value>There is room for more – retry the incorrect questions. 📚</value></data>
+  <data name="DtTemplate_Terms" xml:space="preserve"><value>Terms &amp; definitions</value></data>
+  <data name="DtTemplate_Comparison" xml:space="preserve"><value>Comparison</value></data>
+  <data name="DtTemplate_Timeline" xml:space="preserve"><value>Timeline</value></data>
+  <data name="DtTemplate_People" xml:space="preserve"><value>People &amp; contributions</value></data>
+  <data name="DtTemplate_Formulas" xml:space="preserve"><value>Formulas &amp; key figures</value></data>
+  <data name="DtTemplate_Custom" xml:space="preserve"><value>Custom instructions</value></data>
+  <data name="DtTemplate_Terms_Desc" xml:space="preserve"><value>Technical terms with a short definition and an example.</value></data>
+  <data name="DtTemplate_Comparison_Desc" xml:space="preserve"><value>Theories, methods or models compared by their characteristics.</value></data>
+  <data name="DtTemplate_Timeline_Desc" xml:space="preserve"><value>Events with date and significance in chronological order.</value></data>
+  <data name="DtTemplate_People_Desc" xml:space="preserve"><value>People with their contributions, works and era.</value></data>
+  <data name="DtTemplate_Formulas_Desc" xml:space="preserve"><value>Formulas, key figures and quantities with meaning and unit.</value></data>
+  <data name="DtTemplate_Custom_Desc" xml:space="preserve"><value>You describe what the table should contain – optionally with columns.</value></data>
+  <data name="DtTemplate_Terms_Columns" xml:space="preserve"><value>Term, Definition, Example</value></data>
+  <data name="DtTemplate_Comparison_Columns" xml:space="preserve"><value>Subject, Core idea, Characteristics, Advantages, Disadvantages</value></data>
+  <data name="DtTemplate_Timeline_Columns" xml:space="preserve"><value>Date, Event, Significance</value></data>
+  <data name="DtTemplate_People_Columns" xml:space="preserve"><value>Person, Life dates, Contribution, Work / Known for</value></data>
+  <data name="DtTemplate_Formulas_Columns" xml:space="preserve"><value>Name, Formula / Value, Meaning, Unit</value></data>
+  <data name="ReportTemplate_StudyGuide" xml:space="preserve"><value>Study guide</value></data>
+  <data name="ReportTemplate_Briefing" xml:space="preserve"><value>Summary / briefing</value></data>
+  <data name="ReportTemplate_Glossary" xml:space="preserve"><value>Glossary</value></data>
+  <data name="ReportTemplate_Faq" xml:space="preserve"><value>FAQ</value></data>
+  <data name="ReportTemplate_Custom" xml:space="preserve"><value>Custom instructions</value></data>
+  <data name="ReportTemplate_StudyGuide_Desc" xml:space="preserve"><value>Summarizes key concepts with terms, key takeaways and review questions – ideal for studying.</value></data>
+  <data name="ReportTemplate_Briefing_Desc" xml:space="preserve"><value>The key points in brief for a quick overview, with a conclusion.</value></data>
+  <data name="ReportTemplate_Glossary_Desc" xml:space="preserve"><value>The important technical terms with a clear explanation, grouped by topic.</value></data>
+  <data name="ReportTemplate_Faq_Desc" xml:space="preserve"><value>Frequently asked questions about the material with detailed answers.</value></data>
+  <data name="ReportTemplate_Custom_Desc" xml:space="preserve"><value>You describe what the report should contain.</value></data>
+  <data name="DataTable_Generate" xml:space="preserve"><value>✨ Generate table</value></data>
+  <data name="DataTable_AddMoreRows" xml:space="preserve"><value>✨ Add more rows</value></data>
+  <data name="DataTable_RowLimitHint" xml:space="preserve"><value>The table has reached the maximum of {max} rows. Delete rows or create a new table (e.g. narrowed down to a topic).</value></data>
+  <data name="DataTable_SelectDocument" xml:space="preserve"><value>⚠️ Select at least one document on the left – the table is generated from it.</value></data>
+  <data name="DataTable_CustomMissing" xml:space="preserve"><value>⚠️ For “{custom}”, describe what the table should contain or enter the columns you want.</value></data>
+  <data name="DataTable_Cancelled" xml:space="preserve"><value>Generating the table was canceled.</value></data>
+  <data name="DataTable_CreatedRepaired" xml:space="preserve"><value>✓ Table with {count, plural, one {# row} other {# rows}} generated. However, the AI response was incomplete, so some rows may be missing.</value></data>
+  <data name="DataTable_TipCompleteWithMore" xml:space="preserve"><value>Use “{button}” to complete the table.</value></data>
+  <data name="DataTable_TipTopicShorter" xml:space="preserve"><value>For very extensive material: enter a topic so that the response is shorter.</value></data>
+  <data name="DataTable_Created" xml:space="preserve"><value>✓ Table “{title}” with {rows, plural, one {# row} other {# rows}} and {columns, plural, one {# column} other {# columns}} generated.</value></data>
+  <data name="DataTable_GenerateFailed" xml:space="preserve"><value>⚠️ Could not generate the table: {error}</value></data>
+  <data name="DataTable_SourcesMissing" xml:space="preserve"><value>⚠️ The source documents of the table no longer exist. Activate documents on the left.</value></data>
+  <data name="DataTable_AppendCancelled" xml:space="preserve"><value>Adding rows was canceled.</value></data>
+  <data name="DataTable_OnlyDuplicates" xml:space="preserve"><value>The AI only returned rows that are already in the table ({count}). The table remains unchanged.</value></data>
+  <data name="DataTable_NoNewRows" xml:space="preserve"><value>The AI found no new rows. The table remains unchanged.</value></data>
+  <data name="DataTable_TipRetryOtherExcerpt" xml:space="preserve"><value>Try again – each run reads a different excerpt of the documents.</value></data>
+  <data name="DataTable_TipMoreDocuments" xml:space="preserve"><value>Activate more documents or create a new table with a different topic.</value></data>
+  <data name="DataTable_RowsAdded" xml:space="preserve"><value>✓ {count, plural, one {# new row} other {# new rows}} added.</value></data>
+  <data name="DataTable_RowsAddedWithDuplicates" xml:space="preserve"><value>✓ {count, plural, one {# new row} other {# new rows}} added ({duplicates, plural, one {# duplicate} other {# duplicates}} skipped).</value></data>
+  <data name="DataTable_AppendFailed" xml:space="preserve"><value>⚠️ Could not add rows to the table: {error}</value></data>
+  <data name="DataTable_Deleted" xml:space="preserve"><value>✓ Table “{title}” deleted.</value></data>
+  <data name="DataTable_ColumnNameEmpty" xml:space="preserve"><value>Enter a column name.</value></data>
+  <data name="DataTable_ColumnNameTooLong" xml:space="preserve"><value>The column name is too long (maximum {max} characters).</value></data>
+  <data name="DataTable_ColumnNameReserved" xml:space="preserve"><value>“{name}” is reserved for the source column.</value></data>
+  <data name="DataTable_ColumnNameExists" xml:space="preserve"><value>A column “{name}” already exists.</value></data>
+  <data name="DataTable_MaxColumns" xml:space="preserve"><value>⚠️ A table can have at most {max} columns.</value></data>
+  <data name="DataTable_LastColumn" xml:space="preserve"><value>⚠️ The last column cannot be deleted.</value></data>
+  <data name="DataTable_FormatCsv" xml:space="preserve"><value>CSV for Excel (*.csv)</value></data>
+  <data name="DataTable_FormatExcel" xml:space="preserve"><value>Excel workbook (*.xlsx)</value></data>
+  <data name="DataTable_FormatMarkdown" xml:space="preserve"><value>Markdown (*.md)</value></data>
+  <data name="DataTable_Exported" xml:space="preserve"><value>✓ Exported as {format}: {file} – {rows, plural, one {# row} other {# rows}}</value></data>
+  <data name="DataTable_ExportedFiltered" xml:space="preserve"><value>✓ Exported as {format}: {file} – {rows} of {total, plural, one {# row} other {# rows}} (filtered)</value></data>
+  <data name="DataTable_ExportFailed" xml:space="preserve"><value>⚠️ Could not export: {error}</value></data>
+  <data name="DataTable_TipFileOpenExcel" xml:space="preserve"><value>Is the file still open in another program (e.g. Excel)? Close it and export again.</value></data>
+  <data name="Report_Generate" xml:space="preserve"><value>✨ Generate report</value></data>
+  <data name="Report_SelectDocument" xml:space="preserve"><value>⚠️ Select at least one document on the left – the report is generated from it.</value></data>
+  <data name="Report_CustomMissing" xml:space="preserve"><value>⚠️ For “{custom}”, describe what the report should contain.</value></data>
+  <data name="Report_Cancelled" xml:space="preserve"><value>Generating the report was canceled.</value></data>
+  <data name="Report_CreatedRepaired" xml:space="preserve"><value>✓ Report generated. However, the AI response was incomplete or faulty, so some sections may be missing.</value></data>
+  <data name="Report_TipRegenerate" xml:space="preserve"><value>Generate again – the AI responds a little differently each time.</value></data>
+  <data name="Report_TipFewerDocuments" xml:space="preserve"><value>Only for very extensive material: activate fewer documents so that the response is shorter.</value></data>
+  <data name="Report_Created" xml:space="preserve"><value>✓ Report “{title}” with {sections, plural, one {# section} other {# sections}} generated.</value></data>
+  <data name="Report_GenerateFailed" xml:space="preserve"><value>⚠️ Could not generate the report: {error}</value></data>
+  <data name="Report_Deleted" xml:space="preserve"><value>✓ Report “{title}” deleted.</value></data>
+  <data name="Report_VideoCount" xml:space="preserve"><value>{count, plural, one {# video} other {# videos}}</value></data>
+  <data name="Report_AudioNone" xml:space="preserve"><value>without sound (fixed timing)</value></data>
+  <data name="Report_AudioAll" xml:space="preserve"><value>with sound ({format})</value></data>
+  <data name="Report_AudioMixed" xml:space="preserve"><value>{withAudio} with sound ({format}), {silent} without sound (fixed timing)</value></data>
+  <data name="Report_PlayersEstimate" xml:space="preserve"><value>HTML file {size} · {videos} {audio}</value></data>
+  <data name="Report_FormatWord" xml:space="preserve"><value>Word document (*.docx)</value></data>
+  <data name="Report_FormatMarkdown" xml:space="preserve"><value>Markdown (*.md)</value></data>
+  <data name="Report_FormatText" xml:space="preserve"><value>Text file (*.txt)</value></data>
+  <data name="Report_FormatHtml" xml:space="preserve"><value>Interactive web page (*.html)</value></data>
+  <data name="Report_Exported" xml:space="preserve"><value>✓ Exported as {format}: {file}</value></data>
+  <data name="Report_ExportFailed" xml:space="preserve"><value>⚠️ Could not export: {error}</value></data>
+  <data name="Report_TipFileOpen" xml:space="preserve"><value>Is the file still open in another program? Close it and export again.</value></data>
 </root>

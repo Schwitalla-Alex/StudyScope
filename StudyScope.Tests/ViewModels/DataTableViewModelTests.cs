@@ -285,6 +285,18 @@ public class DataTableViewModelTests
 
     // ---------- Weitere Zeilen ----------
 
+    [Test, SetUICulture("en")]
+    public async Task GenerateMoreRows_English_PluralFormsAndButtonInTips()
+    {
+        var table = await CreateTableAsync("Enzym");
+        _llm.Response = """[{"columns": ["Begriff", "Info"], "rows": [["enzym", "doppelt"], ["Hormon", "neu"]]}]""";
+
+        await _viewModel.GenerateMoreRowsAsync(Documents(selected: false));
+
+        Assert.That(_viewModel.StatusMessage, Is.EqualTo("✓ 1 new row added (1 duplicate skipped)."));
+        Assert.That(table.Rows, Has.Count.EqualTo(2));
+    }
+
     [Test]
     public async Task GenerateMoreRows_AddsNewRows_SkipsDuplicates_AndRespectsLimit()
     {

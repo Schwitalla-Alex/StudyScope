@@ -13,8 +13,6 @@ public static class DataTableSorting
     /// <summary>Index der Quellspalte (die Quelle ist keine normale Spalte).</summary>
     public const int SourceColumn = -1;
 
-    private static readonly CompareInfo GermanCompare = CultureInfo.GetCultureInfo("de-DE").CompareInfo;
-
     /// <summary>Text einer Zelle; <see cref="SourceColumn"/> liefert die Quelle.</summary>
     public static string CellValue(DataTableRow row, int column) =>
         column == SourceColumn
@@ -32,7 +30,7 @@ public static class DataTableSorting
 
     /// <summary>
     /// Sortiert stabil nach einer Spalte. Leere Zellen stehen immer am Ende (auch absteigend).
-    /// Texte werden nach deutschen Regeln ohne Groß-/Kleinschreibung verglichen.
+    /// Texte werden nach den Regeln der Oberflächensprache (<see cref="CultureInfo.CurrentCulture"/>) ohne Groß-/Kleinschreibung verglichen.
     /// </summary>
     public static List<DataTableRow> Sort(IEnumerable<DataTableRow> rows, int column, bool descending)
     {
@@ -63,7 +61,7 @@ public static class DataTableSorting
             case DataTableColumnKind.Date when DataTableValues.TryParseDateKey(a, out var da) && DataTableValues.TryParseDateKey(b, out var db):
                 return da.CompareTo(db);
             default:
-                return GermanCompare.Compare(a, b, CompareOptions.IgnoreCase);
+                return CultureInfo.CurrentCulture.CompareInfo.Compare(a, b, CompareOptions.IgnoreCase);
         }
     }
 

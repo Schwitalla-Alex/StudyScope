@@ -214,6 +214,8 @@ body.ss-resizing, body.ss-resizing * { cursor: col-resize !important; user-selec
 .ss-menu-sep { height: 1px; background: var(--ss-border-light); margin: 4px 0; }
 .ss-submenu { top: -5px; inset-inline-start: calc(100% - 2px); }
 /* Richtungspfeile (▸ ◀ ▶) zeigen bei rechts-nach-links in die Gegenrichtung */
+/* inline-block, weil transform auf reine Inline-Elemente (z. B. <span> in einem Knopf) nicht wirkt */
+.ss-flip-rtl { display: inline-block; }
 :root[dir="rtl"] .ss-flip-rtl { transform: scaleX(-1); }
 
 /* Link, der im System-Browser öffnet (IExternalLinkOpener) – als Knopf, damit die WebView nie selbst navigiert */

@@ -349,4 +349,119 @@
   <data name="Quiz_AllWithSolutions" xml:space="preserve"><value>Alle Fragen mit Lösung</value></data>
   <data name="Quiz_OnlyWrong" xml:space="preserve"><value>nur falsche anzeigen</value></data>
   <data name="Quiz_YourAnswer" xml:space="preserve"><value>← Ihre Antwort</value></data>
+  <data name="Common_Apply" xml:space="preserve"><value>Übernehmen</value></data>
+  <data name="Common_Rename" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="Common_DeleteConfirm" xml:space="preserve"><value>Löschen?</value></data>
+  <data name="Common_DontDelete" xml:space="preserve"><value>Nicht löschen</value></data>
+  <data name="Common_Template" xml:space="preserve"><value>Vorlage</value></data>
+  <data name="Common_YourInstructions" xml:space="preserve"><value>Ihre Vorgabe</value></data>
+  <data name="Common_ActivateDocument" xml:space="preserve"><value>Bitte links mindestens ein Dokument aktivieren.</value></data>
+  <data name="DataTable_Title" xml:space="preserve"><value>Datentabellen: {profile}</value></data>
+  <data name="DataTable_New" xml:space="preserve"><value>➕ Neue Tabelle</value></data>
+  <data name="DataTable_BusyAppending" xml:space="preserve"><value>📊 KI sucht weitere Zeilen in den Dokumenten …</value></data>
+  <data name="DataTable_BusyGenerating" xml:space="preserve"><value>📊 KI liest die Dokumente und stellt die Tabelle zusammen ({template}) …</value></data>
+  <data name="DataTable_FormTitle" xml:space="preserve"><value>➕ Neue Datentabelle</value></data>
+  <data name="DataTable_ColumnsExample" xml:space="preserve"><value>Spalten z. B.: {columns}</value></data>
+  <data name="DataTable_CustomPlaceholder" xml:space="preserve"><value>z. B. Alle Steuerarten mit Steuersatz, Bemessungsgrundlage und Beispiel</value></data>
+  <data name="DataTable_ColumnsPlaceholder" xml:space="preserve"><value>z. B. Steuerart, Steuersatz, Beispiel</value></data>
+  <data name="DataTable_ColumnsHint" xml:space="preserve"><value>Leer lassen, dann schlägt die KI passende Spalten vor. Die Spalte „{source}“ kommt immer automatisch dazu.</value><comment>{source} = Name der Quellspalte</comment></data>
+  <data name="DataTable_TopicPlaceholder" xml:space="preserve"><value>z. B. Photosynthese</value></data>
+  <data name="DataTable_TopicHint" xml:space="preserve"><value>Grenzt die Tabelle auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</value></data>
+  <data name="DataTable_Saved" xml:space="preserve"><value>📊 Gespeicherte Tabellen</value></data>
+  <data name="DataTable_ItemMeta" xml:space="preserve"><value>{template} · {rows, plural, one {# Zeile} other {# Zeilen}} · {date}</value></data>
+  <data name="DataTable_DeleteTable" xml:space="preserve"><value>Tabelle löschen</value></data>
+  <data name="DataTable_ShowList" xml:space="preserve"><value>Tabellenliste einblenden</value></data>
+  <data name="DataTable_HideList" xml:space="preserve"><value>Tabellenliste ausblenden – mehr Platz für die Tabelle</value></data>
+  <data name="DataTable_TopicMeta" xml:space="preserve"><value>Thema: {topic}</value></data>
+  <data name="DataTable_SizeMeta" xml:space="preserve"><value>{rows} / {max, plural, one {# Zeile} other {# Zeilen}} · {columns, plural, one {# Spalte} other {# Spalten}}</value></data>
+  <data name="DataTable_SourcesMeta" xml:space="preserve"><value>Quellen: {sources}</value></data>
+  <data name="DataTable_AddMoreRowsTitle" xml:space="preserve"><value>Die KI sucht in den Dokumenten weitere Zeilen; Wiederholungen werden weggelassen</value></data>
+  <data name="DataTable_AddRow" xml:space="preserve"><value>➕ Zeile</value></data>
+  <data name="DataTable_AddRowTitle" xml:space="preserve"><value>Leere Zeile anhängen</value></data>
+  <data name="DataTable_AddColumn" xml:space="preserve"><value>➕ Spalte</value></data>
+  <data name="DataTable_AddColumnTitle" xml:space="preserve"><value>Spalte hinzufügen</value></data>
+  <data name="DataTable_NewColumnPlaceholder" xml:space="preserve"><value>Name der neuen Spalte</value></data>
+  <data name="DataTable_Add" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="DataTable_FilterPlaceholder" xml:space="preserve"><value>🔍 Filtern (alle Wörter müssen vorkommen)</value></data>
+  <data name="DataTable_FilterCount" xml:space="preserve"><value>{visible} von {total, plural, one {# Zeile} other {# Zeilen}}</value></data>
+  <data name="DataTable_ClearFilter" xml:space="preserve"><value>Filter löschen</value></data>
+  <data name="DataTable_ExportFilteredTitle" xml:space="preserve"><value>Sonst werden alle Zeilen exportiert (in der aktuellen Sortierung)</value></data>
+  <data name="DataTable_ExportFilteredOnly" xml:space="preserve"><value>Nur gefilterte Zeilen exportieren</value></data>
+  <data name="DataTable_ClearSort" xml:space="preserve"><value>Sortierung aufheben</value></data>
+  <data name="DataTable_ExcelTitle" xml:space="preserve"><value>Als Excel-Arbeitsmappe speichern</value></data>
+  <data name="DataTable_CsvTitle" xml:space="preserve"><value>Als CSV-Datei speichern (Semikolon, für Excel)</value></data>
+  <data name="DataTable_MarkdownTitle" xml:space="preserve"><value>Als Markdown-Tabelle speichern</value></data>
+  <data name="DataTable_PdfTitle" xml:space="preserve"><value>Drucken oder als PDF speichern (aktuelle Ansicht)</value></data>
+  <data name="DataTable_PrintMeta" xml:space="preserve"><value>{template} · {rows, plural, one {# Zeile} other {# Zeilen}} · StudyScope, {date}</value></data>
+  <data name="DataTable_DeleteColumnConfirm" xml:space="preserve"><value>„{name}“ löschen?</value></data>
+  <data name="DataTable_Sort" xml:space="preserve"><value>Sortieren</value></data>
+  <data name="DataTable_RenameColumn" xml:space="preserve"><value>Spalte umbenennen</value></data>
+  <data name="DataTable_DeleteColumn" xml:space="preserve"><value>Spalte löschen</value></data>
+  <data name="DataTable_SortBySource" xml:space="preserve"><value>Nach Quelle sortieren</value></data>
+  <data name="DataTable_DeleteRow" xml:space="preserve"><value>Zeile löschen</value></data>
+  <data name="DataTable_NoFilterMatch" xml:space="preserve"><value>Keine Zeile passt zum Filter.</value></data>
+  <data name="DataTable_NoRows" xml:space="preserve"><value>Die Tabelle hat noch keine Zeilen.</value></data>
+  <data name="DataTable_EditHint" xml:space="preserve"><value>Doppelklick auf eine Zelle zum Bearbeiten – Enter übernimmt, Esc bricht ab. Änderungen werden sofort gespeichert.</value></data>
+  <data name="DataTable_SourceCellTitle" xml:space="preserve"><value>Quelldokument – Doppelklick zum Ändern</value></data>
+  <data name="DataTable_EmptyTitle" xml:space="preserve"><value>Noch keine Tabelle ausgewählt.</value></data>
+  <data name="DataTable_EmptyHint" xml:space="preserve"><value>Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „{button}“. Die KI sucht die Angaben aus Ihren Unterlagen heraus – jede Zeile mit ihrer Quelle. Die Tabelle lässt sich sortieren, filtern, bearbeiten und als Excel, CSV, Markdown oder PDF speichern.</value><comment>{button} = Knopf „Tabelle erstellen“</comment></data>
+  <data name="DataTable_PrintTip" xml:space="preserve"><value>Alternative: Tabelle als „{button}“ speichern und dort drucken.</value><comment>{button} = Knopf „📗 Excel“</comment></data>
+  <data name="Report_Title" xml:space="preserve"><value>Berichte: {profile}</value></data>
+  <data name="Report_New" xml:space="preserve"><value>➕ Neuer Bericht</value></data>
+  <data name="Report_Busy" xml:space="preserve"><value>📑 KI liest die Dokumente und schreibt den Bericht ({template}) …</value></data>
+  <data name="Report_FormTitle" xml:space="preserve"><value>➕ Neuer Bericht</value></data>
+  <data name="Report_CustomPlaceholder" xml:space="preserve"><value>z. B. Vergleiche die Steuerarten in einer Übersicht mit Vor- und Nachteilen</value></data>
+  <data name="Report_EmbedTitle" xml:space="preserve"><value>Studio-Inhalte einbetten</value></data>
+  <data name="Report_EmbedMindmapFull" xml:space="preserve"><value>🧠 Mindmap</value></data>
+  <data name="Report_EmbedFlashcardsFull" xml:space="preserve"><value>🎴 Karteikarten</value></data>
+  <data name="Report_EmbedQuizFull" xml:space="preserve"><value>❓ Selbsttest (Quizfragen)</value></data>
+  <data name="Report_EmbedPresentationFull" xml:space="preserve"><value>📽️ Präsentation</value></data>
+  <data name="Report_EmbedDataTablesFull" xml:space="preserve"><value>📊 Datentabellen</value></data>
+  <data name="Report_EmbedAudioFull" xml:space="preserve"><value>🎧 Audio-Skripte (Text)</value></data>
+  <data name="Report_EmbedVideoFull" xml:space="preserve"><value>🎬 Video-Skripte (Text)</value></data>
+  <data name="Report_MindmapPresent" xml:space="preserve"><value>vorhanden</value></data>
+  <data name="Report_MindmapMissing" xml:space="preserve"><value>noch keine</value></data>
+  <data name="Report_SlideCount" xml:space="preserve"><value>{count, plural, one {# Folie} other {# Folien}}</value></data>
+  <data name="Report_EmbedHint" xml:space="preserve"><value>Fehlende Inhalte erstellen Sie in den Reitern Mindmap, Lernkarteikarten, Quiz, Präsentation, Datentabelle, Audio und Video.</value></data>
+  <data name="Report_Saved" xml:space="preserve"><value>📑 Gespeicherte Berichte</value></data>
+  <data name="Report_ItemMeta" xml:space="preserve"><value>{template} · {date}</value></data>
+  <data name="Report_DeleteReport" xml:space="preserve"><value>Bericht löschen</value></data>
+  <data name="Report_Embedded" xml:space="preserve"><value>Eingebettet:</value></data>
+  <data name="Report_EmbedMindmap" xml:space="preserve"><value>Mindmap</value></data>
+  <data name="Report_EmbedFlashcards" xml:space="preserve"><value>Karteikarten</value></data>
+  <data name="Report_EmbedQuiz" xml:space="preserve"><value>Selbsttest</value></data>
+  <data name="Report_EmbedPresentation" xml:space="preserve"><value>Präsentation</value></data>
+  <data name="Report_EmbedDataTables" xml:space="preserve"><value>Datentabellen</value></data>
+  <data name="Report_EmbedAudio" xml:space="preserve"><value>Audio-Skripte</value></data>
+  <data name="Report_EmbedVideo" xml:space="preserve"><value>Video-Skripte</value></data>
+  <data name="Report_WordTitle" xml:space="preserve"><value>Als Word-Dokument speichern</value></data>
+  <data name="Report_PdfTitle" xml:space="preserve"><value>Drucken oder als PDF speichern (alles aufgeklappt, mit Lösungen)</value></data>
+  <data name="Report_MarkdownTitle" xml:space="preserve"><value>Als Markdown-Datei speichern</value></data>
+  <data name="Report_TextTitle" xml:space="preserve"><value>Als reine Textdatei speichern</value></data>
+  <data name="Report_HtmlTitle" xml:space="preserve"><value>Als interaktive Webseite speichern – funktioniert im Browser auch ohne StudyScope</value></data>
+  <data name="Report_EmbedPlayersTitle" xml:space="preserve"><value>Nur für „{button}“: je Video ein Player mit Folien, Stichpunkten und Ton. Ton nur bei aktueller Gemini-Audiodatei, sonst stumm im festen Takt.</value><comment>{button} = Knopf „🌐 HTML“</comment></data>
+  <data name="Report_EmbedPlayers" xml:space="preserve"><value>🎬 Videos im HTML-Bericht einbetten (Player mit Folien und Ton)</value></data>
+  <data name="Report_UseMp3" xml:space="preserve"><value>Ton als MP3 (kleiner)</value></data>
+  <data name="Report_FrameTitle" xml:space="preserve"><value>Bericht</value></data>
+  <data name="Report_EmptyTitle" xml:space="preserve"><value>Noch kein Bericht ausgewählt.</value></data>
+  <data name="Report_EmptyHint" xml:space="preserve"><value>Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „{button}“. Der Bericht wird interaktiv angezeigt – mit Mindmap, Karteikarten, Selbsttest, Folien und Datentabellen – und lässt sich als Word, PDF, Markdown, Text oder HTML speichern.</value><comment>{button} = Knopf „Bericht erstellen“</comment></data>
+  <data name="Report_EmbedUnavailable" xml:space="preserve"><value>Noch nicht vorhanden – im entsprechenden Reiter erstellen</value></data>
+  <data name="Report_PrintTip" xml:space="preserve"><value>Alternative: Bericht als „{button}“ speichern, im Browser öffnen und dort drucken bzw. als PDF speichern.</value><comment>{button} = Knopf „🌐 HTML“</comment></data>
+  <data name="Report_HtmlButton" xml:space="preserve"><value>🌐 HTML</value></data>
+  <data name="DataTable_ExcelButton" xml:space="preserve"><value>📗 Excel</value></data>
+  <data name="Common_TitleLabel" xml:space="preserve"><value>Titel</value></data>
+  <data name="Common_TitleOptionalHint" xml:space="preserve"><value>(optional – sonst wählt die KI einen)</value></data>
+  <data name="Common_OptionalHint" xml:space="preserve"><value>(optional)</value></data>
+  <data name="Common_NoActiveDocument" xml:space="preserve"><value>kein Dokument aktiviert</value></data>
+  <data name="Common_ActiveDocuments" xml:space="preserve"><value>{count, plural, one {# aktiviertes Dokument} other {# aktivierte Dokumente}}</value><comment>{count} = angehakte, vorhandene Dokumente (mindestens 1)</comment></data>
+  <data name="Common_BasedOn" xml:space="preserve"><value>{items} · Grundlage: {documents}</value><comment>{items} = Anzahl gespeicherter Tabellen/Berichte, {documents} = aktivierte Dokumente</comment></data>
+  <data name="DataTable_NoTables" xml:space="preserve"><value>Noch keine Tabellen</value></data>
+  <data name="DataTable_TableCount" xml:space="preserve"><value>{count, plural, one {# Tabelle} other {# Tabellen}}</value></data>
+  <data name="DataTable_ColumnsLabel" xml:space="preserve"><value>Spalten</value></data>
+  <data name="DataTable_ColumnsLabelHint" xml:space="preserve"><value>(optional – durch Komma getrennt)</value></data>
+  <data name="DataTable_TopicLabel" xml:space="preserve"><value>Thema / Suchbegriff</value></data>
+  <data name="DataTable_SaveAsTitle" xml:space="preserve"><value>Datentabelle speichern als …</value></data>
+  <data name="Report_NoReports" xml:space="preserve"><value>Noch keine Berichte</value></data>
+  <data name="Report_ReportCount" xml:space="preserve"><value>{count, plural, one {# Bericht} other {# Berichte}}</value></data>
+  <data name="Report_SaveAsTitle" xml:space="preserve"><value>Bericht speichern als …</value></data>
 </root>

@@ -10,15 +10,16 @@
 
     <div class="dt-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">Datentabellen: @DocVm.CurrentProfile</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.DataTable_Title, ("profile", DocVm.CurrentProfile))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
-                @(DtVm.Tables.Count == 0 ? "Noch keine Tabellen" : DtVm.Tables.Count == 1 ? "1 Tabelle" : $"{DtVm.Tables.Count} Tabellen")
-                · Grundlage: @ActiveDocumentsText
+                @Loc.Format(UiStrings.Common_BasedOn,
+                    ("items", DtVm.Tables.Count == 0 ? UiStrings.DataTable_NoTables : Loc.Format(UiStrings.DataTable_TableCount, ("count", DtVm.Tables.Count))),
+                    ("documents", ActiveDocumentsText))
             </span>
         </div>
         @if (!DtVm.IsFormOpen && !DtVm.IsBusy)
         {
-            <button type="button" class="dt-btn" style="background: var(--ss-primary);" @onclick="DtVm.OpenForm">➕ Neue Tabelle</button>
+            <button type="button" class="dt-btn" style="background: var(--ss-primary);" @onclick="DtVm.OpenForm">@UiStrings.DataTable_New</button>
         }
     </div>
 
@@ -27,13 +28,13 @@
         <div class="dt-info">
             <div style="font-weight: 600; font-size: 13px;">
                 @(DtVm.IsAppending
-                    ? "📊 KI sucht weitere Zeilen in den Dokumenten ..."
-                    : $"📊 KI liest die Dokumente und stellt die Tabelle zusammen ({DataTableTemplates.DisplayName(DtVm.Template)}) ...")
+                    ? UiStrings.DataTable_BusyAppending
+                    : Loc.Format(UiStrings.DataTable_BusyGenerating, ("template", TemplateTexts.Name(DtVm.Template))))
             </div>
             <div class="dt-progress"><div class="dt-progress-bar"></div></div>
             <div style="display: flex; justify-content: center; gap: 10px; align-items: center; margin-top: 6px;">
-                <span style="font-size: 11px; color: var(--ss-text-muted);">Je nach Modell und Dokumentgröße kann das etwas dauern.</span>
-                <button type="button" class="dt-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="DtVm.Cancel">Abbrechen</button>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Common_GenerationWait</span>
+                <button type="button" class="dt-btn" style="background: var(--ss-secondary); padding: 4px 10px;" @onclick="DtVm.Cancel">@UiStrings.Common_Cancel</button>
             </div>
         </div>
     }
@@ -49,7 +50,7 @@
                 <div style="font-weight: 600;">@DtVm.StatusMessage</div>
                 @if (DtVm.StatusTips.Count > 0)
                 {
-                    <ul style="margin: 4px 0 0 18px; line-height: 1.5;">
+                    <ul style="margin-block: 4px 0; margin-inline: 18px 0; line-height: 1.5;">
                         @foreach (var tip in DtVm.StatusTips)
                         {
                             <li>@tip</li>
@@ -59,12 +60,12 @@
                 @if (!string.IsNullOrEmpty(DtVm.StatusDetails))
                 {
                     <details style="margin-top: 6px;">
-                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">Technische Details (Antwort der KI)</summary>
+                        <summary style="cursor: pointer; font-size: 11px; opacity: 0.85;">@UiStrings.Common_TechnicalDetailsAi</summary>
                         <pre class="dt-details-raw">@DtVm.StatusDetails</pre>
                     </details>
                 }
             </div>
-            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="Meldung schließen" @onclick="DtVm.ClearStatus">✕</button>
+            <button style="background: none; border: none; cursor: pointer; color: inherit; font-weight: bold; font-size: 14px; align-self: flex-start;" title="@UiStrings.Common_Dismiss" aria-label="@UiStrings.Common_Dismiss" @onclick="DtVm.ClearStatus">✕</button>
         </div>
     }
 
@@ -74,9 +75,9 @@
             @if (DtVm.IsFormOpen)
             {
                 <div class="dt-card" style="border-color: var(--ss-selected-border);">
-                    <h4>➕ Neue Datentabelle</h4>
+                    <h4>@UiStrings.DataTable_FormTitle</h4>
 
-                    <label class="dt-label">Vorlage</label>
+                    <label class="dt-label">@UiStrings.Common_Template</label>
                     <div class="dt-templates">
                         @foreach (var template in DataTableTemplates.All)
                         {
@@ -84,11 +85,11 @@
                             <button type="button" class="dt-template @(DtVm.Template == current ? "active" : "")" disabled="@DtVm.IsBusy" @onclick="() => DtVm.Template = current">
                                 <span style="font-size: 18px;">@DataTableTemplates.Icon(current)</span>
                                 <span>
-                                    <b>@DataTableTemplates.DisplayName(current)</b>
-                                    <span class="dt-desc">@DataTableTemplates.Description(current)</span>
-                                    @if (DataTableTemplates.SuggestedColumns(current).Count > 0)
+                                    <b>@TemplateTexts.Name(current)</b>
+                                    <span class="dt-desc">@TemplateTexts.Description(current)</span>
+                                    @if (TemplateTexts.SuggestedColumns(current) is { Length: > 0 } columns)
                                     {
-                                        <span class="dt-desc" style="font-style: italic;">Spalten z. B.: @string.Join(", ", DataTableTemplates.SuggestedColumns(current))</span>
+                                        <span class="dt-desc" style="font-style: italic;">@Loc.Format(UiStrings.DataTable_ColumnsExample, ("columns", columns))</span>
                                     }
                                 </span>
                             </button>
@@ -97,32 +98,32 @@
 
                     @if (DtVm.Template == DataTableTemplate.Custom)
                     {
-                        <label class="dt-label">Ihre Vorgabe</label>
-                        <textarea class="dt-input" rows="3" placeholder="z. B. Alle Steuerarten mit Steuersatz, Bemessungsgrundlage und Beispiel" @bind="DtVm.CustomInstruction" @bind:event="oninput"></textarea>
+                        <label class="dt-label">@UiStrings.Common_YourInstructions</label>
+                        <textarea class="dt-input" rows="3" placeholder="@UiStrings.DataTable_CustomPlaceholder" @bind="DtVm.CustomInstruction" @bind:event="oninput"></textarea>
                     }
 
-                    <label class="dt-label">Spalten <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – durch Komma getrennt)</span></label>
+                    <label class="dt-label">@UiStrings.DataTable_ColumnsLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.DataTable_ColumnsLabelHint</span></label>
                     <input class="dt-input" placeholder="@ColumnsPlaceholder" @bind="DtVm.CustomColumns" @bind:event="oninput" />
-                    <div class="dt-meta" style="margin-top: 3px;">Leer lassen, dann schlägt die KI passende Spalten vor. Die Spalte „Quelle“ kommt immer automatisch dazu.</div>
+                    <div class="dt-meta" style="margin-top: 3px;">@Loc.Format(UiStrings.DataTable_ColumnsHint, ("source", DataTableDocument.SourceColumnName))</div>
 
-                    <label class="dt-label">Thema / Suchbegriff <span style="font-weight: normal; color: var(--ss-text-muted);">(optional)</span></label>
-                    <input class="dt-input" placeholder="z. B. Photosynthese" @bind="DtVm.Topic" @bind:event="oninput" />
-                    <div class="dt-meta" style="margin-top: 3px;">Grenzt die Tabelle auf passende Textstellen ein; sonst wird das ganze Material berücksichtigt.</div>
+                    <label class="dt-label">@UiStrings.DataTable_TopicLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.Common_OptionalHint</span></label>
+                    <input class="dt-input" placeholder="@UiStrings.DataTable_TopicPlaceholder" @bind="DtVm.Topic" @bind:event="oninput" />
+                    <div class="dt-meta" style="margin-top: 3px;">@UiStrings.DataTable_TopicHint</div>
 
-                    <label class="dt-label">Titel <span style="font-weight: normal; color: var(--ss-text-muted);">(optional – sonst wählt die KI einen)</span></label>
+                    <label class="dt-label">@UiStrings.Common_TitleLabel <span style="font-weight: normal; color: var(--ss-text-muted);">@UiStrings.Common_TitleOptionalHint</span></label>
                     <input class="dt-input" @bind="DtVm.CustomTitle" @bind:event="oninput" />
 
                     <button type="button" class="dt-btn" style="background: var(--ss-success); width: 100%; justify-content: center; margin-top: 14px; padding: 9px;"
                             disabled="@(DtVm.IsBusy || ActiveDocumentCount == 0)" @onclick="GenerateAsync">
-                        ✨ Tabelle erstellen
+                        @VmStrings.DataTable_Generate
                     </button>
                     @if (ActiveDocumentCount == 0)
                     {
-                        <div class="dt-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">Bitte links mindestens ein Dokument aktivieren.</div>
+                        <div class="dt-meta" style="color: var(--ss-danger-fg); margin-top: 6px;">@UiStrings.Common_ActivateDocument</div>
                     }
                     @if (DtVm.Tables.Count > 0 && !DtVm.IsBusy)
                     {
-                        <button type="button" class="dt-link" style="margin-top: 8px;" @onclick="() => DtVm.IsFormOpen = false">Abbrechen</button>
+                        <button type="button" class="dt-link" style="margin-top: 8px;" @onclick="() => DtVm.IsFormOpen = false">@UiStrings.Common_Cancel</button>
                     }
                 </div>
             }
@@ -130,7 +131,7 @@
             @if (DtVm.Tables.Count > 0)
             {
                 <div class="dt-card">
-                    <h4>📊 Gespeicherte Tabellen</h4>
+                    <h4>@UiStrings.DataTable_Saved</h4>
                     @foreach (var table in DtVm.Tables)
                     {
                         var t = table;
@@ -147,23 +148,23 @@
                                 {
                                     <div class="dt-item-title" title="@t.Title">@t.Title</div>
                                 }
-                                <div class="dt-meta">@DataTableTemplates.DisplayName(t.Template) · @t.Rows.Count Zeilen · @t.CreatedAt.ToString("dd.MM.yyyy HH:mm")</div>
+                                <div class="dt-meta">@Loc.Format(UiStrings.DataTable_ItemMeta, ("template", TemplateTexts.Name(t.Template)), ("rows", t.Rows.Count), ("date", t.CreatedAt.ToString("g")))</div>
                             </div>
                             <div style="display: flex; gap: 2px; flex-shrink: 0;" @onclick:stopPropagation="true">
                                 @if (renameId == t.Id)
                                 {
-                                    <button class="dt-icon" title="Übernehmen" @onclick="() => RenameAsync(t.Id)">✔</button>
-                                    <button class="dt-icon" title="Abbrechen" @onclick="() => renameId = null">✕</button>
+                                    <button class="dt-icon" title="@UiStrings.Common_Apply" aria-label="@UiStrings.Common_Apply" @onclick="() => RenameAsync(t.Id)">✔</button>
+                                    <button class="dt-icon" title="@UiStrings.Common_Cancel" aria-label="@UiStrings.Common_Cancel" @onclick="() => renameId = null">✕</button>
                                 }
                                 else if (confirmDeleteId == t.Id)
                                 {
-                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(t.Id)">Löschen?</button>
-                                    <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteId = null">✕</button>
+                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 12px;" @onclick="() => DeleteAsync(t.Id)">@UiStrings.Common_DeleteConfirm</button>
+                                    <button class="dt-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteId = null">✕</button>
                                 }
                                 else
                                 {
-                                    <button class="dt-icon" title="Umbenennen" @onclick="() => StartRename(t)">✏️</button>
-                                    <button class="dt-icon" title="Tabelle löschen" @onclick="() => confirmDeleteId = t.Id">🗑️</button>
+                                    <button class="dt-icon" title="@UiStrings.Common_Rename" aria-label="@UiStrings.Common_Rename" @onclick="() => StartRename(t)">✏️</button>
+                                    <button class="dt-icon" title="@UiStrings.DataTable_DeleteTable" aria-label="@UiStrings.DataTable_DeleteTable" @onclick="() => confirmDeleteId = t.Id">🗑️</button>
                                 }
                             </div>
                         </div>
@@ -181,29 +182,29 @@
                 <div class="dt-card dt-head dt-noprint">
                     <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
                         <div style="min-width: 0; display: flex; gap: 8px; align-items: flex-start;">
-                            <button class="ss-icon-btn" title="@(sideCollapsed ? "Tabellenliste einblenden" : "Tabellenliste ausblenden – mehr Platz für die Tabelle")" @onclick="() => sideCollapsed = !sideCollapsed">@(sideCollapsed ? "▶" : "◀")</button>
+                            <button class="ss-icon-btn" title="@(sideCollapsed ? UiStrings.DataTable_ShowList : UiStrings.DataTable_HideList)" aria-label="@(sideCollapsed ? UiStrings.DataTable_ShowList : UiStrings.DataTable_HideList)" @onclick="() => sideCollapsed = !sideCollapsed"><span class="ss-flip-rtl">@(sideCollapsed ? "▶" : "◀")</span></button>
                             <div style="min-width: 0;">
                             <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@selected.Title</div>
                             <div class="dt-meta">
-                                @DataTableTemplates.DisplayName(selected.Template)
+                                @TemplateTexts.Name(selected.Template)
                                 @if (!string.IsNullOrWhiteSpace(selected.Topic))
                                 {
-                                    <span> · Thema: @selected.Topic</span>
+                                    <span> · @Loc.Format(UiStrings.DataTable_TopicMeta, ("topic", selected.Topic))</span>
                                 }
-                                · @selected.Rows.Count / @DataTableDocument.MaxRows Zeilen · @selected.Columns.Count Spalten
+                                <span> · @Loc.Format(UiStrings.DataTable_SizeMeta, ("rows", selected.Rows.Count), ("max", DataTableDocument.MaxRows), ("columns", selected.Columns.Count))</span>
                                 @if (selected.SourceDocuments.Count > 0)
                                 {
-                                    <span> · Quellen: @string.Join(", ", selected.SourceDocuments)</span>
+                                    <span> · @Loc.Format(UiStrings.DataTable_SourcesMeta, ("sources", string.Join(", ", selected.SourceDocuments)))</span>
                                 }
                             </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                             <button type="button" class="dt-btn" style="background: var(--ss-success);" disabled="@(!DtVm.CanAddMoreRows)"
-                                    title="@(DtVm.IsAtRowLimit ? DtVm.RowLimitHint : "Die KI sucht in den Dokumenten weitere Zeilen; Wiederholungen werden weggelassen")"
-                                    @onclick="GenerateMoreRowsAsync">✨ Weitere Zeilen ergänzen</button>
-                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || DtVm.IsAtRowLimit)" title="Leere Zeile anhängen" @onclick="AddRowAsync">➕ Zeile</button>
-                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || selected.Columns.Count >= DataTableDocument.MaxColumns)" title="Spalte hinzufügen" @onclick="StartAddColumn">➕ Spalte</button>
+                                    title="@(DtVm.IsAtRowLimit ? DtVm.RowLimitHint : UiStrings.DataTable_AddMoreRowsTitle)"
+                                    @onclick="GenerateMoreRowsAsync">@VmStrings.DataTable_AddMoreRows</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || DtVm.IsAtRowLimit)" title="@UiStrings.DataTable_AddRowTitle" @onclick="AddRowAsync">@UiStrings.DataTable_AddRow</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-primary);" disabled="@(DtVm.IsBusy || selected.Columns.Count >= DataTableDocument.MaxColumns)" title="@UiStrings.DataTable_AddColumnTitle" @onclick="StartAddColumn">@UiStrings.DataTable_AddColumn</button>
                         </div>
                     </div>
 
@@ -215,34 +216,34 @@
                     @if (addingColumn)
                     {
                         <div style="display: flex; gap: 6px; align-items: center; margin-top: 8px;">
-                            <input id="dt-newcol" class="dt-input" style="max-width: 260px;" placeholder="Name der neuen Spalte" @bind="newColumnName" @bind:event="oninput" @onkeydown="AddColumnKeyAsync" />
-                            <button class="dt-btn" style="background: var(--ss-success);" @onclick="AddColumnAsync">Hinzufügen</button>
-                            <button class="dt-icon" title="Abbrechen" @onclick="() => addingColumn = false">✕</button>
+                            <input id="dt-newcol" class="dt-input" style="max-width: 260px;" placeholder="@UiStrings.DataTable_NewColumnPlaceholder" @bind="newColumnName" @bind:event="oninput" @onkeydown="AddColumnKeyAsync" />
+                            <button class="dt-btn" style="background: var(--ss-success);" @onclick="AddColumnAsync">@UiStrings.DataTable_Add</button>
+                            <button class="dt-icon" title="@UiStrings.Common_Cancel" aria-label="@UiStrings.Common_Cancel" @onclick="() => addingColumn = false">✕</button>
                         </div>
                     }
 
                     <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px;">
                         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-                            <input class="dt-input" style="width: 260px;" placeholder="🔍 Filtern (alle Wörter müssen vorkommen)" @bind="DtVm.FilterText" @bind:event="oninput" />
+                            <input class="dt-input" style="width: 260px;" placeholder="@UiStrings.DataTable_FilterPlaceholder" @bind="DtVm.FilterText" @bind:event="oninput" />
                             @if (DtVm.HasFilter)
                             {
-                                <span class="dt-meta">@visible.Count von @selected.Rows.Count Zeilen</span>
-                                <button class="dt-link" @onclick='() => DtVm.FilterText = ""'>Filter löschen</button>
-                                <label class="dt-check" title="Sonst werden alle Zeilen exportiert (in der aktuellen Sortierung)">
+                                <span class="dt-meta">@Loc.Format(UiStrings.DataTable_FilterCount, ("visible", visible.Count), ("total", selected.Rows.Count))</span>
+                                <button class="dt-link" @onclick='() => DtVm.FilterText = ""'>@UiStrings.DataTable_ClearFilter</button>
+                                <label class="dt-check" title="@UiStrings.DataTable_ExportFilteredTitle">
                                     <input type="checkbox" checked="@DtVm.ExportFilteredOnly" @onchange="e => DtVm.ExportFilteredOnly = e.Value is true" />
-                                    <span>Nur gefilterte Zeilen exportieren</span>
+                                    <span>@UiStrings.DataTable_ExportFilteredOnly</span>
                                 </label>
                             }
                             @if (DtVm.SortColumn != null)
                             {
-                                <button class="dt-link" @onclick="DtVm.ClearSort">Sortierung aufheben</button>
+                                <button class="dt-link" @onclick="DtVm.ClearSort">@UiStrings.DataTable_ClearSort</button>
                             }
                         </div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                            <button type="button" class="dt-btn" style="background: #1d6f42;" title="Als Excel-Arbeitsmappe speichern" @onclick="() => ExportAsync(DataTableExportFormat.Excel)">📗 Excel</button> @* ss:feste-farbe – Excel-Markenfarbe *@
-                            <button type="button" class="dt-btn" style="background: var(--ss-strong);" title="Als CSV-Datei speichern (Semikolon, für Excel)" @onclick="() => ExportAsync(DataTableExportFormat.Csv)">🧾 CSV</button>
-                            <button type="button" class="dt-btn" style="background: var(--ss-info);" title="Als Markdown-Tabelle speichern" @onclick="() => ExportAsync(DataTableExportFormat.Markdown)">📄 Markdown</button>
-                            <button type="button" class="dt-btn" style="background: var(--ss-secondary);" title="Drucken oder als PDF speichern (aktuelle Ansicht)" @onclick="PrintAsync">🖨️ PDF</button>
+                            <button type="button" class="dt-btn" style="background: #1d6f42;" title="@UiStrings.DataTable_ExcelTitle" @onclick="() => ExportAsync(DataTableExportFormat.Excel)">@UiStrings.DataTable_ExcelButton</button> @* ss:feste-farbe – Excel-Markenfarbe *@
+                            <button type="button" class="dt-btn" style="background: var(--ss-strong);" title="@UiStrings.DataTable_CsvTitle" @onclick="() => ExportAsync(DataTableExportFormat.Csv)">🧾 CSV</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-info);" title="@UiStrings.DataTable_MarkdownTitle" @onclick="() => ExportAsync(DataTableExportFormat.Markdown)">📄 Markdown</button>
+                            <button type="button" class="dt-btn" style="background: var(--ss-secondary);" title="@UiStrings.DataTable_PdfTitle" @onclick="PrintAsync">🖨️ PDF</button>
                         </div>
                     </div>
                 </div>
@@ -251,7 +252,7 @@
                     <div class="dt-print-header">
                         <div style="font-size: 16pt; font-weight: bold;">@selected.Title</div>
                         <div style="font-size: 9pt; color: var(--ss-text-muted);">
-                            @DataTableTemplates.DisplayName(selected.Template) · @visible.Count Zeilen · StudyScope, @DateTime.Now.ToString("dd.MM.yyyy")
+                            @Loc.Format(UiStrings.DataTable_PrintMeta, ("template", TemplateTexts.Name(selected.Template)), ("rows", visible.Count), ("date", DateTime.Now.ToString("d")))
                         </div>
                     </div>
 
@@ -267,33 +268,33 @@
                                             {
                                                 <div style="display: flex; gap: 3px; align-items: center;">
                                                     <input id="dt-colrename" class="dt-input" style="padding: 2px 5px; min-width: 90px;" @bind="renameColumnText" @bind:event="oninput" @onkeydown="e => RenameColumnKeyAsync(e, col)" />
-                                                    <button class="dt-icon" title="Übernehmen" @onclick="() => RenameColumnAsync(col)">✔</button>
-                                                    <button class="dt-icon" title="Abbrechen" @onclick="() => renameColumn = null">✕</button>
+                                                    <button class="dt-icon" title="@UiStrings.Common_Apply" aria-label="@UiStrings.Common_Apply" @onclick="() => RenameColumnAsync(col)">✔</button>
+                                                    <button class="dt-icon" title="@UiStrings.Common_Cancel" aria-label="@UiStrings.Common_Cancel" @onclick="() => renameColumn = null">✕</button>
                                                 </div>
                                             }
                                             else if (confirmDeleteColumn == col)
                                             {
                                                 <div style="display: flex; gap: 3px; align-items: center;">
-                                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 11px;" @onclick="() => DeleteColumnAsync(col)">„@selected.Columns[col]“ löschen?</button>
-                                                    <button class="dt-icon" title="Nicht löschen" @onclick="() => confirmDeleteColumn = null">✕</button>
+                                                    <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 8px; font-size: 11px;" @onclick="() => DeleteColumnAsync(col)">@Loc.Format(UiStrings.DataTable_DeleteColumnConfirm, ("name", selected.Columns[col]))</button>
+                                                    <button class="dt-icon" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteColumn = null">✕</button>
                                                 </div>
                                             }
                                             else
                                             {
                                                 <div class="dt-th">
-                                                    <button class="dt-sort" title="Sortieren" @onclick="() => DtVm.ToggleSort(col)">
+                                                    <button class="dt-sort" title="@UiStrings.DataTable_Sort" @onclick="() => DtVm.ToggleSort(col)">
                                                         @selected.Columns[col] <span class="dt-arrow">@SortArrow(col)</span>
                                                     </button>
                                                     <span class="dt-th-tools dt-noprint">
-                                                        <button class="dt-icon small" title="Spalte umbenennen" @onclick="() => StartRenameColumn(col)">✏️</button>
-                                                        <button class="dt-icon small" title="Spalte löschen" @onclick="() => StartDeleteColumn(col)">🗑️</button>
+                                                        <button class="dt-icon small" title="@UiStrings.DataTable_RenameColumn" aria-label="@UiStrings.DataTable_RenameColumn" @onclick="() => StartRenameColumn(col)">✏️</button>
+                                                        <button class="dt-icon small" title="@UiStrings.DataTable_DeleteColumn" aria-label="@UiStrings.DataTable_DeleteColumn" @onclick="() => StartDeleteColumn(col)">🗑️</button>
                                                     </span>
                                                 </div>
                                             }
                                         </th>
                                     }
                                     <th class="dt-source-col">
-                                        <button class="dt-sort" title="Nach Quelle sortieren" @onclick="() => DtVm.ToggleSort(DataTableSorting.SourceColumn)">
+                                        <button class="dt-sort" title="@UiStrings.DataTable_SortBySource" @onclick="() => DtVm.ToggleSort(DataTableSorting.SourceColumn)">
                                             @DataTableDocument.SourceColumnName <span class="dt-arrow">@SortArrow(DataTableSorting.SourceColumn)</span>
                                         </button>
                                     </th>
@@ -314,12 +315,12 @@
                                         <td class="dt-actions dt-noprint">
                                             @if (confirmDeleteRowId == r.Id)
                                             {
-                                                <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 6px; font-size: 11px;" @onclick="() => DeleteRowAsync(r.Id)">Löschen?</button>
-                                                <button class="dt-icon small" title="Nicht löschen" @onclick="() => confirmDeleteRowId = null">✕</button>
+                                                <button class="dt-btn" style="background: var(--ss-danger); padding: 2px 6px; font-size: 11px;" @onclick="() => DeleteRowAsync(r.Id)">@UiStrings.Common_DeleteConfirm</button>
+                                                <button class="dt-icon small" title="@UiStrings.Common_DontDelete" aria-label="@UiStrings.Common_DontDelete" @onclick="() => confirmDeleteRowId = null">✕</button>
                                             }
                                             else
                                             {
-                                                <button class="dt-icon small" title="Zeile löschen" @onclick="() => confirmDeleteRowId = r.Id">🗑️</button>
+                                                <button class="dt-icon small" title="@UiStrings.DataTable_DeleteRow" aria-label="@UiStrings.DataTable_DeleteRow" @onclick="() => confirmDeleteRowId = r.Id">🗑️</button>
                                             }
                                         </td>
                                     </tr>
@@ -328,25 +329,23 @@
                                 {
                                     <tr>
                                         <td colspan="@(selected.Columns.Count + 2)" class="dt-empty-row">
-                                            @(DtVm.HasFilter ? "Keine Zeile passt zum Filter." : "Die Tabelle hat noch keine Zeilen.")
+                                            @(DtVm.HasFilter ? UiStrings.DataTable_NoFilterMatch : UiStrings.DataTable_NoRows)
                                         </td>
                                     </tr>
                                 }
                             </tbody>
                         </table>
                     </div>
-                    <div class="dt-meta dt-noprint" style="margin-top: 6px;">Doppelklick auf eine Zelle zum Bearbeiten – Enter übernimmt, Esc bricht ab. Änderungen werden sofort gespeichert.</div>
+                    <div class="dt-meta dt-noprint" style="margin-top: 6px;">@UiStrings.DataTable_EditHint</div>
                 </div>
             }
             else if (!DtVm.IsBusy)
             {
                 <div class="dt-empty">
                     <div style="font-size: 34px; margin-bottom: 10px;">📊</div>
-                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">Noch keine Tabelle ausgewählt.</p>
+                    <p style="font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--ss-text);">@UiStrings.DataTable_EmptyTitle</p>
                     <span style="font-size: 12px; line-height: 1.5; display: block;">
-                        Aktivieren Sie links die Dokumente, wählen Sie eine Vorlage und klicken Sie auf „✨ Tabelle erstellen“.
-                        Die KI sucht die Angaben aus Ihren Unterlagen heraus – jede Zeile mit ihrer Quelle. Die Tabelle lässt sich
-                        sortieren, filtern, bearbeiten und als Excel, CSV, Markdown oder PDF speichern.
+                        @Loc.Format(UiStrings.DataTable_EmptyHint, ("button", VmStrings.DataTable_Generate))
                     </span>
                 </div>
             }
@@ -365,7 +364,7 @@
         .dt-info { margin-top: 14px; padding: 14px 20px; background: var(--ss-info-bg); border: 1px solid var(--ss-info-border); border-radius: 8px; text-align: center; color: var(--ss-info-text); }
         .dt-progress { width: 100%; max-width: 480px; height: 6px; background: var(--ss-info-bg-strong); border-radius: 4px; margin: 10px auto 4px auto; overflow: hidden; position: relative; }
         .dt-progress-bar { width: 40%; height: 100%; background: linear-gradient(90deg, var(--ss-primary), var(--ss-primary-hover)); border-radius: 4px; position: absolute; animation: dt-slide 1.4s ease-in-out infinite; }
-        @@keyframes dt-slide { 0% { left: -40%; } 100% { left: 100%; } }
+        @@keyframes dt-slide { 0% { left: -40%; } 100% { left: 100%; } }  /* ss:physisch – Ladebalken läuft immer von links nach rechts */
         .dt-status { margin-top: 12px; padding: 10px 14px; border: 1px solid; border-radius: 6px; font-size: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .dt-details-raw { margin-top: 4px; max-height: 160px; overflow: auto; padding: 8px; background: var(--ss-raw-bg); border-radius: 4px; font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 11px; white-space: pre-wrap; word-break: break-word; color: var(--ss-text); }
         .dt-body { flex: 1; min-height: 0; display: flex; gap: 14px; margin-top: 16px; }
@@ -378,7 +377,7 @@
         .dt-label { font-size: 12px; font-weight: 600; color: var(--ss-text-2); margin: 12px 0 4px 0; display: block; }
         .dt-input { width: 100%; box-sizing: border-box; padding: 6px 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; font-family: inherit; }
         .dt-templates { display: flex; flex-direction: column; gap: 6px; }
-        .dt-template { display: flex; gap: 10px; align-items: flex-start; text-align: left; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
+        .dt-template { display: flex; gap: 10px; align-items: flex-start; text-align: start; padding: 7px 10px; border: 2px solid var(--ss-border-light); border-radius: 6px; background: var(--ss-surface); cursor: pointer; font-size: 13px; color: var(--ss-text); font-family: inherit; }
         .dt-template.active { border-color: var(--ss-primary); background: var(--ss-selected-bg); }
         .dt-template b { display: block; }
         .dt-desc { display: block; font-size: 11.5px; color: var(--ss-text-muted); line-height: 1.35; }
@@ -392,16 +391,16 @@
         .dt-print-header { display: none; }
         .dt-scroll { flex: 1 1 auto; min-height: 340px; max-height: calc(100vh - 160px); overflow: auto; background: var(--ss-surface); border: 1px solid var(--ss-border-light); border-radius: 8px; }
         .dt-table { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 12.5px; }
-        .dt-table th { position: sticky; top: 0; z-index: 1; background: var(--ss-selected-bg); color: var(--ss-text); text-align: left; padding: 6px 8px; border-bottom: 2px solid var(--ss-selected-border); border-right: 1px solid var(--ss-border-light); vertical-align: top; min-width: 90px; }
-        .dt-table td { padding: 5px 8px; border-bottom: 1px solid var(--ss-border-faint); border-right: 1px solid var(--ss-border-faint); vertical-align: top; white-space: pre-wrap; word-break: break-word; cursor: text; min-width: 60px; }
+        .dt-table th { position: sticky; top: 0; z-index: 1; background: var(--ss-selected-bg); color: var(--ss-text); text-align: start; padding: 6px 8px; border-bottom: 2px solid var(--ss-selected-border); border-inline-end: 1px solid var(--ss-border-light); vertical-align: top; min-width: 90px; }
+        .dt-table td { padding: 5px 8px; border-bottom: 1px solid var(--ss-border-faint); border-inline-end: 1px solid var(--ss-border-faint); vertical-align: top; white-space: pre-wrap; word-break: break-word; cursor: text; min-width: 60px; }
         .dt-table tbody tr:nth-child(even) td { background: var(--ss-panel-light); }
         .dt-table tbody tr:hover td { background: var(--ss-selected-bg); }
         .dt-table td.dt-source, .dt-table th.dt-source-col { color: var(--ss-text-muted); font-size: 11.5px; min-width: 110px; }
-        .dt-table .dt-actions { width: 1%; white-space: nowrap; min-width: 0; text-align: right; cursor: default; }
+        .dt-table .dt-actions { width: 1%; white-space: nowrap; min-width: 0; text-align: end; cursor: default; }
         .dt-table td.editing { padding: 2px 4px; background: var(--ss-highlight-bg) !important; }
         .dt-cell-input { width: 100%; box-sizing: border-box; min-width: 120px; padding: 3px 5px; border: 1px solid var(--ss-primary); border-radius: 3px; font-size: 12.5px; font-family: inherit; }
         .dt-th { display: flex; align-items: flex-start; justify-content: space-between; gap: 4px; }
-        .dt-sort { background: none; border: none; padding: 0; font-weight: 700; font-size: 12.5px; cursor: pointer; text-align: left; color: inherit; font-family: inherit; }
+        .dt-sort { background: none; border: none; padding: 0; font-weight: 700; font-size: 12.5px; cursor: pointer; text-align: start; color: inherit; font-family: inherit; }
         .dt-arrow { color: var(--ss-link); font-size: 11px; }
         .dt-th-tools { display: inline-flex; opacity: 0.35; flex-shrink: 0; }
         .dt-table th:hover .dt-th-tools { opacity: 1; }
@@ -412,7 +411,7 @@
             @@page { size: A4 landscape; margin: 12mm; }
             body * { visibility: hidden; }
             .dt-print-area, .dt-print-area * { visibility: visible; }
-            .dt-print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; }
+            .dt-print-area { position: absolute; left: 0; top: 0; width: 100%; display: block; }  /* ss:physisch – Druckseite */
             .dt-print-header { display: block; margin-bottom: 5mm; }
             .dt-noprint, .dt-noprint * { display: none !important; }
             .dt-scroll { overflow: visible !important; max-height: none !important; min-height: 0 !important; border: none; border-radius: 0; }
@@ -448,21 +447,13 @@
 
     private int ActiveDocumentCount => DocVm.Documents.Count(d => d.IsSelected && !d.IsMissing);
 
-    private string ActiveDocumentsText => ActiveDocumentCount switch
-    {
-        0 => "kein Dokument aktiviert",
-        1 => "1 aktiviertes Dokument",
-        var n => $"{n} aktivierte Dokumente"
-    };
+    private string ActiveDocumentsText => ActiveDocumentCount == 0
+        ? UiStrings.Common_NoActiveDocument
+        : Loc.Format(UiStrings.Common_ActiveDocuments, ("count", ActiveDocumentCount));
 
-    private string ColumnsPlaceholder
-    {
-        get
-        {
-            var suggested = DataTableTemplates.SuggestedColumns(DtVm.Template);
-            return suggested.Count > 0 ? string.Join(", ", suggested) : "z. B. Steuerart, Steuersatz, Beispiel";
-        }
-    }
+    private string ColumnsPlaceholder => TemplateTexts.SuggestedColumns(DtVm.Template) is { Length: > 0 } suggested
+        ? suggested
+        : UiStrings.DataTable_ColumnsPlaceholder;
 
     private string SortArrow(int column) =>
         DtVm.SortColumn == column ? (DtVm.SortDescending ? "▼" : "▲") : "";
@@ -481,7 +472,7 @@
         }
         else
         {
-            <td class="@(isSource ? "dt-source" : "")" title="@(isSource ? "Quelldokument – Doppelklick zum Ändern" : null)" @ondblclick="() => StartEdit(row, column)">@value</td>
+            <td class="@(isSource ? "dt-source" : "")" title="@(isSource ? UiStrings.DataTable_SourceCellTitle : null)" @ondblclick="() => StartEdit(row, column)">@value</td>
         }
     };
 
@@ -700,7 +691,7 @@
                 DtVm.SuggestFileName(format),
                 filterExtension: extension,
                 filterDescription: DataTableViewModel.FormatDescription(format),
-                title: "Datentabelle speichern als...");
+                title: UiStrings.DataTable_SaveAsTitle);
 
             if (string.IsNullOrWhiteSpace(path))
                 return;
@@ -712,7 +703,7 @@
         }
         catch (Exception ex)
         {
-            DtVm.ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true);
+            DtVm.ShowStatus(Loc.Format(VmStrings.DataTable_ExportFailed, ("error", ex.Message)), isError: true);
         }
     }
 
@@ -727,8 +718,8 @@
         }
         catch (Exception ex)
         {
-            DtVm.ShowStatus($"⚠️ Der Druckdialog konnte nicht geöffnet werden: {ex.Message}", isError: true,
-                new[] { "Alternative: Tabelle als „📗 Excel“ speichern und dort drucken." });
+            DtVm.ShowStatus(Loc.Format(UiStrings.Common_PrintDialogFailed, ("error", ex.Message)), isError: true,
+                new[] { Loc.Format(UiStrings.DataTable_PrintTip, ("button", UiStrings.DataTable_ExcelButton)) });
         }
     }
 
