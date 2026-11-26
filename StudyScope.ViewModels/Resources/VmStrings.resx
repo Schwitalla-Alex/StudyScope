@@ -172,4 +172,87 @@
   <data name="Quiz_Verdict_VeryGood" xml:space="preserve"><value>Sehr gut gemacht! 👍</value></data>
   <data name="Quiz_Verdict_Good" xml:space="preserve"><value>Gut – mit etwas Wiederholung sitzt es bald. 💪</value></data>
   <data name="Quiz_Verdict_KeepGoing" xml:space="preserve"><value>Da geht noch mehr – wiederholen Sie die falschen Fragen. 📚</value></data>
+  <data name="DtTemplate_Terms" xml:space="preserve"><value>Begriffe &amp; Definitionen</value></data>
+  <data name="DtTemplate_Comparison" xml:space="preserve"><value>Vergleich</value></data>
+  <data name="DtTemplate_Timeline" xml:space="preserve"><value>Zeitleiste</value></data>
+  <data name="DtTemplate_People" xml:space="preserve"><value>Personen &amp; Beiträge</value></data>
+  <data name="DtTemplate_Formulas" xml:space="preserve"><value>Formeln &amp; Kennzahlen</value></data>
+  <data name="DtTemplate_Custom" xml:space="preserve"><value>Eigene Vorgabe</value></data>
+  <data name="DtTemplate_Terms_Desc" xml:space="preserve"><value>Fachbegriffe mit kurzer Definition und Beispiel.</value></data>
+  <data name="DtTemplate_Comparison_Desc" xml:space="preserve"><value>Theorien, Verfahren oder Modelle mit ihren Merkmalen gegenübergestellt.</value></data>
+  <data name="DtTemplate_Timeline_Desc" xml:space="preserve"><value>Ereignisse mit Datum und Bedeutung in zeitlicher Folge.</value></data>
+  <data name="DtTemplate_People_Desc" xml:space="preserve"><value>Personen mit ihren Beiträgen, Werken und ihrer Zeit.</value></data>
+  <data name="DtTemplate_Formulas_Desc" xml:space="preserve"><value>Formeln, Kennzahlen und Größen mit Bedeutung und Einheit.</value></data>
+  <data name="DtTemplate_Custom_Desc" xml:space="preserve"><value>Sie beschreiben selbst, was die Tabelle enthalten soll – optional mit Spalten.</value></data>
+  <data name="DtTemplate_Terms_Columns" xml:space="preserve"><value>Begriff, Definition, Beispiel</value><comment>Nur Anzeige; die KI bekommt die deutschen Spalten aus DataTableTemplates.SuggestedColumns</comment></data>
+  <data name="DtTemplate_Comparison_Columns" xml:space="preserve"><value>Gegenstand, Kernidee, Merkmale, Vorteile, Nachteile</value><comment>Nur Anzeige</comment></data>
+  <data name="DtTemplate_Timeline_Columns" xml:space="preserve"><value>Datum, Ereignis, Bedeutung</value><comment>Nur Anzeige</comment></data>
+  <data name="DtTemplate_People_Columns" xml:space="preserve"><value>Person, Lebensdaten, Beitrag, Werk / Bekannt für</value><comment>Nur Anzeige</comment></data>
+  <data name="DtTemplate_Formulas_Columns" xml:space="preserve"><value>Bezeichnung, Formel / Wert, Bedeutung, Einheit</value><comment>Nur Anzeige</comment></data>
+  <data name="ReportTemplate_StudyGuide" xml:space="preserve"><value>Lernübersicht</value></data>
+  <data name="ReportTemplate_Briefing" xml:space="preserve"><value>Zusammenfassung / Briefing</value></data>
+  <data name="ReportTemplate_Glossary" xml:space="preserve"><value>Glossar</value></data>
+  <data name="ReportTemplate_Faq" xml:space="preserve"><value>FAQ</value></data>
+  <data name="ReportTemplate_Custom" xml:space="preserve"><value>Eigene Vorgabe</value></data>
+  <data name="ReportTemplate_StudyGuide_Desc" xml:space="preserve"><value>Fasst wichtige Konzepte mit Begriffen, Merksätzen und Wiederholungsfragen zusammen – ideal zum Lernen.</value></data>
+  <data name="ReportTemplate_Briefing_Desc" xml:space="preserve"><value>Die Kernaussagen kompakt für einen schnellen Überblick, mit Fazit.</value></data>
+  <data name="ReportTemplate_Glossary_Desc" xml:space="preserve"><value>Die wichtigen Fachbegriffe mit verständlicher Erklärung, nach Themen gruppiert.</value></data>
+  <data name="ReportTemplate_Faq_Desc" xml:space="preserve"><value>Häufige Fragen zum Stoff mit ausführlichen Antworten.</value></data>
+  <data name="ReportTemplate_Custom_Desc" xml:space="preserve"><value>Sie beschreiben selbst, was der Bericht enthalten soll.</value></data>
+  <data name="DataTable_Generate" xml:space="preserve"><value>✨ Tabelle erstellen</value></data>
+  <data name="DataTable_AddMoreRows" xml:space="preserve"><value>✨ Weitere Zeilen ergänzen</value></data>
+  <data name="DataTable_RowLimitHint" xml:space="preserve"><value>Die Tabelle hat die Höchstzahl von {max} Zeilen erreicht. Löschen Sie Zeilen oder legen Sie eine neue Tabelle an (z. B. mit einem Thema eingegrenzt).</value><comment>{max} = Höchstzahl der Zeilen</comment></data>
+  <data name="DataTable_SelectDocument" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht die Tabelle.</value></data>
+  <data name="DataTable_CustomMissing" xml:space="preserve"><value>⚠️ Bitte beschreiben Sie bei „{custom}“, was die Tabelle enthalten soll, oder geben Sie die gewünschten Spalten an.</value><comment>{custom} = Name der Vorlage „Eigene Vorgabe“</comment></data>
+  <data name="DataTable_Cancelled" xml:space="preserve"><value>Die Erstellung der Tabelle wurde abgebrochen.</value></data>
+  <data name="DataTable_CreatedRepaired" xml:space="preserve"><value>✓ Tabelle mit {count, plural, one {# Zeile} other {# Zeilen}} erstellt. Die Antwort der KI war allerdings unvollständig, daher fehlen eventuell einige Zeilen.</value></data>
+  <data name="DataTable_TipCompleteWithMore" xml:space="preserve"><value>Mit „{button}“ lässt sich die Tabelle vervollständigen.</value><comment>{button} = Knopf „Weitere Zeilen ergänzen“</comment></data>
+  <data name="DataTable_TipTopicShorter" xml:space="preserve"><value>Bei sehr umfangreichen Unterlagen: ein Thema angeben, damit die Antwort kürzer wird.</value></data>
+  <data name="DataTable_Created" xml:space="preserve"><value>✓ Tabelle „{title}“ mit {rows, plural, one {# Zeile} other {# Zeilen}} und {columns, plural, one {# Spalte} other {# Spalten}} erstellt.</value></data>
+  <data name="DataTable_GenerateFailed" xml:space="preserve"><value>⚠️ Fehler beim Erstellen der Tabelle: {error}</value></data>
+  <data name="DataTable_SourcesMissing" xml:space="preserve"><value>⚠️ Die Quelldokumente der Tabelle sind nicht mehr vorhanden. Bitte links Dokumente aktivieren.</value></data>
+  <data name="DataTable_AppendCancelled" xml:space="preserve"><value>Das Ergänzen wurde abgebrochen.</value></data>
+  <data name="DataTable_OnlyDuplicates" xml:space="preserve"><value>Die KI hat nur Zeilen geliefert, die schon in der Tabelle stehen ({count}). Die Tabelle bleibt unverändert.</value><comment>{count} = Anzahl der Wiederholungen</comment></data>
+  <data name="DataTable_NoNewRows" xml:space="preserve"><value>Die KI hat keine neuen Zeilen gefunden. Die Tabelle bleibt unverändert.</value></data>
+  <data name="DataTable_TipRetryOtherExcerpt" xml:space="preserve"><value>Erneut versuchen – jeder Durchgang liest einen anderen Ausschnitt der Dokumente.</value></data>
+  <data name="DataTable_TipMoreDocuments" xml:space="preserve"><value>Weitere Dokumente aktivieren oder eine neue Tabelle mit anderem Thema anlegen.</value></data>
+  <data name="DataTable_RowsAdded" xml:space="preserve"><value>✓ {count, plural, one {# neue Zeile} other {# neue Zeilen}} ergänzt.</value></data>
+  <data name="DataTable_RowsAddedWithDuplicates" xml:space="preserve"><value>✓ {count, plural, one {# neue Zeile} other {# neue Zeilen}} ergänzt ({duplicates, plural, one {# Wiederholung} other {# Wiederholungen}} weggelassen).</value></data>
+  <data name="DataTable_AppendFailed" xml:space="preserve"><value>⚠️ Fehler beim Ergänzen der Tabelle: {error}</value></data>
+  <data name="DataTable_Deleted" xml:space="preserve"><value>✓ Tabelle „{title}“ gelöscht.</value></data>
+  <data name="DataTable_ColumnNameEmpty" xml:space="preserve"><value>Bitte einen Spaltennamen eingeben.</value></data>
+  <data name="DataTable_ColumnNameTooLong" xml:space="preserve"><value>Der Spaltenname ist zu lang (höchstens {max} Zeichen).</value></data>
+  <data name="DataTable_ColumnNameReserved" xml:space="preserve"><value>„{name}“ ist für die Quellspalte reserviert.</value></data>
+  <data name="DataTable_ColumnNameExists" xml:space="preserve"><value>Eine Spalte „{name}“ gibt es bereits.</value></data>
+  <data name="DataTable_MaxColumns" xml:space="preserve"><value>⚠️ Eine Tabelle hat höchstens {max} Spalten.</value></data>
+  <data name="DataTable_LastColumn" xml:space="preserve"><value>⚠️ Die letzte Spalte kann nicht gelöscht werden.</value></data>
+  <data name="DataTable_FormatCsv" xml:space="preserve"><value>CSV für Excel (*.csv)</value></data>
+  <data name="DataTable_FormatExcel" xml:space="preserve"><value>Excel-Arbeitsmappe (*.xlsx)</value></data>
+  <data name="DataTable_FormatMarkdown" xml:space="preserve"><value>Markdown (*.md)</value></data>
+  <data name="DataTable_Exported" xml:space="preserve"><value>✓ Exportiert als {format}: {file} – {rows, plural, one {# Zeile} other {# Zeilen}}</value></data>
+  <data name="DataTable_ExportedFiltered" xml:space="preserve"><value>✓ Exportiert als {format}: {file} – {rows} von {total, plural, one {# Zeile} other {# Zeilen}} (gefiltert)</value></data>
+  <data name="DataTable_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export: {error}</value></data>
+  <data name="DataTable_TipFileOpenExcel" xml:space="preserve"><value>Ist die Datei noch in einem anderen Programm (z. B. Excel) geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
+  <data name="Report_Generate" xml:space="preserve"><value>✨ Bericht erstellen</value></data>
+  <data name="Report_SelectDocument" xml:space="preserve"><value>⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht der Bericht.</value></data>
+  <data name="Report_CustomMissing" xml:space="preserve"><value>⚠️ Bitte beschreiben Sie bei „{custom}“, was der Bericht enthalten soll.</value><comment>{custom} = Name der Vorlage „Eigene Vorgabe“</comment></data>
+  <data name="Report_Cancelled" xml:space="preserve"><value>Die Erstellung des Berichts wurde abgebrochen.</value></data>
+  <data name="Report_CreatedRepaired" xml:space="preserve"><value>✓ Bericht erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Abschnitte.</value></data>
+  <data name="Report_TipRegenerate" xml:space="preserve"><value>Erneut erstellen – die KI antwortet jedes Mal etwas anders.</value></data>
+  <data name="Report_TipFewerDocuments" xml:space="preserve"><value>Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird.</value></data>
+  <data name="Report_Created" xml:space="preserve"><value>✓ Bericht „{title}“ mit {sections, plural, one {# Abschnitt} other {# Abschnitten}} erstellt.</value></data>
+  <data name="Report_GenerateFailed" xml:space="preserve"><value>⚠️ Fehler beim Erstellen des Berichts: {error}</value></data>
+  <data name="Report_Deleted" xml:space="preserve"><value>✓ Bericht „{title}“ gelöscht.</value></data>
+  <data name="Report_VideoCount" xml:space="preserve"><value>{count, plural, one {# Video} other {# Videos}}</value></data>
+  <data name="Report_AudioNone" xml:space="preserve"><value>ohne Ton (fester Takt)</value></data>
+  <data name="Report_AudioAll" xml:space="preserve"><value>mit Ton ({format})</value><comment>{format} = MP3 oder WAV</comment></data>
+  <data name="Report_AudioMixed" xml:space="preserve"><value>{withAudio} mit Ton ({format}), {silent} ohne Ton (fester Takt)</value></data>
+  <data name="Report_PlayersEstimate" xml:space="preserve"><value>HTML-Datei {size} · {videos} {audio}</value><comment>{videos} = Report_VideoCount, {audio} = Report_Audio*</comment></data>
+  <data name="Report_FormatWord" xml:space="preserve"><value>Word-Dokument (*.docx)</value></data>
+  <data name="Report_FormatMarkdown" xml:space="preserve"><value>Markdown (*.md)</value></data>
+  <data name="Report_FormatText" xml:space="preserve"><value>Textdatei (*.txt)</value></data>
+  <data name="Report_FormatHtml" xml:space="preserve"><value>Interaktive Webseite (*.html)</value></data>
+  <data name="Report_Exported" xml:space="preserve"><value>✓ Exportiert als {format}: {file}</value></data>
+  <data name="Report_ExportFailed" xml:space="preserve"><value>⚠️ Fehler beim Export: {error}</value></data>
+  <data name="Report_TipFileOpen" xml:space="preserve"><value>Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren.</value></data>
 </root>

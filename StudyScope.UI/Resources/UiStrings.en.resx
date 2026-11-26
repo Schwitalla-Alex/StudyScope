@@ -349,4 +349,119 @@
   <data name="Quiz_AllWithSolutions" xml:space="preserve"><value>All questions with solutions</value></data>
   <data name="Quiz_OnlyWrong" xml:space="preserve"><value>show incorrect only</value></data>
   <data name="Quiz_YourAnswer" xml:space="preserve"><value>← Your answer</value></data>
+  <data name="Common_Apply" xml:space="preserve"><value>Apply</value></data>
+  <data name="Common_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Common_DeleteConfirm" xml:space="preserve"><value>Delete?</value></data>
+  <data name="Common_DontDelete" xml:space="preserve"><value>Don't delete</value></data>
+  <data name="Common_Template" xml:space="preserve"><value>Template</value></data>
+  <data name="Common_YourInstructions" xml:space="preserve"><value>Your instructions</value></data>
+  <data name="Common_ActivateDocument" xml:space="preserve"><value>Activate at least one document on the left.</value></data>
+  <data name="DataTable_Title" xml:space="preserve"><value>Data tables: {profile}</value></data>
+  <data name="DataTable_New" xml:space="preserve"><value>➕ New table</value></data>
+  <data name="DataTable_BusyAppending" xml:space="preserve"><value>📊 AI is searching the documents for more rows…</value></data>
+  <data name="DataTable_BusyGenerating" xml:space="preserve"><value>📊 AI is reading the documents and compiling the table ({template})…</value></data>
+  <data name="DataTable_FormTitle" xml:space="preserve"><value>➕ New data table</value></data>
+  <data name="DataTable_ColumnsExample" xml:space="preserve"><value>Columns e.g.: {columns}</value></data>
+  <data name="DataTable_CustomPlaceholder" xml:space="preserve"><value>e.g. All types of tax with tax rate, tax base and example</value></data>
+  <data name="DataTable_ColumnsPlaceholder" xml:space="preserve"><value>e.g. Type of tax, Tax rate, Example</value></data>
+  <data name="DataTable_ColumnsHint" xml:space="preserve"><value>Leave empty and the AI suggests suitable columns. The “{source}” column is always added automatically.</value></data>
+  <data name="DataTable_TopicPlaceholder" xml:space="preserve"><value>e.g. Photosynthesis</value></data>
+  <data name="DataTable_TopicHint" xml:space="preserve"><value>Limits the table to matching passages; otherwise all of the material is used.</value></data>
+  <data name="DataTable_Saved" xml:space="preserve"><value>📊 Saved tables</value></data>
+  <data name="DataTable_ItemMeta" xml:space="preserve"><value>{template} · {rows, plural, one {# row} other {# rows}} · {date}</value></data>
+  <data name="DataTable_DeleteTable" xml:space="preserve"><value>Delete table</value></data>
+  <data name="DataTable_ShowList" xml:space="preserve"><value>Show table list</value></data>
+  <data name="DataTable_HideList" xml:space="preserve"><value>Hide table list – more room for the table</value></data>
+  <data name="DataTable_TopicMeta" xml:space="preserve"><value>Topic: {topic}</value></data>
+  <data name="DataTable_SizeMeta" xml:space="preserve"><value>{rows} / {max, plural, one {# row} other {# rows}} · {columns, plural, one {# column} other {# columns}}</value></data>
+  <data name="DataTable_SourcesMeta" xml:space="preserve"><value>Sources: {sources}</value></data>
+  <data name="DataTable_AddMoreRowsTitle" xml:space="preserve"><value>The AI searches the documents for more rows; duplicates are skipped</value></data>
+  <data name="DataTable_AddRow" xml:space="preserve"><value>➕ Row</value></data>
+  <data name="DataTable_AddRowTitle" xml:space="preserve"><value>Append an empty row</value></data>
+  <data name="DataTable_AddColumn" xml:space="preserve"><value>➕ Column</value></data>
+  <data name="DataTable_AddColumnTitle" xml:space="preserve"><value>Add column</value></data>
+  <data name="DataTable_NewColumnPlaceholder" xml:space="preserve"><value>Name of the new column</value></data>
+  <data name="DataTable_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="DataTable_FilterPlaceholder" xml:space="preserve"><value>🔍 Filter (all words must occur)</value></data>
+  <data name="DataTable_FilterCount" xml:space="preserve"><value>{visible} of {total, plural, one {# row} other {# rows}}</value></data>
+  <data name="DataTable_ClearFilter" xml:space="preserve"><value>Clear filter</value></data>
+  <data name="DataTable_ExportFilteredTitle" xml:space="preserve"><value>Otherwise all rows are exported (in the current sort order)</value></data>
+  <data name="DataTable_ExportFilteredOnly" xml:space="preserve"><value>Export filtered rows only</value></data>
+  <data name="DataTable_ClearSort" xml:space="preserve"><value>Clear sorting</value></data>
+  <data name="DataTable_ExcelTitle" xml:space="preserve"><value>Save as Excel workbook</value></data>
+  <data name="DataTable_CsvTitle" xml:space="preserve"><value>Save as CSV file (semicolon, for Excel)</value></data>
+  <data name="DataTable_MarkdownTitle" xml:space="preserve"><value>Save as Markdown table</value></data>
+  <data name="DataTable_PdfTitle" xml:space="preserve"><value>Print or save as PDF (current view)</value></data>
+  <data name="DataTable_PrintMeta" xml:space="preserve"><value>{template} · {rows, plural, one {# row} other {# rows}} · StudyScope, {date}</value></data>
+  <data name="DataTable_DeleteColumnConfirm" xml:space="preserve"><value>Delete “{name}”?</value></data>
+  <data name="DataTable_Sort" xml:space="preserve"><value>Sort</value></data>
+  <data name="DataTable_RenameColumn" xml:space="preserve"><value>Rename column</value></data>
+  <data name="DataTable_DeleteColumn" xml:space="preserve"><value>Delete column</value></data>
+  <data name="DataTable_SortBySource" xml:space="preserve"><value>Sort by source</value></data>
+  <data name="DataTable_DeleteRow" xml:space="preserve"><value>Delete row</value></data>
+  <data name="DataTable_NoFilterMatch" xml:space="preserve"><value>No row matches the filter.</value></data>
+  <data name="DataTable_NoRows" xml:space="preserve"><value>The table has no rows yet.</value></data>
+  <data name="DataTable_EditHint" xml:space="preserve"><value>Double-click a cell to edit it – Enter applies, Esc cancels. Changes are saved immediately.</value></data>
+  <data name="DataTable_SourceCellTitle" xml:space="preserve"><value>Source document – double-click to change</value></data>
+  <data name="DataTable_EmptyTitle" xml:space="preserve"><value>No table selected yet.</value></data>
+  <data name="DataTable_EmptyHint" xml:space="preserve"><value>Activate the documents on the left, choose a template and click “{button}”. The AI picks the information out of your material – each row with its source. The table can be sorted, filtered, edited and saved as Excel, CSV, Markdown or PDF.</value></data>
+  <data name="DataTable_PrintTip" xml:space="preserve"><value>Alternative: save the table as “{button}” and print it there.</value></data>
+  <data name="Report_Title" xml:space="preserve"><value>Reports: {profile}</value></data>
+  <data name="Report_New" xml:space="preserve"><value>➕ New report</value></data>
+  <data name="Report_Busy" xml:space="preserve"><value>📑 AI is reading the documents and writing the report ({template})…</value></data>
+  <data name="Report_FormTitle" xml:space="preserve"><value>➕ New report</value></data>
+  <data name="Report_CustomPlaceholder" xml:space="preserve"><value>e.g. Compare the types of tax in an overview with advantages and disadvantages</value></data>
+  <data name="Report_EmbedTitle" xml:space="preserve"><value>Embed studio content</value></data>
+  <data name="Report_EmbedMindmapFull" xml:space="preserve"><value>🧠 Mind map</value></data>
+  <data name="Report_EmbedFlashcardsFull" xml:space="preserve"><value>🎴 Flashcards</value></data>
+  <data name="Report_EmbedQuizFull" xml:space="preserve"><value>❓ Self-test (quiz questions)</value></data>
+  <data name="Report_EmbedPresentationFull" xml:space="preserve"><value>📽️ Presentation</value></data>
+  <data name="Report_EmbedDataTablesFull" xml:space="preserve"><value>📊 Data tables</value></data>
+  <data name="Report_EmbedAudioFull" xml:space="preserve"><value>🎧 Audio scripts (text)</value></data>
+  <data name="Report_EmbedVideoFull" xml:space="preserve"><value>🎬 Video scripts (text)</value></data>
+  <data name="Report_MindmapPresent" xml:space="preserve"><value>available</value></data>
+  <data name="Report_MindmapMissing" xml:space="preserve"><value>none yet</value></data>
+  <data name="Report_SlideCount" xml:space="preserve"><value>{count, plural, one {# slide} other {# slides}}</value></data>
+  <data name="Report_EmbedHint" xml:space="preserve"><value>Create missing content in the Mind map, Flashcards, Quiz, Presentation, Data table, Audio and Video tabs.</value></data>
+  <data name="Report_Saved" xml:space="preserve"><value>📑 Saved reports</value></data>
+  <data name="Report_ItemMeta" xml:space="preserve"><value>{template} · {date}</value></data>
+  <data name="Report_DeleteReport" xml:space="preserve"><value>Delete report</value></data>
+  <data name="Report_Embedded" xml:space="preserve"><value>Embedded:</value></data>
+  <data name="Report_EmbedMindmap" xml:space="preserve"><value>Mind map</value></data>
+  <data name="Report_EmbedFlashcards" xml:space="preserve"><value>Flashcards</value></data>
+  <data name="Report_EmbedQuiz" xml:space="preserve"><value>Self-test</value></data>
+  <data name="Report_EmbedPresentation" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Report_EmbedDataTables" xml:space="preserve"><value>Data tables</value></data>
+  <data name="Report_EmbedAudio" xml:space="preserve"><value>Audio scripts</value></data>
+  <data name="Report_EmbedVideo" xml:space="preserve"><value>Video scripts</value></data>
+  <data name="Report_WordTitle" xml:space="preserve"><value>Save as Word document</value></data>
+  <data name="Report_PdfTitle" xml:space="preserve"><value>Print or save as PDF (everything expanded, with solutions)</value></data>
+  <data name="Report_MarkdownTitle" xml:space="preserve"><value>Save as Markdown file</value></data>
+  <data name="Report_TextTitle" xml:space="preserve"><value>Save as plain text file</value></data>
+  <data name="Report_HtmlTitle" xml:space="preserve"><value>Save as interactive web page – works in the browser even without StudyScope</value></data>
+  <data name="Report_EmbedPlayersTitle" xml:space="preserve"><value>Only for “{button}”: one player per video with slides, bullet points and sound. Sound only with an up-to-date Gemini audio file, otherwise silent at a fixed pace.</value></data>
+  <data name="Report_EmbedPlayers" xml:space="preserve"><value>🎬 Embed videos in the HTML report (player with slides and sound)</value></data>
+  <data name="Report_UseMp3" xml:space="preserve"><value>Sound as MP3 (smaller)</value></data>
+  <data name="Report_FrameTitle" xml:space="preserve"><value>Report</value></data>
+  <data name="Report_EmptyTitle" xml:space="preserve"><value>No report selected yet.</value></data>
+  <data name="Report_EmptyHint" xml:space="preserve"><value>Activate the documents on the left, choose a template and click “{button}”. The report is shown interactively – with mind map, flashcards, self-test, slides and data tables – and can be saved as Word, PDF, Markdown, text or HTML.</value></data>
+  <data name="Report_EmbedUnavailable" xml:space="preserve"><value>Not available yet – create it in the corresponding tab</value></data>
+  <data name="Report_PrintTip" xml:space="preserve"><value>Alternative: save the report as “{button}”, open it in the browser and print it or save it as PDF there.</value></data>
+  <data name="Report_HtmlButton" xml:space="preserve"><value>🌐 HTML</value></data>
+  <data name="DataTable_ExcelButton" xml:space="preserve"><value>📗 Excel</value></data>
+  <data name="Common_TitleLabel" xml:space="preserve"><value>Title</value></data>
+  <data name="Common_TitleOptionalHint" xml:space="preserve"><value>(optional – otherwise the AI chooses one)</value></data>
+  <data name="Common_OptionalHint" xml:space="preserve"><value>(optional)</value></data>
+  <data name="Common_NoActiveDocument" xml:space="preserve"><value>no document activated</value></data>
+  <data name="Common_ActiveDocuments" xml:space="preserve"><value>{count, plural, one {# activated document} other {# activated documents}}</value></data>
+  <data name="Common_BasedOn" xml:space="preserve"><value>{items} · Based on: {documents}</value></data>
+  <data name="DataTable_NoTables" xml:space="preserve"><value>No tables yet</value></data>
+  <data name="DataTable_TableCount" xml:space="preserve"><value>{count, plural, one {# table} other {# tables}}</value></data>
+  <data name="DataTable_ColumnsLabel" xml:space="preserve"><value>Columns</value></data>
+  <data name="DataTable_ColumnsLabelHint" xml:space="preserve"><value>(optional – separated by commas)</value></data>
+  <data name="DataTable_TopicLabel" xml:space="preserve"><value>Topic / search term</value></data>
+  <data name="DataTable_SaveAsTitle" xml:space="preserve"><value>Save data table as…</value></data>
+  <data name="Report_NoReports" xml:space="preserve"><value>No reports yet</value></data>
+  <data name="Report_ReportCount" xml:space="preserve"><value>{count, plural, one {# report} other {# reports}}</value></data>
+  <data name="Report_SaveAsTitle" xml:space="preserve"><value>Save report as…</value></data>
 </root>

@@ -38,6 +38,9 @@ public class LogicalCssTests
         "Components/PresentationView.razor",
         "Components/QuizView.razor",
         "Components/SlideView.razor",
+        // 3a-3 Datentabelle und Bericht
+        "Components/DataTableView.razor",
+        "Components/ReportView.razor",
     };
 
     private static readonly Regex Physical = new(
@@ -92,5 +95,7 @@ public class LogicalCssTests
     {
         var css = File.ReadAllText(Path.Combine(UiDirectory, "wwwroot", "css", "studyscope-base.css"));
         Assert.That(css, Does.Contain(":root[dir=\"rtl\"] .ss-flip-rtl"));
+        // transform wirkt nicht auf reine Inline-Elemente – ohne inline-block bliebe ein <span>-Pfeil ungespiegelt
+        Assert.That(css, Does.Contain(".ss-flip-rtl { display: inline-block; }"));
     }
 }

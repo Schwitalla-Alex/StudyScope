@@ -3,6 +3,8 @@ using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.Mindmap;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -324,13 +326,13 @@ public class ReportViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht der Bericht.", isError: true);
+            ShowStatus(VmStrings.Report_SelectDocument, isError: true);
             return;
         }
 
         if (Template == ReportTemplate.Custom && string.IsNullOrWhiteSpace(CustomInstruction))
         {
-            ShowStatus("⚠️ Bitte beschreiben Sie bei „Eigene Vorgabe“, was der Bericht enthalten soll.", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Report_CustomMissing, ("custom", TemplateTexts.Name(ReportTemplate.Custom))), isError: true);
             return;
         }
 
@@ -352,13 +354,13 @@ public class ReportViewModel : INotifyPropertyChanged
             var result = await _reportService.GenerateReportAsync(chunks, Template, CustomInstruction, fallbackTitle, token);
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Erstellung des Berichts wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.Report_Cancelled, isError: false);
                 return;
             }
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.Report, "✨ Bericht erstellen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.Report, VmStrings.Report_Generate);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -388,18 +390,18 @@ public class ReportViewModel : INotifyPropertyChanged
             SelectedReport = report;
 
             if (result.WasRepaired)
-                ShowStatus("✓ Bericht erstellt. Die Antwort der KI war allerdings unvollständig oder fehlerhaft, daher fehlen eventuell einige Abschnitte.", isError: false,
-                    new[] { "Erneut erstellen – die KI antwortet jedes Mal etwas anders.", "Nur bei sehr umfangreichen Unterlagen: weniger Dokumente aktivieren, damit die Antwort kürzer wird." }, isWarning: true);
+                ShowStatus(VmStrings.Report_CreatedRepaired, isError: false,
+                    new[] { VmStrings.Report_TipRegenerate, VmStrings.Report_TipFewerDocuments }, isWarning: true);
             else
-                ShowStatus($"✓ Bericht „{report.Title}“ mit {report.Sections.Count} Abschnitten erstellt.", isError: false);
+                ShowStatus(Loc.Format(VmStrings.Report_Created, ("title", report.Title), ("sections", report.Sections.Count)), isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung des Berichts wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.Report_Cancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen des Berichts: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.Report_GenerateFailed, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -451,7 +453,7 @@ public class ReportViewModel : INotifyPropertyChanged
         if (_library.Reports.Count == 0)
             IsFormOpen = true;
 
-        ShowStatus($"✓ Bericht „{report.Title}“ gelöscht.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.Report_Deleted, ("title", report.Title)), isError: false);
     }
 
     /// <summary>Schaltet eine Einbettung des gewählten Berichts um (mindmap, flashcards, quiz, presentation, datatables).</summary>
@@ -526,15 +528,16 @@ public class ReportViewModel : INotifyPropertyChanged
             if (!EmbedVideoPlayers || !CanEmbedVideoPlayers) return null;
             var videos = EmbeddedVideos;
             var e = _videoScriptService!.EstimateHtml(_profileName, videos, UseMp3);
-            var count = videos.Count == 1 ? "1 Video" : $"{videos.Count} Videos";
+            var count = Loc.Format(VmStrings.Report_VideoCount, ("count", videos.Count));
             var silent = e.VideoCount - e.VideosWithAudio;
+            var format = e.UsesMp3 ? "MP3" : "WAV";
             var audio = e.VideosWithAudio switch
             {
-                0 => "ohne Ton (fester Takt)",
-                _ when silent == 0 => $"mit Ton ({(e.UsesMp3 ? "MP3" : "WAV")})",
-                _ => $"{e.VideosWithAudio} mit Ton ({(e.UsesMp3 ? "MP3" : "WAV")}), {silent} ohne Ton (fester Takt)"
+                0 => VmStrings.Report_AudioNone,
+                _ when silent == 0 => Loc.Format(VmStrings.Report_AudioAll, ("format", format)),
+                _ => Loc.Format(VmStrings.Report_AudioMixed, ("withAudio", e.VideosWithAudio), ("format", format), ("silent", silent))
             };
-            return $"HTML-Datei {e.SizeText} · {count} {audio}";
+            return Loc.Format(VmStrings.Report_PlayersEstimate, ("size", e.SizeText), ("videos", count), ("audio", audio));
         }
     }
 
@@ -563,10 +566,10 @@ public class ReportViewModel : INotifyPropertyChanged
 
     public static string FormatDescription(ReportExportFormat format) => format switch
     {
-        ReportExportFormat.Word => "Word-Dokument (*.docx)",
-        ReportExportFormat.Markdown => "Markdown (*.md)",
-        ReportExportFormat.Text => "Textdatei (*.txt)",
-        _ => "Interaktive Webseite (*.html)"
+        ReportExportFormat.Word => VmStrings.Report_FormatWord,
+        ReportExportFormat.Markdown => VmStrings.Report_FormatMarkdown,
+        ReportExportFormat.Text => VmStrings.Report_FormatText,
+        _ => VmStrings.Report_FormatHtml
     };
 
     public async Task<bool> ExportAsync(ReportExportFormat format, string filePath)
@@ -609,13 +612,13 @@ public class ReportViewModel : INotifyPropertyChanged
                     break;
             }
 
-            ShowStatus($"✓ Exportiert als {FormatDescription(format)}: {Path.GetFileName(filePath)}", isError: false);
+            ShowStatus(Loc.Format(VmStrings.Report_Exported, ("format", FormatDescription(format)), ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true,
-                new[] { "Ist die Datei noch in einem anderen Programm geöffnet? Dann bitte schließen und erneut exportieren." });
+            ShowStatus(Loc.Format(VmStrings.Report_ExportFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.Report_TipFileOpen });
             return false;
         }
     }

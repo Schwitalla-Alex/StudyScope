@@ -4,6 +4,8 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.ViewModels.DataTable;
 using StudyScope.ViewModels.Mindmap;
+using StudyScope.Core.Localization;
+using StudyScope.ViewModels.Resources;
 
 namespace StudyScope.ViewModels;
 
@@ -157,8 +159,7 @@ public class DataTableViewModel : INotifyPropertyChanged
     public bool IsAtRowLimit => RowCount >= DataTableDocument.MaxRows;
     public bool CanAddMoreRows => SelectedTable != null && !IsBusy && !IsAtRowLimit;
 
-    public string RowLimitHint =>
-        $"Die Tabelle hat die Höchstzahl von {DataTableDocument.MaxRows} Zeilen erreicht. Löschen Sie Zeilen oder legen Sie eine neue Tabelle an (z. B. mit einem Thema eingegrenzt).";
+    public string RowLimitHint => Loc.Format(VmStrings.DataTable_RowLimitHint, ("max", DataTableDocument.MaxRows));
 
     // ---------------- Fortschritt und Status ----------------
 
@@ -231,13 +232,13 @@ public class DataTableViewModel : INotifyPropertyChanged
         var selectedDocs = documents.Where(d => d.IsSelected && !d.IsMissing).ToList();
         if (selectedDocs.Count == 0)
         {
-            ShowStatus("⚠️ Bitte wählen Sie links mindestens ein Dokument aus – daraus entsteht die Tabelle.", isError: true);
+            ShowStatus(VmStrings.DataTable_SelectDocument, isError: true);
             return;
         }
 
         if (Template == DataTableTemplate.Custom && string.IsNullOrWhiteSpace(CustomInstruction) && string.IsNullOrWhiteSpace(CustomColumns))
         {
-            ShowStatus("⚠️ Bitte beschreiben Sie bei „Eigene Vorgabe“, was die Tabelle enthalten soll, oder geben Sie die gewünschten Spalten an.", isError: true);
+            ShowStatus(Loc.Format(VmStrings.DataTable_CustomMissing, ("custom", TemplateTexts.Name(DataTableTemplate.Custom))), isError: true);
             return;
         }
 
@@ -258,13 +259,13 @@ public class DataTableViewModel : INotifyPropertyChanged
             var result = await _dataTableService.GenerateAsync(chunks, Template, CustomInstruction, columns, Topic, fallbackTitle, token);
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Die Erstellung der Tabelle wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.DataTable_Cancelled, isError: false);
                 return;
             }
 
             if (!result.IsSuccess)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.DataTable, "✨ Tabelle erstellen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.DataTable, VmStrings.DataTable_Generate);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -286,18 +287,18 @@ public class DataTableViewModel : INotifyPropertyChanged
             SelectedTable = table;
 
             if (result.WasRepaired)
-                ShowStatus($"✓ Tabelle mit {table.Rows.Count} Zeilen erstellt. Die Antwort der KI war allerdings unvollständig, daher fehlen eventuell einige Zeilen.", isError: false,
-                    new[] { "Mit „➕ Weitere Zeilen ergänzen“ lässt sich die Tabelle vervollständigen.", "Bei sehr umfangreichen Unterlagen: ein Thema angeben, damit die Antwort kürzer wird." }, isWarning: true);
+                ShowStatus(Loc.Format(VmStrings.DataTable_CreatedRepaired, ("count", table.Rows.Count)), isError: false,
+                    new[] { Loc.Format(VmStrings.DataTable_TipCompleteWithMore, ("button", VmStrings.DataTable_AddMoreRows)), VmStrings.DataTable_TipTopicShorter }, isWarning: true);
             else
-                ShowStatus($"✓ Tabelle „{table.Title}“ mit {table.Rows.Count} Zeilen und {table.Columns.Count} Spalten erstellt.", isError: false);
+                ShowStatus(Loc.Format(VmStrings.DataTable_Created, ("title", table.Title), ("rows", table.Rows.Count), ("columns", table.Columns.Count)), isError: false);
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Die Erstellung der Tabelle wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.DataTable_Cancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Erstellen der Tabelle: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.DataTable_GenerateFailed, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -328,7 +329,7 @@ public class DataTableViewModel : INotifyPropertyChanged
             docs = all.Where(d => d.IsSelected).ToList();
         if (docs.Count == 0)
         {
-            ShowStatus("⚠️ Die Quelldokumente der Tabelle sind nicht mehr vorhanden. Bitte links Dokumente aktivieren.", isError: true);
+            ShowStatus(VmStrings.DataTable_SourcesMissing, isError: true);
             return;
         }
 
@@ -345,13 +346,13 @@ public class DataTableViewModel : INotifyPropertyChanged
             var result = await _dataTableService.GenerateMoreRowsAsync(table, chunks, remaining, token);
             if (token.IsCancellationRequested)
             {
-                ShowStatus("Das Ergänzen wurde abgebrochen.", isError: false);
+                ShowStatus(VmStrings.DataTable_AppendCancelled, isError: false);
                 return;
             }
 
             if (result.FailureReason != MindmapFailureReason.None)
             {
-                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.NewRows, "➕ Weitere Zeilen ergänzen");
+                var failure = MindmapStatusTexts.ForFailure(result.FailureReason, result.RawResponse, GenerationSubject.NewRows, VmStrings.DataTable_AddMoreRows);
                 ShowStatus(failure.Message, isError: true, failure.Tips, failure.Details);
                 return;
             }
@@ -364,10 +365,10 @@ public class DataTableViewModel : INotifyPropertyChanged
             {
                 await SaveAsync();
                 ShowStatus(result.DuplicatesSkipped > 0
-                        ? $"Die KI hat nur Zeilen geliefert, die schon in der Tabelle stehen ({result.DuplicatesSkipped}). Die Tabelle bleibt unverändert."
-                        : "Die KI hat keine neuen Zeilen gefunden. Die Tabelle bleibt unverändert.",
+                        ? Loc.Format(VmStrings.DataTable_OnlyDuplicates, ("count", result.DuplicatesSkipped))
+                        : VmStrings.DataTable_NoNewRows,
                     isError: false,
-                    new[] { "Erneut versuchen – jeder Durchgang liest einen anderen Ausschnitt der Dokumente.", "Weitere Dokumente aktivieren oder eine neue Tabelle mit anderem Thema anlegen." },
+                    new[] { VmStrings.DataTable_TipRetryOtherExcerpt, VmStrings.DataTable_TipMoreDocuments },
                     isWarning: true);
                 return;
             }
@@ -376,10 +377,9 @@ public class DataTableViewModel : INotifyPropertyChanged
             await SaveAsync();
             OnTableContentChanged();
 
-            var message = $"✓ {result.Rows.Count} {(result.Rows.Count == 1 ? "neue Zeile" : "neue Zeilen")} ergänzt";
-            if (result.DuplicatesSkipped > 0)
-                message += $" ({result.DuplicatesSkipped} {(result.DuplicatesSkipped == 1 ? "Wiederholung" : "Wiederholungen")} weggelassen)";
-            message += ".";
+            var message = result.DuplicatesSkipped > 0
+                ? Loc.Format(VmStrings.DataTable_RowsAddedWithDuplicates, ("count", result.Rows.Count), ("duplicates", result.DuplicatesSkipped))
+                : Loc.Format(VmStrings.DataTable_RowsAdded, ("count", result.Rows.Count));
             if (IsAtRowLimit)
                 ShowStatus(message + " " + RowLimitHint, isError: false, isWarning: true);
             else
@@ -387,11 +387,11 @@ public class DataTableViewModel : INotifyPropertyChanged
         }
         catch (OperationCanceledException)
         {
-            ShowStatus("Das Ergänzen wurde abgebrochen.", isError: false);
+            ShowStatus(VmStrings.DataTable_AppendCancelled, isError: false);
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Ergänzen der Tabelle: {ex.Message}", isError: true);
+            ShowStatus(Loc.Format(VmStrings.DataTable_AppendFailed, ("error", ex.Message)), isError: true);
         }
         finally
         {
@@ -468,7 +468,7 @@ public class DataTableViewModel : INotifyPropertyChanged
         if (_library.Tables.Count == 0)
             IsFormOpen = true;
 
-        ShowStatus($"✓ Tabelle „{table.Title}“ gelöscht.", isError: false);
+        ShowStatus(Loc.Format(VmStrings.DataTable_Deleted, ("title", table.Title)), isError: false);
     }
 
     // ---------------- Bearbeiten ----------------
@@ -528,18 +528,21 @@ public class DataTableViewModel : INotifyPropertyChanged
         OnTableContentChanged();
     }
 
+    /// <summary>Höchstlänge eines Spaltennamens.</summary>
+    public const int MaxColumnNameLength = 60;
+
     /// <summary>Prüft einen Spaltennamen; liefert eine Fehlermeldung oder null.</summary>
     public string? ValidateColumnName(string? name, int? exceptColumn = null)
     {
         var n = (name ?? string.Empty).Trim();
         if (n.Length == 0)
-            return "Bitte einen Spaltennamen eingeben.";
-        if (n.Length > 60)
-            return "Der Spaltenname ist zu lang (höchstens 60 Zeichen).";
+            return VmStrings.DataTable_ColumnNameEmpty;
+        if (n.Length > MaxColumnNameLength)
+            return Loc.Format(VmStrings.DataTable_ColumnNameTooLong, ("max", MaxColumnNameLength));
         if (string.Equals(n, DataTableDocument.SourceColumnName, StringComparison.OrdinalIgnoreCase))
-            return $"„{DataTableDocument.SourceColumnName}“ ist für die Quellspalte reserviert.";
+            return Loc.Format(VmStrings.DataTable_ColumnNameReserved, ("name", DataTableDocument.SourceColumnName));
         if (SelectedTable != null && SelectedTable.Columns.Where((_, i) => i != exceptColumn).Any(c => string.Equals(c, n, StringComparison.OrdinalIgnoreCase)))
-            return $"Eine Spalte „{n}“ gibt es bereits.";
+            return Loc.Format(VmStrings.DataTable_ColumnNameExists, ("name", n));
         return null;
     }
 
@@ -568,7 +571,7 @@ public class DataTableViewModel : INotifyPropertyChanged
 
         if (table.Columns.Count >= DataTableDocument.MaxColumns)
         {
-            ShowStatus($"⚠️ Eine Tabelle hat höchstens {DataTableDocument.MaxColumns} Spalten.", isError: true);
+            ShowStatus(Loc.Format(VmStrings.DataTable_MaxColumns, ("max", DataTableDocument.MaxColumns)), isError: true);
             return false;
         }
 
@@ -597,7 +600,7 @@ public class DataTableViewModel : INotifyPropertyChanged
 
         if (table.Columns.Count <= 1)
         {
-            ShowStatus("⚠️ Die letzte Spalte kann nicht gelöscht werden.", isError: true);
+            ShowStatus(VmStrings.DataTable_LastColumn, isError: true);
             return false;
         }
 
@@ -644,9 +647,9 @@ public class DataTableViewModel : INotifyPropertyChanged
 
     public static string FormatDescription(DataTableExportFormat format) => format switch
     {
-        DataTableExportFormat.Csv => "CSV für Excel (*.csv)",
-        DataTableExportFormat.Excel => "Excel-Arbeitsmappe (*.xlsx)",
-        _ => "Markdown (*.md)"
+        DataTableExportFormat.Csv => VmStrings.DataTable_FormatCsv,
+        DataTableExportFormat.Excel => VmStrings.DataTable_FormatExcel,
+        _ => VmStrings.DataTable_FormatMarkdown
     };
 
     public async Task<bool> ExportAsync(DataTableExportFormat format, string filePath)
@@ -670,14 +673,16 @@ public class DataTableViewModel : INotifyPropertyChanged
                     break;
             }
 
-            var scope = rows.Count == table.Rows.Count ? $"{rows.Count} Zeilen" : $"{rows.Count} von {table.Rows.Count} Zeilen (gefiltert)";
-            ShowStatus($"✓ Exportiert als {FormatDescription(format)}: {Path.GetFileName(filePath)} – {scope}", isError: false);
+            var message = rows.Count == table.Rows.Count
+                ? Loc.Format(VmStrings.DataTable_Exported, ("format", FormatDescription(format)), ("file", Path.GetFileName(filePath)), ("rows", rows.Count))
+                : Loc.Format(VmStrings.DataTable_ExportedFiltered, ("format", FormatDescription(format)), ("file", Path.GetFileName(filePath)), ("rows", rows.Count), ("total", table.Rows.Count));
+            ShowStatus(message, isError: false);
             return true;
         }
         catch (Exception ex)
         {
-            ShowStatus($"⚠️ Fehler beim Export: {ex.Message}", isError: true,
-                new[] { "Ist die Datei noch in einem anderen Programm (z. B. Excel) geöffnet? Dann bitte schließen und erneut exportieren." });
+            ShowStatus(Loc.Format(VmStrings.DataTable_ExportFailed, ("error", ex.Message)), isError: true,
+                new[] { VmStrings.DataTable_TipFileOpenExcel });
             return false;
         }
     }

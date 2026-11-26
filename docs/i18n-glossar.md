@@ -202,6 +202,14 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Begriffe / Glossar | terms / glossary | |
 | Merksatz | key takeaway | |
 | Selbsttest | self-test | |
+| Eigene Vorgabe | Custom instructions | Vorlage „Custom“ |
+| Ihre Vorgabe | Your instructions | Eingabefeld |
+| Quelle (Spalte) | source | gespeicherter Spaltenname bleibt „Quelle“ |
+| Grundlage: … | Based on: … | Kopfzeile der Reiter |
+| Lernübersicht | Study guide | Berichtsvorlage |
+| Zusammenfassung / Briefing | Summary / briefing | Berichtsvorlage |
+| Eingebettet | Embedded | |
+| Wiederholung (doppelte Zeile) | duplicate | |
 
 ## Audio und Video
 

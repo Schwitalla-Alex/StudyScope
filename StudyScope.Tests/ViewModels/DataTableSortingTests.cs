@@ -83,13 +83,22 @@ public class DataTableSortingTests
 
     // ---------- Sortierung ----------
 
-    [Test]
+    [Test, SetCulture("de-DE")]
     public void Sort_Text_GermanRules_CaseInsensitive_EmptyLast()
     {
         var rows = Rows("zebra", "Äpfel", "", "apfel", "Birne");
 
         Assert.That(First(DataTableSorting.Sort(rows, 0, descending: false)), Is.EqualTo(new[] { "apfel", "Äpfel", "Birne", "zebra", "" }));
         Assert.That(First(DataTableSorting.Sort(rows, 0, descending: true)), Is.EqualTo(new[] { "zebra", "Birne", "Äpfel", "apfel", "" }));
+    }
+
+    /// <summary>Texte folgen den Regeln der Oberflächensprache: im Schwedischen steht „Ä“ hinter „Z“.</summary>
+    [Test, SetCulture("sv-SE")]
+    public void Sort_Text_FollowsCurrentCulture()
+    {
+        var rows = Rows("zebra", "Äpfel", "apfel");
+
+        Assert.That(First(DataTableSorting.Sort(rows, 0, descending: false)), Is.EqualTo(new[] { "apfel", "zebra", "Äpfel" }));
     }
 
     [Test]
