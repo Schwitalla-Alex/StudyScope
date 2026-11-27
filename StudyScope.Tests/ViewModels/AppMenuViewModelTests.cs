@@ -23,7 +23,7 @@ public class AppMenuViewModelTests
         Assert.That(items[2].Children!.Select(c => c.Id), Is.EqualTo(new[]
         {
             AppMenuViewModel.SettingsAi, AppMenuViewModel.SettingsSpeech, AppMenuViewModel.SettingsExport,
-            AppMenuViewModel.SettingsAppearance
+            AppMenuViewModel.SettingsWebSearch, AppMenuViewModel.SettingsAppearance
         }));
         Assert.That(items[3].Children!.Select(c => c.Id), Is.EqualTo(new[] { AppMenuViewModel.About, AppMenuViewModel.Support }));
         Assert.That(items[4].IsDanger, Is.True);
@@ -68,6 +68,7 @@ public class AppMenuViewModelTests
             Assert.That(AppMenuViewModel.SettingsSectionOf(AppMenuViewModel.SettingsAi), Is.EqualTo("ai"));
             Assert.That(AppMenuViewModel.SettingsSectionOf(AppMenuViewModel.SettingsSpeech), Is.EqualTo("speech"));
             Assert.That(AppMenuViewModel.SettingsSectionOf(AppMenuViewModel.SettingsExport), Is.EqualTo("export"));
+            Assert.That(AppMenuViewModel.SettingsSectionOf(AppMenuViewModel.SettingsWebSearch), Is.EqualTo("websearch"));
             Assert.That(AppMenuViewModel.SettingsSectionOf(AppMenuViewModel.About), Is.Null);
         });
     }

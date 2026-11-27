@@ -297,6 +297,25 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Formatvorlage „StudyScope Frage“ | “StudyScope Question” | Name in Word |
 | Formen „Titel“, „Fußzeile“, „Foliennummer“ | “Title”, “Footer”, “Slide number” | Auswahlbereich in PowerPoint |
 
+## Websuche
+
+| Deutsch | Englisch | Hinweis |
+|---|---|---|
+| Websuche | web search | Einstellungsabschnitt „🌐 Web search“, Menüeintrag „Web search“ |
+| Suchdienst | search provider | Tavily, SearXNG |
+| Kein Suchdienst | No search provider | Auswahl |
+| Auch im Internet suchen | Also search the web | Häkchen in der Seitenleiste (ab 4-2) |
+| Treffer (der Suche) | result(s) | „Treffer je Frage“ → “Results per question”; Plural über ICU |
+| Web-Quelle | web source | Quellenliste unter der Antwort (ab 4-2) |
+| Suchanfrage | search query | was ins Netz geht: nur die selbst eingegebene Frage |
+| Instanz (SearXNG) | instance | „Adresse der SearXNG-Instanz“ → “Address of the SearXNG instance” |
+| Metasuchmaschine | metasearch engine | |
+| Kontingent / Monatskontingent | quota / monthly quota | Tavily HTTP 432 |
+| Ausgabengrenze (Pay-as-you-go) | pay-as-you-go spending limit | Tavily HTTP 433 |
+| Credit | credit | Abrechnungseinheit von Tavily, nicht übersetzen |
+| Schlüssel holen | Get a key | „Schlüssel bei Tavily holen“ → “Get a key from Tavily” |
+| Suchindizes Dritter | third-party search indexes | Datenschutzhinweis |
+
 ## Schlüssel in den `.resx`-Dateien
 
 - Aufbau `Bereich_Element[_Variante]`, z. B. `Menu_OpenFile`, `Settings_Ai_Title`, `Chat_Send`, `Quiz_Result_Score`. Unterstriche statt Punkte, weil daraus Eigenschaften der Ressourcenklasse werden.

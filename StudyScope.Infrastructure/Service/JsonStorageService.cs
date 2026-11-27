@@ -174,7 +174,9 @@ public class JsonStorageService : IStorageService
             AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig()),
             SpeechSettings = profile.SpeechSettings == null ? null : EncryptedCopy(profile.SpeechSettings),
             // Neue Profilfelder hier ergänzen – sonst gehen sie beim nächsten Speichern (z. B. der Dokumente) verloren
-            OutputLanguage = profile.OutputLanguage
+            OutputLanguage = profile.OutputLanguage,
+            WebSearchEnabled = profile.WebSearchEnabled,
+            WebSearchNoticeAcceptedFor = profile.WebSearchNoticeAcceptedFor
         };
 
         var filePath = GetProfileFilePath(profileName);
@@ -370,9 +372,9 @@ public class JsonStorageService : IStorageService
     {
         var node = JsonSerializer.SerializeToNode(EncryptedCopy(config), JsonOptions)!.AsObject();
 
-        // Sprachausgabe, Export- und Oberflächen-Einstellungen stehen in derselben Datei und bleiben erhalten
+        // Sprachausgabe, Export-, Oberflächen- und Websuche-Einstellungen stehen in derselben Datei und bleiben erhalten
         var existing = await ReadConfigNodeAsync();
-        foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty, UiSettingsProperty })
+        foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty, UiSettingsProperty, WebSearchSettingsProperty })
         {
             if (existing?[property] is JsonNode kept)
                 node[property] = kept.DeepClone();
@@ -409,6 +411,67 @@ public class JsonStorageService : IStorageService
         var node = await ReadConfigNodeAsync() ?? new JsonObject();
         node[ExportSettingsProperty] = JsonSerializer.SerializeToNode(settings.Clone(), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    // ---------------- Websuche ----------------
+
+    private const string WebSearchSettingsProperty = "WebSearchSettings";
+
+    public async Task<WebSearchSettings> LoadWebSearchSettingsAsync()
+    {
+        try
+        {
+            if ((await ReadConfigNodeAsync())?[WebSearchSettingsProperty] is JsonObject node &&
+                node.Deserialize<WebSearchSettings>(JsonOptions) is { } settings)
+            {
+                settings.TavilyApiKey = DecryptApiKey(settings.TavilyApiKey);
+                settings.SearxngUrl ??= string.Empty;
+                settings.MaxResults = WebSearchSettings.ClampMaxResults(settings.MaxResults);
+                if (!Enum.IsDefined(settings.Provider))
+                    settings.Provider = WebSearchProviderType.None;
+                return settings;
+            }
+        }
+        catch
+        {
+            // defekter Eintrag → Standard (kein Suchdienst)
+        }
+        return new WebSearchSettings();
+    }
+
+    public async Task SaveWebSearchSettingsAsync(WebSearchSettings settings)
+    {
+        Directory.CreateDirectory(_baseDirectory);
+        var node = await ReadConfigNodeAsync() ?? new JsonObject();
+        node[WebSearchSettingsProperty] = JsonSerializer.SerializeToNode(EncryptedCopy(settings), JsonOptions);
+        await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    /// <summary>Kopie der Websuche-Einstellungen mit verschlüsseltem Tavily-Schlüssel (das Original bleibt Klartext).</summary>
+    private WebSearchSettings EncryptedCopy(WebSearchSettings settings)
+    {
+        var copy = settings.Clone();
+        copy.TavilyApiKey = string.IsNullOrWhiteSpace(settings.TavilyApiKey)
+            ? string.Empty
+            : _encryptionService.Encrypt(DecryptApiKey(settings.TavilyApiKey.Trim()));
+        copy.SearxngUrl = (settings.SearxngUrl ?? string.Empty).Trim();
+        copy.MaxResults = WebSearchSettings.ClampMaxResults(settings.MaxResults);
+        return copy;
+    }
+
+    public async Task<WebSearchProfileState> LoadWebSearchStateAsync(string profileName)
+    {
+        // Bewusst ohne globalen Rückfall: fehlt der Eintrag, ist die Websuche aus
+        var profile = await ReadProfileFileAsync(profileName);
+        return new WebSearchProfileState(profile.WebSearchEnabled, string.IsNullOrWhiteSpace(profile.WebSearchNoticeAcceptedFor) ? null : profile.WebSearchNoticeAcceptedFor);
+    }
+
+    public async Task SaveWebSearchStateAsync(string profileName, WebSearchProfileState state)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+        profile.WebSearchEnabled = state.Enabled;
+        profile.WebSearchNoticeAcceptedFor = state.NoticeAcceptedFor;
+        await WriteProfileFileAsync(profileName, profile);
     }
 
     // ---------------- Oberfläche ----------------

@@ -425,4 +425,11 @@
   <data name="Settings_NumberedLabel" xml:space="preserve"><value>{number}. {label}</value><comment>Beschriftung eines Felds im Dialog KI-Modell mit fortlaufender Nummer (nur sichtbare Felder werden gezählt)</comment></data>
   <data name="OutputLanguage_Saved" xml:space="preserve"><value>✓ Gespeichert</value><comment>Bestätigung, nachdem die Sprache der KI-Ergebnisse für das Profil gespeichert wurde</comment></data>
   <data name="OutputLanguage_SaveFailed" xml:space="preserve"><value>Die Sprache konnte nicht gespeichert werden: {error}</value></data>
+  <data name="Menu_SettingsWebSearch" xml:space="preserve"><value>Websuche</value></data>
+  <data name="WebSearch_ProviderNone" xml:space="preserve"><value>Kein Suchdienst</value></data>
+  <data name="WebSearch_TestOk" xml:space="preserve"><value>✓ Verbindung zu {provider} funktioniert ({count, plural, one {# Treffer} other {# Treffer}} für „StudyScope“).</value><comment>{provider} = Tavily bzw. SearXNG; „StudyScope“ ist der feste Testbegriff</comment></data>
+  <data name="WebSearch_TestFailed" xml:space="preserve"><value>Der Test ist fehlgeschlagen: {error}</value></data>
+  <data name="WebSearch_Saved" xml:space="preserve"><value>✓ Einstellungen der Websuche gespeichert.</value></data>
+  <data name="WebSearch_KeyMissing" xml:space="preserve"><value>Bitte den API-Schlüssel von Tavily eintragen.</value></data>
+  <data name="WebSearch_UrlInvalid" xml:space="preserve"><value>Bitte eine gültige Adresse der SearXNG-Instanz eintragen (http oder https, z. B. http://localhost:8888).</value></data>
 </root>

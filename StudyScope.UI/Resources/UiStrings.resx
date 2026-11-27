@@ -659,4 +659,20 @@
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Wird mit „{button}“ übernommen. Chat, Dokumente und eine laufende Wiedergabe bleiben erhalten; bereits angezeigte Meldungen bleiben in der bisherigen Sprache. Wird die Systemsprache nicht unterstützt, erscheint StudyScope auf Englisch.</value><comment>{button} = Common_Save</comment></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>Die Sprache ist zurzeit über die Umgebungsvariable {variable} auf „{culture}“ festgelegt. Ihre Auswahl wird gespeichert und gilt, sobald die Variable nicht mehr gesetzt ist.</value><comment>{variable} = STUDYSCOPE_UI_CULTURE</comment></data>
   <data name="Settings_OutputLanguage" xml:space="preserve"><value>Sprache der KI-Ergebnisse:</value></data>
+  <data name="Settings_Tab_WebSearch" xml:space="preserve"><value>🌐 Websuche</value></data>
+  <data name="WebSearch_Intro" xml:space="preserve"><value>Die Websuche ergänzt Antworten im Chat um Treffer aus dem Internet. Sie ist in jedem Profil zunächst aus und wird erst über „Auch im Internet suchen“ in der Seitenleiste eingeschaltet. Dann geht nur die Frage, die Sie selbst eingeben, an den Suchdienst – nie Auszüge, Dateinamen oder Inhalte Ihrer Dokumente.</value><comment>„Auch im Internet suchen“ = Name des Häkchens in der Seitenleiste (kommt mit 4-2)</comment></data>
+  <data name="WebSearch_ProviderLabel" xml:space="preserve"><value>Suchdienst:</value></data>
+  <data name="WebSearch_NoneHint" xml:space="preserve"><value>Ohne Suchdienst lässt sich die Websuche in keinem Profil einschalten.</value></data>
+  <data name="WebSearch_TavilyKeyLabel" xml:space="preserve"><value>API-Schlüssel von Tavily:</value></data>
+  <data name="WebSearch_TavilyKeyPlaceholder" xml:space="preserve"><value>tvly-…</value><comment>Beispielanfang eines Tavily-Schlüssels, nicht übersetzen</comment></data>
+  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily ist ein Cloud-Dienst mit monatlichem Gratis-Kontingent; jede Suche kostet 1 Credit. Den Schlüssel erhalten Sie nach der Anmeldung bei Tavily. Er gilt für alle Profile und wird verschlüsselt gespeichert.</value></data>
+  <data name="WebSearch_TavilySignup" xml:space="preserve"><value>Schlüssel bei Tavily holen</value></data>
+  <data name="WebSearch_TavilyPrivacy" xml:space="preserve"><value>Tavily speichert Suchanfragen und kann sie laut eigener Datenschutzerklärung zur Verbesserung des Dienstes nutzen und an Suchindizes Dritter weitergeben.</value></data>
+  <data name="WebSearch_SearxngUrlLabel" xml:space="preserve"><value>Adresse der SearXNG-Instanz:</value></data>
+  <data name="WebSearch_SearxngHint" xml:space="preserve"><value>SearXNG ist eine Metasuchmaschine, die Sie selbst betreiben oder deren Betreiber Sie vertrauen. Sie braucht keinen Schlüssel; in der Instanz muss das JSON-Format freigeschaltet sein (&lt;code&gt;search › formats: json&lt;/code&gt; in &lt;code&gt;settings.yml&lt;/code&gt;). Die Instanz leitet die Frage an die dort eingestellten Suchmaschinen weiter.</value><comment>Enthält HTML</comment></data>
+  <data name="WebSearch_MaxResultsLabel" xml:space="preserve"><value>Treffer je Frage:</value></data>
+  <data name="WebSearch_MaxResultsHint" xml:space="preserve"><value>Mehr Treffer verlängern die Anfrage an die KI – besonders bei lokalen Modellen dauert die Antwort dann länger.</value></data>
+  <data name="WebSearch_Test" xml:space="preserve"><value>🔌 Verbindung testen</value></data>
+  <data name="WebSearch_Testing" xml:space="preserve"><value>Prüfe …</value></data>
+  <data name="WebSearch_TestTitle" xml:space="preserve"><value>Sucht einmal nach „StudyScope“ mit den eingegebenen Werten (bei Tavily 1 Credit). Es wird keine Frage und kein Dokumentinhalt gesendet.</value></data>
 </root>

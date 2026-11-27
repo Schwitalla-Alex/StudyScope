@@ -58,7 +58,7 @@
         </div>
     }
 
-    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
+    <div class="st-footer st-footer-end">
         <button type="button" class="ap-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
         <button type="button" class="ap-btn" style="background: var(--ss-primary);" disabled="@(!AppearanceVm.IsDirty)" @onclick="SaveAsync">@UiStrings.Common_Save</button>
     </div>

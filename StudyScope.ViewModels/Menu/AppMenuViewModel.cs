@@ -15,6 +15,7 @@ public class AppMenuViewModel
     public const string SettingsAi = "settings:ai";
     public const string SettingsSpeech = "settings:speech";
     public const string SettingsExport = "settings:export";
+    public const string SettingsWebSearch = "settings:websearch";
     public const string SettingsAppearance = "settings:appearance";
     public const string Help = "help";
     public const string About = "about";
@@ -62,6 +63,7 @@ public class AppMenuViewModel
             new(SettingsAi, VmStrings.Menu_SettingsAi, "🤖"),
             new(SettingsSpeech, VmStrings.Menu_SettingsSpeech, "🔊"),
             new(SettingsExport, VmStrings.Menu_SettingsExport, "🎞️"),
+            new(SettingsWebSearch, VmStrings.Menu_SettingsWebSearch, "🌐"),
         };
         if (appearanceAvailable) settings.Add(new(SettingsAppearance, VmStrings.Menu_SettingsAppearance, "🎨"));
 
