@@ -98,7 +98,12 @@ public class DocumentListViewModel : INotifyPropertyChanged
     /// <summary>Anzahl der aktivierten, vorhandenen Dokumente – unabhängig vom Suchbegriff.</summary>
     public int ActiveDocumentCount => Documents.Count(d => d.IsSelected && !d.IsMissing);
 
-    public async Task RefreshCurrentAiModelAsync()
+    /// <summary>
+    /// Modellname des aktiven Profils für die Statusleiste neu lesen. <paramref name="announceProfile"/> = false nach
+    /// einem Sprachwechsel: Die Reiter verstehen eine Meldung zu <see cref="CurrentProfile"/> als Profilwechsel und
+    /// würden neu laden (eine laufende Wiedergabe endete).
+    /// </summary>
+    public async Task RefreshCurrentAiModelAsync(bool announceProfile = true)
     {
         var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
 
@@ -121,7 +126,8 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
 
         OnPropertyChanged(nameof(CurrentAiModelDisplayName));
-        OnPropertyChanged(nameof(CurrentProfile));
+        if (announceProfile)
+            OnPropertyChanged(nameof(CurrentProfile));
     }
 
     public async Task InitializeAsync()
@@ -176,14 +182,24 @@ public class DocumentListViewModel : INotifyPropertyChanged
         // Vorhandene Profile (auch in anderer Schreibweise) nicht erneut anlegen – sonst würde deren Dokumentliste überschrieben
         var trimmed = profileName!.Trim();
         var existing = ProfileExists(trimmed)
-            ? AvailableProfiles.FirstOrDefault(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)) ?? "Standard"
+            ? AvailableProfiles.FirstOrDefault(p => p.Equals(trimmed, StringComparison.OrdinalIgnoreCase)) ?? ProfileDisplay.DefaultProfileName
             : null;
-        return existing == null ? null : Loc.Format(VmStrings.Docs_ProfileExists, ("name", existing));
+        return existing == null ? null : Loc.Format(VmStrings.Docs_ProfileExists, ("name", DisplayName(existing)));
     }
 
+    /// <summary>
+    /// Vorhanden: gleicher Name (ohne Groß-/Kleinschreibung) oder ein Anzeigename des Standardprofils in irgendeiner
+    /// Sprache („Standard“, „Default“) – ein solches Profil wäre in der Liste nicht vom Standardprofil zu unterscheiden.
+    /// </summary>
     private bool ProfileExists(string profileName) =>
-        profileName.Equals("Standard", StringComparison.OrdinalIgnoreCase) ||
+        ProfileDisplay.IsDefaultAlias(profileName) ||
         AvailableProfiles.Any(p => p.Equals(profileName, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Anzeigename eines Profils („Standard“ englisch „Default“), siehe <see cref="ProfileDisplay"/>.</summary>
+    public string DisplayName(string? profile) => ProfileDisplay.Name(profile, AvailableProfiles);
+
+    /// <summary>Anzeigename des aktiven Profils (Statusleiste, Überschriften der Reiter, Einstellungen).</summary>
+    public string CurrentProfileDisplayName => DisplayName(CurrentProfile);
 
     /// <summary>
     /// Legt ein Profil an und aktiviert es. Ungültige und bereits vorhandene Namen werden abgelehnt

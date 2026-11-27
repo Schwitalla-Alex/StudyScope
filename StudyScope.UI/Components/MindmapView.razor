@@ -12,7 +12,7 @@
     <!-- Obere Steuerleiste -->
     <div class="mm-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Mindmap_Title, ("name", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Mindmap_Title, ("name", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(MapVm.HasMindmap ? MapVm.SourceInfoText : UiStrings.Mindmap_NoneForProfile)
             </span>
@@ -117,7 +117,7 @@
                 <!-- Kopfzeile nur für Druck/PDF -->
                 <div class="mm-print-header">
                     <div style="font-size: 16pt; font-weight: 600;">@Loc.Format(UiStrings.Mindmap_Title, ("name", MapVm.Mindmap!.Root.Title))</div>
-                    <div style="font-size: 9pt; color: var(--ss-text-muted);">@Loc.Format(UiStrings.Mindmap_PrintSource, ("source", MapVm.SourceInfoText), ("profile", DocVm.CurrentProfile))</div>
+                    <div style="font-size: 9pt; color: var(--ss-text-muted);">@Loc.Format(UiStrings.Mindmap_PrintSource, ("source", MapVm.SourceInfoText), ("profile", DocVm.CurrentProfileDisplayName))</div>
                 </div>
                 <svg width="@F(layout.Width * MapVm.Zoom)" height="@F(layout.Height * MapVm.Zoom)"
                      viewBox="0 0 @F(layout.Width) @F(layout.Height)" xmlns="http://www.w3.org/2000/svg">
@@ -326,7 +326,7 @@
         try
         {
             var path = await DesktopDialogs.SaveFileAsync(
-                Loc.Format(UiStrings.Mindmap_ExportFileName, ("profile", DocVm.CurrentProfile), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm"))),
+                Loc.Format(UiStrings.Mindmap_ExportFileName, ("profile", DocVm.CurrentProfileDisplayName), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm"))),
                 filterExtension: "md",
                 title: UiStrings.Mindmap_ExportDialogTitle);
 

@@ -413,4 +413,6 @@
   <data name="Voice_WindowsMoreVoices" xml:space="preserve"><value>Weitere deutsche Stimmen (z. B. „Stefan“) unter Windows: Einstellungen › Zeit und Sprache › Sprache und Region › Deutsch › Sprachoptionen › bei „Sprachausgabe“ bzw. „Text-zu-Sprache“ herunterladen. Danach hier „{recheck}“ bzw. StudyScope neu starten.</value><comment>{recheck} = Knopf „↻ Neu prüfen“ (UiStrings.Speech_Recheck)</comment></data>
   <data name="Voice_OnlyOneGerman" xml:space="preserve"><value>Für zwei Sprecher ist nur eine deutsche Stimme installiert – beide klingen gleich.</value></data>
   <data name="Voice_NoMatchingGender" xml:space="preserve"><value>Keine {gender, select, male {männliche} other {weibliche}} deutsche Stimme für „{role}“ installiert – es wird „{voice}“ verwendet.</value><comment>{gender} = male/female, {role} = Sprecherrolle (übersetzt)</comment></data>
+  <data name="Appearance_LanguageSystem" xml:space="preserve"><value>Wie System</value><comment>Sprachauswahl: Sprache des Betriebssystems (nicht unterstützt → Englisch)</comment></data>
+  <data name="Profile_DefaultName" xml:space="preserve"><value>Standard</value><comment>Anzeigename des Standardprofils; gespeichert bleibt immer „Standard“</comment></data>
 </root>

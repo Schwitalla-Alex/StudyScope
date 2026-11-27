@@ -3,7 +3,7 @@
 @inject IExternalLinkOpener LinkOpener
 
 <!-- Hintergrund-Overlay -->
-<div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; justify-content: center; align-items: center; z-index: 1050;"
+<div data-ss-dialog style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; justify-content: center; align-items: center; z-index: 1050;"
      @onclick="Close">
 
     <!-- Dialogfenster -->
@@ -16,7 +16,7 @@
                 <span style="font-size: 18px;">ℹ️</span>
                 <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.About_Title</h4>
             </div>
-            <button type="button" aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
+            <button type="button" data-ss-dialog-close aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
                     @onclick="Close">
                 ✕
             </button>

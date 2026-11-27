@@ -655,4 +655,7 @@
   <data name="Video_SaveMp3Title" xml:space="preserve"><value>Tonspur als MP3 speichern unter …</value></data>
   <data name="Video_FormatHtml" xml:space="preserve"><value>Interaktive Webseite (*.html)</value></data>
   <data name="Video_SaveHtmlTitle" xml:space="preserve"><value>Video als HTML speichern unter …</value></data>
+  <data name="Appearance_Language" xml:space="preserve"><value>Sprache</value><comment>Überschrift der Sprachauswahl</comment></data>
+  <data name="Appearance_LanguageHint" xml:space="preserve"><value>Wird mit „{button}“ übernommen. Chat, Dokumente und eine laufende Wiedergabe bleiben erhalten; bereits angezeigte Meldungen bleiben in der bisherigen Sprache. Wird die Systemsprache nicht unterstützt, erscheint StudyScope auf Englisch.</value><comment>{button} = Common_Save</comment></data>
+  <data name="Appearance_LanguageOverride" xml:space="preserve"><value>Die Sprache ist zurzeit über die Umgebungsvariable {variable} auf „{culture}“ festgelegt. Ihre Auswahl wird gespeichert und gilt, sobald die Variable nicht mehr gesetzt ist.</value><comment>{variable} = STUDYSCOPE_UI_CULTURE</comment></data>
 </root>

@@ -8,7 +8,7 @@
     <!-- Kopfzeile -->
     <div class="qz-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Quiz_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Quiz_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(QuizVm.Topics.Count == 0
                     ? UiStrings.Quiz_NoTopicsYet

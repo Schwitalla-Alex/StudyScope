@@ -9,7 +9,7 @@
 
     <div class="rp-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Report_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Report_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @Loc.Format(UiStrings.Common_BasedOn,
                     ("items", RepVm.Reports.Count == 0 ? UiStrings.Report_NoReports : Loc.Format(UiStrings.Report_ReportCount, ("count", RepVm.Reports.Count))),

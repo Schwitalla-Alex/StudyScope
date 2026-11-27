@@ -413,4 +413,6 @@
   <data name="Voice_WindowsMoreVoices" xml:space="preserve"><value>More German voices (e.g. “Stefan”) on Windows: Settings › Time &amp; language › Language &amp; region › German › Language options › download “Text-to-speech”. Then use “{recheck}” here or restart StudyScope.</value></data>
   <data name="Voice_OnlyOneGerman" xml:space="preserve"><value>Only one German voice is installed for two speakers – both sound the same.</value></data>
   <data name="Voice_NoMatchingGender" xml:space="preserve"><value>No {gender, select, male {male} other {female}} German voice installed for “{role}” – “{voice}” is used.</value></data>
+  <data name="Appearance_LanguageSystem" xml:space="preserve"><value>Same as system</value></data>
+  <data name="Profile_DefaultName" xml:space="preserve"><value>Default</value></data>
 </root>

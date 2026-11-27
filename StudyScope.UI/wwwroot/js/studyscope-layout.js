@@ -217,3 +217,43 @@ window.studyScopeLayout = (function () {
         }
     };
 })();
+
+// Dialoge: Esc schließt den obersten offenen Dialog – für alle Dialoge gleich, ohne eigene Tastenbehandlung je Dialog.
+// Ein Dialog trägt data-ss-dialog am äußersten Element, sein „Schließen“ bzw. „Abbrechen“ data-ss-dialog-close; Esc
+// löst genau diesen Knopf aus (gleiche Wirkung wie ein Klick, z. B. Vorschau verwerfen). Danach steht der Fokus wieder
+// auf dem Element, das vor dem Dialog den Fokus hatte, sonst auf ☰. Offene Menüs fangen Esc vorher selbst ab
+// (attachMenu); Vortrag und Vollbild-Video sind keine Dialoge und behalten ihr eigenes Esc.
+(function () {
+    var lastOutside = null;
+
+    function openDialogs() { return document.querySelectorAll('[data-ss-dialog]'); }
+
+    document.addEventListener('focusin', function (e) {
+        if (e.target && e.target.closest && !e.target.closest('[data-ss-dialog]')) lastOutside = e.target;
+    }, true);
+
+    function restoreFocus() {
+        var active = document.activeElement;
+        if (openDialogs().length > 0 && active && active !== document.body && active.isConnected) return;
+        var target = lastOutside && lastOutside.isConnected ? lastOutside : document.getElementById('ss-appmenu-trigger');
+        if (target) target.focus({ preventScroll: true });
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key !== 'Escape' || e.defaultPrevented || e.isComposing || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+        var dialogs = openDialogs();
+        if (dialogs.length === 0) return;
+        var dialog = dialogs[dialogs.length - 1];
+        var close = dialog.querySelector('[data-ss-dialog-close]');
+        if (!close) return;
+        e.preventDefault();
+        e.stopPropagation();
+        close.click();
+        // Blazor entfernt den Dialog erst nach dem nächsten Zeichnen
+        var tries = 0;
+        (function wait() {
+            if (dialog.isConnected && tries++ < 30) { requestAnimationFrame(wait); return; }
+            restoreFocus();
+        })();
+    });
+})();
