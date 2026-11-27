@@ -1,11 +1,13 @@
 @using Microsoft.JSInterop
 @using StudyScope.Core.Models
 @inject AppearanceViewModel AppearanceVm
+@inject ZoomViewModel ZoomVm
 @inject IJSRuntime JS
 @implements IAsyncDisposable
 
 @* Einstellungen › 🎨 Darstellung: Farbschema. Die Auswahl wirkt sofort als Vorschau (studyScopeTheme.apply),
-   gespeichert wird erst mit „Speichern“; Schließen ohne Speichern stellt den gespeicherten Stand wieder her. *@
+   gespeichert wird erst mit „Speichern“; Schließen ohne Speichern stellt den gespeicherten Stand wieder her.
+   Der Zoom wirkt und speichert sofort (wie Strg + Mausrad), er ist nicht Teil von Vorschau und „Speichern“. *@
 <div style="display: flex; flex-direction: column; gap: 14px;">
     <div>
         <span class="ap-label" id="ap-theme-label">@UiStrings.Appearance_ColorScheme</span>
@@ -33,6 +35,25 @@
 
     <div class="ap-note">
         @UiStrings.Appearance_Note
+    </div>
+
+    <div>
+        <label class="ap-label" for="ap-zoom">@UiStrings.Appearance_Zoom</label>
+        <div class="ap-zoom">
+            <button type="button" class="ap-zoom-btn" title="@UiStrings.Appearance_ZoomOut" aria-label="@UiStrings.Appearance_ZoomOut"
+                    disabled="@(!ZoomVm.CanZoomOut)" @onclick="ZoomVm.ZoomOutAsync">−</button>
+            <select id="ap-zoom" class="ap-select ap-zoom-select" value="@ZoomVm.Percent"
+                    @onchange="e => ZoomVm.SetAsync(int.TryParse(e.Value?.ToString(), out var p) ? p : 0)">
+                @foreach (var (value, label) in ZoomVm.Options)
+                {
+                    <option value="@value">@label</option>
+                }
+            </select>
+            <button type="button" class="ap-zoom-btn" title="@UiStrings.Appearance_ZoomIn" aria-label="@UiStrings.Appearance_ZoomIn"
+                    disabled="@(!ZoomVm.CanZoomIn)" @onclick="ZoomVm.ZoomInAsync">+</button>
+            <button type="button" class="ap-zoom-reset" disabled="@ZoomVm.IsDefault" @onclick="ZoomVm.ResetAsync">@UiStrings.Appearance_ZoomReset</button>
+        </div>
+        <div class="ap-hint ap-language-hint">@UiStrings.Appearance_ZoomHint</div>
     </div>
 
     <div>
@@ -82,6 +103,12 @@
     .ap-current { margin-inline-start: .3em; }
     .ap-select { width: 100%; height: 32px; padding: 0 8px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; box-sizing: border-box; }
     .ap-language-hint { margin-top: 5px; }
+    .ap-zoom { display: flex; align-items: center; gap: 6px; }
+    .ap-zoom-select { width: 110px; }
+    .ap-zoom-btn { width: 32px; height: 32px; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); color: var(--ss-text); font-size: 16px; cursor: pointer; }
+    .ap-zoom-reset { height: 32px; padding-inline: 10px; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); color: var(--ss-text); font-size: 13px; cursor: pointer; }
+    .ap-zoom-btn:hover:not(:disabled), .ap-zoom-reset:hover:not(:disabled) { background: var(--ss-hover); }
+    .ap-zoom-btn:disabled, .ap-zoom-reset:disabled { color: var(--ss-text-muted); cursor: default; }
     .ap-note { font-size: 11.5px; padding: 7px 10px; border-radius: 4px; background: var(--ss-hover); color: var(--ss-text-2); border: 1px solid var(--ss-border-light); }
     .ap-btn { padding: 7px 14px; color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; }
     .ap-btn:disabled { opacity: .55; cursor: not-allowed; }
@@ -96,6 +123,7 @@
     protected override async Task OnInitializedAsync()
     {
         AppearanceVm.PropertyChanged += OnVmChanged;
+        ZoomVm.PropertyChanged += OnVmChanged;
         await AppearanceVm.LoadAsync();
     }
 
@@ -140,6 +168,7 @@
     public async ValueTask DisposeAsync()
     {
         AppearanceVm.PropertyChanged -= OnVmChanged;
+        ZoomVm.PropertyChanged -= OnVmChanged;
         // Schließen bzw. anderer Abschnitt ohne Speichern: Vorschau verwerfen
         if (AppearanceVm.IsDirty)
         {

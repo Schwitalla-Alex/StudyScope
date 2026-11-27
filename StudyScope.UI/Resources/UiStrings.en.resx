@@ -15,6 +15,7 @@
   <data name="Status_AudioPaused" xml:space="preserve"><value>is paused</value></data>
   <data name="Status_AudioPlaying" xml:space="preserve"><value>is playing</value></data>
   <data name="Status_VideoTitle" xml:space="preserve"><value>Video is playing (continues in all tabs)</value></data>
+  <data name="Status_ZoomTitle" xml:space="preserve"><value>Interface zoom: {percent}. Click to restore the default size.</value></data>
   <data name="Status_VideoPaused" xml:space="preserve"><value>is paused</value></data>
   <data name="Status_VideoPlaying" xml:space="preserve"><value>is playing</value></data>
   <data name="Status_Ai" xml:space="preserve"><value>AI:</value></data>
@@ -657,6 +658,11 @@
   <data name="Video_SaveHtmlTitle" xml:space="preserve"><value>Save video as HTML…</value></data>
   <data name="Appearance_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Applied when you click “{button}”. Chat, documents and any playback in progress are kept; messages already shown stay in the previous language. If the system language is not supported, StudyScope appears in English.</value></data>
+  <data name="Appearance_Zoom" xml:space="preserve"><value>Zoom</value></data>
+  <data name="Appearance_ZoomIn" xml:space="preserve"><value>Zoom in</value></data>
+  <data name="Appearance_ZoomOut" xml:space="preserve"><value>Zoom out</value></data>
+  <data name="Appearance_ZoomReset" xml:space="preserve"><value>Default size</value></data>
+  <data name="Appearance_ZoomHint" xml:space="preserve"><value>Enlarges or shrinks the whole interface and takes effect immediately. Also with Ctrl + mouse wheel or Ctrl + Plus / Ctrl + Minus; Ctrl + 0 restores the default size.</value></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>The language is currently set to “{culture}” by the environment variable {variable}. Your choice is saved and applies once the variable is no longer set.</value></data>
   <data name="Settings_OutputLanguage" xml:space="preserve"><value>Language of AI results:</value></data>
   <data name="Settings_Tab_WebSearch" xml:space="preserve"><value>🌐 Web search</value></data>

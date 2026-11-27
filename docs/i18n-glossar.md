@@ -35,6 +35,8 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Bild auf / Bild ab | Page Up / Page Down |
 | Pfeil links/rechts | Left/Right arrow |
 | Doppelklick | double-click |
+| Mausrad | mouse wheel |
+| Strg + Plus / Strg + Minus | Ctrl + Plus / Ctrl + Minus |
 
 ## Nicht übersetzt
 
@@ -58,6 +60,9 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | StudyScope unterstützen | Support StudyScope | |
 | Anwendung schließen | Exit | |
 | Reiter | tab | |
+| Zoom (der Oberfläche) | zoom | „Zoom der Oberfläche“ → „Interface zoom“ |
+| Vergrößern / Verkleinern | Zoom in / Zoom out | Knöpfe des Zooms |
+| Standardgröße | default size | Zoom 100 % |
 | » Mehr | » More | Überlaufmenü der Reiter |
 | Seitenleiste | sidebar | |
 | Seitenleiste ein-/ausklappen | Collapse/expand sidebar | |
