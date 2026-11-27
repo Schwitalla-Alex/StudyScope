@@ -82,7 +82,22 @@ public partial class AudioViewModel : INotifyPropertyChanged
             _currentSegmentIndex = -1;
             OnPropertyChanged();
             OnPlayerChanged();
+            _ = ApplySpeechContentAsync(value);
         }
+    }
+
+    /// <summary>Vorlesesprache folgt dem gewählten Beitrag (Sprache des Skripts, sonst Ergebnissprache des Profils).</summary>
+    private async Task ApplySpeechContentAsync(AudioSummary? summary)
+    {
+        try
+        {
+            await _speech.SetContentAsync(summary?.Language, summary?.Segments.Select(s => s.Text) ?? Enumerable.Empty<string>());
+        }
+        catch
+        {
+            // Verfügbarkeit wird beim nächsten Prüfen erneut ermittelt
+        }
+        OnSpeechChanged();
     }
 
     public void SelectSummary(string id)
@@ -172,7 +187,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
         ClearStatus();
 
         _library = await _audioService.LoadLibraryAsync(profileName);
-        await _speech.LoadAsync(profileName);
+        await _speech.LoadAsync(profileName, await OutputLanguageSettingAsync(profileName));
 
         _isLoaded = true;
         IsFormOpen = _library.Items.Count == 0;
@@ -190,7 +205,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         if (_isLoaded && string.Equals(_profileName, profileName, StringComparison.Ordinal))
         {
-            await _speech.ReloadAsync();
+            await _speech.ReloadAsync(await OutputLanguageSettingAsync(profileName));
             await RefreshAvailabilityAsync();
             return;
         }
@@ -204,7 +219,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     public async Task ReloadSpeechSettingsAsync()
     {
         if (!_isLoaded) return;
-        await _speech.ReloadAsync();
+        await _speech.ReloadAsync(await OutputLanguageSettingAsync(_profileName));
         await RefreshAvailabilityAsync();
     }
 
@@ -243,8 +258,14 @@ public partial class AudioViewModel : INotifyPropertyChanged
 
     public bool ShowPrivacyHint => _speech.ShowPrivacyHint;
 
-    /// <summary>Stimmen der Systemstimme (deutsche und Offline-Stimmen zuerst).</summary>
+    /// <summary>Stimmen der Systemstimme (Stimmen der Vorlesesprache und Offline-Stimmen zuerst).</summary>
     public IReadOnlyList<SpeechVoice> SystemVoices => _speech.SystemVoices;
+
+    /// <summary>Sprache, in der vorgelesen wird (Code „de“, „en“): die des gewählten Beitrags, sonst die Ergebnissprache.</summary>
+    public string SpeechLanguage => _speech.Language;
+
+    /// <summary>Gewählte Systemstimme eines Sprechers für die Vorlesesprache (leer = automatisch) – Wert der Auswahlliste.</summary>
+    public string ChosenSystemVoice(int speakerIndex) => _speech.ChosenSystemVoice(speakerIndex);
 
     /// <summary>Prüft alle Anbieter (vor dem Abspielen/Erzeugen, damit Knöpfe vorab deaktiviert werden können).</summary>
     public async Task RefreshAvailabilityAsync()
@@ -318,7 +339,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     public string VoiceForSpeakerIndex(int speakerIndex) => _speech.VoiceForSpeakerIndex(speakerIndex, SpeakerRoles);
 
     /// <summary>
-    /// Hinweis zur automatischen Stimme des zweiten Sprechers (Podcast), wenn keine passende zweite deutsche Stimme
+    /// Hinweis zur automatischen Stimme des zweiten Sprechers (Podcast), wenn keine passende zweite Stimme der Sprache
     /// installiert ist – samt Installationsweg unter Windows. Bei manueller Auswahl kein Hinweis.
     /// </summary>
     public string? VoiceAssignmentHint => _speech.VoiceAssignmentHint(SpeakerRoles);
@@ -842,7 +863,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
 
                 foreach (var piece in SystemVoiceRules.SplitForSpeech(segment.Text))
                 {
-                    var completed = await live.SpeakAsync(piece, voice, Rate);
+                    var completed = await live.SpeakAsync(piece, voice, Rate, _speech.Language);
                     if (!completed || generation != _playGeneration)
                         return;
                 }

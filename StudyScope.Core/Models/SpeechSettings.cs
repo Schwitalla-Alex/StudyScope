@@ -31,19 +31,91 @@ public class SpeechSettings
     public string GeminiVoicePrimary { get; set; } = GeminiTtsInfo.DefaultVoicePrimary;
     public string GeminiVoiceSecondary { get; set; } = GeminiTtsInfo.DefaultVoiceSecondary;
 
-    /// <summary>Kennung (voiceURI) der Systemstimme für den ersten Sprecher; leer = automatisch (deutsch bevorzugt).</summary>
+    /// <summary>
+    /// Kennung (voiceURI) der Systemstimme für den ersten Sprecher bei deutschen Beiträgen; leer = automatisch.
+    /// Vor 3c-3 die einzige Wahl (damals wurde immer deutsch vorgelesen); weitere Sprachen stehen in
+    /// <see cref="SystemVoicesByLanguage"/>. Zugriff über <see cref="GetSystemVoice"/>/<see cref="SetSystemVoice"/>.
+    /// </summary>
     public string SystemVoicePrimary { get; set; } = string.Empty;
 
-    /// <summary>Kennung der Systemstimme für den zweiten Sprecher (Podcast); leer = automatisch eine andere Stimme.</summary>
+    /// <summary>Kennung der Systemstimme für den zweiten Sprecher (Podcast) bei deutschen Beiträgen; leer = automatisch eine andere Stimme.</summary>
     public string SystemVoiceSecondary { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gewählte Systemstimmen je Sprache des Beitrags (Code „en“ → Stimmen für Sprecher 1 und 2). Deutsch steht
+    /// zusätzlich in <see cref="SystemVoicePrimary"/>/<see cref="SystemVoiceSecondary"/>, damit ältere Fassungen
+    /// der App die Wahl weiter lesen.
+    /// </summary>
+    public Dictionary<string, SystemVoiceChoice> SystemVoicesByLanguage { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Gewählte Systemstimme eines Sprechers (0/1) für die Sprache; leer = automatisch.</summary>
+    public string GetSystemVoice(string? language, int speakerIndex)
+    {
+        var code = LanguageCode(language);
+        if (SystemVoicesByLanguage?.TryGetValue(code, out var choice) == true && choice != null)
+            return (speakerIndex == 0 ? choice.Primary : choice.Secondary) ?? string.Empty;
+        if (code == GermanCode)
+            return (speakerIndex == 0 ? SystemVoicePrimary : SystemVoiceSecondary) ?? string.Empty;
+        return string.Empty;
+    }
+
+    /// <summary>Merkt die Systemstimme eines Sprechers (0/1) für die Sprache; leer = automatisch.</summary>
+    public void SetSystemVoice(string? language, int speakerIndex, string? voiceId)
+    {
+        var code = LanguageCode(language);
+        SystemVoicesByLanguage ??= new Dictionary<string, SystemVoiceChoice>(StringComparer.OrdinalIgnoreCase);
+        if (!SystemVoicesByLanguage.TryGetValue(code, out var choice) || choice == null)
+        {
+            choice = code == GermanCode
+                ? new SystemVoiceChoice { Primary = SystemVoicePrimary ?? string.Empty, Secondary = SystemVoiceSecondary ?? string.Empty }
+                : new SystemVoiceChoice();
+            SystemVoicesByLanguage[code] = choice;
+        }
+
+        if (speakerIndex == 0) choice.Primary = voiceId ?? string.Empty;
+        else choice.Secondary = voiceId ?? string.Empty;
+
+        if (code == GermanCode)
+        {
+            SystemVoicePrimary = choice.Primary;
+            SystemVoiceSecondary = choice.Secondary;
+        }
+    }
+
+    private const string GermanCode = "de";
+
+    private static string LanguageCode(string? language)
+    {
+        var value = (language ?? string.Empty).Trim();
+        var dash = value.IndexOfAny(new[] { '-', '_' });
+        if (dash > 0) value = value[..dash];
+        return value.Length == 0 ? GermanCode : value.ToLowerInvariant();
+    }
 
     /// <summary>Sprechgeschwindigkeit (1 = normal).</summary>
     public double Rate { get; set; } = 1.0;
 
-    public SpeechSettings Clone() => (SpeechSettings)MemberwiseClone();
+    public SpeechSettings Clone()
+    {
+        var copy = (SpeechSettings)MemberwiseClone();
+        copy.SystemVoicesByLanguage = new Dictionary<string, SystemVoiceChoice>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (language, choice) in SystemVoicesByLanguage ?? new Dictionary<string, SystemVoiceChoice>())
+        {
+            if (choice != null)
+                copy.SystemVoicesByLanguage[language] = new SystemVoiceChoice { Primary = choice.Primary, Secondary = choice.Secondary };
+        }
+        return copy;
+    }
 
     public static double ClampRate(double rate) =>
         double.IsNaN(rate) ? 1.0 : Math.Clamp(rate, MinRate, MaxRate);
+}
+
+/// <summary>Gewählte Systemstimmen einer Sprache (leer = automatisch).</summary>
+public sealed class SystemVoiceChoice
+{
+    public string Primary { get; set; } = string.Empty;
+    public string Secondary { get; set; } = string.Empty;
 }
 
 /// <summary>

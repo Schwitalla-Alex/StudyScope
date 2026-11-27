@@ -479,7 +479,7 @@
                 {
                     <div class="au-voice-row">
                         <label>@(podcast ? Loc.Format(UiStrings.Speech_VoiceFor, ("role", MediaTexts.SpeakerName(AuVm.SpeakerRoleName(0)))) : UiStrings.Speech_Voice)
-                            <select class="au-select" value="@AuVm.SpeechSettings.SystemVoicePrimary" @onchange="e => VoiceChangedAsync(0, e)">
+                            <select class="au-select" value="@AuVm.ChosenSystemVoice(0)" @onchange="e => VoiceChangedAsync(0, e)">
                                 <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(AuVm.VoiceForSpeakerIndex(0))))</option>
                                 @foreach (var voice in AuVm.SystemVoices)
                                 {
@@ -490,7 +490,7 @@
                         @if (podcast)
                         {
                             <label>@MediaTexts.SpeakerName(AuVm.SpeakerRoleName(1))
-                                <select class="au-select" value="@AuVm.SpeechSettings.SystemVoiceSecondary" @onchange="e => VoiceChangedAsync(1, e)">
+                                <select class="au-select" value="@AuVm.ChosenSystemVoice(1)" @onchange="e => VoiceChangedAsync(1, e)">
                                     <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(AuVm.VoiceForSpeakerIndex(1))))</option>
                                     @foreach (var voice in AuVm.SystemVoices)
                                     {

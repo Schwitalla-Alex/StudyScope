@@ -1,0 +1,13 @@
+# Abbreviations the text-to-speech should read out in full (one line each: abbreviation = expansion).
+# Spaces inside the abbreviation are optional ("e.g." and "e. g."). If the expansion ends with a full stop,
+# the abbreviation can end a sentence ("… etc. Then …") and the full stop is kept.
+# Only unambiguous abbreviations.
+e.g. = for example
+i.e. = that is
+etc. = and so on.
+approx. = approximately
+vs. = versus
+cf. = compare
+incl. = including
+B.C. = BC.
+A.D. = AD

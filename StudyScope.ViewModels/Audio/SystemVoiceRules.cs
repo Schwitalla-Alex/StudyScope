@@ -15,16 +15,21 @@ public enum VoiceGender
 
 /// <summary>
 /// Bewertung der Systemstimme (Web Speech API der WebView) ohne Oberfläche: Verfügbarkeit samt Hinweistext,
-/// Reihenfolge der Stimmen (deutsch und offline zuerst) und automatische Stimmenwahl je Sprecher.
+/// Reihenfolge der Stimmen und automatische Stimmenwahl je Sprecher – jeweils für die Sprache des Beitrags
+/// (Code „de“, „en“, siehe <see cref="SpeechLanguage"/>). Bevorzugte Stimmen und Namen für die Schätzung des
+/// Geschlechts stehen je Sprache in <c>Languages/&lt;sprache&gt;/voices.txt</c> (<see cref="VoiceNames"/>).
 /// </summary>
 public static class SystemVoiceRules
 {
-    public static string WindowsGermanVoiceHint => VmStrings.Voice_WindowsInstallHint;
+    /// <summary>Installationsweg einer Stimme der Sprache unter Windows.</summary>
+    public static string WindowsVoiceHint(string? language) =>
+        Loc.Format(VmStrings.Voice_WindowsInstallHint, ("language", LanguageKey(language)));
 
     public static string LinuxNoSpeechHint => VmStrings.Voice_LinuxNoSpeech;
 
-    public static SpeechAvailability Evaluate(bool supported, IReadOnlyList<SpeechVoice> voices, bool isLinux)
+    public static SpeechAvailability Evaluate(bool supported, IReadOnlyList<SpeechVoice> voices, bool isLinux, string? language)
     {
+        var key = LanguageKey(language);
         if (!supported)
         {
             return SpeechAvailability.Unavailable(
@@ -36,53 +41,57 @@ public static class SystemVoiceRules
         {
             return SpeechAvailability.Unavailable(
                 VmStrings.Voice_NoneInstalled,
-                isLinux ? LinuxNoSpeechHint : WindowsGermanVoiceHint);
+                isLinux ? LinuxNoSpeechHint : WindowsVoiceHint(key));
         }
 
-        var german = voices.Where(v => v.IsGerman).ToList();
-        if (german.Count == 0)
+        var matching = voices.Where(v => v.Matches(key)).ToList();
+        if (matching.Count == 0)
         {
             return SpeechAvailability.Warning(
-                VmStrings.Voice_NoGerman,
-                isLinux ? null : WindowsGermanVoiceHint);
+                Loc.Format(VmStrings.Voice_NoMatchingLanguage, ("language", key)),
+                isLinux ? null : WindowsVoiceHint(key));
         }
 
-        var local = german.Count(v => v.IsLocal);
+        var local = matching.Count(v => v.IsLocal);
         if (local == 0)
         {
             return SpeechAvailability.Warning(
-                Loc.Format(VmStrings.Voice_OnlyOnline, ("count", german.Count)),
-                isLinux ? null : WindowsGermanVoiceHint);
+                Loc.Format(VmStrings.Voice_OnlyOnline, ("count", matching.Count), ("language", key)),
+                isLinux ? null : WindowsVoiceHint(key));
         }
 
-        return SpeechAvailability.Ready(Loc.Format(VmStrings.Voice_Ready, ("count", german.Count)));
+        return SpeechAvailability.Ready(Loc.Format(VmStrings.Voice_Ready, ("count", matching.Count), ("language", key)));
     }
 
-    /// <summary>Deutsche zuerst, dabei Offline- vor Online-Stimmen, sonst alphabetisch.</summary>
-    public static List<SpeechVoice> Order(IEnumerable<SpeechVoice> voices) =>
+    /// <summary>
+    /// Stimmen der Sprache zuerst, dabei Offline- vor Online-Stimmen, dann nach Vorrang aus <c>voices.txt</c>,
+    /// sonst alphabetisch.
+    /// </summary>
+    public static List<SpeechVoice> Order(IEnumerable<SpeechVoice> voices, string? language) =>
         voices
-            .OrderByDescending(v => v.IsGerman)
+            .OrderByDescending(v => v.Matches(language))
             .ThenByDescending(v => v.IsLocal)
+            .ThenBy(v => VoiceNames.Rank(NameWords(v), language))
             .ThenBy(v => v.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
     /// <summary>
-    /// Stimme für einen Sprecher: die gewählte, falls vorhanden; sonst automatisch (deutsch, offline bevorzugt) –
-    /// passend zum Sprecher (<paramref name="preferredGender"/>, z. B. „Experte“ → männliche Stimme), soweit installiert,
-    /// und beim zweiten Sprecher möglichst eine andere Stimme als beim ersten.
+    /// Stimme für einen Sprecher: die gewählte, falls vorhanden; sonst automatisch (Sprache des Beitrags, offline
+    /// bevorzugt) – passend zum Sprecher (<paramref name="preferredGender"/>, z. B. „Experte“ → männliche Stimme),
+    /// soweit installiert, und beim zweiten Sprecher möglichst eine andere Stimme als beim ersten.
     /// </summary>
-    public static string ResolveVoice(IReadOnlyList<SpeechVoice> voices, string chosenId, int speakerIndex, string? otherVoiceId = null,
-        VoiceGender preferredGender = VoiceGender.Unknown)
+    public static string ResolveVoice(IReadOnlyList<SpeechVoice> voices, string chosenId, int speakerIndex, string? otherVoiceId,
+        VoiceGender preferredGender, string? language)
     {
         if (!string.IsNullOrWhiteSpace(chosenId) && voices.Any(v => v.Id == chosenId))
             return chosenId;
 
-        var ordered = Order(voices);
+        var ordered = Order(voices, language);
         if (ordered.Count == 0)
             return string.Empty;
 
-        var preferredLanguage = ordered[0].IsGerman;
-        var candidates = ordered.Where(v => v.IsGerman == preferredLanguage && (speakerIndex == 0 || v.Id != otherVoiceId)).ToList();
+        var preferredLanguage = ordered[0].Matches(language);
+        var candidates = ordered.Where(v => v.Matches(language) == preferredLanguage && (speakerIndex == 0 || v.Id != otherVoiceId)).ToList();
 
         if (preferredGender != VoiceGender.Unknown)
         {
@@ -99,31 +108,27 @@ public static class SystemVoiceRules
                ?? ordered[0].Id;
     }
 
-    // Bekannte Stimmen (Windows, Microsoft-Online-Stimmen, macOS/Google) – die Web Speech API liefert kein Geschlecht.
-    private static readonly HashSet<string> FemaleNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "hedda", "katja", "amala", "louisa", "seraphina", "ingrid", "leni", "elke", "gisela", "klarissa", "maja", "tanja",
-        "anna", "petra", "marlene", "vicki", "helena", "hanna", "sabine", "yvonne", "female", "weiblich", "frau"
-    };
-
-    private static readonly HashSet<string> MaleNames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        "stefan", "conrad", "killian", "florian", "jonas", "jan", "bernd", "christoph", "kasper", "ralf", "klaus", "hans",
-        "markus", "yannick", "daniel", "michael", "thomas", "male", "männlich", "mann"
-    };
-
-    /// <summary>Schätzt das Geschlecht einer Stimme anhand ihres Namens (z. B. „Microsoft Stefan - German (Germany)“).</summary>
+    /// <summary>
+    /// Schätzt das Geschlecht einer Stimme anhand ihres Namens (z. B. „Microsoft Stefan - German (Germany)“) über die
+    /// Namenslisten aller Sprachen (<see cref="VoiceNames"/>); die Web Speech API liefert kein Geschlecht.
+    /// </summary>
     public static VoiceGender GuessGender(SpeechVoice voice)
     {
-        var words = System.Text.RegularExpressions.Regex.Split(voice.Name ?? string.Empty, @"[^\p{L}]+");
-        foreach (var word in words)
+        foreach (var word in NameWords(voice))
         {
-            if (word.Length == 0) continue;
-            if (FemaleNames.Contains(word)) return VoiceGender.Female;
-            if (MaleNames.Contains(word)) return VoiceGender.Male;
+            var gender = VoiceNames.GenderOf(word);
+            if (gender != VoiceGender.Unknown)
+                return gender;
         }
         return VoiceGender.Unknown;
     }
+
+    private static IEnumerable<string> NameWords(SpeechVoice voice) => VoiceNames.Words(voice.Name);
+
+    /// <summary>
+    /// Schlüssel der Sprache für die ICU-Auswahl in den Texten („de“, „en“; unbekannt bzw. leer → Deutsch wie vor 3c-3).
+    /// </summary>
+    public static string LanguageKey(string? language) => SpeechLanguage.Code(language) ?? SpeechLanguage.Default;
 
     /// <summary>Gewünschte Stimme je Sprecherrolle: „Sprecherin“/„Moderatorin“ weiblich, „Experte“ männlich.</summary>
     public static VoiceGender SpeakerGender(string? speaker) => (speaker ?? string.Empty).Trim() switch
@@ -133,17 +138,19 @@ public static class SystemVoiceRules
         _ => VoiceGender.Unknown
     };
 
-    public static string WindowsMoreVoicesHint => Loc.Format(VmStrings.Voice_WindowsMoreVoices, ("recheck", VmStrings.Speech_Recheck));
+    /// <summary>Weitere Stimmen der Sprache unter Windows installieren (mit Verweis auf „↻ Neu prüfen“).</summary>
+    public static string WindowsMoreVoicesHint(string? language) =>
+        Loc.Format(VmStrings.Voice_WindowsMoreVoices, ("language", LanguageKey(language)), ("recheck", VmStrings.Speech_Recheck));
 
     /// <summary>
-    /// Hinweis, wenn die automatisch gewählte Stimme des zweiten Sprechers nicht passt: nur eine deutsche Stimme
+    /// Hinweis, wenn die automatisch gewählte Stimme des zweiten Sprechers nicht passt: nur eine Stimme der Sprache
     /// (beide klingen gleich) oder keine Stimme des gewünschten Geschlechts. null = alles passend.
     /// </summary>
     public static string? SecondVoiceHint(IReadOnlyList<SpeechVoice> voices, string primaryId, string secondaryId, string roleName,
-        VoiceGender wanted, bool isLinux)
+        VoiceGender wanted, bool isLinux, string? language)
     {
-        var german = voices.Where(v => v.IsGerman).ToList();
-        if (german.Count == 0)
+        var key = LanguageKey(language);
+        if (!voices.Any(v => v.Matches(key)))
             return null; // Darauf weist schon die Verfügbarkeit hin
 
         var second = voices.FirstOrDefault(v => v.Id == secondaryId);
@@ -151,15 +158,15 @@ public static class SystemVoiceRules
             return null;
 
         string message;
-        if (secondaryId == primaryId || !second.IsGerman)
-            message = VmStrings.Voice_OnlyOneGerman;
+        if (secondaryId == primaryId || !second.Matches(key))
+            message = Loc.Format(VmStrings.Voice_OnlyOneVoice, ("language", key));
         else if (wanted != VoiceGender.Unknown && GuessGender(second) != wanted)
             message = Loc.Format(VmStrings.Voice_NoMatchingGender, ("gender", wanted == VoiceGender.Male ? "male" : "female"),
-                ("role", MediaTexts.SpeakerName(roleName)), ("voice", ShortName(second)));
+                ("language", key), ("role", MediaTexts.SpeakerName(roleName)), ("voice", ShortName(second)));
         else
             return null;
 
-        return isLinux ? message : $"{message} {WindowsMoreVoicesHint}";
+        return isLinux ? message : $"{message} {WindowsMoreVoicesHint(key)}";
     }
 
     /// <summary>Kurzer Stimmenname: „Microsoft Stefan - German (Germany)“ → „Stefan“.</summary>

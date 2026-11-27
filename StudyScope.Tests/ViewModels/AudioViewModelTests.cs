@@ -486,6 +486,85 @@ public class AudioViewModelTests
         Assert.That(_viewModel.StatusMessage, Does.Contain("liest nicht direkt vor"));
     }
 
+    // ---------- Stimmen je Ergebnissprache (3c-3) ----------
+
+    private sealed class FixedOutputLanguage(string setting) : IOutputLanguageProvider
+    {
+        public Task<string> GetSettingAsync(string profileName) => Task.FromResult(setting);
+    }
+
+    [Test]
+    public async Task EnglishEpisode_SpeaksEnglish_WithEnglishVoices_AndEnglishRoles()
+    {
+        _live.Voices = new[]
+        {
+            new SpeechVoice("katja", "Microsoft Katja - German (Germany)", "de-DE"),
+            new SpeechVoice("david", "Microsoft David - English (United States)", "en-US"),
+            new SpeechVoice("zira", "Microsoft Zira - English (United States)", "en-US")
+        };
+        _viewModel.OutputLanguageProvider = new FixedOutputLanguage("en");
+        var summary = await CreateScriptAsync(AudioScriptFormat.Podcast);
+
+        Assert.That(summary.Language, Is.EqualTo("en"));
+        Assert.That(summary.Segments.Select(s => s.Speaker).Distinct(), Is.EquivalentTo(new[] { "Moderatorin", "Experte" }),
+            "englische Rollen der KI werden den gespeicherten Rollen zugeordnet");
+        Assert.That(_viewModel.SpeechLanguage, Is.EqualTo("en"));
+        Assert.That(_viewModel.SystemVoices[0].Language, Does.StartWith("en"), "Stimmen der Vorlesesprache zuerst");
+        Assert.That(_viewModel.VoiceForSpeakerIndex(0), Is.EqualTo("zira"), "Moderatorin: weibliche englische Stimme");
+        Assert.That(_viewModel.VoiceForSpeakerIndex(1), Is.EqualTo("david"), "Experte: männliche englische Stimme");
+
+        await _viewModel.PlayAsync();
+
+        Assert.That(_live.SpokenLanguages, Is.Not.Empty.And.All.EqualTo("en"));
+        Assert.That(_live.CheckedLanguages, Does.Contain("en"), "Verfügbarkeit für die Sprache des Beitrags geprüft");
+    }
+
+    [Test]
+    public async Task SelectingEpisodes_SwitchesSpeechLanguage_AndKeepsVoiceChoicePerLanguage()
+    {
+        _live.Voices = new[] { new SpeechVoice("katja", "Katja", "de-DE"), new SpeechVoice("zira", "Zira", "en-US"), new SpeechVoice("david", "David", "en-US") };
+        var german = await CreateScriptAsync();
+        _viewModel.OutputLanguageProvider = new FixedOutputLanguage("en");
+        await _viewModel.GenerateAsync(Documents());
+        var english = _viewModel.SelectedSummary!;
+        Assert.That((german.Language, english.Language), Is.EqualTo(("de", "en")));
+
+        await _viewModel.SetSystemVoiceAsync(0, "david");
+        Assert.That(_viewModel.ChosenSystemVoice(0), Is.EqualTo("david"));
+
+        _viewModel.SelectSummary(german.Id);
+        await Task.Yield();
+        Assert.That(_viewModel.SpeechLanguage, Is.EqualTo("de"));
+        Assert.That(_viewModel.ChosenSystemVoice(0), Is.Empty, "die englische Wahl gilt nicht für Deutsch");
+        Assert.That(_viewModel.VoiceForSpeakerIndex(0), Is.EqualTo("katja"));
+
+        _viewModel.SelectSummary(english.Id);
+        await Task.Yield();
+        Assert.That(_viewModel.SpeechLanguage, Is.EqualTo("en"));
+        Assert.That(_viewModel.ChosenSystemVoice(0), Is.EqualTo("david"));
+
+        var saved = await _storage.LoadSpeechSettingsAsync(Profile);
+        Assert.That(saved.GetSystemVoice("en", 0), Is.EqualTo("david"));
+        Assert.That(saved.GetSystemVoice("de", 0), Is.Empty);
+    }
+
+    [Test]
+    public async Task OlderEpisodeWithoutLanguage_IsReadInTheLanguageOfItsText()
+    {
+        var summary = await CreateScriptAsync();
+        summary.Language = null;
+        summary.Segments = new List<AudioSegment>
+        {
+            new() { Speaker = "Sprecherin", Text = "The revolution began in 1789 with the storming of the Bastille, and it was one of the most important events of the century." },
+            new() { Speaker = "Sprecherin", Text = "It is still a topic that is taught in many schools, because it changed the history of the whole world." }
+        };
+        await _audioService.SaveLibraryAsync(Profile, new AudioLibrary { Items = new List<AudioSummary> { summary } });
+
+        await _viewModel.LoadForProfileAsync(Profile);
+
+        Assert.That(_viewModel.SpeechLanguage, Is.EqualTo("en"));
+    }
+
     // ---------- Hilfsklassen ----------
 
     private sealed class FakeLiveSpeech : ILiveSpeechService
@@ -496,6 +575,8 @@ public class AudioViewModelTests
         public SpeechAvailability Availability { get; set; } = SpeechAvailability.Ready("Bereit – 1 deutsche Stimme verfügbar.");
         public IReadOnlyList<SpeechVoice> Voices { get; set; } = new[] { new SpeechVoice("de-1", "Katja", "de-DE") };
         public List<(string Text, string Voice, double Rate)> Spoken { get; } = new();
+        public List<string?> SpokenLanguages { get; } = new();
+        public List<string?> CheckedLanguages { get; } = new();
         public bool Block { get; set; }
         public Exception? ThrowOnSpeak { get; set; }
         public int PauseCount { get; private set; }
@@ -507,11 +588,16 @@ public class AudioViewModelTests
         public bool SupportsLivePlayback => true;
         public bool SupportsFileExport => false;
 
-        public Task<SpeechAvailability> GetAvailabilityAsync(SpeechContext context, CancellationToken cancellationToken = default) => Task.FromResult(Availability);
+        public Task<SpeechAvailability> GetAvailabilityAsync(SpeechContext context, CancellationToken cancellationToken = default)
+        {
+            CheckedLanguages.Add(context.Language);
+            return Task.FromResult(Availability);
+        }
         public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken = default) => Task.FromResult(Voices);
 
-        public Task<bool> SpeakAsync(string text, string voiceId, double rate, CancellationToken cancellationToken = default)
+        public Task<bool> SpeakAsync(string text, string voiceId, double rate, string? language, CancellationToken cancellationToken = default)
         {
+            SpokenLanguages.Add(language);
             if (ThrowOnSpeak != null) throw ThrowOnSpeak;
             Spoken.Add((text, voiceId, rate));
             _current?.TrySetResult(false);

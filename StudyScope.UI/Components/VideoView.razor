@@ -654,7 +654,7 @@
                 @if (VdVm.SystemVoices.Count > 0)
                 {
                     <label class="vd-voice-row">@UiStrings.Speech_Voice
-                        <select class="vd-select" value="@VdVm.SpeechSettings.SystemVoicePrimary" @onchange="VoiceChangedAsync">
+                        <select class="vd-select" value="@VdVm.ChosenSystemVoice" @onchange="VoiceChangedAsync">
                             <option value="">@Loc.Format(UiStrings.Speech_VoiceAuto, ("voice", VoiceName(VdVm.NarratorVoice)))</option>
                             @foreach (var voice in VdVm.SystemVoices)
                             {

@@ -16,4 +16,5 @@
   <data name="Content_AudioTitle" xml:space="preserve"><value>Audio summary</value></data>
   <data name="Content_ChatNotInDocuments" xml:space="preserve"><value>Your documents do not contain any information on this.</value></data>
   <data name="Content_VideoTitle" xml:space="preserve"><value>Video overview</value></data>
+  <data name="Content_SpeechStyle" xml:space="preserve"><value>Read aloud in English, naturally, calmly and clearly.</value></data>
 </root>

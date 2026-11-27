@@ -1,0 +1,23 @@
+# Abkürzungen, die die Sprachausgabe ausgeschrieben vorlesen soll (eine Zeile je Abkürzung: Abkürzung = Ausgeschrieben).
+# Leerzeichen innerhalb der Abkürzung sind beliebig („z.B.“ und „z. B.“). Endet die Ausschreibung mit einem Punkt,
+# kann die Abkürzung einen Satz beenden („… usw. Danach …“) und der Satzpunkt bleibt erhalten.
+# Nur eindeutige Abkürzungen ohne Beugung (also nicht „sog.“ → sogenannte/sogenannter).
+z. B. = zum Beispiel
+d. h. = das heißt
+u. a. = unter anderem.
+u. U. = unter Umständen
+z. T. = zum Teil
+v. a. = vor allem
+o. Ä. = oder Ähnliches.
+usw. = und so weiter.
+bzw. = beziehungsweise
+ca. = circa
+vgl. = vergleiche
+evtl. = eventuell
+ggf. = gegebenenfalls
+bspw. = beispielsweise
+inkl. = inklusive
+etc. = et cetera.
+v. Chr. = vor Christus.
+n. Chr. = nach Christus.
+Jh. = Jahrhundert.

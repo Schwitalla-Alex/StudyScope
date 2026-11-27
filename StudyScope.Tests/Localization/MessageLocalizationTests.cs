@@ -76,10 +76,10 @@ public class MessageLocalizationTests
             new("katja", "Microsoft Katja - German (Germany)", "de-DE"),
             new("hedda", "Microsoft Hedda - German (Germany)", "de-DE"),
         };
-        Assert.That(SystemVoiceRules.Evaluate(true, voices, isLinux: false).Message, Is.EqualTo("Ready – 2 German voices available."));
-        Assert.That(SystemVoiceRules.Evaluate(true, voices.Take(1).ToList(), isLinux: false).Message, Is.EqualTo("Ready – 1 German voice available."));
+        Assert.That(SystemVoiceRules.Evaluate(true, voices, isLinux: false, "de").Message, Is.EqualTo("Ready – 2 German voices available."));
+        Assert.That(SystemVoiceRules.Evaluate(true, voices.Take(1).ToList(), isLinux: false, "de").Message, Is.EqualTo("Ready – 1 German voice available."));
 
-        var hint = SystemVoiceRules.SecondVoiceHint(voices, "katja", "hedda", AudioScriptFormats.ExpertName, VoiceGender.Male, isLinux: false);
+        var hint = SystemVoiceRules.SecondVoiceHint(voices, "katja", "hedda", AudioScriptFormats.ExpertName, VoiceGender.Male, isLinux: false, "de");
         Assert.That(hint, Does.StartWith("No male German voice installed for “Expert” – “Hedda” is used."));
         Assert.That(hint, Does.Contain("Settings › Time & language").And.Contain("↻ Check again"));
     }
@@ -88,8 +88,8 @@ public class MessageLocalizationTests
     public void SystemVoice_German_Unchanged()
     {
         var voices = new List<SpeechVoice> { new("katja", "Microsoft Katja - German (Germany)", "de-DE") };
-        Assert.That(SystemVoiceRules.Evaluate(true, voices, isLinux: false).Message, Is.EqualTo("Bereit – 1 deutsche Stimme verfügbar."));
-        Assert.That(SystemVoiceRules.WindowsMoreVoicesHint, Does.Contain("„↻ Neu prüfen“"));
+        Assert.That(SystemVoiceRules.Evaluate(true, voices, isLinux: false, "de").Message, Is.EqualTo("Bereit – 1 deutsche Stimme verfügbar."));
+        Assert.That(SystemVoiceRules.WindowsMoreVoicesHint("de"), Does.Contain("„↻ Neu prüfen“"));
     }
 
     [Test, SetUICulture("en")]

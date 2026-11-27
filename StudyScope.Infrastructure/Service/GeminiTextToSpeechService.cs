@@ -35,8 +35,17 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     public static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(3);
     public static readonly TimeSpan ValidationTimeout = TimeSpan.FromSeconds(15);
 
-    /// <summary>Sprechanweisung (Stil) für jedes Inhaltselement.</summary>
-    public const string SpeechStyle = "Auf Deutsch, natürlich, ruhig und deutlich vorlesen.";
+    /// <summary>
+    /// Sprechanweisung (Stil) für jedes Inhaltselement in der Sprache des Beitrags (<c>ContentStrings.Content_SpeechStyle</c>,
+    /// z. B. „Auf Deutsch, natürlich, ruhig und deutlich vorlesen.“). Die Gemini-Stimmen sind mehrsprachig; die Anweisung
+    /// in der Sprache des Textes verhindert einen fremden Akzent. Ohne Angabe Deutsch wie vor 3c-3.
+    /// </summary>
+    public static string SpeechStyleFor(string? language)
+    {
+        var culture = ResultLanguage.FromCode(SpeechLanguage.Code(language) ?? SpeechLanguage.Default)
+                      ?? System.Globalization.CultureInfo.GetCultureInfo(SpeechLanguage.Default);
+        return ResultLanguage.Content(culture, () => ContentStrings.Content_SpeechStyle);
+    }
 
     private readonly HttpClient _httpClient;
     private readonly TimeSpan _retryDelay;
@@ -227,8 +236,10 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     /// Stimme; zwei Sprecher → ein Textelement je Sprecherwechsel mit <c>speech_metadata.speaker</c> und
     /// <c>speech_config.speakers</c> mit beiden Stimmen.
     /// </summary>
-    public static JsonObject BuildRequestBody(string model, IReadOnlyList<SpeechPiece> pieces, bool twoSpeakers, string voicePrimary, string voiceSecondary)
+    public static JsonObject BuildRequestBody(string model, IReadOnlyList<SpeechPiece> pieces, bool twoSpeakers, string voicePrimary, string voiceSecondary,
+        string? language = null)
     {
+        var style = SpeechStyleFor(language);
         var content = new JsonArray();
         JsonNode speechConfig;
 
@@ -254,7 +265,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
                     {
                         ["type"] = "speech_metadata",
                         ["speaker"] = SpeakerAlias(slot),
-                        ["style"] = SpeechStyle
+                        ["style"] = style
                     })
                 });
             }
@@ -272,7 +283,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
             {
                 ["type"] = "text",
                 ["text"] = string.Join("\n\n", pieces.Select(p => p.Text)),
-                ["annotations"] = new JsonArray(new JsonObject { ["type"] = "speech_metadata", ["style"] = SpeechStyle })
+                ["annotations"] = new JsonArray(new JsonObject { ["type"] = "speech_metadata", ["style"] = style })
             });
             speechConfig = new JsonArray(new JsonObject { ["voice"] = voicePrimary });
         }
@@ -299,6 +310,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
 
         var model = ResolveModel(context.Settings);
         var twoSpeakers = AudioScriptFormats.HasTwoSpeakers(summary);
+        var language = SpeechLanguage.Code(summary.Language) ?? SpeechLanguage.Code(context.Language);
         var voicePrimary = ResolveVoice(context.Settings.GeminiVoicePrimary, GeminiTtsInfo.DefaultVoicePrimary);
         var voiceSecondary = ResolveVoice(context.Settings.GeminiVoiceSecondary, GeminiTtsInfo.DefaultVoiceSecondary);
         if (twoSpeakers && voiceSecondary == voicePrimary)
@@ -323,7 +335,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
                 {
                     cancellationToken.ThrowIfCancellationRequested();
                     var part = parts[p];
-                    var body = BuildRequestBody(model, part, twoSpeakers, voicePrimary, voiceSecondary);
+                    var body = BuildRequestBody(model, part, twoSpeakers, voicePrimary, voiceSecondary, language);
                     var audio = await RequestAudioAsync(key, model, body, cancellationToken);
 
                     if (p > 0)

@@ -35,7 +35,31 @@ public partial class AudioScriptService : IAudioScriptService
     private static readonly string[] KnownSpeakerWords =
     {
         "sprecher", "sprecherin", "moderator", "moderatorin", "experte", "expertin", "host", "gast", "erzähler", "erzählerin",
-        "interviewer", "interviewerin", "a", "b", "sprecher 1", "sprecher 2", "sprecherin 1", "sprecherin 2"
+        "interviewer", "interviewerin", "a", "b", "sprecher 1", "sprecher 2", "sprecherin 1", "sprecherin 2",
+        "expert", "guest", "narrator", "presenter", "speaker", "speaker 1", "speaker 2"
+    };
+
+    /// <summary>
+    /// Rollenbezeichnungen der KI in anderen Sprachen bzw. Formen („Host“, „Expert“, „Narrator“) → gespeicherte
+    /// Rollen des Formats. Gespeichert bleiben immer die deutschen Rollen (Stimmenzuordnung, Gemini-Sprecher, Exporte
+    /// übersetzen sie beim Anzeigen).
+    /// </summary>
+    private static readonly Dictionary<string, string> RoleAliases = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["host"] = AudioScriptFormats.HostName,
+        ["moderator"] = AudioScriptFormats.HostName,
+        ["presenter"] = AudioScriptFormats.HostName,
+        ["interviewer"] = AudioScriptFormats.HostName,
+        ["interviewerin"] = AudioScriptFormats.HostName,
+        ["expert"] = AudioScriptFormats.ExpertName,
+        ["expertin"] = AudioScriptFormats.ExpertName,
+        ["guest"] = AudioScriptFormats.ExpertName,
+        ["gast"] = AudioScriptFormats.ExpertName,
+        ["narrator"] = AudioScriptFormats.NarratorName,
+        ["speaker"] = AudioScriptFormats.NarratorName,
+        ["sprecher"] = AudioScriptFormats.NarratorName,
+        ["erzähler"] = AudioScriptFormats.NarratorName,
+        ["erzählerin"] = AudioScriptFormats.NarratorName
     };
 
     private readonly ILlmService _llmService;
@@ -67,7 +91,7 @@ public partial class AudioScriptService : IAudioScriptService
         var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(format, length, topic), language);
         var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(c => c.Text), cancellationToken);
         var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_AudioTitle) : fallbackTitle;
-        var result = AnalyzeResponse(raw, format, fallback);
+        var result = AnalyzeResponse(raw, format, fallback, ResultLanguage.Code(language));
 
         if (result.Summary != null)
         {
@@ -145,7 +169,8 @@ public partial class AudioScriptService : IAudioScriptService
     /// abgeschnittene Antworten werden repariert) oder reiner Text (ein Segment je Absatz bzw. Sprecherzeile).
     /// Die Sprecher werden auf die Namen des Formats abgebildet.
     /// </summary>
-    public static AudioScriptResult AnalyzeResponse(string? rawResponse, AudioScriptFormat format, string fallbackTitle)
+    /// <param name="language">Sprache des Skripts (Code); Abkürzungen dieser Sprache werden ausgeschrieben (<see cref="SpokenAbbreviations"/>).</param>
+    public static AudioScriptResult AnalyzeResponse(string? rawResponse, AudioScriptFormat format, string fallbackTitle, string? language = null)
     {
         var raw = rawResponse ?? string.Empty;
         if (raw.Trim() == LlmServiceDispatcher.CancelledResponse)
@@ -170,7 +195,7 @@ public partial class AudioScriptService : IAudioScriptService
             };
         }
 
-        Finish(summary, format);
+        Finish(summary, format, language);
         if (summary.Segments.Count == 0)
             return new AudioScriptResult { RawResponse = raw, FailureReason = MindmapFailureReason.NoTopics };
 
@@ -387,12 +412,12 @@ public partial class AudioScriptService : IAudioScriptService
     }
 
     /// <summary>Bereinigt die Texte, teilt zu lange Segmente und bildet die Sprecher auf die Namen des Formats ab.</summary>
-    private static void Finish(AudioSummary summary, AudioScriptFormat format)
+    private static void Finish(AudioSummary summary, AudioScriptFormat format, string? language)
     {
         var cleaned = new List<AudioSegment>();
         foreach (var segment in summary.Segments)
         {
-            var text = CleanSpokenText(segment.Text);
+            var text = CleanSpokenText(segment.Text, language);
             if (text.Length == 0)
                 continue;
 
@@ -405,9 +430,9 @@ public partial class AudioScriptService : IAudioScriptService
     }
 
     /// <summary>
-    /// Ein Sprecher: alle Segmente bekommen den Erzählernamen. Zwei Sprecher: passende Namen bleiben, andere werden in
-    /// der Reihenfolge ihres Auftretens den noch freien Namen zugeordnet (weitere abwechselnd); fehlende Sprecher
-    /// übernehmen den vorherigen.
+    /// Ein Sprecher: alle Segmente bekommen den Erzählernamen. Zwei Sprecher: passende Namen bleiben, bekannte
+    /// Rollenbezeichnungen anderer Sprachen („Host“, „Expert“) werden ihrer Rolle zugeordnet, andere in der Reihenfolge
+    /// ihres Auftretens den noch freien Namen (weitere abwechselnd); fehlende Sprecher übernehmen den vorherigen.
     /// </summary>
     public static void NormalizeSpeakers(List<AudioSegment> segments, IReadOnlyList<string> expected)
     {
@@ -425,7 +450,16 @@ public partial class AudioScriptService : IAudioScriptService
         foreach (var name in expected)
             map[name] = name;
 
-        var free = expected.Where(e => !names.Contains(e, StringComparer.OrdinalIgnoreCase)).ToList();
+        // Bekannte Rollen anderer Sprachen („Host“ → Moderatorin), sofern die Rolle nicht schon vergeben ist
+        var claimed = names.Where(map.ContainsKey).Select(n => map[n]).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var name in names)
+        {
+            if (!map.ContainsKey(name) && RoleAliases.TryGetValue(name, out var role) && expected.Contains(role) && claimed.Add(role))
+                map[name] = role;
+        }
+
+        var used = names.Where(map.ContainsKey).Select(n => map[n]).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var free = expected.Where(e => !used.Contains(e)).ToList();
         var unknown = names.Where(n => !map.ContainsKey(n)).ToList();
         for (var i = 0; i < unknown.Count; i++)
             map[unknown[i]] = i < free.Count ? free[i] : expected[(i - free.Count) % expected.Count];
@@ -449,9 +483,13 @@ public partial class AudioScriptService : IAudioScriptService
 
     /// <summary>
     /// Entfernt, was nicht vorgelesen werden soll: Aufzählungszeichen, Nummerierungen, Markdown-Hervorhebungen,
-    /// Quellenmarkierungen, Regieanweisungen in eckigen Klammern; mehrfache Leerzeichen werden zusammengefasst.
+    /// Quellenmarkierungen („[Quelle: …]“, „[Source: …]“); mehrfache Leerzeichen werden zusammengefasst. Mit Sprache
+    /// werden außerdem deren Abkürzungen ausgeschrieben („z. B.“ → „zum Beispiel“, „e.g.“ → „for example“).
     /// </summary>
-    public static string CleanSpokenText(string? text)
+    public static string CleanSpokenText(string? text) => CleanSpokenText(text, null);
+
+    /// <inheritdoc cref="CleanSpokenText(string?)"/>
+    public static string CleanSpokenText(string? text, string? language)
     {
         if (string.IsNullOrWhiteSpace(text))
             return string.Empty;
@@ -463,7 +501,8 @@ public partial class AudioScriptService : IAudioScriptService
         joined = SourceMarker().Replace(joined, " ");
         joined = joined.Replace("**", string.Empty).Replace("__", string.Empty).Replace("`", string.Empty);
         joined = MultiSpace().Replace(joined, " ").Trim();
-        return joined;
+        joined = SpaceBeforePunctuation().Replace(joined, "$1"); // „Zellkern [Quelle: x], …“ → „Zellkern, …“
+        return SpokenAbbreviations.Expand(joined, language);
     }
 
     /// <summary>Teilt einen zu langen Text an Satzenden (notfalls hart) in Stücke von höchstens <paramref name="maxLength"/> Zeichen.</summary>
@@ -496,7 +535,7 @@ public partial class AudioScriptService : IAudioScriptService
     }
 
     /// <summary>Titelzeile: „# Titel“ oder „Titel: …“ (auch fett).</summary>
-    [GeneratedRegex(@"^(?:#{1,3}\s+(?:Titel:\s*)?|\**Titel:\s*\**)(?<title>.+?)\**$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^(?:#{1,3}\s+(?:(?:Titel|Title):\s*)?|\**(?:Titel|Title):\s*\**)(?<title>.+?)\**$", RegexOptions.IgnoreCase)]
     private static partial Regex TitleLine();
 
     /// <summary>„Moderatorin: Text“, auch „**Experte:** Text“ oder „- Sprecher 1: Text“.</summary>
@@ -506,11 +545,14 @@ public partial class AudioScriptService : IAudioScriptService
     [GeneratedRegex(@"^(?:[-*•–]\s+|\d{1,2}[.)]\s+)")]
     private static partial Regex BulletPrefix();
 
-    [GeneratedRegex(@"\[Quelle:[^\]]*\]", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"\[(?:Quelle|Quellen|Source|Sources):[^\]]*\]", RegexOptions.IgnoreCase)]
     private static partial Regex SourceMarker();
 
     [GeneratedRegex(@"\s{2,}")]
     private static partial Regex MultiSpace();
+
+    [GeneratedRegex(@"\s+([,.;:!?])")]
+    private static partial Regex SpaceBeforePunctuation();
 
     // ---------------- Speicherung ----------------
 

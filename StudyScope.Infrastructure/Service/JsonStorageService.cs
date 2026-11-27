@@ -527,6 +527,10 @@ public class JsonStorageService : IStorageService
         settings.GeminiVoiceSecondary = string.IsNullOrWhiteSpace(settings.GeminiVoiceSecondary) ? GeminiTtsInfo.DefaultVoiceSecondary : settings.GeminiVoiceSecondary;
         settings.SystemVoicePrimary ??= string.Empty;
         settings.SystemVoiceSecondary ??= string.Empty;
+        settings.SystemVoicesByLanguage = settings.SystemVoicesByLanguage == null
+            ? new Dictionary<string, SystemVoiceChoice>(StringComparer.OrdinalIgnoreCase)
+            : new Dictionary<string, SystemVoiceChoice>(
+                settings.SystemVoicesByLanguage.Where(kv => kv.Value != null && kv.Key.Length > 0), StringComparer.OrdinalIgnoreCase);
         settings.Rate = SpeechSettings.ClampRate(settings.Rate == 0 ? 1.0 : settings.Rate);
         return settings;
     }

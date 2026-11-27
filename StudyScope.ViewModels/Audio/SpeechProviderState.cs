@@ -8,8 +8,9 @@ namespace StudyScope.ViewModels.Audio;
 /// <summary>
 /// Gemeinsame Sprachausgabe-Logik für die Reiter „Audio“ und „Video“: Einstellungen und Chat-KI des Profils laden,
 /// Verfügbarkeit aller Anbieter prüfen, Anbieter wählen (nicht verfügbare sind gesperrt), Stimmen der Systemstimme je
-/// Sprecherrolle zuordnen und Begründungen für deaktivierte Knöpfe liefern. Hält keine Oberfläche; Änderungen werden
-/// über <see cref="Changed"/> gemeldet.
+/// Sprecherrolle zuordnen und Begründungen für deaktivierte Knöpfe liefern. Alles gilt für die Sprache des gewählten
+/// Inhalts (<see cref="Language"/>, gesetzt über <see cref="SetContentAsync"/>). Hält keine Oberfläche; Änderungen
+/// werden über <see cref="Changed"/> gemeldet.
 /// </summary>
 public sealed class SpeechProviderState
 {
@@ -36,7 +37,41 @@ public sealed class SpeechProviderState
     public string ProfileName { get; private set; } = string.Empty;
     public SpeechSettings Settings { get; private set; } = new();
     public AiConfig? ChatConfig { get; private set; }
-    public SpeechContext Context => new(Settings, ChatConfig);
+    public SpeechContext Context => new(Settings, ChatConfig, Language);
+
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (Rückfall für Inhalte ohne erkennbare Sprache).</summary>
+    public string? OutputSetting { get; private set; }
+
+    /// <summary>
+    /// Sprache, in der vorgelesen wird (Code „de“, „en“): die des gewählten Beitrags bzw. Videos, ohne Auswahl die
+    /// Ergebnissprache des Profils (<see cref="SpeechLanguage.For"/>).
+    /// </summary>
+    public string Language { get; private set; } = SpeechLanguage.Default;
+
+    private string? _contentLanguage;
+    private IReadOnlyList<string> _contentTexts = Array.Empty<string>();
+
+    /// <summary>
+    /// Setzt den vorzulesenden Inhalt (gespeicherte Sprache und Texte; null/leer = keine Auswahl) und prüft die
+    /// Verfügbarkeit neu, wenn sich dadurch die Sprache ändert (z. B. keine englische Stimme installiert).
+    /// </summary>
+    public async Task SetContentAsync(string? storedLanguage, IEnumerable<string> texts)
+    {
+        _contentLanguage = storedLanguage;
+        _contentTexts = texts.ToList();
+        if (UpdateLanguage() && _availability.Count > 0)
+            await RefreshAvailabilityAsync();
+    }
+
+    private bool UpdateLanguage()
+    {
+        var language = SpeechLanguage.For(_contentLanguage, _contentTexts, OutputSetting);
+        if (string.Equals(language, Language, StringComparison.OrdinalIgnoreCase))
+            return false;
+        Language = language;
+        Changed?.Invoke();
+        return true;
+    }
 
     /// <summary>Alle Anbieter (auch nicht verfügbare – sie werden ausgegraut angezeigt).</summary>
     public IReadOnlyList<ITextToSpeechService> Services => _services;
@@ -44,27 +79,37 @@ public sealed class SpeechProviderState
     public SpeechProviderType SelectedProvider => Settings.Provider;
     public ITextToSpeechService? CurrentService => _services.FirstOrDefault(s => s.Provider == SelectedProvider);
 
-    public IReadOnlyList<SpeechVoice> SystemVoices => _systemVoices;
+    /// <summary>Stimmen der Systemstimme, Stimmen der <see cref="Language"/> und Offline-Stimmen zuerst.</summary>
+    public IReadOnlyList<SpeechVoice> SystemVoices => SystemVoiceRules.Order(_systemVoices, Language);
 
     /// <summary>Chat-KI des Profils ist lokal (Ollama/LM Studio).</summary>
     public bool IsLocalChatAi => ChatConfig?.SelectedProvider is AiProviderType.OllamaLocal or AiProviderType.LmStudioLocal;
 
     public bool ShowPrivacyHint => SelectedProvider == SpeechProviderType.GeminiTts;
 
-    /// <summary>Lädt Einstellungen der Sprachausgabe und Chat-KI des Profils.</summary>
-    public async Task LoadAsync(string profileName)
+    /// <summary>Lädt Einstellungen der Sprachausgabe, Chat-KI und Ergebnissprache des Profils.</summary>
+    public async Task LoadAsync(string profileName, string? outputSetting = null)
     {
         ProfileName = profileName;
         Settings = await _storage.LoadSpeechSettingsAsync(profileName) ?? new SpeechSettings();
         ChatConfig = await _storage.LoadAiConfigForProfileAsync(profileName) ?? await _storage.LoadAiConfigAsync();
+        OutputSetting = outputSetting;
+        _contentLanguage = null;
+        _contentTexts = Array.Empty<string>();
+        UpdateLanguage();
         Changed?.Invoke();
     }
 
-    /// <summary>Liest Einstellungen und Chat-KI neu (z. B. nach dem Schließen der Einstellungen); bisherige Werte bleiben, wenn nichts gespeichert ist.</summary>
-    public async Task ReloadAsync()
+    /// <summary>
+    /// Liest Einstellungen, Chat-KI und Ergebnissprache neu (z. B. nach dem Schließen der Einstellungen); bisherige
+    /// Werte bleiben, wenn nichts gespeichert ist.
+    /// </summary>
+    public async Task ReloadAsync(string? outputSetting = null)
     {
         Settings = await _storage.LoadSpeechSettingsAsync(ProfileName) ?? Settings;
         ChatConfig = await _storage.LoadAiConfigForProfileAsync(ProfileName) ?? await _storage.LoadAiConfigAsync();
+        OutputSetting = outputSetting ?? OutputSetting;
+        UpdateLanguage();
         Changed?.Invoke();
     }
 
@@ -112,11 +157,13 @@ public sealed class SpeechProviderState
         return true;
     }
 
-    /// <summary>Stimme der Systemstimme für Sprecher 1 (0) bzw. 2 (1); leer = automatisch.</summary>
+    /// <summary>Gewählte Systemstimme für Sprecher 1 (0) bzw. 2 (1) in der aktuellen <see cref="Language"/>; leer = automatisch.</summary>
+    public string ChosenSystemVoice(int speakerIndex) => Settings.GetSystemVoice(Language, speakerIndex);
+
+    /// <summary>Stimme der Systemstimme für Sprecher 1 (0) bzw. 2 (1) – gemerkt je Sprache des Inhalts; leer = automatisch.</summary>
     public async Task SetSystemVoiceAsync(int speakerIndex, string voiceId)
     {
-        if (speakerIndex == 0) Settings.SystemVoicePrimary = voiceId ?? string.Empty;
-        else Settings.SystemVoiceSecondary = voiceId ?? string.Empty;
+        Settings.SetSystemVoice(Language, speakerIndex, voiceId);
         await SaveAsync();
         Changed?.Invoke();
     }
@@ -140,31 +187,32 @@ public sealed class SpeechProviderState
     /// </summary>
     public string VoiceForSpeakerIndex(int speakerIndex, IReadOnlyList<string> roles)
     {
-        var primary = SystemVoiceRules.ResolveVoice(SystemVoices, Settings.SystemVoicePrimary, 0, null,
-            SystemVoiceRules.SpeakerGender(RoleName(roles, 0)));
+        var primary = SystemVoiceRules.ResolveVoice(SystemVoices, ChosenSystemVoice(0), 0, null,
+            SystemVoiceRules.SpeakerGender(RoleName(roles, 0)), Language);
         return speakerIndex == 0
             ? primary
-            : SystemVoiceRules.ResolveVoice(SystemVoices, Settings.SystemVoiceSecondary, 1, primary,
-                SystemVoiceRules.SpeakerGender(RoleName(roles, 1)));
+            : SystemVoiceRules.ResolveVoice(SystemVoices, ChosenSystemVoice(1), 1, primary,
+                SystemVoiceRules.SpeakerGender(RoleName(roles, 1)), Language);
     }
 
     public static string RoleName(IReadOnlyList<string> roles, int speakerIndex) =>
         roles.Count == 0 ? $"Sprecher {speakerIndex + 1}" : roles[Math.Clamp(speakerIndex, 0, roles.Count - 1)];
 
     /// <summary>
-    /// Hinweis zur automatischen Stimme des zweiten Sprechers, wenn keine passende zweite deutsche Stimme installiert ist
+    /// Hinweis zur automatischen Stimme des zweiten Sprechers, wenn keine passende zweite Stimme der Sprache installiert ist
     /// – samt Installationsweg. Bei manueller Auswahl, nur einem Sprecher oder anderem Anbieter kein Hinweis.
     /// </summary>
     public string? VoiceAssignmentHint(IReadOnlyList<string> roles)
     {
         if (SelectedProvider != SpeechProviderType.SystemVoice || roles.Count < 2 || SystemVoices.Count == 0)
             return null;
-        if (!string.IsNullOrWhiteSpace(Settings.SystemVoiceSecondary) && SystemVoices.Any(v => v.Id == Settings.SystemVoiceSecondary))
+        var chosen = ChosenSystemVoice(1);
+        if (!string.IsNullOrWhiteSpace(chosen) && SystemVoices.Any(v => v.Id == chosen))
             return null;
 
         var role = RoleName(roles, 1);
         return SystemVoiceRules.SecondVoiceHint(SystemVoices, VoiceForSpeakerIndex(0, roles), VoiceForSpeakerIndex(1, roles), role,
-            SystemVoiceRules.SpeakerGender(role), OperatingSystem.IsLinux());
+            SystemVoiceRules.SpeakerGender(role), OperatingSystem.IsLinux(), Language);
     }
 
     /// <summary>Begründung aus der Verfügbarkeit (null = nutzbar).</summary>

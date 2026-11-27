@@ -1,3 +1,4 @@
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
 using StudyScope.Core.Resources;
 
@@ -11,7 +12,7 @@ public enum SpeechAvailabilityStatus
 
     Ready,
 
-    /// <summary>Nutzbar, aber mit Einschränkung (z. B. keine deutsche Stimme installiert).</summary>
+    /// <summary>Nutzbar, aber mit Einschränkung (z. B. keine Stimme für die Sprache installiert).</summary>
     ReadyWithWarning,
 
     Unavailable
@@ -33,11 +34,15 @@ public sealed record SpeechAvailability(SpeechAvailabilityStatus Status, string 
 /// <param name="IsLocal">Läuft offline auf dem Rechner (bei Online-Stimmen geht der Text an den Hersteller).</param>
 public sealed record SpeechVoice(string Id, string Name, string Language, bool IsLocal = true, bool IsDefault = false)
 {
-    public bool IsGerman => Language.StartsWith("de", StringComparison.OrdinalIgnoreCase);
+    /// <summary>Spricht die Stimme diese Sprache? Vergleicht den Sprachteil („en-GB“ passt zu „en“).</summary>
+    public bool Matches(string? language) => SpeechLanguage.Matches(Language, language);
 }
 
-/// <summary>Was zur Verfügbarkeitsprüfung gebraucht wird: Einstellungen der Sprachausgabe und Chat-KI des Profils.</summary>
-public sealed record SpeechContext(SpeechSettings Settings, AiConfig? ChatConfig);
+/// <summary>
+/// Was zur Verfügbarkeitsprüfung und Erzeugung gebraucht wird: Einstellungen der Sprachausgabe, Chat-KI des Profils
+/// und die Sprache des vorzulesenden Inhalts (Code „de“, „en“; null = Deutsch wie vor 3c-3, siehe <see cref="SpeechLanguage"/>).
+/// </summary>
+public sealed record SpeechContext(SpeechSettings Settings, AiConfig? ChatConfig, string? Language = null);
 
 /// <summary>
 /// Sprachausgabe für Audio-Beiträge. Mehrere Anbieter (Systemstimme, Gemini TTS, …); der Reiter wählt je Profil einen aus.
@@ -58,7 +63,7 @@ public interface ITextToSpeechService
 
     Task<SpeechAvailability> GetAvailabilityAsync(SpeechContext context, CancellationToken cancellationToken = default);
 
-    /// <summary>Verfügbare Stimmen (deutsche zuerst).</summary>
+    /// <summary>Verfügbare Stimmen (alle Sprachen; die Reihenfolge je Sprache bestimmt <c>SystemVoiceRules.Order</c>).</summary>
     Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken = default);
 }
 
@@ -69,9 +74,10 @@ public interface ILiveSpeechService : ITextToSpeechService
     /// Spricht einen Text und kehrt zurück, wenn er zu Ende gesprochen ist (true) oder durch <see cref="StopAsync"/>
     /// bzw. ein neues <see cref="SpeakAsync"/> abgebrochen wurde (false). Fehler kommen als Ausnahme mit deutscher Meldung.
     /// </summary>
-    /// <param name="voiceId">Kennung der Stimme; leer = Standardstimme (deutsch bevorzugt).</param>
+    /// <param name="voiceId">Kennung der Stimme; leer = Standardstimme der Sprache.</param>
     /// <param name="rate">Geschwindigkeit, 1 = normal.</param>
-    Task<bool> SpeakAsync(string text, string voiceId, double rate, CancellationToken cancellationToken = default);
+    /// <param name="language">Sprache des Textes (Code „de“, „en“); bestimmt die Standardstimme und die Aussprache.</param>
+    Task<bool> SpeakAsync(string text, string voiceId, double rate, string? language, CancellationToken cancellationToken = default);
 
     Task PauseAsync();
     Task ResumeAsync();

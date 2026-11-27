@@ -125,7 +125,22 @@ public partial class VideoViewModel : INotifyPropertyChanged
             _isEnded = false;
             OnPropertyChanged();
             OnVideoChanged();
+            _ = ApplySpeechContentAsync(value);
         }
+    }
+
+    /// <summary>Vorlesesprache folgt dem gewählten Video (Sprache der Sprechtexte, sonst Ergebnissprache des Profils).</summary>
+    private async Task ApplySpeechContentAsync(VideoDocument? video)
+    {
+        try
+        {
+            await _speech.SetContentAsync(video?.Language, video?.Scenes.Select(s => s.Narration) ?? Enumerable.Empty<string>());
+        }
+        catch
+        {
+            // Verfügbarkeit wird beim nächsten Prüfen erneut ermittelt
+        }
+        OnSpeechChanged();
     }
 
     public void SelectVideo(string id)
@@ -301,7 +316,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         ClearStatus();
 
         _library = await _videoService.LoadLibraryAsync(profileName);
-        await _speech.LoadAsync(profileName);
+        await _speech.LoadAsync(profileName, await OutputLanguageSettingAsync(profileName));
         CurrentPresentation = await LoadPresentationSafeAsync(profileName);
 
         _isLoaded = true;
@@ -324,7 +339,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         if (_isLoaded && string.Equals(_profileName, profileName, StringComparison.Ordinal))
         {
             CurrentPresentation = await LoadPresentationSafeAsync(profileName);
-            await _speech.ReloadAsync();
+            await _speech.ReloadAsync(await OutputLanguageSettingAsync(profileName));
             await RefreshAvailabilityAsync();
             await RefreshExportAvailabilityAsync();
             return;
@@ -349,7 +364,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
     public async Task ReloadSpeechSettingsAsync()
     {
         if (!_isLoaded) return;
-        await _speech.ReloadAsync();
+        await _speech.ReloadAsync(await OutputLanguageSettingAsync(_profileName));
         await RefreshAvailabilityAsync();
     }
 
@@ -377,6 +392,12 @@ public partial class VideoViewModel : INotifyPropertyChanged
     public bool ShowPrivacyHint => _speech.ShowPrivacyHint;
     public IReadOnlyList<SpeechVoice> SystemVoices => _speech.SystemVoices;
     public double Rate => _speech.Settings.Rate;
+
+    /// <summary>Sprache, in der vorgelesen wird (Code „de“, „en“): die des gewählten Videos, sonst die Ergebnissprache.</summary>
+    public string SpeechLanguage => _speech.Language;
+
+    /// <summary>Gewählte Systemstimme der Sprecherin für die Vorlesesprache (leer = automatisch) – Wert der Auswahlliste.</summary>
+    public string ChosenSystemVoice => _speech.ChosenSystemVoice(0);
 
     /// <summary>Tatsächlich verwendete Systemstimme der Sprecherin.</summary>
     public string NarratorVoice => _speech.VoiceForSpeakerIndex(0, SpeakerRoles);
@@ -834,6 +855,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 {
                     Id = scene.Id,
                     Title = video.Title,
+                    Language = _speech.Language,
                     Format = AudioScriptFormat.Summary,
                     Segments = new List<AudioSegment> { new() { Speaker = AudioScriptFormats.NarratorName, Text = scene.Narration.Trim() } }
                 };
@@ -1276,7 +1298,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 {
                     foreach (var piece in SystemVoiceRules.SplitForSpeech(scene.Narration))
                     {
-                        var completed = await live.SpeakAsync(piece, NarratorVoice, Rate);
+                        var completed = await live.SpeakAsync(piece, NarratorVoice, Rate, _speech.Language);
                         if (!completed || generation != _playGeneration)
                             return;
                     }

@@ -54,7 +54,7 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
                 .Select(v => new SpeechVoice(v.Id ?? v.Name ?? string.Empty, v.Name ?? v.Id ?? string.Empty, v.Lang ?? string.Empty, v.Local, v.IsDefault))
                 .Where(v => v.Id.Length > 0)
                 .ToList();
-            return (result.Supported, SystemVoiceRules.Order(voices));
+            return (result.Supported, SystemVoiceRules.Order(voices, null));
         }
         catch (Exception)
         {
@@ -70,7 +70,7 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
             return SpeechAvailability.Checking();
 
         var (supported, voices) = await CheckAsync();
-        return SystemVoiceRules.Evaluate(supported, voices, OperatingSystem.IsLinux());
+        return SystemVoiceRules.Evaluate(supported, voices, OperatingSystem.IsLinux(), context.Language);
     }
 
     public async Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken = default)
@@ -80,7 +80,7 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
         return (await CheckAsync()).Voices;
     }
 
-    public async Task<bool> SpeakAsync(string text, string voiceId, double rate, CancellationToken cancellationToken = default)
+    public async Task<bool> SpeakAsync(string text, string voiceId, double rate, string? language, CancellationToken cancellationToken = default)
     {
         if (_js == null || _reference == null)
             throw new InvalidOperationException(UiStrings.SystemVoice_NotReady);
@@ -98,7 +98,8 @@ public sealed class BrowserSpeechService : ILiveSpeechService, IDisposable
                 pending.TrySetResult(false);
         });
 
-        await _js.InvokeVoidAsync("studyScopeSpeech.speak", _reference, id, text, voiceId ?? string.Empty, SpeechSettings.ClampRate(rate));
+        await _js.InvokeVoidAsync("studyScopeSpeech.speak", _reference, id, text, voiceId ?? string.Empty, SpeechSettings.ClampRate(rate),
+            SpeechLanguage.SpecificTag(language));
         return await tcs.Task;
     }
 

@@ -37,19 +37,28 @@ window.studyScopeSpeech = (function () {
         };
     }
 
-    function findVoice(voiceId) {
+    // Sprachteil einer Angabe: "en-GB" / "en_US" -> "en"
+    function languagePart(tag) {
+        return String(tag || "").split(/[-_]/)[0].toLowerCase();
+    }
+
+    // Gewählte Stimme, sonst eine Stimme der Sprache (offline zuerst); lang = "de-DE", "en-US" ...
+    function findVoice(voiceId, lang) {
         var voices = window.speechSynthesis.getVoices() || [];
         if (voiceId) {
             var chosen = voices.find(function (v) { return (v.voiceURI || v.name) === voiceId; });
             if (chosen) return chosen;
         }
-        return voices.find(function (v) { return /^de/i.test(v.lang) && v.localService; })
-            || voices.find(function (v) { return /^de/i.test(v.lang); })
+        var wanted = languagePart(lang || "de-DE");
+        function matches(v) { return languagePart(v.lang) === wanted; }
+        return voices.find(function (v) { return matches(v) && v.localService; })
+            || voices.find(matches)
             || null;
     }
 
-    // Spricht einen Text; meldet das Ende über dotnetRef.OnSpeechEnded(id, vollständig, fehler)
-    function speak(dotnetRef, id, text, voiceId, rate) {
+    // Spricht einen Text in der Sprache lang ("de-DE", "en-US"); meldet das Ende über
+    // dotnetRef.OnSpeechEnded(id, vollständig, fehler)
+    function speak(dotnetRef, id, text, voiceId, rate, lang) {
         if (!isSupported()) {
             dotnetRef.invokeMethodAsync("OnSpeechEnded", id, false, "not-supported");
             return;
@@ -57,12 +66,12 @@ window.studyScopeSpeech = (function () {
 
         window.speechSynthesis.cancel();
         var utterance = new SpeechSynthesisUtterance(text);
-        var voice = findVoice(voiceId);
+        var voice = findVoice(voiceId, lang);
         if (voice) {
             utterance.voice = voice;
             utterance.lang = voice.lang;
         } else {
-            utterance.lang = "de-DE";
+            utterance.lang = lang || "de-DE";
         }
         utterance.rate = rate || 1;
 

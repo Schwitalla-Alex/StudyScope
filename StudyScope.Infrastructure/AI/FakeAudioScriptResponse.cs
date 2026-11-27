@@ -18,8 +18,11 @@ public static class FakeAudioScriptResponse
     {
         var isPodcast = prompt.Contains("Format: Podcast-Gespräch", StringComparison.OrdinalIgnoreCase);
         var isBriefing = prompt.Contains("Format: Kurz-Briefing", StringComparison.OrdinalIgnoreCase);
-        // Texte englisch, wenn die Sprachzeile es verlangt; die Sprecherrollen bleiben die gespeicherten (deutschen) Rollen
+        // Texte englisch, wenn die Sprachzeile es verlangt – dann auch mit englischen Rollen („Host“, „Expert“, „Narrator“),
+        // wie sie echte Modelle oft liefern; AudioScriptService.NormalizeSpeakers ordnet sie den gespeicherten Rollen zu
         var en = FakeLanguage.IsEnglish(prompt);
+        var host = en ? "Host" : "Moderatorin";
+        var expert = en ? "Expert" : "Experte";
 
         var sentences = chunks
             .SelectMany(c => c.Replace('\n', ' ').Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries))
@@ -34,18 +37,18 @@ public static class FakeAudioScriptResponse
         var segments = new List<object>();
         if (isPodcast)
         {
-            segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Herzlich willkommen! Heute schauen wir uns gemeinsam Ihre Unterlagen an. Worum geht es denn?", "Welcome! Today we are taking a look at your documents together. What are they about?") });
+            segments.Add(new { speaker = host, text = FakeLanguage.T(en, "Herzlich willkommen! Heute schauen wir uns gemeinsam Ihre Unterlagen an. Worum geht es denn?", "Welcome! Today we are taking a look at your documents together. What are they about?") });
             for (var i = 0; i < sentences.Count; i++)
             {
-                segments.Add(new { speaker = "Experte", text = FakeLanguage.T(en, $"Ein wichtiger Punkt ist dieser: {sentences[i]}", $"One important point is this: {sentences[i]}") });
+                segments.Add(new { speaker = expert, text = FakeLanguage.T(en, $"Ein wichtiger Punkt ist dieser: {sentences[i]}", $"One important point is this: {sentences[i]}") });
                 if (i < sentences.Count - 1)
-                    segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Spannend. Und was gehört noch dazu?", "Interesting. And what else is part of it?") });
+                    segments.Add(new { speaker = host, text = FakeLanguage.T(en, "Spannend. Und was gehört noch dazu?", "Interesting. And what else is part of it?") });
             }
-            segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Vielen Dank! Das war unser Überblick im Testmodus.", "Thank you! That was our overview in test mode.") });
+            segments.Add(new { speaker = host, text = FakeLanguage.T(en, "Vielen Dank! Das war unser Überblick im Testmodus.", "Thank you! That was our overview in test mode.") });
         }
         else
         {
-            var speaker = "Sprecherin";
+            var speaker = en ? "Narrator" : "Sprecherin";
             segments.Add(new { speaker, text = isBriefing
                 ? FakeLanguage.T(en, "Hier das Wichtigste in Kürze.", "Here are the key points in brief.")
                 : FakeLanguage.T(en, "In dieser Zusammenfassung geht es um die wichtigsten Inhalte Ihrer Unterlagen.", "This summary covers the most important content of your documents.") });
