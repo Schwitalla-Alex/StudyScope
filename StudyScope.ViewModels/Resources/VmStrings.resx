@@ -415,4 +415,14 @@
   <data name="Voice_NoMatchingGender" xml:space="preserve"><value>Keine {gender, select, male {männliche} other {weibliche}} deutsche Stimme für „{role}“ installiert – es wird „{voice}“ verwendet.</value><comment>{gender} = male/female, {role} = Sprecherrolle (übersetzt)</comment></data>
   <data name="Appearance_LanguageSystem" xml:space="preserve"><value>Wie System</value><comment>Sprachauswahl: Sprache des Betriebssystems (nicht unterstützt → Englisch)</comment></data>
   <data name="Profile_DefaultName" xml:space="preserve"><value>Standard</value><comment>Anzeigename des Standardprofils; gespeichert bleibt immer „Standard“</comment></data>
+  <data name="OutputLanguage_FollowUi" xml:space="preserve"><value>Wie Oberfläche</value><comment>Sprache der KI-Ergebnisse: Sprache der Oberfläche (Standard)</comment></data>
+  <data name="OutputLanguage_FollowDocuments" xml:space="preserve"><value>Wie die Dokumente</value><comment>Sprache der KI-Ergebnisse: aus den ausgewählten Textstellen erkannt</comment></data>
+  <data name="OutputLanguage_Hint" xml:space="preserve"><value>Gilt für neue Ergebnisse dieses Profils, im Chat ab der nächsten Frage. Vorhandene Ergebnisse behalten ihre Sprache, auch wenn Sie sie ergänzen.</value></data>
+  <data name="OutputLanguage_DocumentsHint" xml:space="preserve"><value>Erkannt werden zurzeit nur diese Sprachen: {languages}. Ist die Sprache der Unterlagen nicht eindeutig, gilt die Sprache der Oberfläche.</value><comment>{languages}: Sprachnamen im eigenen Namen, durch Komma getrennt</comment></data>
+  <data name="OutputLanguage_BadgeTooltip" xml:space="preserve"><value>Sprache des Inhalts: {language}</value><comment>Kennzeichen „EN“ o. Ä. an Ergebnissen in einer anderen Sprache als die Oberfläche; {language}: Sprachname im eigenen Namen</comment></data>
+  <data name="Fallback_Titled" xml:space="preserve"><value>{kind}: {source}</value><comment>Rückfall-Titel eines Ergebnisses in der Ergebnissprache, falls die KI keinen liefert; {kind} = Vorlage bzw. Format, {source} = Dateiname oder Profilname</comment></data>
+  <data name="Fallback_Documents" xml:space="preserve"><value>Unterlagen: {profile}</value><comment>Rückfall-Titel der Präsentation aus mehreren Dokumenten (Ergebnissprache)</comment></data>
+  <data name="Settings_NumberedLabel" xml:space="preserve"><value>{number}. {label}</value><comment>Beschriftung eines Felds im Dialog KI-Modell mit fortlaufender Nummer (nur sichtbare Felder werden gezählt)</comment></data>
+  <data name="OutputLanguage_Saved" xml:space="preserve"><value>✓ Gespeichert</value><comment>Bestätigung, nachdem die Sprache der KI-Ergebnisse für das Profil gespeichert wurde</comment></data>
+  <data name="OutputLanguage_SaveFailed" xml:space="preserve"><value>Die Sprache konnte nicht gespeichert werden: {error}</value></data>
 </root>

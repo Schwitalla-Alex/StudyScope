@@ -264,7 +264,7 @@
                         <input type="checkbox" checked="@QuizVm.IsTopicSelected(t.Id)" title="@UiStrings.Quiz_SelectForQuiz" @onchange="() => QuizVm.ToggleTopic(t.Id)" />
                         <div style="flex: 1; min-width: 0; cursor: pointer;" @onclick="() => QuizVm.ToggleTopic(t.Id)">
                             <div style="font-size: 14px; font-weight: 600; color: var(--ss-text);">
-                                @t.Name
+                                <LanguageBadge Code="@ResultLanguageBadge.Majority(t.Questions.Select(q => q.Language))" />@t.Name
                                 @if (t.Origin == StudyScope.Core.Models.QuizTopicOrigin.Ai)
                                 {
                                     <span class="qz-badge" style="background: var(--ss-purple-bg); color: var(--ss-purple-text);">@UiStrings.Quiz_AiBadge</span>
@@ -447,7 +447,7 @@
 
             <div class="qz-card">
                 <div class="qz-hint">
-                    @(question.Type switch
+                    <LanguageBadge Code="@question.Language" />@(question.Type switch
                     {
                         StudyScope.Core.Models.QuizQuestionType.TrueFalse => UiStrings.Quiz_Hint_TrueFalse,
                         StudyScope.Core.Models.QuizQuestionType.MultipleChoice => Loc.Format(UiStrings.Quiz_Hint_Multiple, ("count", question.CorrectIndices.Count)),

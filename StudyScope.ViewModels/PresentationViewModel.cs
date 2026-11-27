@@ -194,11 +194,10 @@ public class PresentationViewModel : INotifyPropertyChanged
             foreach (var doc in selectedDocs)
                 chunks.AddRange(await _documentService.ExtractChunksAsync(doc.FilePath));
 
-            var fallbackTitle = selectedDocs.Count == 1
-                ? Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)
-                : $"Unterlagen: {profileName}";
+            var outputLanguage = await OutputLanguageSettingAsync(profileName);
+            var fallbackTitle = FallbackTitles.Documents(FallbackTitles.Language(outputLanguage, chunks), selectedDocs, profileName);
 
-            var result = await _presentationService.GenerateFromDocumentsAsync(chunks, fallbackTitle, SlideCount, await OutputLanguageSettingAsync(profileName), token);
+            var result = await _presentationService.GenerateFromDocumentsAsync(chunks, fallbackTitle, SlideCount, outputLanguage, token);
 
             if (token.IsCancellationRequested)
             {
@@ -289,7 +288,7 @@ public class PresentationViewModel : INotifyPropertyChanged
 
         try
         {
-            await _presentationService.ExportToPptxAsync(Presentation, filePath, ExportCulture.Current);
+            await _presentationService.ExportToPptxAsync(Presentation, filePath, ExportCulture.For(Presentation.Language));
             ShowStatus(Loc.Format(VmStrings.Presentation_PptxExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;
         }

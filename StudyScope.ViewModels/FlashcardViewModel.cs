@@ -462,7 +462,7 @@ public class FlashcardViewModel : INotifyPropertyChanged
 
     public string GetMarkdownExport(string profileName)
     {
-        return _flashcardService.ExportToMarkdown(profileName, FilteredFlashcards, ExportCulture.Current);
+        return _flashcardService.ExportToMarkdown(profileName, FilteredFlashcards, ExportCulture.For(FilteredFlashcards));
     }
 
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)

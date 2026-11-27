@@ -16,7 +16,7 @@
     <!-- Obere Steuerleiste: Profil, Fortschritt und zentrale Aktionsbuttons -->
     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px;">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);"><LanguageBadge Code="@ResultLanguageBadge.Majority(FlashVm.Flashcards.Select(c => c.Language))" />@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @Loc.Format(UiStrings.Flashcards_Summary, ("count", FlashVm.Flashcards.Count), ("progress", FlashVm.ProgressText))
             </span>
@@ -210,7 +210,7 @@
                     <span style="font-weight: bold; letter-spacing: 0.5px; color: @(FlashVm.IsAnswerRevealed ? "var(--ss-success-fg)" : "var(--ss-link)");">
                         @(FlashVm.IsAnswerRevealed ? UiStrings.Flashcards_Answer : UiStrings.Flashcards_Question)
                     </span>
-                    <span>@Loc.Format(UiStrings.Flashcards_Status, ("status", GetStatusLabel(FlashVm.CurrentCard.Status)))</span>
+                    <span><LanguageBadge Code="@FlashVm.CurrentCard.Language" />@Loc.Format(UiStrings.Flashcards_Status, ("status", GetStatusLabel(FlashVm.CurrentCard.Status)))</span>
                 </div>
 
                 <!-- Karten-Inhalt -->

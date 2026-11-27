@@ -168,6 +168,7 @@ public sealed class QuizSession
         Text = q.Text,
         Options = options,
         CorrectIndices = correct,
-        Explanation = q.Explanation
+        Explanation = q.Explanation,
+        Language = q.Language
     };
 }

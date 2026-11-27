@@ -15,6 +15,7 @@ public static class FakeReportResponse
 
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
+        var en = FakeLanguage.IsEnglish(prompt);
         var sentences = chunks
             .SelectMany(c => c.Replace('\n', ' ').Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries))
             .Select(s => s.Trim())
@@ -22,7 +23,7 @@ public static class FakeReportResponse
             .Take(12)
             .ToList();
         if (sentences.Count == 0)
-            sentences.Add("Die aktivierten Dokumente enthalten kaum Text");
+            sentences.Add(FakeLanguage.T(en, "Die aktivierten Dokumente enthalten kaum Text", "The selected documents contain hardly any text"));
 
         var words = chunks
             .SelectMany(c => c.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
@@ -32,23 +33,23 @@ public static class FakeReportResponse
             .Take(6)
             .ToList();
 
-        var kind = prompt.Contains("Glossar.") ? "Glossar"
+        var kind = prompt.Contains("Glossar.") ? FakeLanguage.T(en, "Glossar", "Glossary")
             : prompt.Contains("FAQ.") ? "FAQ"
-            : prompt.Contains("Zusammenfassung / Briefing") ? "Zusammenfassung"
-            : prompt.Contains("Lernübersicht") ? "Lernübersicht"
-            : "Bericht";
+            : prompt.Contains("Zusammenfassung / Briefing") ? FakeLanguage.T(en, "Zusammenfassung", "Summary")
+            : prompt.Contains("Lernübersicht") ? FakeLanguage.T(en, "Lernübersicht", "Study guide")
+            : FakeLanguage.T(en, "Bericht", "Report");
 
         var sections = sentences
             .Chunk(3)
             .Take(3)
             .Select((group, i) => new
             {
-                heading = $"Abschnitt {i + 1}",
+                heading = FakeLanguage.T(en, $"Abschnitt {i + 1}", $"Section {i + 1}"),
                 paragraphs = new[] { string.Join(". ", group) + "." },
                 bullets = group.Select(s => s.Length > 70 ? s[..70] + "…" : s).ToArray(),
-                terms = words.Skip(i * 2).Take(2).Select(w => new { term = w, definition = $"Begriff aus den Unterlagen (Testmodus)." }).ToArray(),
-                faq = new[] { new { question = $"Worum geht es in Abschnitt {i + 1}?", answer = group[0] + "." } },
-                takeaway = $"Merksatz {i + 1}: {group[0]}."
+                terms = words.Skip(i * 2).Take(2).Select(w => new { term = w, definition = FakeLanguage.T(en, "Begriff aus den Unterlagen (Testmodus).", "Term from your documents (test mode).") }).ToArray(),
+                faq = new[] { new { question = FakeLanguage.T(en, $"Worum geht es in Abschnitt {i + 1}?", $"What is section {i + 1} about?"), answer = group[0] + "." } },
+                takeaway = FakeLanguage.T(en, $"Merksatz {i + 1}: {group[0]}.", $"Key point {i + 1}: {group[0]}.")
             })
             .ToArray();
 
@@ -56,8 +57,9 @@ public static class FakeReportResponse
         {
             new
             {
-                title = $"[Testmodus] {kind}",
-                summary = $"Beispiel-{kind} der Fake-KI aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
+                title = FakeLanguage.T(en, $"[Testmodus] {kind}", $"[Test mode] {kind}"),
+                summary = FakeLanguage.T(en, $"Beispiel-{kind} der Fake-KI aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
+                    $"Sample {kind.ToLowerInvariant()} by the fake AI from {chunks.Count} excerpt(s). Choose an AI in the settings for real content."),
                 sections
             }
         };

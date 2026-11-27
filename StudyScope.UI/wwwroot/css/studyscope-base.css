@@ -157,6 +157,8 @@ body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; b
 .ss-icon-btn { background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 13px; line-height: 1.2; padding: 2px 5px; color: var(--ss-text-2); font-family: inherit; }
 .ss-icon-btn:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
 .ss-icon-btn:focus-visible { outline: 2px solid var(--ss-primary); outline-offset: 1px; }
+/* Kennzeichen der Ergebnissprache („EN“) in Listen und Kopfzeilen – nur bei Abweichung von der Oberfläche */
+.ss-lang-badge { display: inline-block; vertical-align: middle; margin-inline-end: 6px; padding: 0 5px; border: 1px solid var(--ss-info-border); border-radius: 3px; background: var(--ss-info-bg); color: var(--ss-info-text); font-size: 10px; font-weight: 700; line-height: 1.5; letter-spacing: .03em; font-family: inherit; white-space: nowrap; }
 
 /* Linke Seitenleiste (SidebarPanel.razor): ein-/ausklappbar. Der Inhalt behält beim Animieren seine Breite und wird
    nur abgeschnitten – so bricht nichts um; der Inhaltsbereich rechts wächst per flex mit. */

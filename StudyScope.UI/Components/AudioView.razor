@@ -163,7 +163,7 @@
                                 }
                                 else
                                 {
-                                    <div class="au-item-title" title="@it.Title">@it.Title</div>
+                                    <div class="au-item-title" title="@it.Title"><LanguageBadge Code="@it.Language" />@it.Title</div>
                                 }
                                 <div class="au-meta">@Loc.Format(UiStrings.Audio_ItemMeta, ("format", MediaTexts.FormatName(it.Format)), ("minutes", MediaTexts.Minutes(it.EstimatedMinutes)), ("date", it.CreatedAt.ToString("g")))</div>
                             </div>
@@ -200,7 +200,7 @@
                 <div class="au-card au-head">
                     <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
                         <div style="min-width: 0;">
-                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@summary.Title</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);"><LanguageBadge Code="@summary.Language" />@summary.Title</div>
                             <div class="au-meta">
                                 @Loc.Format(UiStrings.Audio_HeadMeta, ("format", MediaTexts.FormatName(summary.Format)),
                                     ("segments", Loc.Format(VmStrings.Audio_SegmentCount, ("count", summary.Segments.Count))),

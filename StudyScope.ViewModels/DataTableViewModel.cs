@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
@@ -51,6 +51,13 @@ public class DataTableViewModel : INotifyPropertyChanged
     public IReadOnlyList<DataTableDocument> Tables => _library.Tables.OrderByDescending(t => t.CreatedAt).ToList();
 
     private DataTableDocument? _selectedTable;
+    /// <summary>
+    /// Überschrift der Quellspalte in der Ansicht – in der Sprache der Tabelle wie im Export („Quelle“/„Source“);
+    /// Tabellen ohne gespeicherte Sprache nach der Oberfläche. Nur Anzeige: Filter und Sortierung arbeiten über
+    /// <see cref="DataTableSorting.SourceColumn"/>, reserviert ist der Name in jeder Sprache.
+    /// </summary>
+    public string SourceColumnLabel => DataTableDocument.SourceColumnNameIn(ExportCulture.For(SelectedTable?.Language));
+
     public DataTableDocument? SelectedTable
     {
         get => _selectedTable;
@@ -62,6 +69,7 @@ public class DataTableViewModel : INotifyPropertyChanged
             _filterText = string.Empty;
             _exportFilteredOnly = false;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(SourceColumnLabel));
             OnTableContentChanged();
             OnPropertyChanged(nameof(SortColumn));
             OnPropertyChanged(nameof(SortDescending));
@@ -258,12 +266,13 @@ public class DataTableViewModel : INotifyPropertyChanged
         try
         {
             var chunks = await LoadChunksAsync(selectedDocs);
-            var fallbackTitle = selectedDocs.Count == 1
-                ? $"{DataTableTemplates.DisplayName(Template)}: {Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)}"
-                : $"{DataTableTemplates.DisplayName(Template)}: {_profileName}";
+            var outputLanguage = await OutputLanguageSettingAsync(_profileName);
+            var template = Template;
+            var fallbackTitle = FallbackTitles.Titled(FallbackTitles.Language(outputLanguage, chunks.Select(c => c.Text)),
+                () => TemplateTexts.Name(template), selectedDocs, _profileName);
             var columns = ParseColumns(CustomColumns);
 
-            var result = await _dataTableService.GenerateAsync(chunks, Template, CustomInstruction, columns, Topic, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
+            var result = await _dataTableService.GenerateAsync(chunks, Template, CustomInstruction, columns, Topic, fallbackTitle, outputLanguage, token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.DataTable_Cancelled, isError: false);
@@ -670,13 +679,13 @@ public class DataTableViewModel : INotifyPropertyChanged
             switch (format)
             {
                 case DataTableExportFormat.Csv:
-                    await File.WriteAllBytesAsync(filePath, _dataTableService.ExportToCsv(table, rows, ExportCulture.Current));
+                    await File.WriteAllBytesAsync(filePath, _dataTableService.ExportToCsv(table, rows, ExportCulture.For(table.Language)));
                     break;
                 case DataTableExportFormat.Excel:
-                    await _dataTableService.ExportToXlsxAsync(table, rows, filePath, ExportCulture.Current);
+                    await _dataTableService.ExportToXlsxAsync(table, rows, filePath, ExportCulture.For(table.Language));
                     break;
                 default:
-                    await File.WriteAllTextAsync(filePath, _dataTableService.ExportToMarkdown(table, rows, ExportCulture.Current));
+                    await File.WriteAllTextAsync(filePath, _dataTableService.ExportToMarkdown(table, rows, ExportCulture.For(table.Language)));
                     break;
             }
 

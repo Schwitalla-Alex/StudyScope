@@ -1,0 +1,10 @@
+@* Kennzeichen der Ergebnissprache („EN“), nur wenn sie von der Oberfläche abweicht (siehe ResultLanguageBadge) *@
+@if (ResultLanguageBadge.Text(Code) is { } text)
+{
+    <span class="ss-lang-badge" title="@ResultLanguageBadge.Tooltip(Code)" aria-label="@ResultLanguageBadge.Tooltip(Code)" lang="@Code">@text</span>
+}
+
+@code {
+    /// <summary>Gespeicherter Sprachcode des Ergebnisses („en“) oder null (ältere Daten → kein Kennzeichen).</summary>
+    [Parameter] public string? Code { get; set; }
+}

@@ -48,7 +48,7 @@
             <!-- 1. KI-Provider Auswahl -->
             <div>
                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                    @UiStrings.Settings_Provider
+                    @SettingsVm.NumberedLabel(SettingsField.Provider, UiStrings.Settings_Provider)
                 </label>
                 <select style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); font-size: 13px;"
                         @bind="SettingsVm.SelectedProvider">
@@ -63,11 +63,11 @@
             </div>
 
             <!-- 2. Server-Endpunkt (nur für lokale Provider und Custom) -->
-            @if (SettingsVm.IsLocalProvider)
+            @if (SettingsVm.ShowsServer)
             {
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                        @(SettingsVm.IsCustomProvider ? UiStrings.Settings_ServerCustom : UiStrings.Settings_Server)
+                        @SettingsVm.NumberedLabel(SettingsField.Server, SettingsVm.IsCustomProvider ? UiStrings.Settings_ServerCustom : UiStrings.Settings_Server)
                     </label>
                     <div style="display: flex; gap: 6px;">
                         <input type="text"
@@ -87,11 +87,11 @@
             }
 
             <!-- 3. API-Schlüssel (für Cloud-Dienste oder optional bei Custom) -->
-            @if (SettingsVm.IsApiKeyRequired || SettingsVm.IsCustomProvider)
+            @if (SettingsVm.ShowsApiKey)
             {
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text);">
-                        @(SettingsVm.IsCustomProvider ? UiStrings.Settings_ApiKeyOptional : Loc.Format(UiStrings.Settings_ApiKey, ("provider", SettingsVm.SelectedModelDisplayName)))
+                        @SettingsVm.NumberedLabel(SettingsField.ApiKey, SettingsVm.IsCustomProvider ? UiStrings.Settings_ApiKeyOptional : Loc.Format(UiStrings.Settings_ApiKey, ("provider", SettingsVm.SelectedModelDisplayName)))
                     </label>
                     <div style="display: flex; gap: 6px;">
                         <input type="password"
@@ -116,7 +116,7 @@
             <!-- 4. Modell-Auswahl -->
             <div>
                 <label style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
-                    @UiStrings.Settings_Model
+                    @SettingsVm.NumberedLabel(SettingsField.Model, UiStrings.Settings_Model)
                 </label>
 
                 @if (SettingsVm.AvailableModels.Any())
@@ -154,6 +154,33 @@
                         @LocHtml.Format(UiStrings.Settings_CloudHint)
                     </div>
                 }
+            </div>
+
+            <!-- Sprache der KI-Ergebnisse (je Profil, sofort beim Ändern gespeichert – unabhängig von der Verbindung) -->
+            <div>
+                <label for="st-output-language" style="display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2);">
+                    @SettingsVm.NumberedLabel(SettingsField.OutputLanguage, UiStrings.Settings_OutputLanguage)
+                </label>
+                <select id="st-output-language" aria-describedby="st-output-language-hint"
+                        style="width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); font-size: 13px;"
+                        value="@SettingsVm.OutputLanguage"
+                        @onchange="e => SettingsVm.ChangeOutputLanguageAsync(e.Value?.ToString())">
+                    @foreach (var (value, label) in SettingsVm.OutputLanguageOptions)
+                    {
+                        <option value="@value" selected="@(value == SettingsVm.OutputLanguage)">@label</option>
+                    }
+                </select>
+                @if (!string.IsNullOrEmpty(SettingsVm.OutputLanguageStatus))
+                {
+                    <div role="status" style="font-size: 12px; margin-top: 4px; color: @(SettingsVm.OutputLanguageSaveFailed ? "var(--ss-danger-fg)" : "var(--ss-success-fg)");">@SettingsVm.OutputLanguageStatus</div>
+                }
+                <div id="st-output-language-hint" style="font-size: 11px; color: var(--ss-text-muted); margin-top: 4px;">
+                    @VmStrings.OutputLanguage_Hint
+                    @if (!string.IsNullOrEmpty(SettingsVm.OutputLanguageDocumentsHint))
+                    {
+                        <div style="margin-top: 2px;">@SettingsVm.OutputLanguageDocumentsHint</div>
+                    }
+                </div>
             </div>
 
             <!-- Statusmeldung -->

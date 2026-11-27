@@ -64,8 +64,16 @@ public static partial class OutputLanguage
     /// <summary>Beginn der Sprachzeile; daran erkennt der Dispatcher die Sprache einer Chat-Anfrage.</summary>
     public const string LinePrefix = "Sprache der Antwort:";
 
-    /// <summary>Zusatz der Sprachzeile: auch Titel und Fachbegriffe in dieser Sprache, unabhängig von den Auszügen.</summary>
-    public const string LineRule = "Alle Texte (auch Titel und Fachbegriffe) in dieser Sprache schreiben, auch wenn die Auszüge eine andere Sprache haben.";
+    /// <summary>
+    /// Zusatz der Sprachzeile: alle Texte samt Titeln und Fachbegriffen in dieser Sprache, unabhängig von den Auszügen.
+    /// Seit 3c-2 ausdrücklich mit Übersetzen der Fachbegriffe und ohne Originalbegriff in Klammern – im Echttest blieben
+    /// sonst vereinzelt Begriffe aus den Auszügen stehen („Calvin-Zyklus“, „(Atmungskette)“). Ohne Klammern, damit
+    /// <see cref="TryParse"/> nur die Sprachangabe findet.
+    /// </summary>
+    public const string LineRule =
+        "Alle Texte in dieser Sprache schreiben, auch Titel, Überschriften und Fachbegriffe, auch wenn die Auszüge eine andere Sprache haben. " +
+        "Fachbegriffe aus den Auszügen in den in dieser Sprache üblichen Fachbegriff übersetzen, nicht unverändert übernehmen und nicht zusätzlich in der Sprache der Auszüge in Klammern nennen. " +
+        "Unverändert bleiben nur Eigennamen, Formeln, Einheiten und feste Abkürzungen.";
 
     /// <summary>Sprache aus der Sprachzeile eines Prompts (der Eigenname bzw. Code in Klammern) oder null.</summary>
     public static CultureInfo? TryParse(string? prompt)

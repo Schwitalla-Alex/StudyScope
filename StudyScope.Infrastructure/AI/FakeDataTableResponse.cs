@@ -17,11 +17,12 @@ public static partial class FakeDataTableResponse
 
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
+        var en = FakeLanguage.IsEnglish(prompt);
         var columns = ColumnLine().Match(prompt) is { Success: true } m && !m.Groups["cols"].Value.StartsWith("Wähle", StringComparison.Ordinal)
             ? m.Groups["cols"].Value.Split('|').Select(c => c.Trim()).Where(c => c.Length > 0).ToList()
             : new List<string>();
         if (columns.Count == 0)
-            columns = new List<string> { "Begriff", "Erklärung" };
+            columns = en ? new List<string> { "Term", "Explanation" } : new List<string> { "Begriff", "Erklärung" };
 
         // Bereits vorhandene Zeilen („- Eintrag“ unter „…gibt es bereits“) nicht wiederholen
         var existing = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -66,7 +67,7 @@ public static partial class FakeDataTableResponse
         {
             new
             {
-                title = "[Testmodus] Datentabelle",
+                title = FakeLanguage.T(en, "[Testmodus] Datentabelle", "[Test mode] Data table"),
                 columns,
                 rows
             }
