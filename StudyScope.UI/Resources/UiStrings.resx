@@ -493,7 +493,7 @@
   <data name="SystemVoice_NotReady" xml:space="preserve"><value>Die Sprachausgabe ist noch nicht bereit. Bitte den Reiter neu öffnen.</value></data>
   <data name="SystemVoice_NotSupported" xml:space="preserve"><value>Ihre Systemumgebung stellt keine Sprachausgabe bereit.</value></data>
   <data name="SystemVoice_VoiceUnavailable" xml:space="preserve"><value>Die gewählte Stimme ist nicht verfügbar. Bitte eine andere Stimme wählen.</value></data>
-  <data name="SystemVoice_LanguageUnavailable" xml:space="preserve"><value>Für die Sprache ist keine Stimme installiert. Bitte eine deutsche Stimme installieren oder eine andere Stimme wählen.</value></data>
+  <data name="SystemVoice_LanguageUnavailable" xml:space="preserve"><value>Für die Sprache ist keine Stimme installiert. Bitte eine Stimme für die Sprache des Beitrags installieren oder eine andere Stimme wählen.</value></data>
   <data name="SystemVoice_NoAudioDevice" xml:space="preserve"><value>Die Sprachausgabe konnte nicht gestartet werden. Ist ein Audiogerät angeschlossen und aktiviert?</value></data>
   <data name="SystemVoice_Network" xml:space="preserve"><value>Die gewählte Online-Stimme ist nicht erreichbar. Bitte eine Offline-Stimme wählen oder die Internetverbindung prüfen.</value></data>
   <data name="SystemVoice_Blocked" xml:space="preserve"><value>Die Sprachausgabe wurde vom System blockiert. Bitte erneut auf „{button}“ klicken.</value><comment>{button} = Common_Play</comment></data>

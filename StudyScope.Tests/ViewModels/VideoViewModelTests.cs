@@ -313,6 +313,22 @@ public class VideoViewModelTests
     }
 
     [Test]
+    public async Task EnglishVideo_SceneAudioAndSystemVoice_UseEnglish()
+    {
+        var video = await CreateVideoAsync(gemini: true);
+        video.Language = "en";
+        await _videoService.SaveLibraryAsync(Profile, new VideoLibrary { Items = new List<VideoDocument> { video } });
+        await _vm.LoadForProfileAsync(Profile);
+        Assert.That(_vm.SpeechLanguage, Is.EqualTo("en"));
+
+        await _vm.GenerateAudioAsync();
+
+        Assert.That(_vm.IsError, Is.False, _vm.StatusMessage);
+        Assert.That(_gemini.SummaryLanguages, Is.Not.Empty.And.All.EqualTo("en"), "jede Szene mit der Sprache des Videos");
+        Assert.That(_gemini.LastContext!.Language, Is.EqualTo("en"));
+    }
+
+    [Test]
     public async Task Gemini_GenerateAudio_OneRequestPerScene_ExactTimings_PlaysFile()
     {
         var video = await CreateVideoAsync(gemini: true);
@@ -756,6 +772,8 @@ public class VideoViewModelTests
         private TaskCompletionSource _speaking = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public List<(string Text, string Voice, double Rate)> Spoken { get; } = new();
+        public List<string?> SpokenLanguages { get; } = new();
+        public List<string?> CheckedLanguages { get; } = new();
         public bool Block { get; set; }
         public int PauseCount { get; private set; }
         public int ResumeCount { get; private set; }
@@ -766,13 +784,17 @@ public class VideoViewModelTests
         public bool SupportsLivePlayback => true;
         public bool SupportsFileExport => false;
 
-        public Task<SpeechAvailability> GetAvailabilityAsync(SpeechContext context, CancellationToken cancellationToken = default) =>
-            Task.FromResult(SpeechAvailability.Ready("Bereit."));
+        public Task<SpeechAvailability> GetAvailabilityAsync(SpeechContext context, CancellationToken cancellationToken = default)
+        {
+            CheckedLanguages.Add(context.Language);
+            return Task.FromResult(SpeechAvailability.Ready("Bereit."));
+        }
         public Task<IReadOnlyList<SpeechVoice>> GetVoicesAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<SpeechVoice>>(new[] { new SpeechVoice("de-1", "Katja", "de-DE") });
 
-        public Task<bool> SpeakAsync(string text, string voiceId, double rate, CancellationToken cancellationToken = default)
+        public Task<bool> SpeakAsync(string text, string voiceId, double rate, string? language, CancellationToken cancellationToken = default)
         {
+            SpokenLanguages.Add(language);
             Spoken.Add((text, voiceId, rate));
             _current?.TrySetResult(false);
             if (!Block) return Task.FromResult(true);
@@ -803,6 +825,7 @@ public class VideoViewModelTests
         private int _calls;
         public List<string> Texts { get; } = new();
         public SpeechContext? LastContext { get; private set; }
+        public List<string?> SummaryLanguages { get; } = new();
         public LlmServiceException? Fail { get; set; }
         public int BlockAtCall { get; set; }
         public TaskCompletionSource Blocked { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -824,6 +847,7 @@ public class VideoViewModelTests
             IProgress<SpeechSynthesisProgress>? progress = null, CancellationToken cancellationToken = default)
         {
             LastContext = context;
+            SummaryLanguages.Add(summary.Language);
             _calls++;
             if (Fail != null) throw Fail;
             if (BlockAtCall > 0 && _calls == BlockAtCall)

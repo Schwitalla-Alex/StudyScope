@@ -16,4 +16,5 @@
   <data name="Content_AudioTitle" xml:space="preserve"><value>Audio-Zusammenfassung</value><comment>Rückfall-Titel des Audio-Beitrags</comment></data>
   <data name="Content_ChatNotInDocuments" xml:space="preserve"><value>Dazu enthalten Ihre Unterlagen keine Angaben.</value><comment>Beispielsatz in der Systemanweisung des Chats (Antwort, wenn nichts in den Auszügen steht)</comment></data>
   <data name="Content_VideoTitle" xml:space="preserve"><value>Videoübersicht</value><comment>Rückfall-Titel des Videos</comment></data>
+  <data name="Content_SpeechStyle" xml:space="preserve"><value>Auf Deutsch, natürlich, ruhig und deutlich vorlesen.</value><comment>Sprechanweisung an Gemini TTS in der Sprache des Beitrags; die Sprache ausdrücklich nennen (verhindert einen fremden Akzent)</comment></data>
 </root>

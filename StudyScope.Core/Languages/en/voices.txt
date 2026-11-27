@@ -1,0 +1,45 @@
+# Preferred system voices for English (one line each: name = female|male).
+# Each name is exactly one whole word and only matches that word in the voice name, never a part of it:
+# "Mark" matches "Microsoft Mark", but not "Markus"; "man" does not match "German". Case does not matter.
+# Order = priority for the automatic choice (after language and offline voices). The gender helps to match the
+# speaker role (host female, expert male) – the Web Speech API does not report it.
+# Names of all languages are used together to guess the gender.
+# Windows (offline)
+Zira = female
+David = male
+Mark = male
+Hazel = female
+George = male
+Susan = female
+# Microsoft online voices (natural)
+Aria = female
+Jenny = female
+Guy = male
+Ava = female
+Andrew = male
+Emma = female
+Brian = male
+Sonia = female
+Ryan = male
+Libby = female
+Michelle = female
+Christopher = male
+Eric = male
+Steffan = male
+# Other known voices (macOS, Google)
+Samantha = female
+Karen = female
+Moira = female
+Tessa = female
+Fiona = female
+Victoria = female
+Alex = male
+Daniel = male
+Fred = male
+Michael = male
+Thomas = male
+# Words in the name that state the gender
+female = female
+woman = female
+male = male
+man = male

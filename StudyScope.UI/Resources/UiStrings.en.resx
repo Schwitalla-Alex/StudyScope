@@ -493,7 +493,7 @@
   <data name="SystemVoice_NotReady" xml:space="preserve"><value>Text-to-speech is not ready yet. Reopen the tab.</value></data>
   <data name="SystemVoice_NotSupported" xml:space="preserve"><value>Your system does not provide text-to-speech.</value></data>
   <data name="SystemVoice_VoiceUnavailable" xml:space="preserve"><value>The selected voice is not available. Choose another voice.</value></data>
-  <data name="SystemVoice_LanguageUnavailable" xml:space="preserve"><value>No voice is installed for the language. Install a German voice or choose another voice.</value></data>
+  <data name="SystemVoice_LanguageUnavailable" xml:space="preserve"><value>No voice is installed for the language. Install a voice for the language of the episode or choose another voice.</value></data>
   <data name="SystemVoice_NoAudioDevice" xml:space="preserve"><value>Text-to-speech could not be started. Is an audio device connected and enabled?</value></data>
   <data name="SystemVoice_Network" xml:space="preserve"><value>The selected online voice cannot be reached. Choose an offline voice or check the internet connection.</value></data>
   <data name="SystemVoice_Blocked" xml:space="preserve"><value>Text-to-speech was blocked by the system. Click “{button}” again.</value></data>

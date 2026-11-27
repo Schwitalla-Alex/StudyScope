@@ -1,0 +1,48 @@
+# Bevorzugte Systemstimmen für Deutsch (eine Zeile je Stimme: Name = female|male).
+# Jeder Name ist genau ein ganzes Wort und trifft nur dieses Wort im Stimmennamen, nie einen Teil davon:
+# „Jan“ trifft „Microsoft Jan“, aber nicht „Jana“ oder „Janina“. Groß-/Kleinschreibung spielt keine Rolle.
+# Reihenfolge = Vorrang bei der automatischen Wahl (nach Sprache und Offline-Stimmen). Das Geschlecht hilft, Stimmen
+# passend zur Sprecherrolle zu wählen („Moderatorin“ weiblich, „Experte“ männlich) – die Web Speech API liefert keins.
+# Die Namen aller Sprachen gelten gemeinsam für die Erkennung des Geschlechts.
+# Windows (offline) – Hedda vor Katja wie vor 3c-3 (damals alphabetisch), damit sich die automatische Wahl nicht ändert
+Hedda = female
+Katja = female
+Stefan = male
+# Microsoft-Online-Stimmen (natürlich)
+Seraphina = female
+Amala = female
+Louisa = female
+Conrad = male
+Killian = male
+Florian = male
+Jonas = male
+# Weitere bekannte Stimmen (Microsoft, macOS, Google)
+Ingrid = female
+Leni = female
+Elke = female
+Gisela = female
+Klarissa = female
+Maja = female
+Tanja = female
+Anna = female
+Petra = female
+Marlene = female
+Vicki = female
+Helena = female
+Hanna = female
+Sabine = female
+Yvonne = female
+Jan = male
+Bernd = male
+Christoph = male
+Kasper = male
+Ralf = male
+Klaus = male
+Hans = male
+Markus = male
+Yannick = male
+# Wörter im Namen, die das Geschlecht nennen
+weiblich = female
+Frau = female
+männlich = male
+Mann = male
