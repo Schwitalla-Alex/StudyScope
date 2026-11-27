@@ -659,4 +659,20 @@
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Applied when you click “{button}”. Chat, documents and any playback in progress are kept; messages already shown stay in the previous language. If the system language is not supported, StudyScope appears in English.</value></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>The language is currently set to “{culture}” by the environment variable {variable}. Your choice is saved and applies once the variable is no longer set.</value></data>
   <data name="Settings_OutputLanguage" xml:space="preserve"><value>Language of AI results:</value></data>
+  <data name="Settings_Tab_WebSearch" xml:space="preserve"><value>🌐 Web search</value></data>
+  <data name="WebSearch_Intro" xml:space="preserve"><value>Web search adds results from the internet to answers in the chat. It is off in every profile until you turn it on with “Also search the web” in the sidebar. Then only the question you type yourself is sent to the search provider – never excerpts, file names or content from your documents.</value></data>
+  <data name="WebSearch_ProviderLabel" xml:space="preserve"><value>Search provider:</value></data>
+  <data name="WebSearch_NoneHint" xml:space="preserve"><value>Without a search provider, web search cannot be turned on in any profile.</value></data>
+  <data name="WebSearch_TavilyKeyLabel" xml:space="preserve"><value>Tavily API key:</value></data>
+  <data name="WebSearch_TavilyKeyPlaceholder" xml:space="preserve"><value>tvly-…</value></data>
+  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily is a cloud service with a free monthly quota; each search costs 1 credit. You get the key after signing up with Tavily. It applies to all profiles and is stored encrypted.</value></data>
+  <data name="WebSearch_TavilySignup" xml:space="preserve"><value>Get a key from Tavily</value></data>
+  <data name="WebSearch_TavilyPrivacy" xml:space="preserve"><value>Tavily stores search queries and, according to its privacy policy, may use them to improve its service and pass them on to third-party search indexes.</value></data>
+  <data name="WebSearch_SearxngUrlLabel" xml:space="preserve"><value>Address of the SearXNG instance:</value></data>
+  <data name="WebSearch_SearxngHint" xml:space="preserve"><value>SearXNG is a metasearch engine that you run yourself or whose operator you trust. It needs no key; the JSON format must be enabled in the instance (&lt;code&gt;search › formats: json&lt;/code&gt; in &lt;code&gt;settings.yml&lt;/code&gt;). The instance passes the question on to the search engines configured there.</value></data>
+  <data name="WebSearch_MaxResultsLabel" xml:space="preserve"><value>Results per question:</value></data>
+  <data name="WebSearch_MaxResultsHint" xml:space="preserve"><value>More results make the request to the AI longer – especially with local models, the answer then takes longer.</value></data>
+  <data name="WebSearch_Test" xml:space="preserve"><value>🔌 Test connection</value></data>
+  <data name="WebSearch_Testing" xml:space="preserve"><value>Checking …</value></data>
+  <data name="WebSearch_TestTitle" xml:space="preserve"><value>Searches once for “StudyScope” with the values entered (1 credit with Tavily). No question and no document content is sent.</value></data>
 </root>

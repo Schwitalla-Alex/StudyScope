@@ -1,0 +1,112 @@
+@using StudyScope.Core.Models
+@using StudyScope.ViewModels
+@inject WebSearchSettingsViewModel WebVm
+@implements IDisposable
+
+@* Einstellungen › „🌐 Websuche“: Suchdienst, Schlüssel bzw. Adresse, Trefferzahl (global für alle Profile) *@
+
+<div style="display: flex; flex-direction: column; gap: 14px;">
+    <div class="ws-info">@UiStrings.WebSearch_Intro</div>
+
+    <div>
+        <label class="ss-label" for="ws-provider">@UiStrings.WebSearch_ProviderLabel</label>
+        <select id="ws-provider" class="ss-input" @bind="WebVm.Provider">
+            @foreach (var option in WebVm.ProviderOptions)
+            {
+                <option value="@option.Value">@option.Label</option>
+            }
+        </select>
+        @if (WebVm.Provider == WebSearchProviderType.None)
+        {
+            <div class="ss-hint">@UiStrings.WebSearch_NoneHint</div>
+        }
+    </div>
+
+    @if (WebVm.IsTavily)
+    {
+        <div>
+            <label class="ss-label" for="ws-key">@UiStrings.WebSearch_TavilyKeyLabel</label>
+            <input id="ws-key" type="password" class="ss-input" autocomplete="off" spellcheck="false"
+                   placeholder="@UiStrings.WebSearch_TavilyKeyPlaceholder"
+                   @bind="WebVm.TavilyApiKey" @bind:event="oninput" />
+            <div class="ss-hint">@UiStrings.WebSearch_TavilyHint</div>
+            <button type="button" class="ss-link-btn ws-link" @onclick="() => WebVm.OpenTavilySignup()">@UiStrings.WebSearch_TavilySignup</button>
+            <div class="ss-hint">@UiStrings.WebSearch_TavilyPrivacy</div>
+        </div>
+    }
+    else if (WebVm.IsSearxng)
+    {
+        <div>
+            <label class="ss-label" for="ws-url">@UiStrings.WebSearch_SearxngUrlLabel</label>
+            <input id="ws-url" type="text" class="ss-input" autocomplete="off" spellcheck="false"
+                   placeholder="http://localhost:8888"
+                   @bind="WebVm.SearxngUrl" @bind:event="oninput" />
+            <div class="ss-hint">@LocHtml.Format(UiStrings.WebSearch_SearxngHint)</div>
+        </div>
+    }
+
+    @if (WebVm.Provider != WebSearchProviderType.None)
+    {
+        <div>
+            <label class="ss-label" for="ws-max">@UiStrings.WebSearch_MaxResultsLabel</label>
+            <select id="ws-max" class="ss-input ws-narrow" @bind="WebVm.MaxResults">
+                @foreach (var count in WebVm.MaxResultsOptions)
+                {
+                    <option value="@count">@count</option>
+                }
+            </select>
+            <div class="ss-hint">@UiStrings.WebSearch_MaxResultsHint</div>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(WebVm.StatusMessage))
+    {
+        <div role="status" class="ws-status @(WebVm.IsSuccess ? "ws-ok" : "ws-error")">@WebVm.StatusMessage</div>
+    }
+</div>
+
+<div class="st-footer">
+    <button type="button" class="ss-btn" style="background: var(--ss-info);" disabled="@(!WebVm.CanTest)"
+            title="@UiStrings.WebSearch_TestTitle"
+            @onclick="WebVm.TestAsync">
+        @(WebVm.IsTesting ? UiStrings.WebSearch_Testing : UiStrings.WebSearch_Test)
+    </button>
+    <div style="display: flex; gap: 8px;">
+        <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
+        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">@UiStrings.Common_Save</button>
+    </div>
+</div>
+
+<style>
+    .ss-label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 4px; color: var(--ss-text-2); }
+    .ss-input { width: 100%; padding: 7px; border: 1px solid var(--ss-border); border-radius: 4px; font-size: 13px; box-sizing: border-box; background: var(--ss-surface); margin-top: 3px; }
+    .ss-hint { font-size: 11.5px; color: var(--ss-text-muted); margin-top: 4px; line-height: 1.4; }
+    .ss-btn { padding: 7px 14px; color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: bold; white-space: nowrap; }
+    .ss-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ws-info { font-size: 12px; padding: 8px 10px; border-radius: 4px; line-height: 1.5; background: var(--ss-info-bg); color: var(--ss-info-text); border: 1px solid var(--ss-info-border); }
+    .ws-narrow { width: auto; min-width: 80px; }
+    .ws-link { margin-top: 6px; font-size: 12px; }
+    .ws-status { font-size: 12px; padding: 7px 10px; border-radius: 4px; word-break: break-word; }
+    .ws-ok { background: var(--ss-success-bg); color: var(--ss-success-text); border: 1px solid var(--ss-success-border); }
+    .ws-error { background: var(--ss-danger-bg); color: var(--ss-danger-text); border: 1px solid var(--ss-danger-border); }
+</style>
+
+@code {
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        WebVm.PropertyChanged += OnChanged;
+        await WebVm.LoadAsync();
+    }
+
+    private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
+
+    private async Task SaveAsync()
+    {
+        if (await WebVm.SaveAsync())
+            await OnClose.InvokeAsync();
+    }
+
+    public void Dispose() => WebVm.PropertyChanged -= OnChanged;
+}

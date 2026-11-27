@@ -32,4 +32,18 @@
   <data name="Report_SceneHeading" xml:space="preserve"><value>Slide {number}: {title}</value></data>
   <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Slide {number}</value></data>
   <data name="Llm_Http402" xml:space="preserve"><value>The account has no credit or no active billing plan. Check the billing settings with the provider (for example, add credit or a payment method).</value></data>
+  <data name="WebSearch_HttpError" xml:space="preserve"><value>{provider} reports an error (HTTP {status}). {hint}</value></data>
+  <data name="WebSearch_Http400" xml:space="preserve"><value>The search request was rejected.</value></data>
+  <data name="WebSearch_Http401" xml:space="preserve"><value>The API key was rejected. Check the key under Settings › Web search.</value></data>
+  <data name="WebSearch_Http404" xml:space="preserve"><value>The address was not found. Check the address of the search provider.</value></data>
+  <data name="WebSearch_Http408" xml:space="preserve"><value>The search provider did not respond in time. Try again later.</value></data>
+  <data name="WebSearch_Http429" xml:space="preserve"><value>Too many requests in a short time. Wait a moment and try again.</value></data>
+  <data name="WebSearch_Http432" xml:space="preserve"><value>The plan's quota for this month is used up. It resets on the first day of the month; until then no searches are possible (or change the plan with the provider).</value></data>
+  <data name="WebSearch_Http433" xml:space="preserve"><value>The pay-as-you-go spending limit you set has been reached. Raise the limit with the provider or wait until next month.</value></data>
+  <data name="WebSearch_Http5xx" xml:space="preserve"><value>The search provider is currently down or overloaded. Try again in a few minutes.</value></data>
+  <data name="WebSearch_HttpOther" xml:space="preserve"><value>The search provider did not answer the request.</value></data>
+  <data name="WebSearch_NotReachable" xml:space="preserve"><value>{provider} cannot be reached. Check the internet connection or address ({error}).</value></data>
+  <data name="WebSearch_Timeout" xml:space="preserve"><value>{provider} did not respond within {seconds} seconds. Try again later.</value></data>
+  <data name="WebSearch_UnexpectedResponse" xml:space="preserve"><value>{provider} returned an unexpected response.</value></data>
+  <data name="WebSearch_NotConfigured" xml:space="preserve"><value>No search provider is set up. Choose a provider under Settings › Web search.</value></data>
 </root>

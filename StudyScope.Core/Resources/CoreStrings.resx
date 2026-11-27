@@ -32,4 +32,18 @@
   <data name="Report_SceneHeading" xml:space="preserve"><value>Folie {number}: {title}</value><comment>Überschrift eines Sprechtexts je Folie in Exporten</comment></data>
   <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Folie {number}</value><comment>Wie Report_SceneHeading, wenn die Folie keinen Titel hat</comment></data>
   <data name="Llm_Http402" xml:space="preserve"><value>Das Guthaben bzw. der Zahlungsplan des Kontos reicht nicht aus. Bitte die Abrechnung beim Anbieter prüfen (z. B. Guthaben aufladen oder Zahlungsart hinterlegen).</value><comment>HTTP 402 Payment Required</comment></data>
+  <data name="WebSearch_HttpError" xml:space="preserve"><value>{provider} meldet einen Fehler (HTTP {status}). {hint}</value><comment>Websuche; {provider} = Name des Suchdienstes, {hint} = WebSearch_Http*</comment></data>
+  <data name="WebSearch_Http400" xml:space="preserve"><value>Die Suchanfrage wurde abgelehnt.</value></data>
+  <data name="WebSearch_Http401" xml:space="preserve"><value>Der API-Schlüssel wurde abgelehnt. Bitte den Schlüssel unter Einstellungen › Websuche prüfen.</value></data>
+  <data name="WebSearch_Http404" xml:space="preserve"><value>Die Adresse wurde nicht gefunden. Bitte die Adresse des Suchdienstes prüfen.</value></data>
+  <data name="WebSearch_Http408" xml:space="preserve"><value>Der Suchdienst hat nicht rechtzeitig geantwortet. Bitte später erneut versuchen.</value></data>
+  <data name="WebSearch_Http429" xml:space="preserve"><value>Zu viele Anfragen in kurzer Zeit. Bitte kurz warten und erneut versuchen.</value></data>
+  <data name="WebSearch_Http432" xml:space="preserve"><value>Das Kontingent des Tarifs ist für diesen Monat aufgebraucht. Es wird am Monatsersten zurückgesetzt; bis dahin sind keine Suchen möglich (oder den Tarif beim Anbieter ändern).</value></data>
+  <data name="WebSearch_Http433" xml:space="preserve"><value>Die selbst festgelegte Ausgabengrenze für Pay-as-you-go ist erreicht. Bitte die Grenze beim Anbieter anheben oder bis zum nächsten Monat warten.</value></data>
+  <data name="WebSearch_Http5xx" xml:space="preserve"><value>Der Suchdienst ist gerade gestört oder überlastet. Bitte in einigen Minuten erneut versuchen.</value></data>
+  <data name="WebSearch_HttpOther" xml:space="preserve"><value>Der Suchdienst hat die Anfrage nicht beantwortet.</value></data>
+  <data name="WebSearch_NotReachable" xml:space="preserve"><value>{provider} ist nicht erreichbar. Bitte Internetverbindung bzw. Adresse prüfen ({error}).</value></data>
+  <data name="WebSearch_Timeout" xml:space="preserve"><value>{provider} hat nicht innerhalb von {seconds} Sekunden geantwortet. Bitte später erneut versuchen.</value></data>
+  <data name="WebSearch_UnexpectedResponse" xml:space="preserve"><value>{provider} hat eine unerwartete Antwort geliefert.</value></data>
+  <data name="WebSearch_NotConfigured" xml:space="preserve"><value>Es ist kein Suchdienst eingerichtet. Bitte unter Einstellungen › Websuche einen Dienst auswählen.</value></data>
 </root>

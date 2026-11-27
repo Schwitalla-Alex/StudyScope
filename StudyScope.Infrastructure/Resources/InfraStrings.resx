@@ -64,4 +64,8 @@
   <data name="Wav_NoData" xml:space="preserve"><value>Die WAV-Daten enthalten keinen Audioteil.</value></data>
   <data name="Wav_UnsupportedBits" xml:space="preserve"><value>Nicht unterstützte Bittiefe ({bits} Bit).</value></data>
   <data name="Wav_FormatMismatch" xml:space="preserve"><value>Die Audioteile haben unterschiedliche Formate ({rate} Hz/{channels} Kanal vs. {otherRate} Hz/{otherChannels} Kanal).</value></data>
+  <data name="WebSearch_TavilyNoKey" xml:space="preserve"><value>Für Tavily fehlt der API-Schlüssel. Bitte unter Einstellungen › Websuche eintragen.</value></data>
+  <data name="WebSearch_SearxngInvalidUrl" xml:space="preserve"><value>Die Adresse der SearXNG-Instanz ist ungültig. Erlaubt sind http- und https-Adressen, z. B. http://localhost:8888.</value></data>
+  <data name="WebSearch_SearxngJsonDisabled" xml:space="preserve"><value>Die SearXNG-Instanz lehnt Anfragen im JSON-Format ab (HTTP 403). In der Instanz muss das JSON-Format freigeschaltet sein (search › formats: json in settings.yml).</value><comment>„search › formats: json“ und settings.yml nicht übersetzen</comment></data>
+  <data name="WebSearch_SearxngNoJson" xml:space="preserve"><value>Die SearXNG-Instanz hat kein JSON geliefert. Bitte die Adresse prüfen und ob das JSON-Format in der Instanz freigeschaltet ist.</value></data>
 </root>

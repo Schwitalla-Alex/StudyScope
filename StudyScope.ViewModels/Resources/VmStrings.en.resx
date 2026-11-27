@@ -425,4 +425,11 @@
   <data name="Settings_NumberedLabel" xml:space="preserve"><value>{number}. {label}</value></data>
   <data name="OutputLanguage_Saved" xml:space="preserve"><value>✓ Saved</value></data>
   <data name="OutputLanguage_SaveFailed" xml:space="preserve"><value>The language could not be saved: {error}</value></data>
+  <data name="Menu_SettingsWebSearch" xml:space="preserve"><value>Web search</value></data>
+  <data name="WebSearch_ProviderNone" xml:space="preserve"><value>No search provider</value></data>
+  <data name="WebSearch_TestOk" xml:space="preserve"><value>✓ Connection to {provider} works ({count, plural, one {# result} other {# results}} for “StudyScope”).</value></data>
+  <data name="WebSearch_TestFailed" xml:space="preserve"><value>The test failed: {error}</value></data>
+  <data name="WebSearch_Saved" xml:space="preserve"><value>✓ Web search settings saved.</value></data>
+  <data name="WebSearch_KeyMissing" xml:space="preserve"><value>Enter the Tavily API key.</value></data>
+  <data name="WebSearch_UrlInvalid" xml:space="preserve"><value>Enter a valid address of the SearXNG instance (http or https, for example http://localhost:8888).</value></data>
 </root>

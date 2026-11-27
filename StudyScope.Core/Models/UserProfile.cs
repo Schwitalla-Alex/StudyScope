@@ -23,4 +23,10 @@ public class UserProfile
     /// eingestellt, dann gilt die globale Einstellung.
     /// </summary>
     public string? OutputLanguage { get; set; }
+
+    /// <summary>Websuche im Chat eingeschaltet (Standard aus; nur nach bestätigtem Hinweis).</summary>
+    public bool WebSearchEnabled { get; set; }
+
+    /// <summary>Suchdienst, für den der Hinweis zur Websuche bestätigt wurde (z. B. „Tavily“); null = noch nie.</summary>
+    public string? WebSearchNoticeAcceptedFor { get; set; }
 }

@@ -41,6 +41,12 @@ class Program
 
         appBuilder.Services.AddSingleton<IFileOpenerService, FileOpenerService>();
         appBuilder.Services.AddSingleton<IExternalLinkOpener, ExternalLinkOpener>();
+
+        // Websuche (nur nach Einschalten je Profil): eigener HttpClient, Zeitlimit je Anfrage im Dienst (15 s)
+        appBuilder.Services.AddSingleton<IWebSearchService>(sp =>
+            new WebSearchDispatcher(sp.GetRequiredService<IStorageService>(), new HttpClient { Timeout = TimeSpan.FromSeconds(60) }));
+        appBuilder.Services.AddSingleton<WebSearchSettingsViewModel>(sp => new WebSearchSettingsViewModel(
+            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IWebSearchService>(), sp.GetRequiredService<IExternalLinkOpener>()));
         appBuilder.Services.AddSingleton<IFlashcardService, FlashcardService>();
         appBuilder.Services.AddSingleton<IMindmapService>(sp => new MindmapService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IPresentationService>(sp => new PresentationService(sp.GetRequiredService<ILlmService>()));

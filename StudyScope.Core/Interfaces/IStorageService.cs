@@ -52,4 +52,19 @@ public interface IStorageService
 
     /// <summary>Speichert die Oberflächen-Einstellungen in <c>config.json</c>, ohne die übrigen Einträge zu verändern.</summary>
     Task SaveUiSettingsAsync(UiSettings settings);
+
+    /// <summary>Einstellungen der Websuche (global in <c>config.json</c>; Schlüssel im Speicher Klartext, gespeichert verschlüsselt).</summary>
+    Task<WebSearchSettings> LoadWebSearchSettingsAsync();
+
+    /// <summary>Speichert die Einstellungen der Websuche, ohne andere Einträge in <c>config.json</c> zu verändern.</summary>
+    Task SaveWebSearchSettingsAsync(WebSearchSettings settings);
+
+    /// <summary>
+    /// Websuche des Profils (eingeschaltet, Hinweis bestätigt). Ohne Eintrag: aus. Es gibt bewusst keinen globalen
+    /// Rückfall – ein neues Profil sucht nie im Internet, bevor es dort selbst eingeschaltet wurde.
+    /// </summary>
+    Task<WebSearchProfileState> LoadWebSearchStateAsync(string profileName);
+
+    /// <summary>Speichert die Websuche des Profils sofort (nur im Profil).</summary>
+    Task SaveWebSearchStateAsync(string profileName, WebSearchProfileState state);
 }
