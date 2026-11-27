@@ -41,19 +41,19 @@ public class FakeLlmService : ILlmService
         // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
         {
-            return Task.FromResult(FakeMindmapResponse.Create(chunks));
+            return Task.FromResult(FakeMindmapResponse.Create(chunks, FakeLanguage.IsEnglish(prompt)));
         }
 
         // Präsentation angefordert (ebenfalls vor dem Karteikarten-Fall)
         if (FakePresentationResponse.IsPresentationPrompt(prompt))
         {
-            return Task.FromResult(FakePresentationResponse.Create(chunks));
+            return Task.FromResult(FakePresentationResponse.Create(chunks, FakeLanguage.IsEnglish(prompt)));
         }
 
         // Quiz: Themenvorschläge bzw. Fragen (ebenfalls vor dem Karteikarten-Fall)
         if (FakeQuizResponse.IsTopicPrompt(prompt))
         {
-            return Task.FromResult(FakeQuizResponse.CreateTopics(chunks));
+            return Task.FromResult(FakeQuizResponse.CreateTopics(chunks, FakeLanguage.IsEnglish(prompt)));
         }
 
         if (FakeQuizResponse.IsQuestionPrompt(prompt))
@@ -61,35 +61,13 @@ public class FakeLlmService : ILlmService
             return Task.FromResult(FakeQuizResponse.CreateQuestions(prompt, chunks));
         }
 
-        // 1. Fall: Generierung von Karteikarten angefordert -> Valides JSON zurückgeben
+        // 1. Fall: Karteikarten (Prompt mit „Lernkarteikarten“ bzw. „JSON“), 2. Fall: normaler Chat
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
             prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
         {
-            var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";
-            var preview = snippet.Substring(0, Math.Min(40, snippet.Length));
-
-            var json = $$"""
-        [
-          {
-            "question": "Was besagt der Textauszug?",
-            "answer": "Der Auszug lautet auszugsweise: '{{preview}}...'"
-          },
-          {
-            "question": "Wie viele Textstellen wurden übergeben?",
-            "answer": "Es wurden genau {{chunks.Count}} Textstelle(n) analysiert."
-          }
-        ]
-        """;
-            return Task.FromResult(json);
+            return Task.FromResult(FakeLanguage.Flashcards(prompt, chunks));
         }
 
-        // 2. Fall: Normaler Chatverlauf
-        if (!chunks.Any())
-        {
-            return Task.FromResult($"[Testmodus] Keine Dokumentinhalte aktiv. Ihre Frage war: '{prompt}'");
-        }
-
-        var firstChunkPreview = chunks.First().Substring(0, Math.Min(50, chunks.First().Length));
-        return Task.FromResult($"[Testmodus] Antwort basierend auf {chunks.Count} Textstelle(n).\nFrage: {prompt}\nAuszug: {firstChunkPreview}...");
+        return Task.FromResult(FakeLanguage.Chat(prompt, chunks));
     }
 }

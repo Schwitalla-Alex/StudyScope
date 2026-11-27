@@ -72,6 +72,8 @@ class Program
         appBuilder.Services.AddSingleton<LayoutViewModel>();
         appBuilder.Services.AddSingleton<StudyScope.ViewModels.Menu.AppMenuViewModel>();
         appBuilder.Services.AddSingleton<IUiLanguageService>(languageService);
+        // Sprache der KI-Ergebnisse je Profil (Profil → global → wie Oberfläche), an alle erzeugenden ViewModels
+        appBuilder.Services.AddSingleton<IOutputLanguageProvider>(sp => new OutputLanguageProvider(sp.GetRequiredService<IStorageService>()));
         appBuilder.Services.AddSingleton<AppearanceViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
@@ -79,14 +81,16 @@ class Program
             sp.GetRequiredService<ILlmService>(),
             sp.GetRequiredService<IDocumentService>(),
             sp.GetRequiredService<DocumentListViewModel>()
-        ));
+        ) { OutputLanguageProvider = sp.GetRequiredService<IOutputLanguageProvider>() });
 
         appBuilder.Services.AddSingleton<SettingsViewModel>();
         appBuilder.Services.AddSingleton<FlashcardViewModel>();
         appBuilder.Services.AddSingleton<MindmapViewModel>();
         appBuilder.Services.AddSingleton<PresentationViewModel>();
-        appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>()));
-        appBuilder.Services.AddSingleton<DataTableViewModel>(sp => new DataTableViewModel(sp.GetRequiredService<IDataTableService>(), sp.GetRequiredService<IDocumentService>()));
+        appBuilder.Services.AddSingleton<QuizViewModel>(sp => new QuizViewModel(sp.GetRequiredService<IQuizService>(), sp.GetRequiredService<IDocumentService>(),
+            outputLanguage: sp.GetRequiredService<IOutputLanguageProvider>()));
+        appBuilder.Services.AddSingleton<DataTableViewModel>(sp => new DataTableViewModel(sp.GetRequiredService<IDataTableService>(), sp.GetRequiredService<IDocumentService>(),
+            sp.GetRequiredService<IOutputLanguageProvider>()));
         appBuilder.Services.AddSingleton<AudioViewModel>(sp => new AudioViewModel(
             sp.GetRequiredService<IAudioScriptService>(),
             sp.GetRequiredService<IDocumentService>(),
@@ -94,7 +98,8 @@ class Program
             sp.GetServices<ITextToSpeechService>(),
             sp.GetRequiredService<IAudioFilePlayer>(),
             sp.GetRequiredService<PlaybackCoordinator>(),
-            sp.GetService<IAudioTranscoder>()));
+            sp.GetService<IAudioTranscoder>(),
+            sp.GetRequiredService<IOutputLanguageProvider>()));
         appBuilder.Services.AddSingleton<VideoViewModel>(sp => new VideoViewModel(
             sp.GetRequiredService<IVideoScriptService>(),
             sp.GetRequiredService<IPresentationService>(),
@@ -104,7 +109,8 @@ class Program
             sp.GetRequiredService<IAudioFilePlayer>(),
             sp.GetRequiredService<PlaybackCoordinator>(),
             transcoder: sp.GetService<IAudioTranscoder>(),
-            mp4: sp.GetService<IVideoMp4Exporter>()));
+            mp4: sp.GetService<IVideoMp4Exporter>(),
+            outputLanguage: sp.GetRequiredService<IOutputLanguageProvider>()));
         appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
             sp.GetRequiredService<IStorageService>(),
             sp.GetServices<ITextToSpeechService>()));
@@ -118,7 +124,8 @@ class Program
             sp.GetRequiredService<IDataTableService>(),
             sp.GetRequiredService<IAudioScriptService>(),
             sp.GetRequiredService<IVideoScriptService>(),
-            sp.GetService<IAudioTranscoder>()));
+            sp.GetService<IAudioTranscoder>(),
+            sp.GetRequiredService<IOutputLanguageProvider>()));
 
         // Root-Komponente setzen
         appBuilder.RootComponents.Add<App>("#app");

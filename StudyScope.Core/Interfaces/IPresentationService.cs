@@ -13,7 +13,7 @@ public interface IPresentationService
     /// <param name="fallbackTitle">Titel, falls die KI keinen liefert.</param>
     /// <param name="slideCount">Gewünschte Anzahl Inhaltsfolien (ohne Titelfolie).</param>
     Task<PresentationGenerationResult> GenerateFromDocumentsAsync(
-        IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, CancellationToken cancellationToken = default);
+        IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, string? outputLanguage = null, CancellationToken cancellationToken = default);
 
     /// <summary>Leitet eine Präsentation aus einer Mindmap ab (ohne KI-Aufruf).</summary>
     PresentationDocument CreateFromMindmap(MindmapDocument mindmap);

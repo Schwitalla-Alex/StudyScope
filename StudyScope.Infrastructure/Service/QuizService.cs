@@ -4,6 +4,8 @@ using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -56,7 +58,7 @@ public class QuizService : IQuizService
 
     // ---------------- Themenvorschläge ----------------
 
-    public async Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
+    public async Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, string? outputLanguage = null, CancellationToken cancellationToken = default)
     {
         var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
@@ -71,6 +73,7 @@ public class QuizService : IQuizService
             "- 3 bis 8 Themen, die sich inhaltlich klar unterscheiden.\n" +
             "- Nur Themen, zu denen die Auszüge genug Inhalt für mehrere Quizfragen liefern. Sprache: Deutsch.";
 
+        prompt = ResultLanguage.ApplyToPrompt(prompt, ResultLanguage.Resolve(outputLanguage, chunks));
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
         var parsed = LenientJson.Analyze(raw, ParseTopicSuggestions);
 
@@ -121,6 +124,7 @@ public class QuizService : IQuizService
         int count,
         IReadOnlyCollection<QuizQuestionType> allowedTypes,
         int batchIndex,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default)
     {
         var chunks = SelectChunksForTopic(topicChunks, topic, batchIndex);
@@ -129,11 +133,25 @@ public class QuizService : IQuizService
 
         var types = allowedTypes.Count > 0 ? allowedTypes : new[] { QuizQuestionType.SingleChoice };
         var number = Math.Clamp(count, 1, BatchSize);
-        var prompt = BuildQuestionPrompt(topic, number, types);
+        // Vorhandene Fragen des Themas geben die Sprache vor (keine gemischten Themen aus Versehen)
+        var existingLanguage = topic.Questions.Select(q => q.Language).FirstOrDefault(l => !string.IsNullOrWhiteSpace(l));
+        var language = ResultLanguage.FromCode(existingLanguage) ?? ResultLanguage.Resolve(outputLanguage, chunks);
+        var prompt = ResultLanguage.ApplyToPrompt(BuildQuestionPrompt(topic, number, types), language);
 
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
         var existing = topic.Questions.Select(q => q.Text);
         var parsed = LenientJson.Analyze(raw, element => ParseQuestions(element, types, existing));
+        if (parsed.Value != null)
+        {
+            var trueText = ResultLanguage.Content(language, () => ContentStrings.Content_True);
+            var falseText = ResultLanguage.Content(language, () => ContentStrings.Content_False);
+            foreach (var question in parsed.Value)
+            {
+                question.Language = ResultLanguage.Code(language);
+                if (question.Type == QuizQuestionType.TrueFalse)
+                    question.Options = new List<string> { trueText, falseText };
+            }
+        }
 
         return new QuizQuestionGenerationResult
         {

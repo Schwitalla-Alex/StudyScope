@@ -19,6 +19,7 @@ public interface IAudioScriptService
         AudioScriptLength length,
         string topic,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default);
 
     Task<AudioLibrary> LoadLibraryAsync(string profileName);

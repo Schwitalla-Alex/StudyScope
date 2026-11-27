@@ -10,7 +10,7 @@ public interface IQuizService
     /// <summary>Höchstzahl Fragen je KI-Aufruf (größere Mengen werden in mehreren Paketen erzeugt).</summary>
     int BatchSize { get; }
 
-    Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default);
+    Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, string? outputLanguage = null, CancellationToken cancellationToken = default);
 
     /// <param name="topic">Thema; vorhandene Fragen werden der KI genannt, damit sie sich nicht wiederholen.</param>
     /// <param name="topicChunks">Textstellen der Dokumente des Themas.</param>
@@ -23,6 +23,7 @@ public interface IQuizService
         int count,
         IReadOnlyCollection<QuizQuestionType> allowedTypes,
         int batchIndex,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Lädt Themen und Verlauf; liefert eine leere Bibliothek, wenn noch nichts gespeichert ist.</summary>

@@ -328,8 +328,8 @@ public class MindmapViewModelTests
         var captured = CancellationToken.None;
 
         var service = new Mock<IMindmapService>();
-        service.Setup(s => s.GenerateMindmapAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
-               .Returns<IEnumerable<string>, string, CancellationToken>((_, _, ct) =>
+        service.Setup(s => s.GenerateMindmapAsync(It.IsAny<IEnumerable<string>>(), It.IsAny<string>(), It.IsAny<string?>(), It.IsAny<CancellationToken>()))
+               .Returns<IEnumerable<string>, string, string?, CancellationToken>((_, _, _, ct) =>
                {
                    captured = ct;
                    if (cancelCompletesTask)
@@ -413,7 +413,7 @@ public class MindmapViewModelTests
         public string? LastRootTitle { get; private set; }
         public Dictionary<string, MindmapDocument> Saved { get; } = new();
 
-        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default)
+        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, string? outputLanguage = null, CancellationToken cancellationToken = default)
         {
             GenerateCalls++;
             LastRootTitle = rootTitle;

@@ -28,6 +28,12 @@ public class MindmapNode
 /// </summary>
 public class MindmapDocument
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public MindmapNode Root { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.Now;
 
@@ -41,6 +47,12 @@ public class MindmapDocument
 /// </summary>
 public class MindmapGenerationResult
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; init; }
+
     public MindmapNode? Root { get; init; }
     public string RawResponse { get; init; } = string.Empty;
     public bool IsSuccess => Root != null;

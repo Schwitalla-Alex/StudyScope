@@ -40,7 +40,7 @@ public class MindmapService : IMindmapService
         _baseDirectory = baseDirectory ?? AppPaths.UserDataDirectory;
     }
 
-    public async Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default)
+    public async Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, string? outputLanguage = null, CancellationToken cancellationToken = default)
     {
         var chunks = ChunkSelector.SelectRepresentative(contextChunks, MaxChunks);
         if (chunks.Count == 0)
@@ -62,11 +62,16 @@ public class MindmapService : IMindmapService
             "- Insgesamt höchstens 40 Themen, damit die Antwort vollständig bleibt.\n" +
             "- Nur Inhalte verwenden, die in den Auszügen vorkommen. Sprache: Deutsch.";
 
+        var language = ResultLanguage.Resolve(outputLanguage, chunks);
+        prompt = ResultLanguage.ApplyToPrompt(prompt, language);
+
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
-        var parsed = AnalyzeResponse(raw, rootTitle);
+        var fallback = string.IsNullOrWhiteSpace(rootTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_MindmapTitle) : rootTitle;
+        var parsed = AnalyzeResponse(raw, fallback);
         return new MindmapGenerationResult
         {
             Root = parsed.Root,
+            Language = ResultLanguage.Code(language),
             RawResponse = raw ?? string.Empty,
             WasRepaired = parsed.WasRepaired,
             FailureReason = parsed.FailureReason

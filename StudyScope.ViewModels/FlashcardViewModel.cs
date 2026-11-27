@@ -149,11 +149,31 @@ public class FlashcardViewModel : INotifyPropertyChanged
     public int NewCount => Flashcards.Count(c => c.Status == FlashcardStatus.New);
     public int KnownCount => Flashcards.Count(c => c.Status == FlashcardStatus.Known);
 
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
+    /// <summary>Häufigste Sprache der Karten (gleich oft oder ohne Angabe: null).</summary>
+    public static string? DominantLanguage(IEnumerable<string?> languages)
+    {
+        var ranked = languages.Where(l => !string.IsNullOrWhiteSpace(l))
+            .GroupBy(l => l!, StringComparer.OrdinalIgnoreCase)
+            .Select(g => (Language: g.Key, Count: g.Count()))
+            .OrderByDescending(g => g.Count)
+            .ToList();
+        if (ranked.Count == 0 || (ranked.Count > 1 && ranked[0].Count == ranked[1].Count)) return null;
+        return ranked[0].Language;
+    }
+
     public FlashcardViewModel(
         IFlashcardService flashcardService,
         IDocumentService pdfService,
-        IStorageService storageService)
+        IStorageService storageService,
+        IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _flashcardService = flashcardService;
         _pdfService = pdfService;
         _storageService = storageService;
@@ -308,7 +328,10 @@ public class FlashcardViewModel : INotifyPropertyChanged
                 allChunks.AddRange(chunks);
             }
 
-            var generatedCards = await _flashcardService.GenerateFlashcardsAsync(allChunks, cardCount);
+            // Hinzufügen: Sprache des vorhandenen Stapels beibehalten (keine gemischten Stapel aus Versehen)
+            var deckLanguage = mode == FlashcardGenerationMode.Append ? DominantLanguage(Flashcards.Select(c => c.Language)) : null;
+            var setting = deckLanguage ?? await OutputLanguageSettingAsync(profileName);
+            var generatedCards = await _flashcardService.GenerateFlashcardsAsync(allChunks, cardCount, setting);
 
             // Keine verwertbare Antwort: vorhandene Karten (samt Lernstand) nicht durch einen leeren Stapel ersetzen
             if (generatedCards == null || generatedCards.Count == 0)

@@ -56,18 +56,22 @@ public partial class AudioScriptService : IAudioScriptService
         AudioScriptLength length,
         string topic,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default)
     {
         var selected = SelectChunks(chunks.ToList(), topic, length);
         if (selected.Count == 0)
             return new AudioScriptResult { FailureReason = MindmapFailureReason.NoContent };
 
-        var prompt = BuildPrompt(format, length, topic);
+        var language = ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
+        var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(format, length, topic), language);
         var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(c => c.Text), cancellationToken);
-        var result = AnalyzeResponse(raw, format, fallbackTitle);
+        var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_AudioTitle) : fallbackTitle;
+        var result = AnalyzeResponse(raw, format, fallback);
 
         if (result.Summary != null)
         {
+            result.Summary.Language = ResultLanguage.Code(language);
             result.Summary.Format = format;
             result.Summary.Length = length;
             result.Summary.Topic = topic?.Trim() ?? string.Empty;

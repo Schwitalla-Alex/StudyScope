@@ -169,40 +169,21 @@ public class LlmServiceDispatcher : ILlmService
 
         // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
         if (FakeMindmapResponse.IsMindmapPrompt(prompt))
-            return FakeMindmapResponse.Create(chunks);
+            return FakeMindmapResponse.Create(chunks, FakeLanguage.IsEnglish(prompt));
 
         if (FakePresentationResponse.IsPresentationPrompt(prompt))
-            return FakePresentationResponse.Create(chunks);
+            return FakePresentationResponse.Create(chunks, FakeLanguage.IsEnglish(prompt));
 
         if (FakeQuizResponse.IsTopicPrompt(prompt))
-            return FakeQuizResponse.CreateTopics(chunks);
+            return FakeQuizResponse.CreateTopics(chunks, FakeLanguage.IsEnglish(prompt));
 
         if (FakeQuizResponse.IsQuestionPrompt(prompt))
             return FakeQuizResponse.CreateQuestions(prompt, chunks);
 
         if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
-        {
-            var snippet = chunks.FirstOrDefault() ?? "Beispielinhalt";
-            var preview = snippet.Substring(0, Math.Min(40, snippet.Length));
-            return $$"""
-            [
-              {
-                "question": "Was besagt der Textauszug?",
-                "answer": "Der Auszug lautet auszugsweise: '{{preview}}...'"
-              },
-              {
-                "question": "Wie viele Textstellen wurden analysiert?",
-                "answer": "Es wurden genau {{chunks.Count}} Textstelle(n) analysiert."
-              }
-            ]
-            """;
-        }
+            return FakeLanguage.Flashcards(prompt, chunks);
 
-        if (!chunks.Any())
-            return $"[Testmodus] Keine Dokumentinhalte aktiv. Ihre Frage war: '{prompt}'";
-
-        var firstPreview = chunks.First().Substring(0, Math.Min(50, chunks.First().Length));
-        return $"[Testmodus] Antwort basierend auf {chunks.Count} Textstelle(n).\nFrage: {prompt}\nAuszug: {firstPreview}...";
+        return FakeLanguage.Chat(prompt, chunks);
     }
 
     private async Task<string> AskOllamaAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken)
@@ -210,7 +191,7 @@ public class LlmServiceDispatcher : ILlmService
         var url = $"{config.LocalEndpointUrl.TrimEnd('/')}/api/chat";
         var contextText = chunks.Any() ? string.Join("\n\n---\n\n", chunks) : string.Empty;
 
-        var systemPrompt = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPrompt;
+        var systemPrompt = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPromptFor(OutputLanguage.TryParse(prompt));
 
         var fullUserMessage = string.IsNullOrWhiteSpace(contextText)
             ? prompt
@@ -273,6 +254,25 @@ public class LlmServiceDispatcher : ILlmService
         "keine Schritte, Zahlen, Namen oder Adressen, die nicht in den Auszügen stehen. " +
         "Ergänzendes Allgemeinwissen nur, wenn ausdrücklich danach gefragt wird, und dann deutlich als solches kennzeichnen. " +
         "Antworte verständlich als Fließtext auf Deutsch.";
+
+    /// <summary>
+    /// Systemanweisung des Chats in der Ergebnissprache: Ohne bzw. mit deutscher Sprachzeile genau <see cref="RagSystemPrompt"/>,
+    /// sonst dieselbe (deutsche) Anweisung mit dem Beispielsatz für „steht nicht in den Unterlagen“ und der Antwortsprache
+    /// in dieser Sprache. Der Chat hängt die Sprachzeile an die Frage (<see cref="OutputLanguage.PromptLine"/>).
+    /// </summary>
+    public static string RagSystemPromptFor(System.Globalization.CultureInfo? language)
+    {
+        if (language == null || language.TwoLetterISOLanguageName == UiLanguage.NeutralLanguage)
+            return RagSystemPrompt;
+
+        var notInDocuments = ResultLanguage.Content(language, () => ContentStrings.Content_ChatNotInDocuments);
+        return
+            "Du bist ein präziser Lern- und Studienassistent (StudyScope). Beantworte Fragen ausschließlich auf Grundlage der bereitgestellten Dokumentauszüge. " +
+            $"Steht die Antwort nicht in den Auszügen, sage das ausdrücklich (z. B. „{notInDocuments}“) und erfinde nichts – " +
+            "keine Schritte, Zahlen, Namen oder Adressen, die nicht in den Auszügen stehen. " +
+            "Ergänzendes Allgemeinwissen nur, wenn ausdrücklich danach gefragt wird, und dann deutlich als solches kennzeichnen. " +
+            $"Antworte verständlich als Fließtext. {OutputLanguage.PromptLine(language)}";
+    }
 
     /// <summary>Systemanweisung für strukturierte Antworten (Karteikarten, Mindmap, Quiz, Präsentation, Bericht).</summary>
     public const string JsonSystemPrompt =
@@ -374,7 +374,7 @@ public class LlmServiceDispatcher : ILlmService
         // Dynamischer System-Prompt: JSON nur verlangen, wenn es explizit gefordert wurde!
         var systemContent = useJsonMode ? JsonModeSystemPrompt
             : WantsJson(prompt) ? JsonSystemPrompt
-            : RagSystemPrompt;
+            : RagSystemPromptFor(OutputLanguage.TryParse(prompt));
 
         var requestBody = new Dictionary<string, object>
         {
@@ -476,7 +476,7 @@ public class LlmServiceDispatcher : ILlmService
             ? prompt
             : $"Kontext:\n{contextText}\n\nFrage: {prompt}";
 
-        var systemText = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPrompt;
+        var systemText = WantsJson(prompt) ? JsonSystemPrompt : RagSystemPromptFor(OutputLanguage.TryParse(prompt));
         var requestBody = new
         {
             system_instruction = new { parts = new[] { new { text = systemText } } },

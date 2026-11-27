@@ -21,7 +21,7 @@ public class FlashcardService : IFlashcardService
         _llmService = llmService;
     }
 
-    public async Task<List<Flashcard>> GenerateFlashcardsAsync(IEnumerable<string> contextChunks, int count = 5)
+    public async Task<List<Flashcard>> GenerateFlashcardsAsync(IEnumerable<string> contextChunks, int count = 5, string? outputLanguage = null)
     {
         var chunksList = contextChunks?.Where(c => !string.IsNullOrWhiteSpace(c)).ToList() ?? new List<string>();
         if (!chunksList.Any())
@@ -36,9 +36,15 @@ public class FlashcardService : IFlashcardService
             "Antworte AUSSCHLIESSLICH als gültiges JSON-Array von Objekten, ohne Einleitung, ohne Markdown-Formatierung und ohne Schlusssatz:\n" +
             "[{\"question\": \"Frage hier\", \"answer\": \"Antwort hier\"}]";
 
+        var language = ResultLanguage.Resolve(outputLanguage, limitedChunks);
+        instructionPrompt = ResultLanguage.ApplyToPrompt(instructionPrompt, language);
+
         var rawResponse = await _llmService.AskQuestionAsync(instructionPrompt, limitedChunks);
 
-        return ParseFlashcardsFromJson(rawResponse);
+        var cards = ParseFlashcardsFromJson(rawResponse);
+        foreach (var card in cards)
+            card.Language = ResultLanguage.Code(language);
+        return cards;
     }
 
     private static readonly string[] QuestionKeys = { "question", "frage", "q" };

@@ -60,6 +60,12 @@ public class VideoScene
 /// </summary>
 public class VideoDocument
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public const int MaxScenes = 60;
     public const int MaxNarrationLength = 3000;
 

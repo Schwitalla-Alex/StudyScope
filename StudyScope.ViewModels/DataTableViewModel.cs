@@ -32,8 +32,15 @@ public class DataTableViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public DataTableViewModel(IDataTableService dataTableService, IDocumentService documentService)
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
+    public DataTableViewModel(IDataTableService dataTableService, IDocumentService documentService, IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _dataTableService = dataTableService;
         _documentService = documentService;
     }
@@ -256,7 +263,7 @@ public class DataTableViewModel : INotifyPropertyChanged
                 : $"{DataTableTemplates.DisplayName(Template)}: {_profileName}";
             var columns = ParseColumns(CustomColumns);
 
-            var result = await _dataTableService.GenerateAsync(chunks, Template, CustomInstruction, columns, Topic, fallbackTitle, token);
+            var result = await _dataTableService.GenerateAsync(chunks, Template, CustomInstruction, columns, Topic, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.DataTable_Cancelled, isError: false);
@@ -343,7 +350,7 @@ public class DataTableViewModel : INotifyPropertyChanged
         {
             var chunks = await LoadChunksAsync(docs);
             var remaining = DataTableDocument.MaxRows - table.Rows.Count;
-            var result = await _dataTableService.GenerateMoreRowsAsync(table, chunks, remaining, token);
+            var result = await _dataTableService.GenerateMoreRowsAsync(table, chunks, remaining, await OutputLanguageSettingAsync(_profileName), token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.DataTable_AppendCancelled, isError: false);

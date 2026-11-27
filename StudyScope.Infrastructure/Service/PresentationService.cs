@@ -3,6 +3,8 @@ using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -39,7 +41,7 @@ public class PresentationService : IPresentationService
     // ---------------- Erzeugung per KI ----------------
 
     public async Task<PresentationGenerationResult> GenerateFromDocumentsAsync(
-        IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, CancellationToken cancellationToken = default)
+        IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, string? outputLanguage = null, CancellationToken cancellationToken = default)
     {
         var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
@@ -61,8 +63,14 @@ public class PresentationService : IPresentationService
             "- notes: 2 bis 3 Sätze, die der Vortragende zu der Folie sagt.\n" +
             "- Nur Inhalte verwenden, die in den Auszügen vorkommen. Sprache: Deutsch.";
 
+        var language = ResultLanguage.Resolve(outputLanguage, chunks);
+        prompt = ResultLanguage.ApplyToPrompt(prompt, language);
+
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
-        var parsed = AnalyzeResponse(raw, fallbackTitle);
+        var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_PresentationTitle) : fallbackTitle;
+        var parsed = AnalyzeResponse(raw, fallback);
+        if (parsed.Value != null)
+            parsed.Value.Language = ResultLanguage.Code(language);
 
         return new PresentationGenerationResult
         {
@@ -224,11 +232,15 @@ public class PresentationService : IPresentationService
     public PresentationDocument CreateFromMindmap(MindmapDocument mindmap)
     {
         var root = mindmap.Root;
+        // Folientexte in der Sprache der Mindmap (ältere Mindmaps ohne Angabe: Oberflächensprache)
+        var language = ResultLanguage.FromCode(mindmap.Language) ?? OutputLanguage.Neutral(System.Globalization.CultureInfo.CurrentUICulture)
+                       ?? System.Globalization.CultureInfo.GetCultureInfo(UiLanguage.NeutralLanguage);
         var presentation = new PresentationDocument
         {
             Title = root.Title,
             Origin = PresentationOrigin.Mindmap,
-            SourceDocuments = mindmap.SourceDocuments.ToList()
+            SourceDocuments = mindmap.SourceDocuments.ToList(),
+            Language = mindmap.Language
         };
 
         presentation.Slides.Add(new PresentationSlide
@@ -242,8 +254,9 @@ public class PresentationService : IPresentationService
         var branches = root.Children;
         if (branches.Count > 0)
         {
-            AddSlides(presentation, "Überblick", branches.Select(b => b.Title).ToList(),
-                "Die Präsentation behandelt folgende Themen: " + string.Join(", ", branches.Select(b => b.Title)) + ".");
+            var topics = string.Join(", ", branches.Select(b => b.Title));
+            AddSlides(presentation, ResultLanguage.Content(language, () => ContentStrings.Content_Overview), branches.Select(b => b.Title).ToList(),
+                ResultLanguage.Content(language, () => Loc.Format(ContentStrings.Content_OverviewNotes, ("topics", topics))));
         }
 
         foreach (var branch in branches)
@@ -261,7 +274,7 @@ public class PresentationService : IPresentationService
 
         if (branches.Count > 1)
         {
-            AddSlides(presentation, "Zusammenfassung",
+            AddSlides(presentation, ResultLanguage.Content(language, () => ContentStrings.Content_Summary),
                 branches.Select(b => string.IsNullOrWhiteSpace(b.Summary) ? b.Title : $"{b.Title}: {b.Summary}").ToList(),
                 root.Summary);
         }

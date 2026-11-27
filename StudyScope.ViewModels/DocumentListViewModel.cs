@@ -99,11 +99,11 @@ public class DocumentListViewModel : INotifyPropertyChanged
     public int ActiveDocumentCount => Documents.Count(d => d.IsSelected && !d.IsMissing);
 
     /// <summary>
-    /// Modellname des aktiven Profils für die Statusleiste neu lesen. <paramref name="announceProfile"/> = false nach
-    /// einem Sprachwechsel: Die Reiter verstehen eine Meldung zu <see cref="CurrentProfile"/> als Profilwechsel und
-    /// würden neu laden (eine laufende Wiedergabe endete).
+    /// Modellname des aktiven Profils für die Statusleiste neu lesen (nach Start, Profilwechsel, Speichern der
+    /// KI-Einstellungen, Sprachwechsel). Meldet bewusst nur <see cref="CurrentAiModelDisplayName"/>: Eine Meldung zu
+    /// <see cref="CurrentProfile"/> verstehen die Reiter als Profilwechsel, laden neu und beenden eine laufende Wiedergabe.
     /// </summary>
-    public async Task RefreshCurrentAiModelAsync(bool announceProfile = true)
+    public async Task RefreshCurrentAiModelAsync()
     {
         var aiConfig = await _storageService.LoadAiConfigForProfileAsync(CurrentProfile);
 
@@ -126,8 +126,6 @@ public class DocumentListViewModel : INotifyPropertyChanged
         }
 
         OnPropertyChanged(nameof(CurrentAiModelDisplayName));
-        if (announceProfile)
-            OnPropertyChanged(nameof(CurrentProfile));
     }
 
     public async Task InitializeAsync()
@@ -153,6 +151,10 @@ public class DocumentListViewModel : INotifyPropertyChanged
         // 4. Dokumente und KI des aktiven Profils laden
         await LoadDocumentsAsync();
         await RefreshCurrentAiModelAsync();
+
+        // 5. Reiter, die vor dem Laden schon gezeichnet wurden, laden das Profil nach – auch wenn das zuletzt aktive
+        //    Profil dem Anfangswert entspricht und der Setzer daher nichts gemeldet hat (nur beim Start)
+        OnPropertyChanged(nameof(CurrentProfile));
     }
 
     public async Task SwitchProfileAsync(string newProfile)

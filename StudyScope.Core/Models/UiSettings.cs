@@ -34,5 +34,11 @@ public class UiSettings
     /// </summary>
     public string Language { get; set; } = Localization.UiLanguage.SystemSetting;
 
-    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme, Language = Language };
+    /// <summary>
+    /// Sprache der KI-Ergebnisse als Rückfall für Profile ohne eigene Einstellung („ui“, „documents“ oder Kulturname);
+    /// null = nicht eingestellt → „ui“. Maßgeblich ist die Einstellung im Profil.
+    /// </summary>
+    public string? OutputLanguage { get; set; }
+
+    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme, Language = Language, OutputLanguage = OutputLanguage };
 }

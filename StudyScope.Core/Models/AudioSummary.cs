@@ -35,6 +35,12 @@ public class AudioSegment
 /// <summary>Ein Audio-Beitrag (Sprechskript, optional mit erzeugter Audiodatei).</summary>
 public class AudioSummary
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public const int MaxSegments = 400;
     public const int MaxSegmentLength = 4000;
 

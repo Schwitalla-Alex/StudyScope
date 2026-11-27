@@ -16,27 +16,28 @@ public static class FakePresentationResponse
         prompt.Contains("Erstelle eine Präsentation", StringComparison.OrdinalIgnoreCase)
         && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
 
-    public static string Create(IReadOnlyList<string> chunks)
+    public static string Create(IReadOnlyList<string> chunks, bool english = false)
     {
+        var en = english;
         var slides = chunks
             .Take(4)
             .Select((chunk, i) => new
             {
-                title = $"Textstelle {i + 1}",
-                bullets = Sentences(chunk).Take(3).DefaultIfEmpty("Kein Text vorhanden").ToArray(),
-                notes = $"Im Testmodus wird hier Textstelle {i + 1} zusammengefasst."
+                title = FakeLanguage.T(en, $"Textstelle {i + 1}", $"Excerpt {i + 1}"),
+                bullets = Sentences(chunk).Take(3).DefaultIfEmpty(FakeLanguage.T(en, "Kein Text vorhanden", "No text available")).ToArray(),
+                notes = FakeLanguage.T(en, $"Im Testmodus wird hier Textstelle {i + 1} zusammengefasst.", $"In test mode, excerpt {i + 1} is summarised here.")
             })
             .Append(new
             {
-                title = "Fazit",
-                bullets = new[] { $"{chunks.Count} Textstelle(n) ausgewertet", "Für echte Inhalte in den Einstellungen eine KI wählen" },
-                notes = "Dies ist eine Beispiel-Präsentation der Fake-KI."
+                title = FakeLanguage.T(en, "Fazit", "Conclusion"),
+                bullets = new[] { FakeLanguage.T(en, $"{chunks.Count} Textstelle(n) ausgewertet", $"{chunks.Count} excerpt(s) analysed"), FakeLanguage.T(en, "Für echte Inhalte in den Einstellungen eine KI wählen", "Choose an AI in the settings for real content") },
+                notes = FakeLanguage.T(en, "Dies ist eine Beispiel-Präsentation der Fake-KI.", "This is a sample presentation from the fake AI.")
             })
             .ToArray();
 
         var presentation = new[]
         {
-            new { title = "[Testmodus] Präsentation", subtitle = "Beispiel aus den aktivierten Dokumenten", slides }
+            new { title = FakeLanguage.T(en, "[Testmodus] Präsentation", "[Test mode] Presentation"), subtitle = FakeLanguage.T(en, "Beispiel aus den aktivierten Dokumenten", "Sample from the selected documents"), slides }
         };
 
         return JsonSerializer.Serialize(presentation);

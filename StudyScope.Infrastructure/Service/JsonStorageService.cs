@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
+using StudyScope.Core.Localization;
 using StudyScope.Core.Models;
 
 namespace StudyScope.Infrastructure.Services;
@@ -171,7 +172,9 @@ public class JsonStorageService : IStorageService
             CreatedAt = profile.CreatedAt,
             Documents = profile.Documents ?? new List<DocumentItem>(),
             AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig()),
-            SpeechSettings = profile.SpeechSettings == null ? null : EncryptedCopy(profile.SpeechSettings)
+            SpeechSettings = profile.SpeechSettings == null ? null : EncryptedCopy(profile.SpeechSettings),
+            // Neue Profilfelder hier ergänzen – sonst gehen sie beim nächsten Speichern (z. B. der Dokumente) verloren
+            OutputLanguage = profile.OutputLanguage
         };
 
         var filePath = GetProfileFilePath(profileName);
@@ -491,6 +494,29 @@ public class JsonStorageService : IStorageService
         var node = await ReadConfigNodeAsync() ?? JsonSerializer.SerializeToNode(EncryptedCopy(new AiConfig()), JsonOptions)!.AsObject();
         node[SpeechSettingsProperty] = JsonSerializer.SerializeToNode(EncryptedCopy(settings), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
+    }
+
+    // ---------------- Sprache der KI-Ergebnisse ----------------
+
+    public async Task<string> LoadOutputLanguageAsync(string profileName)
+    {
+        var profile = await ReadProfileFileAsync(profileName);
+        if (!string.IsNullOrWhiteSpace(profile.OutputLanguage))
+            return OutputLanguage.Normalize(profile.OutputLanguage);
+        return OutputLanguage.Normalize((await LoadUiSettingsAsync()).OutputLanguage);
+    }
+
+    public async Task SaveOutputLanguageAsync(string profileName, string setting)
+    {
+        var value = OutputLanguage.Normalize(setting);
+        var profile = await ReadProfileFileAsync(profileName);
+        profile.OutputLanguage = value;
+        await WriteProfileFileAsync(profileName, profile);
+
+        // Global als Rückfall; die übrigen Oberflächen-Einstellungen bleiben erhalten
+        var ui = await LoadUiSettingsAsync();
+        ui.OutputLanguage = value;
+        await SaveUiSettingsAsync(ui);
     }
 
     private static SpeechSettings Normalize(SpeechSettings settings)

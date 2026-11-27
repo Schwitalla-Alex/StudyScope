@@ -45,10 +45,17 @@ public partial class AudioViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
     public AudioViewModel(IAudioScriptService audioService, IDocumentService documentService, IStorageService storage,
         IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null, PlaybackCoordinator? coordinator = null,
-        IAudioTranscoder? transcoder = null)
+        IAudioTranscoder? transcoder = null, IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         UseTranscoder(transcoder);
         _audioService = audioService;
         _documentService = documentService;
@@ -902,7 +909,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
                 ? $"{AudioScriptFormats.DisplayName(Format)}: {Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)}"
                 : $"{AudioScriptFormats.DisplayName(Format)}: {_profileName}";
 
-            var result = await _audioService.GenerateAsync(chunks, Format, Length, Topic, fallbackTitle, token);
+            var result = await _audioService.GenerateAsync(chunks, Format, Length, Topic, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.Audio_ScriptCancelled, isError: false);

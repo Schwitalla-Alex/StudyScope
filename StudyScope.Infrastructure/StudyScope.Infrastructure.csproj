@@ -37,6 +37,15 @@
       <StronglyTypedFileName>$(IntermediateOutputPath)ExportStrings.Designer.cs</StronglyTypedFileName>
       <PublicClass>true</PublicClass>
     </EmbeddedResource>
+    <!-- Feste Inhalte der KI-Ergebnisse (Rückfall-Titel, „Wahr/Falsch“ …): immer in der Ergebnissprache gelesen
+         (CultureScope.Use(sprache)), nicht in der Oberflächensprache -->
+    <EmbeddedResource Update="Resources\ContentStrings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>StudyScope.Infrastructure.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>ContentStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)ContentStrings.Designer.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

@@ -24,6 +24,18 @@ public class ChatViewModel : INotifyPropertyChanged
     // Token-Quelle für den aktuellen Abbruch
     private CancellationTokenSource? _cancellationTokenSource;
 
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    /// <summary>
+    /// Frage samt Sprachzeile: Weicht die Ergebnissprache vom Deutschen ab, steht sie als eigene Zeile am Ende der Frage;
+    /// der Dispatcher wählt danach die Systemanweisung (<c>RagSystemPromptFor</c>). Bei Deutsch bleibt die Frage unverändert.
+    /// </summary>
+    public static string WithLanguageLine(string question, System.Globalization.CultureInfo language) =>
+        language.TwoLetterISOLanguageName == UiLanguage.NeutralLanguage
+            ? question
+            : question.TrimEnd() + "\n\n" + StudyScope.Core.Localization.OutputLanguage.PromptLine(language);
+
     public ChatViewModel(ILlmService llmService, IDocumentService pdfService, DocumentListViewModel documentListViewModel)
     {
         _llmService = llmService;
@@ -300,7 +312,10 @@ public class ChatViewModel : INotifyPropertyChanged
             var relevantChunks = GetMostRelevantChunks(promptText, contextChunks, maxChunks: 8);
 
             // 3. Antwort vom KI-Service abrufen
-            var response = await _llmService.AskQuestionAsync(promptText, relevantChunks, _cancellationTokenSource.Token);
+            // Antwortsprache: Einstellung des fragenden Profils, bei „Wie die Dokumente“ erkannt an den Auszügen
+            var setting = OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(requestProfile);
+            var language = StudyScope.Core.Localization.OutputLanguage.Resolve(setting, relevantChunks);
+            var response = await _llmService.AskQuestionAsync(WithLanguageLine(promptText, language), relevantChunks, _cancellationTokenSource.Token);
 
             // Der Dienst meldet einen Abbruch teils als Text statt als Ausnahme – wie einen Abbruch behandeln
             _cancellationTokenSource.Token.ThrowIfCancellationRequested();

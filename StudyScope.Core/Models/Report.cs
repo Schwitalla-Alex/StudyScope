@@ -93,6 +93,12 @@ public class ReportEmbeds
 /// <summary>Ein gespeicherter Bericht.</summary>
 public class Report
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public string Title { get; set; } = string.Empty;
 

@@ -10,7 +10,7 @@ public interface IMindmapService
 {
     /// <param name="contextChunks">Textstellen der aktivierten Dokumente.</param>
     /// <param name="rootTitle">Vorschlag für das Hauptthema, falls die KI keines liefert.</param>
-    Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default);
+    Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, string? outputLanguage = null, CancellationToken cancellationToken = default);
 
     Task<MindmapDocument?> LoadMindmapAsync(string profileName);
     Task SaveMindmapAsync(string profileName, MindmapDocument mindmap);

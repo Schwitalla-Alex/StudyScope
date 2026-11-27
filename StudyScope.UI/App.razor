@@ -182,7 +182,7 @@
         StateHasChanged();
         await SetPageLanguageAsync();
         // Modellname in der Statusleiste (z. B. „Fake-KI (Testmodus)“) in der neuen Sprache
-        await DocVm.RefreshCurrentAiModelAsync(announceProfile: false);
+        await DocVm.RefreshCurrentAiModelAsync();
     });
 
     /// <summary>Fensterbreite aus <c>studyscope-layout.js</c> (beim Ändern der Größe, entprellt).</summary>

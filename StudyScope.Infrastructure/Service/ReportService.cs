@@ -4,6 +4,8 @@ using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -49,18 +51,22 @@ public class ReportService : IReportService
         ReportTemplate template,
         string customInstruction,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default)
     {
         var chunks = ChunkSelector.SelectRepresentative(contextChunks, MindmapService.MaxChunks);
         if (chunks.Count == 0)
             return new ReportGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 
-        var prompt = BuildPrompt(template, customInstruction);
+        var language = ResultLanguage.Resolve(outputLanguage, chunks);
+        var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(template, customInstruction), language);
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
-        var parsed = AnalyzeResponse(raw, fallbackTitle);
+        var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_ReportTitle) : fallbackTitle;
+        var parsed = AnalyzeResponse(raw, fallback);
 
         if (parsed.Value != null)
         {
+            parsed.Value.Language = ResultLanguage.Code(language);
             parsed.Value.Template = template;
             parsed.Value.CustomInstruction = template == ReportTemplate.Custom ? customInstruction.Trim() : string.Empty;
         }
