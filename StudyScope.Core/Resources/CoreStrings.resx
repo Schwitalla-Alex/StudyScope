@@ -31,4 +31,5 @@
   <data name="DataTable_SourceColumn" xml:space="preserve"><value>Quelle</value><comment>Feste letzte Spalte der Datentabelle (Ansicht und Exporte); gespeichert wird das Feld Source, der Name ist je Sprache reserviert</comment></data>
   <data name="Report_SceneHeading" xml:space="preserve"><value>Folie {number}: {title}</value><comment>Überschrift eines Sprechtexts je Folie in Exporten</comment></data>
   <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Folie {number}</value><comment>Wie Report_SceneHeading, wenn die Folie keinen Titel hat</comment></data>
+  <data name="Llm_Http402" xml:space="preserve"><value>Das Guthaben bzw. der Zahlungsplan des Kontos reicht nicht aus. Bitte die Abrechnung beim Anbieter prüfen (z. B. Guthaben aufladen oder Zahlungsart hinterlegen).</value><comment>HTTP 402 Payment Required</comment></data>
 </root>

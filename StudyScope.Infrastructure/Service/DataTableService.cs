@@ -4,6 +4,8 @@ using System.Text.Json;
 using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
+using StudyScope.Core.Localization;
+using StudyScope.Infrastructure.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -55,6 +57,7 @@ public class DataTableService : IDataTableService
         IReadOnlyList<string> customColumns,
         string topic,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default)
     {
         var all = chunks.ToList();
@@ -62,16 +65,19 @@ public class DataTableService : IDataTableService
         if (selected.Count == 0)
             return new DataTableGenerationResult { FailureReason = MindmapFailureReason.NoContent };
 
+        var language = ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
         var columns = NormalizeColumnNames(customColumns);
-        var prompt = BuildPrompt(template, customInstruction, columns, topic);
+        var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(template, customInstruction, columns, topic), language);
         var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(LabelChunk), cancellationToken);
 
         var sources = all.Select(c => c.SourceDocument).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
-        var parsed = AnalyzeResponse(raw, fallbackTitle, sources, columns.Count > 0 ? columns : null);
+        var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_DataTableTitle) : fallbackTitle;
+        var parsed = AnalyzeResponse(raw, fallback, sources, columns.Count > 0 ? columns : null);
 
         if (parsed.Value != null)
         {
             var table = parsed.Value;
+            table.Language = ResultLanguage.Code(language);
             table.Template = template;
             table.CustomInstruction = template == DataTableTemplate.Custom ? customInstruction.Trim() : string.Empty;
             table.Topic = topic?.Trim() ?? string.Empty;
@@ -93,6 +99,7 @@ public class DataTableService : IDataTableService
         DataTableDocument table,
         IEnumerable<SourceChunk> chunks,
         int maxNewRows,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default)
     {
         var all = chunks.ToList();
@@ -100,7 +107,9 @@ public class DataTableService : IDataTableService
         if (selected.Count == 0 || table.Columns.Count == 0)
             return new DataTableRowsResult { FailureReason = MindmapFailureReason.NoContent };
 
-        var prompt = BuildMoreRowsPrompt(table);
+        // Neue Zeilen in der Sprache der vorhandenen Tabelle (ältere Tabellen ohne Angabe: Einstellung)
+        var language = ResultLanguage.FromCode(table.Language) ?? ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
+        var prompt = ResultLanguage.ApplyToPrompt(BuildMoreRowsPrompt(table), language);
         var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(LabelChunk), cancellationToken);
 
         var sources = all.Select(c => c.SourceDocument).Concat(table.SourceDocuments).Distinct(StringComparer.OrdinalIgnoreCase).ToList();

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Content_MindmapTitle" xml:space="preserve"><value>Mind map</value></data>
+  <data name="Content_PresentationTitle" xml:space="preserve"><value>Presentation</value></data>
+  <data name="Content_Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Content_OverviewNotes" xml:space="preserve"><value>This presentation covers the following topics: {topics}.</value></data>
+  <data name="Content_Summary" xml:space="preserve"><value>Summary</value></data>
+  <data name="Content_True" xml:space="preserve"><value>True</value></data>
+  <data name="Content_False" xml:space="preserve"><value>False</value></data>
+  <data name="Content_ReportTitle" xml:space="preserve"><value>Report</value></data>
+  <data name="Content_DataTableTitle" xml:space="preserve"><value>Data table</value></data>
+  <data name="Content_AudioTitle" xml:space="preserve"><value>Audio summary</value></data>
+  <data name="Content_ChatNotInDocuments" xml:space="preserve"><value>Your documents do not contain any information on this.</value></data>
+  <data name="Content_VideoTitle" xml:space="preserve"><value>Video overview</value></data>
+</root>

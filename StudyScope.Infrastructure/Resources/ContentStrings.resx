@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Content_MindmapTitle" xml:space="preserve"><value>Mindmap</value><comment>Rückfall-Titel der Mindmap (Inhalt, in der Ergebnissprache)</comment></data>
+  <data name="Content_PresentationTitle" xml:space="preserve"><value>Präsentation</value><comment>Rückfall-Titel der Präsentation</comment></data>
+  <data name="Content_Overview" xml:space="preserve"><value>Überblick</value><comment>Folientitel der Präsentation aus der Mindmap</comment></data>
+  <data name="Content_OverviewNotes" xml:space="preserve"><value>Die Präsentation behandelt folgende Themen: {topics}.</value><comment>Sprechernotiz; {topics} = Hauptäste der Mindmap, mit Komma getrennt</comment></data>
+  <data name="Content_Summary" xml:space="preserve"><value>Zusammenfassung</value><comment>Letzte Folie der Präsentation aus der Mindmap</comment></data>
+  <data name="Content_True" xml:space="preserve"><value>Wahr</value><comment>Antwort einer Wahr/Falsch-Quizfrage</comment></data>
+  <data name="Content_False" xml:space="preserve"><value>Falsch</value><comment>Antwort einer Wahr/Falsch-Quizfrage</comment></data>
+  <data name="Content_ReportTitle" xml:space="preserve"><value>Bericht</value><comment>Rückfall-Titel des Berichts</comment></data>
+  <data name="Content_DataTableTitle" xml:space="preserve"><value>Datentabelle</value><comment>Rückfall-Titel der Datentabelle</comment></data>
+  <data name="Content_AudioTitle" xml:space="preserve"><value>Audio-Zusammenfassung</value><comment>Rückfall-Titel des Audio-Beitrags</comment></data>
+  <data name="Content_ChatNotInDocuments" xml:space="preserve"><value>Dazu enthalten Ihre Unterlagen keine Angaben.</value><comment>Beispielsatz in der Systemanweisung des Chats (Antwort, wenn nichts in den Auszügen steht)</comment></data>
+  <data name="Content_VideoTitle" xml:space="preserve"><value>Videoübersicht</value><comment>Rückfall-Titel des Videos</comment></data>
+</root>

@@ -31,4 +31,5 @@
   <data name="DataTable_SourceColumn" xml:space="preserve"><value>Source</value></data>
   <data name="Report_SceneHeading" xml:space="preserve"><value>Slide {number}: {title}</value></data>
   <data name="Report_SceneHeadingNoTitle" xml:space="preserve"><value>Slide {number}</value></data>
+  <data name="Llm_Http402" xml:space="preserve"><value>The account has no credit or no active billing plan. Check the billing settings with the provider (for example, add credit or a payment method).</value></data>
 </root>

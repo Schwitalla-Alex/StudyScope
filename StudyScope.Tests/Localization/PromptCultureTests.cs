@@ -11,7 +11,8 @@ namespace StudyScope.Tests.Localization;
 /// Die Prompts an die KI bleiben in jeder Oberflächensprache deutsch und Zeichen für Zeichen gleich: Die Fake-KI und
 /// die Dienste erkennen Aufträge an deutschen Merkmalen („JSON-Array“, „Lernkarteikarten“, „Erstelle eine Datentabelle“,
 /// „Format: Podcast-Gespräch“ …). Wer einen Anzeigetext in einen Prompt übernimmt, bekommt hier einen Fehler.
-/// Die Sprache der KI-Ergebnisse kommt erst mit Phase 3c und nur über eine eigene Sprachzeile hinzu.
+/// Die Sprache der KI-Ergebnisse steht nur in der Sprachzeile (Phase 3c); hier ist sie ausdrücklich Deutsch, damit die
+/// Oberflächensprache keinen Einfluss hat (Standard „wie Oberfläche“ prüft OutputLanguageTests).
 /// </summary>
 [TestFixture]
 public class PromptCultureTests
@@ -110,10 +111,10 @@ public class PromptCultureTests
         });
 
         // Dienste, deren Prompt nur beim Aufruf entsteht: über eine Attrappe abfangen
-        prompts["Karteikarten"] = Capture(llm => new FlashcardService(llm).GenerateFlashcardsAsync(Chunks, 5));
-        prompts["Mindmap"] = Capture(llm => new MindmapService(llm).GenerateMindmapAsync(Chunks, "Energie"));
-        prompts["Präsentation"] = Capture(llm => new PresentationService(llm).GenerateFromDocumentsAsync(Chunks, "Energie", 6));
-        prompts["Quiz-Themen"] = Capture(llm => new QuizService(llm).SuggestTopicsAsync(Chunks));
+        prompts["Karteikarten"] = Capture(llm => new FlashcardService(llm).GenerateFlashcardsAsync(Chunks, 5, "de"));
+        prompts["Mindmap"] = Capture(llm => new MindmapService(llm).GenerateMindmapAsync(Chunks, "Energie", "de"));
+        prompts["Präsentation"] = Capture(llm => new PresentationService(llm).GenerateFromDocumentsAsync(Chunks, "Energie", 6, "de"));
+        prompts["Quiz-Themen"] = Capture(llm => new QuizService(llm).SuggestTopicsAsync(Chunks, "de"));
         return prompts;
     });
 

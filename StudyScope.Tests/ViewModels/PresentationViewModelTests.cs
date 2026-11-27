@@ -240,7 +240,7 @@ public class PresentationViewModelTests
         public bool ExportThrows { get; set; }
         public Dictionary<string, PresentationDocument> Saved { get; } = new();
 
-        public Task<PresentationGenerationResult> GenerateFromDocumentsAsync(IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, CancellationToken cancellationToken = default)
+        public Task<PresentationGenerationResult> GenerateFromDocumentsAsync(IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, string? outputLanguage = null, CancellationToken cancellationToken = default)
         {
             GenerateCalls++;
             LastSlideCount = slideCount;
@@ -278,7 +278,7 @@ public class PresentationViewModelTests
     {
         public MindmapDocument? Mindmap { get; set; }
 
-        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default) =>
+        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, string? outputLanguage = null, CancellationToken cancellationToken = default) =>
             Task.FromResult(new MindmapGenerationResult());
 
         public Task<MindmapDocument?> LoadMindmapAsync(string profileName) => Task.FromResult(Mindmap);

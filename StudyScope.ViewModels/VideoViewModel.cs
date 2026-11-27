@@ -80,11 +80,18 @@ public partial class VideoViewModel : INotifyPropertyChanged
 
     /// <param name="timeProvider">Uhr für die Zeitsteuerung der Systemstimme (Tests: eigene Uhr).</param>
     /// <param name="delay">Warten bei Szenen ohne Sprechtext (Tests: sofort).</param>
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
     public VideoViewModel(IVideoScriptService videoService, IPresentationService presentationService, IDocumentService documentService,
         IStorageService storage, IEnumerable<ITextToSpeechService> speechServices, IAudioFilePlayer? filePlayer = null,
         PlaybackCoordinator? coordinator = null, TimeProvider? timeProvider = null, Func<TimeSpan, CancellationToken, Task>? delay = null,
-        IAudioTranscoder? transcoder = null, IVideoMp4Exporter? mp4 = null)
+        IAudioTranscoder? transcoder = null, IVideoMp4Exporter? mp4 = null, IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _transcoder = transcoder;
         _mp4 = mp4;
         _videoService = videoService;
@@ -485,7 +492,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
                     chunks.AddRange(await _documentService.ExtractChunksAsync(doc.FilePath));
                 var fallback = selectedDocs.Count == 1 ? Path.GetFileNameWithoutExtension(selectedDocs[0].FileName) : $"Unterlagen: {_profileName}";
 
-                var slides = await _presentationService.GenerateFromDocumentsAsync(chunks, fallback, SlideCount, token);
+                var slides = await _presentationService.GenerateFromDocumentsAsync(chunks, fallback, SlideCount, await OutputLanguageSettingAsync(_profileName), token);
                 token.ThrowIfCancellationRequested();
                 if (!slides.IsSuccess)
                 {
@@ -513,7 +520,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
             else
             {
                 BusyText = VmStrings.Video_BusyNarration;
-                result = await _videoService.GenerateAsync(presentation, fallbackTitle, token);
+                result = await _videoService.GenerateAsync(presentation, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
                 token.ThrowIfCancellationRequested();
                 if (!result.IsSuccess)
                 {

@@ -16,6 +16,7 @@ public interface IReportService
         ReportTemplate template,
         string customInstruction,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default);
 
     Task<ReportLibrary> LoadLibraryAsync(string profileName);

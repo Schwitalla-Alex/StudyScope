@@ -12,17 +12,18 @@ public static class FakeMindmapResponse
     public static bool IsMindmapPrompt(string prompt) =>
         prompt.Contains("Mindmap", StringComparison.OrdinalIgnoreCase);
 
-    public static string Create(IReadOnlyList<string> chunks)
+    public static string Create(IReadOnlyList<string> chunks, bool english = false)
     {
+        var en = english;
         var branches = chunks
             .Take(5)
             .Select((chunk, i) => new
             {
-                title = $"Textstelle {i + 1}",
+                title = FakeLanguage.T(en, $"Textstelle {i + 1}", $"Excerpt {i + 1}"),
                 summary = Preview(chunk, 80),
                 children = Words(chunk)
                     .Take(3)
-                    .Select(w => new { title = w, summary = $"Begriff aus Textstelle {i + 1}.", children = Array.Empty<object>() })
+                    .Select(w => new { title = w, summary = FakeLanguage.T(en, $"Begriff aus Textstelle {i + 1}.", $"Term from excerpt {i + 1}."), children = Array.Empty<object>() })
                     .ToArray()
             })
             .ToArray();
@@ -31,8 +32,9 @@ public static class FakeMindmapResponse
         {
             new
             {
-                title = "[Testmodus] Mindmap",
-                summary = $"Beispiel-Mindmap aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
+                title = FakeLanguage.T(en, "[Testmodus] Mindmap", "[Test mode] Mind map"),
+                summary = FakeLanguage.T(en, $"Beispiel-Mindmap aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
+                    $"Sample mind map from {chunks.Count} excerpt(s). Choose an AI in the settings for real content."),
                 children = branches
             }
         };

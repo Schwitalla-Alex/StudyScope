@@ -29,6 +29,12 @@ public enum QuizTopicOrigin
 /// <summary>Eine Quizfrage. <see cref="CorrectIndices"/> zeigt auf Einträge in <see cref="Options"/>.</summary>
 public class QuizQuestion
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public string Id { get; set; } = Guid.NewGuid().ToString("N");
     public QuizQuestionType Type { get; set; } = QuizQuestionType.SingleChoice;
     public string Text { get; set; } = string.Empty;

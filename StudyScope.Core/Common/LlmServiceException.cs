@@ -38,6 +38,7 @@ public class LlmServiceException : Exception
         {
             400 => CoreStrings.Llm_Http400,
             401 or 403 => CoreStrings.Llm_Http401,
+            402 => CoreStrings.Llm_Http402,
             404 => CoreStrings.Llm_Http404,
             408 or 504 => CoreStrings.Llm_Http408,
             429 => CoreStrings.Llm_Http429,

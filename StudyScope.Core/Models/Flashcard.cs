@@ -16,6 +16,12 @@ public enum FlashcardStatus
 /// </summary>
 public class Flashcard
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public Guid Id { get; set; } = Guid.NewGuid();
     public string Question { get; set; } = string.Empty;
     public string Answer { get; set; } = string.Empty;

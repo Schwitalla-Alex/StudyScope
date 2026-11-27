@@ -21,6 +21,7 @@ public interface IDataTableService
         IReadOnlyList<string> customColumns,
         string topic,
         string fallbackTitle,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default);
 
     /// <summary>Lässt die KI weitere Zeilen für die vorhandenen Spalten suchen; Wiederholungen werden verworfen.</summary>
@@ -29,6 +30,7 @@ public interface IDataTableService
         DataTableDocument table,
         IEnumerable<SourceChunk> chunks,
         int maxNewRows,
+        string? outputLanguage = null,
         CancellationToken cancellationToken = default);
 
     Task<DataTableLibrary> LoadLibraryAsync(string profileName);

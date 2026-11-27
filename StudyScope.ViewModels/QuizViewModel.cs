@@ -49,8 +49,15 @@ public class QuizViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public QuizViewModel(IQuizService quizService, IDocumentService documentService, Random? random = null)
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
+    public QuizViewModel(IQuizService quizService, IDocumentService documentService, Random? random = null, IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _quizService = quizService;
         _documentService = documentService;
         _random = random ?? Random.Shared;
@@ -392,7 +399,7 @@ public class QuizViewModel : INotifyPropertyChanged
         try
         {
             var chunks = await LoadChunksAsync(selectedDocs.Select(d => new QuizDocumentRef { FileName = d.FileName, FilePath = d.FilePath }));
-            var result = await _quizService.SuggestTopicsAsync(chunks, token);
+            var result = await _quizService.SuggestTopicsAsync(chunks, await OutputLanguageSettingAsync(_profileName), token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.Quiz_SuggestCancelled, isError: false);
@@ -495,6 +502,7 @@ public class QuizViewModel : INotifyPropertyChanged
         QuizQuestionGenerationResult? lastFailure = null;
         var missingDocuments = new List<string>();
         var wasRepaired = false;
+        var outputLanguage = await OutputLanguageSettingAsync(_profileName);
 
         try
         {
@@ -524,7 +532,7 @@ public class QuizViewModel : INotifyPropertyChanged
                     ProgressPercent = totalMissing == 0 ? 0 : 100.0 * generated / totalMissing;
 
                     var request = Math.Min(needed, _quizService.BatchSize);
-                    var result = await _quizService.GenerateQuestionsAsync(topic, chunks, request, types, batch++, token);
+                    var result = await _quizService.GenerateQuestionsAsync(topic, chunks, request, types, batch++, outputLanguage, token);
                     token.ThrowIfCancellationRequested();
 
                     var fresh = result.Questions.Where(q => types.Contains(q.Type)).ToList();

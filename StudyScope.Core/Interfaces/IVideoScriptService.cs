@@ -11,7 +11,7 @@ namespace StudyScope.Core.Interfaces;
 public interface IVideoScriptService
 {
     /// <summary>Lässt die KI je Folie einen Sprechtext schreiben; fehlende Szenen werden aus den Notizen aufgefüllt.</summary>
-    Task<VideoScriptResult> GenerateAsync(PresentationDocument presentation, string fallbackTitle, CancellationToken cancellationToken = default);
+    Task<VideoScriptResult> GenerateAsync(PresentationDocument presentation, string fallbackTitle, string? outputLanguage = null, CancellationToken cancellationToken = default);
 
     /// <summary>Video direkt aus den Sprechernotizen (ohne KI-Aufruf).</summary>
     VideoDocument CreateFromNotes(PresentationDocument presentation, string fallbackTitle);

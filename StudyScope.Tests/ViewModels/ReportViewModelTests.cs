@@ -541,17 +541,17 @@ public class ReportViewModelTests
 
         // Nicht benötigt
         public int BatchSize => 10;
-        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<MindmapGenerationResult> GenerateMindmapAsync(IEnumerable<string> contextChunks, string rootTitle, string? outputLanguage = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveMindmapAsync(string profileName, MindmapDocument mindmap) => Task.CompletedTask;
         public Task DeleteMindmapAsync(string profileName) => Task.CompletedTask;
         string IMindmapService.ExportToMarkdown(MindmapDocument mindmap, System.Globalization.CultureInfo culture) => string.Empty;
-        public Task<List<Flashcard>> GenerateFlashcardsAsync(IEnumerable<string> contextChunks, int count = 5) => throw new NotSupportedException();
+        public Task<List<Flashcard>> GenerateFlashcardsAsync(IEnumerable<string> contextChunks, int count = 5, string? outputLanguage = null) => throw new NotSupportedException();
         public Task SaveFlashcardsAsync(string profileName, IEnumerable<Flashcard> flashcards) => Task.CompletedTask;
         string IFlashcardService.ExportToMarkdown(string profileName, IEnumerable<Flashcard> flashcards, System.Globalization.CultureInfo culture) => string.Empty;
-        public Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default) => throw new NotSupportedException();
-        public Task<QuizQuestionGenerationResult> GenerateQuestionsAsync(QuizTopic topic, IReadOnlyList<string> topicChunks, int count, IReadOnlyCollection<QuizQuestionType> allowedTypes, int batchIndex, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, string? outputLanguage = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<QuizQuestionGenerationResult> GenerateQuestionsAsync(QuizTopic topic, IReadOnlyList<string> topicChunks, int count, IReadOnlyCollection<QuizQuestionType> allowedTypes, int batchIndex, string? outputLanguage = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public Task SaveLibraryAsync(string profileName, QuizLibrary library) => Task.CompletedTask;
-        public Task<PresentationGenerationResult> GenerateFromDocumentsAsync(IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<PresentationGenerationResult> GenerateFromDocumentsAsync(IEnumerable<string> contextChunks, string fallbackTitle, int slideCount, string? outputLanguage = null, CancellationToken cancellationToken = default) => throw new NotSupportedException();
         public PresentationDocument CreateFromMindmap(MindmapDocument mindmap) => new();
         public Task SavePresentationAsync(string profileName, PresentationDocument presentation) => Task.CompletedTask;
         public Task DeletePresentationAsync(string profileName) => Task.CompletedTask;

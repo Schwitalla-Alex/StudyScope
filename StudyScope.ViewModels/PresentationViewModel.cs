@@ -23,8 +23,16 @@ public class PresentationViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public PresentationViewModel(IPresentationService presentationService, IMindmapService mindmapService, IDocumentService documentService)
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
+    public PresentationViewModel(IPresentationService presentationService, IMindmapService mindmapService, IDocumentService documentService,
+        IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _presentationService = presentationService;
         _mindmapService = mindmapService;
         _documentService = documentService;
@@ -190,7 +198,7 @@ public class PresentationViewModel : INotifyPropertyChanged
                 ? Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)
                 : $"Unterlagen: {profileName}";
 
-            var result = await _presentationService.GenerateFromDocumentsAsync(chunks, fallbackTitle, SlideCount, token);
+            var result = await _presentationService.GenerateFromDocumentsAsync(chunks, fallbackTitle, SlideCount, await OutputLanguageSettingAsync(profileName), token);
 
             if (token.IsCancellationRequested)
             {

@@ -395,14 +395,14 @@ public class QuizViewModelTests
         public Action<int>? OnGenerate { get; set; }
         public QuizTopicSuggestionResult Suggestions { get; set; } = new();
 
-        public Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
+        public Task<QuizTopicSuggestionResult> SuggestTopicsAsync(IEnumerable<string> contextChunks, string? outputLanguage = null, CancellationToken cancellationToken = default)
         {
             SuggestCalls++;
             return Task.FromResult(Suggestions);
         }
 
         public Task<QuizQuestionGenerationResult> GenerateQuestionsAsync(QuizTopic topic, IReadOnlyList<string> topicChunks, int count,
-            IReadOnlyCollection<QuizQuestionType> allowedTypes, int batchIndex, CancellationToken cancellationToken = default)
+            IReadOnlyCollection<QuizQuestionType> allowedTypes, int batchIndex, string? outputLanguage = null, CancellationToken cancellationToken = default)
         {
             GenerateRequests.Add(count);
             BatchIndices.Add(batchIndex);

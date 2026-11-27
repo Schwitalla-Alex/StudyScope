@@ -69,6 +69,12 @@ public class PresentationSlide
 /// <summary>Gespeicherte Präsentation eines Profils.</summary>
 public class PresentationDocument
 {
+    /// <summary>
+    /// Sprache des Inhalts (zweistelliger Code wie „de“/„en“), in der die KI ihn erzeugt hat; null = unbekannt
+    /// (ältere Daten oder ohne KI erstellt). Siehe <c>OutputLanguage</c>.
+    /// </summary>
+    public string? Language { get; set; }
+
     public string Title { get; set; } = string.Empty;
     public List<PresentationSlide> Slides { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.Now;

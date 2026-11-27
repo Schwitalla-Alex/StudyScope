@@ -17,4 +17,10 @@ public class UserProfile
 
     /// <summary>Sprachausgabe der Audio-Beiträge (null = noch nicht eingestellt, dann gilt die globale Einstellung).</summary>
     public SpeechSettings? SpeechSettings { get; set; }
+
+    /// <summary>
+    /// Sprache der KI-Ergebnisse („ui“, „documents“ oder Kulturname, siehe <c>OutputLanguage</c>); null = nicht
+    /// eingestellt, dann gilt die globale Einstellung.
+    /// </summary>
+    public string? OutputLanguage { get; set; }
 }

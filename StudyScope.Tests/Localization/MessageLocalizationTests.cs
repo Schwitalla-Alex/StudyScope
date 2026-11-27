@@ -29,6 +29,25 @@ public class MessageLocalizationTests
         Assert.That(ex.Message, Is.EqualTo("Mistral AI reports an error (HTTP 503). The AI service is currently down or overloaded. Try again in a few minutes."));
     }
 
+    [Test]
+    public void LlmServiceException_402_NamesBilling_German()
+    {
+        // Mistral meldet 402, wenn das Konto kein Guthaben bzw. keinen Zahlungsplan hat (Echttest 3c-1)
+        var ex = LlmServiceException.FromHttpStatus("Mistral AI", 402, "{\"message\":\"payment required\"}");
+        Assert.That(ex.Message, Is.EqualTo("Mistral AI meldet einen Fehler (HTTP 402). Das Guthaben bzw. der Zahlungsplan des Kontos reicht nicht aus. " +
+                                           "Bitte die Abrechnung beim Anbieter prüfen (z. B. Guthaben aufladen oder Zahlungsart hinterlegen)."));
+        Assert.That(ex.StatusCode, Is.EqualTo(402));
+        Assert.That(ex.Detail, Does.Contain("payment required"));
+    }
+
+    [Test, SetUICulture("en")]
+    public void LlmServiceException_402_NamesBilling_English()
+    {
+        var ex = LlmServiceException.FromHttpStatus("Mistral AI", 402, null);
+        Assert.That(ex.Message, Is.EqualTo("Mistral AI reports an error (HTTP 402). The account has no credit or no active billing plan. " +
+                                           "Check the billing settings with the provider (for example, add credit or a payment method)."));
+    }
+
     [Test, SetUICulture("en")]
     public void ProfileNameValidator_English()
     {

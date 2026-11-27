@@ -62,6 +62,12 @@ public class ReportViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    /// <summary>Einstellung „Sprache der KI-Ergebnisse“ des Profils (fehlt in Tests → wie Oberfläche).</summary>
+    public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
+
+    private async Task<string?> OutputLanguageSettingAsync(string profileName) =>
+        OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(profileName);
+
     public ReportViewModel(
         IReportService reportService,
         IDocumentService documentService,
@@ -72,8 +78,10 @@ public class ReportViewModel : INotifyPropertyChanged
         IDataTableService dataTableService,
         IAudioScriptService? audioScriptService = null,
         IVideoScriptService? videoScriptService = null,
-        IAudioTranscoder? transcoder = null)
+        IAudioTranscoder? transcoder = null,
+        IOutputLanguageProvider? outputLanguage = null)
     {
+        OutputLanguageProvider = outputLanguage;
         _transcoder = transcoder;
         _reportService = reportService;
         _documentService = documentService;
@@ -351,7 +359,7 @@ public class ReportViewModel : INotifyPropertyChanged
                 ? $"{ReportTemplates.DisplayName(Template)}: {Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)}"
                 : $"{ReportTemplates.DisplayName(Template)}: {_profileName}";
 
-            var result = await _reportService.GenerateReportAsync(chunks, Template, CustomInstruction, fallbackTitle, token);
+            var result = await _reportService.GenerateReportAsync(chunks, Template, CustomInstruction, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.Report_Cancelled, isError: false);

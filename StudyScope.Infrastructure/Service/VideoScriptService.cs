@@ -57,18 +57,21 @@ public partial class VideoScriptService : IVideoScriptService
 
     // ---------------- Erzeugung ----------------
 
-    public async Task<VideoScriptResult> GenerateAsync(PresentationDocument presentation, string fallbackTitle, CancellationToken cancellationToken = default)
+    public async Task<VideoScriptResult> GenerateAsync(PresentationDocument presentation, string fallbackTitle, string? outputLanguage = null, CancellationToken cancellationToken = default)
     {
         if (presentation.Slides.Count == 0)
             return new VideoScriptResult { FailureReason = MindmapFailureReason.NoContent };
 
-        var prompt = BuildPrompt(presentation);
-        var raw = await _llmService.AskQuestionAsync(prompt, BuildSlideChunks(presentation), cancellationToken);
+        // Sprechtexte in der Sprache der Folien (Präsentation ohne Angabe: Einstellung, aufgelöst auf den Folientexten)
+        var slideChunks = BuildSlideChunks(presentation);
+        var language = ResultLanguage.FromCode(presentation.Language) ?? ResultLanguage.Resolve(outputLanguage, slideChunks);
+        var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(presentation), language);
+        var raw = await _llmService.AskQuestionAsync(prompt, slideChunks, cancellationToken);
         var analysis = AnalyzeResponse(raw, presentation.Slides.Count);
         if (analysis.Value == null)
             return new VideoScriptResult { RawResponse = raw ?? string.Empty, FailureReason = analysis.FailureReason };
 
-        var video = CreateVideo(presentation, analysis.Value.Title, fallbackTitle, VideoNarrationSource.Ai);
+        var video = CreateVideo(presentation, analysis.Value.Title, fallbackTitle, VideoNarrationSource.Ai, language);
         var filled = 0;
         for (var i = 0; i < video.Scenes.Count; i++)
         {
@@ -90,22 +93,27 @@ public partial class VideoScriptService : IVideoScriptService
 
     public VideoDocument CreateFromNotes(PresentationDocument presentation, string fallbackTitle)
     {
-        var video = CreateVideo(presentation, string.Empty, fallbackTitle, VideoNarrationSource.Notes);
+        var language = ResultLanguage.FromCode(presentation.Language) ?? OutputLanguage.Neutral(System.Globalization.CultureInfo.CurrentUICulture)
+                       ?? System.Globalization.CultureInfo.GetCultureInfo(UiLanguage.NeutralLanguage);
+        var video = CreateVideo(presentation, string.Empty, fallbackTitle, VideoNarrationSource.Notes, language);
+        video.Language = presentation.Language;
         for (var i = 0; i < video.Scenes.Count; i++)
             video.Scenes[i].Narration = FallbackNarration(presentation.Slides[i]);
         return video;
     }
 
-    private static VideoDocument CreateVideo(PresentationDocument presentation, string aiTitle, string fallbackTitle, VideoNarrationSource source)
+    private static VideoDocument CreateVideo(PresentationDocument presentation, string aiTitle, string fallbackTitle, VideoNarrationSource source,
+        System.Globalization.CultureInfo language)
     {
         var slides = presentation.Slides.Take(VideoDocument.MaxScenes).Select(CloneSlide).ToList();
         var title = Clean(aiTitle, MaxTitleLength);
         if (title.Length == 0) title = Clean(presentation.Title, MaxTitleLength);
-        if (title.Length == 0) title = string.IsNullOrWhiteSpace(fallbackTitle) ? "Videoübersicht" : fallbackTitle.Trim();
+        if (title.Length == 0) title = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_VideoTitle) : fallbackTitle.Trim();
 
         return new VideoDocument
         {
             Title = title,
+            Language = source == VideoNarrationSource.Ai ? ResultLanguage.Code(language) : presentation.Language,
             PresentationTitle = presentation.Title ?? string.Empty,
             PresentationHash = VideoDocument.ComputePresentationHash(presentation),
             Slides = slides,
