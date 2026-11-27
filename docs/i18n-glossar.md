@@ -252,6 +252,28 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Vollbild | full screen | |
 | pausiert | paused | |
 
+## Installationsprogramm
+
+| Deutsch | Englisch | Hinweis |
+|---|---|---|
+| Setup / Assistent | setup / wizard | „StudyScope Setup“ bleibt als Name |
+| Installationsordner / Zielordner | installation folder / destination folder | |
+| Standardordner | default folder | |
+| Verknüpfung im Startmenü / auf dem Desktop | Start menu shortcut / Desktop shortcut | |
+| Eintrag im Anwendungsmenü | application menu entry | Linux |
+| Benutzerdaten | user data | Profile und Einstellungen |
+| Neuinstallation / Update | new installation / update | |
+| Installieren / Aktualisieren / Deinstallieren | Install / Update / Uninstall | Knöpfe |
+| Fertig stellen | Finish | letzter Schritt |
+| Fertig (Schritt) | Done | Schrittanzeige |
+| StudyScope deinstallieren | Uninstall StudyScope | Aktion im Linux-Menü, Fenstertitel |
+| Endgültig löschen | Delete permanently | Sicherheitsabfrage |
+| Einstellungen → Apps → Installierte Apps | Settings → Apps → Installed apps | Menüpfad wie im Windows der jeweiligen Sprache |
+| Entwickler-Build | developer build | |
+| „… %“ (mit Leerzeichen) | „…%“ (ohne) | Fortschritt `Progress_Percent` |
+
+`install.sh` hat keine `.resx`: Beide Fassungen stehen im Skript (`msg "<Deutsch>" "<English>"`); Befehle wie `sudo apt install …` bleiben unübersetzt.
+
 ## Exporte
 
 | Deutsch | Englisch | Hinweis |

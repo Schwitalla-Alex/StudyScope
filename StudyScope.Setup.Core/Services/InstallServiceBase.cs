@@ -1,7 +1,9 @@
 using System.IO.Compression;
 using System.Text.Json;
+using StudyScope.Core.Localization;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
+using StudyScope.Setup.Core.Resources;
 
 namespace StudyScope.Setup.Core.Services;
 
@@ -92,40 +94,40 @@ public abstract class InstallServiceBase : IInstallService
     public string? ValidateInstallDirectory(string? installDirectory)
     {
         if (string.IsNullOrWhiteSpace(installDirectory))
-            return "Bitte wählen Sie einen Installationsordner.";
+            return SetupCoreStrings.Folder_Empty;
 
         var dir = installDirectory.Trim();
         if (dir.IndexOfAny(Path.GetInvalidPathChars()) >= 0)
-            return "Der Pfad enthält unzulässige Zeichen.";
+            return SetupCoreStrings.Folder_InvalidChars;
 
         if (!Path.IsPathFullyQualified(dir))
-            return "Bitte geben Sie einen vollständigen Pfad an (z. B. " + Paths.DefaultInstallDirectory + ").";
+            return Loc.Format(SetupCoreStrings.Folder_NotFullyQualified, ("example", Paths.DefaultInstallDirectory));
 
         string full;
         try { full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(dir)); }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or PathTooLongException)
         {
-            return "Der Pfad ist ungültig.";
+            return SetupCoreStrings.Folder_Invalid;
         }
 
         var root = Path.GetPathRoot(full);
         if (root != null && string.Equals(Path.TrimEndingDirectorySeparator(root), full, PathComparison))
-            return "Bitte wählen Sie einen Unterordner statt eines ganzen Laufwerks.";
+            return SetupCoreStrings.Folder_DriveRoot;
 
         var home = Path.TrimEndingDirectorySeparator(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
         if (!string.IsNullOrEmpty(home) && string.Equals(full, home, PathComparison))
-            return "Bitte wählen Sie einen Unterordner statt Ihres Benutzerordners.";
+            return SetupCoreStrings.Folder_HomeDirectory;
 
         var userData = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Paths.UserDataDirectory));
         if (IsSameOrInside(full, userData) || IsSameOrInside(userData, full))
-            return "Der Installationsordner darf nicht mit dem Ordner für Ihre Profile und Einstellungen (" + userData + ") zusammenfallen.";
+            return Loc.Format(SetupCoreStrings.Folder_OverlapsUserData, ("path", userData));
 
         if (File.Exists(full))
-            return "Unter diesem Pfad existiert bereits eine Datei.";
+            return SetupCoreStrings.Folder_IsFile;
 
         // Ein fremder, nicht leerer Ordner würde mit Programmdateien vermischt
         if (Directory.Exists(full) && TryReadManifest(full) == null && Directory.EnumerateFileSystemEntries(full).Any())
-            return "Der Ordner ist nicht leer. Bitte wählen Sie einen leeren oder neuen Ordner.";
+            return SetupCoreStrings.Folder_NotEmpty;
 
         return null;
     }
@@ -164,12 +166,12 @@ public abstract class InstallServiceBase : IInstallService
         var dir = Path.TrimEndingDirectorySeparator(Path.GetFullPath(options.InstallDirectory.Trim()));
 
         if (!Payload.IsAvailable)
-            throw new InstallException("Dieses Setup enthält kein Installationspaket (Entwickler-Build ohne Payload).");
+            throw new InstallException(SetupCoreStrings.Install_NoPayload);
 
         if (Processes.IsAppRunning(dir, Paths.AppExecutableName))
-            throw new InstallException("StudyScope läuft noch. Bitte schließen Sie StudyScope und versuchen Sie es erneut.");
+            throw new InstallException(SetupCoreStrings.Install_AppRunning);
 
-        progress?.Report(new InstallProgress(0, "Installation wird vorbereitet …"));
+        progress?.Report(new InstallProgress(0, SetupCoreStrings.Progress_Preparing));
 
         var previous = TryReadManifest(dir);
         var isUpdate = previous != null;
@@ -187,7 +189,7 @@ public abstract class InstallServiceBase : IInstallService
             foreach (var entry in entries)
             {
                 if (SafeCombine(dir, entry.FullName) == null)
-                    throw new InstallException($"Das Installationspaket ist ungültig (unzulässiger Pfad: {entry.FullName}).");
+                    throw new InstallException(Loc.Format(SetupCoreStrings.Install_InvalidPackagePath, ("path", entry.FullName)));
             }
 
             var files = new List<string>();
@@ -204,13 +206,13 @@ public abstract class InstallServiceBase : IInstallService
                     written.Add(target);
 
                 files.Add(NormalizeRelative(entry.FullName));
-                progress?.Report(new InstallProgress(5 + (int)(75.0 * (i + 1) / entries.Count), $"Kopiere {entry.FullName}"));
+                progress?.Report(new InstallProgress(5 + (int)(75.0 * (i + 1) / entries.Count), Loc.Format(SetupCoreStrings.Progress_Copying, ("file", entry.FullName))));
             }
 
             // Update: Dateien der alten Version entfernen, die es nicht mehr gibt (nur aus dem alten Manifest)
             if (previous != null)
             {
-                progress?.Report(new InstallProgress(82, "Entferne veraltete Dateien …"));
+                progress?.Report(new InstallProgress(82, SetupCoreStrings.Progress_RemovingObsolete));
                 var current = new HashSet<string>(files, StringComparer.FromComparison(PathComparison));
                 foreach (var old in previous.Files.Where(f => !current.Contains(f)))
                     TryDeleteFile(SafeCombine(dir, old));
@@ -239,10 +241,10 @@ public abstract class InstallServiceBase : IInstallService
                 Files = files.Distinct(StringComparer.FromComparison(PathComparison)).ToList()
             };
 
-            progress?.Report(new InstallProgress(86, "Setze Dateiberechtigungen …"));
+            progress?.Report(new InstallProgress(86, SetupCoreStrings.Progress_SettingPermissions));
             OnFilesInstalled(dir, manifest);
 
-            progress?.Report(new InstallProgress(90, "Lege Verknüpfungen an …"));
+            progress?.Report(new InstallProgress(90, SetupCoreStrings.Progress_CreatingShortcuts));
             if (previous != null)
                 Shortcuts.RemoveShortcuts(previous.Shortcuts);
             manifest.Shortcuts = Shortcuts.CreateShortcuts(new ShortcutRequest
@@ -256,10 +258,10 @@ public abstract class InstallServiceBase : IInstallService
 
             File.WriteAllText(Path.Combine(dir, ManifestFileName), JsonSerializer.Serialize(manifest, JsonOptions));
 
-            progress?.Report(new InstallProgress(96, "Registriere Installation …"));
+            progress?.Report(new InstallProgress(96, SetupCoreStrings.Progress_Registering));
             RegisterInstallation(manifest);
 
-            progress?.Report(new InstallProgress(100, isUpdate ? "Update abgeschlossen." : "Installation abgeschlossen."));
+            progress?.Report(new InstallProgress(100, isUpdate ? SetupCoreStrings.Progress_UpdateDone : SetupCoreStrings.Progress_InstallDone));
             return manifest;
         }
         catch (Exception ex)
@@ -282,11 +284,12 @@ public abstract class InstallServiceBase : IInstallService
 
     private static string DescribeError(Exception ex, bool isUpdate) => ex switch
     {
-        UnauthorizedAccessException => "Keine Schreibrechte im Installationsordner. Bitte wählen Sie einen anderen Ordner.",
-        IOException io when io.HResult == unchecked((int)0x80070020) => "Eine Datei wird gerade verwendet. Bitte schließen Sie StudyScope und versuchen Sie es erneut.",
-        IOException => "Beim Kopieren ist ein Fehler aufgetreten: " + ex.Message + (isUpdate ? " Bitte führen Sie das Setup erneut aus." : ""),
-        InvalidDataException => "Das Installationspaket ist beschädigt.",
-        _ => "Unerwarteter Fehler: " + ex.Message
+        UnauthorizedAccessException => SetupCoreStrings.Error_NoWriteAccess,
+        IOException io when io.HResult == unchecked((int)0x80070020) => SetupCoreStrings.Error_FileInUse,
+        IOException when isUpdate => Loc.Format(SetupCoreStrings.Error_CopyFailedUpdate, ("error", ex.Message)),
+        IOException => Loc.Format(SetupCoreStrings.Error_CopyFailed, ("error", ex.Message)),
+        InvalidDataException => SetupCoreStrings.Error_PackageCorrupt,
+        _ => Loc.Format(SetupCoreStrings.Error_Unexpected, ("error", ex.Message))
     };
 
     // ------------------------------------------------------------------ Deinstallation
@@ -298,12 +301,12 @@ public abstract class InstallServiceBase : IInstallService
     {
         var dir = Path.TrimEndingDirectorySeparator(Path.GetFullPath(options.InstallDirectory));
         var manifest = TryReadManifest(dir)
-            ?? throw new InstallException("In diesem Ordner wurde keine StudyScope-Installation gefunden.");
+            ?? throw new InstallException(SetupCoreStrings.Uninstall_NotFound);
 
         if (Processes.IsAppRunning(dir, Paths.AppExecutableName))
-            throw new InstallException("StudyScope läuft noch. Bitte schließen Sie StudyScope und versuchen Sie es erneut.");
+            throw new InstallException(SetupCoreStrings.Install_AppRunning);
 
-        progress?.Report(new InstallProgress(5, "Entferne Verknüpfungen …"));
+        progress?.Report(new InstallProgress(5, SetupCoreStrings.Progress_RemovingShortcuts));
         Shortcuts.RemoveShortcuts(manifest.Shortcuts);
         UnregisterInstallation(dir);
 
@@ -321,27 +324,27 @@ public abstract class InstallServiceBase : IInstallService
             else if (!TryDeleteFile(file) && File.Exists(file))
                 locked.Add(file);
 
-            progress?.Report(new InstallProgress(10 + (int)(70.0 * (i + 1) / Math.Max(1, manifest.Files.Count)), $"Entferne {manifest.Files[i]}"));
+            progress?.Report(new InstallProgress(10 + (int)(70.0 * (i + 1) / Math.Max(1, manifest.Files.Count)), Loc.Format(SetupCoreStrings.Progress_Removing, ("file", manifest.Files[i]))));
         }
 
         TryDeleteFile(Path.Combine(dir, ManifestFileName));
         DeleteEmptyDirectories(dir);
         TryDeleteEmptyDirectory(dir);
 
-        progress?.Report(new InstallProgress(85, "Entferne zwischengespeicherte Daten …"));
+        progress?.Report(new InstallProgress(85, SetupCoreStrings.Progress_RemovingCaches));
         foreach (var cache in Paths.AppCacheDirectories)
             TryDeleteDirectory(cache);
 
         if (options.DeleteUserData)
         {
-            progress?.Report(new InstallProgress(92, "Entferne Profile und Einstellungen …"));
+            progress?.Report(new InstallProgress(92, SetupCoreStrings.Progress_RemovingUserData));
             TryDeleteDirectory(Paths.UserDataDirectory);
         }
 
         if (locked.Count > 0)
             HandleLockedFiles(dir, locked);
 
-        progress?.Report(new InstallProgress(100, "StudyScope wurde entfernt."));
+        progress?.Report(new InstallProgress(100, SetupCoreStrings.Progress_Removed));
     }
 
     // ------------------------------------------------------------------ Hilfsmethoden

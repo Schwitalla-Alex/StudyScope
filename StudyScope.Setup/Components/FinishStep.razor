@@ -2,26 +2,24 @@
 @inject SetupWizardViewModel Vm
 
 <div class="done-icon">✓</div>
-<h2>@(Vm.IsUpdate ? "Update abgeschlossen" : "Installation abgeschlossen")</h2>
-<p class="lead">
-    StudyScope @Vm.Version wurde erfolgreich @(Vm.IsUpdate ? "aktualisiert" : "installiert").
-</p>
+<h2>@(Vm.IsUpdate ? SetupStrings.Finish_TitleUpdate : SetupStrings.Finish_TitleInstall)</h2>
+<p class="lead">@Loc.Format(Vm.IsUpdate ? SetupStrings.Finish_LeadUpdate : SetupStrings.Finish_LeadInstall, ("version", Vm.Version))</p>
 
 <table class="summary">
-    <tr><th>Installiert in</th><td><code>@Vm.InstallDirectory</code></td></tr>
-    <tr><th>Deinstallation</th><td>@UninstallHint</td></tr>
+    <tr><th>@SetupStrings.Finish_InstalledIn</th><td><code>@Vm.InstallDirectory</code></td></tr>
+    <tr><th>@SetupStrings.Finish_Uninstall</th><td>@UninstallHint</td></tr>
 </table>
 
 <label class="check">
     <input type="checkbox" id="opt-launch" checked="@Vm.LaunchAfterFinish"
            @onchange="e => Vm.LaunchAfterFinish = (bool)(e.Value ?? false)" />
-    <span>StudyScope jetzt starten</span>
+    <span>@SetupStrings.Finish_Launch</span>
 </label>
 
 @code {
     private static string UninstallHint => OperatingSystem.IsWindows()
-        ? "Über Einstellungen → Apps → Installierte Apps → StudyScope"
-        : "Über den Menüeintrag (Rechtsklick → „StudyScope deinstallieren“) oder „bash install.sh --uninstall“";
+        ? SetupStrings.Finish_UninstallHintWindows
+        : Loc.Format(SetupStrings.Finish_UninstallHintLinux, ("action", SetupCoreStrings.Desktop_UninstallAction));
 
     protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };
 }

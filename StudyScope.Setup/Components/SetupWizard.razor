@@ -6,13 +6,17 @@
     <header class="wizard-header">
         <img src="favicon.ico" alt="" class="wizard-logo" />
         <div class="wizard-title">
-            <h1>StudyScope Setup</h1>
-            <span>Version @Vm.Version@(Context.IsSandbox ? " · Sandbox" : "")</span>
+            <h1>@SetupStrings.Window_SetupTitle</h1>
+            <span>@Loc.Format(SetupStrings.Header_Version, ("version", Vm.Version))</span>
+            @if (Context.IsSandbox)
+            {
+                <span class="sandbox-badge">@SetupStrings.Header_Sandbox</span>
+            }
         </div>
         <ol class="wizard-steps">
             @foreach (var (step, label) in Steps)
             {
-                <li class="@StepClass(step)">@((int)step + 1). @label</li>
+                <li class="@StepClass(step)">@Loc.Format(SetupStrings.Step_Label, ("number", (int)step + 1), ("label", label))</li>
             }
         </ol>
     </header>
@@ -41,41 +45,42 @@
     <footer class="wizard-footer">
         @if (Vm.CurrentStep != WizardStep.Finished)
         {
-            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Cancel">Abbrechen</button>
+            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Cancel">@SetupStrings.Button_Cancel</button>
         }
         <span class="spacer"></span>
         @if (Vm.CanGoBack)
         {
-            <button class="btn btn-secondary" id="btn-back" @onclick="Vm.GoBack">Zurück</button>
+            <button class="btn btn-secondary" id="btn-back" @onclick="Vm.GoBack">@SetupStrings.Button_Back</button>
         }
         @switch (Vm.CurrentStep)
         {
             case WizardStep.Welcome:
             case WizardStep.Folder:
-                <button class="btn btn-primary" id="btn-next" disabled="@(!Vm.CanGoNext)" @onclick="Vm.GoNextAsync">Weiter</button>
+                <button class="btn btn-primary" id="btn-next" disabled="@(!Vm.CanGoNext)" @onclick="Vm.GoNextAsync">@SetupStrings.Button_Next</button>
                 break;
             case WizardStep.Options:
-                <button class="btn btn-success" id="btn-next" @onclick="Vm.GoNextAsync">@(Vm.IsUpdate ? "Aktualisieren" : "Installieren")</button>
+                <button class="btn btn-success" id="btn-next" @onclick="Vm.GoNextAsync">@(Vm.IsUpdate ? SetupStrings.Button_Update : SetupStrings.Button_Install)</button>
                 break;
             case WizardStep.Progress when Vm.Install.HasError:
-                <button class="btn btn-primary" id="btn-retry" @onclick="Vm.RetryAsync">Erneut versuchen</button>
+                <button class="btn btn-primary" id="btn-retry" @onclick="Vm.RetryAsync">@SetupStrings.Button_Retry</button>
                 break;
             case WizardStep.Finished:
-                <button class="btn btn-primary" id="btn-finish" @onclick="Vm.Finish">Fertig stellen</button>
+                <button class="btn btn-primary" id="btn-finish" @onclick="Vm.Finish">@SetupStrings.Button_Finish</button>
                 break;
         }
     </footer>
 </div>
 
 @code {
-    private static readonly (WizardStep Step, string Label)[] Steps =
-    {
-        (WizardStep.Welcome, "Willkommen"),
-        (WizardStep.Folder, "Ordner"),
-        (WizardStep.Options, "Optionen"),
-        (WizardStep.Progress, "Installation"),
-        (WizardStep.Finished, "Fertig")
-    };
+    // Eigenschaft statt Feld: die Beschriftungen werden bei jedem Zeichnen in der aktuellen Sprache gelesen
+    private static (WizardStep Step, string Label)[] Steps =>
+    [
+        (WizardStep.Welcome, SetupStrings.Step_Welcome),
+        (WizardStep.Folder, SetupStrings.Step_Folder),
+        (WizardStep.Options, SetupStrings.Step_Options),
+        (WizardStep.Progress, SetupStrings.Step_Installation),
+        (WizardStep.Finished, SetupStrings.Step_Finished)
+    ];
 
     protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm, Vm.Install };
 

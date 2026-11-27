@@ -1,5 +1,7 @@
+using StudyScope.Core.Localization;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
+using StudyScope.Setup.Core.Resources;
 using StudyScope.Setup.Core.Services;
 
 namespace StudyScope.Setup.Core.ViewModels;
@@ -123,7 +125,7 @@ public sealed class UninstallViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Unerwarteter Fehler: " + ex.Message;
+            ErrorMessage = Loc.Format(SetupCoreStrings.Error_Unexpected, ("error", ex.Message));
             CurrentStep = UninstallStep.Confirm;
         }
         finally

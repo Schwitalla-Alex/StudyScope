@@ -1,4 +1,5 @@
-/* Gestaltung des Installationsassistenten. Grundregeln und Farben: css/studyscope-base.css (aus StudyScope.UI). */
+/* Gestaltung des Installationsassistenten. Grundregeln und Farben: css/studyscope-base.css (aus StudyScope.UI).
+   Abstände und Ausrichtung mit logischen Eigenschaften (margin-inline-start, text-align: start), damit dir="rtl" passt. */
 body { background: #fff; color: var(--ss-text); font-size: 14px; }
 #app { height: 100vh; }
 
@@ -8,8 +9,9 @@ body { background: #fff; color: var(--ss-text); font-size: 14px; }
 .wizard-logo { width: 40px; height: 40px; }
 .wizard-title h1 { font-size: 18px; margin: 0; white-space: nowrap; }
 .wizard-title span { font-size: 12px; color: var(--ss-text-muted); }
+.wizard-title .sandbox-badge { margin-inline-start: 6px; padding: 1px 6px; border-radius: 8px; background: var(--ss-warning-bg); color: var(--ss-warning-text); font-weight: 600; }
 
-.wizard-steps { margin-left: auto; display: flex; gap: 6px; list-style: none; }
+.wizard-steps { margin-inline-start: auto; display: flex; gap: 6px; list-style: none; }
 .wizard-steps li { font-size: 11px; color: var(--ss-text-muted); padding: 4px 8px; border-radius: 12px; background: var(--ss-panel); white-space: nowrap; }
 .wizard-steps li.active { background: var(--ss-primary); color: #fff; font-weight: 600; }
 .wizard-steps li.done { background: #d4edda; color: #155724; }
@@ -32,7 +34,7 @@ code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 12px; ba
 .btn-success { background: var(--ss-success); color: #fff; }
 .btn-danger { background: var(--ss-danger); color: #fff; }
 .btn-secondary { background: var(--ss-text-muted); color: #fff; }
-.link { background: none; border: none; color: var(--ss-primary); cursor: pointer; font-size: 12px; text-align: left; padding: 0; }
+.link { background: none; border: none; color: var(--ss-primary); cursor: pointer; font-size: 12px; text-align: start; padding: 0; }
 
 .box { padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.5; }
 .box-info { background: #e7f1ff; color: #084298; }
@@ -55,7 +57,7 @@ code { font-family: Consolas, "DejaVu Sans Mono", monospace; font-size: 12px; ba
 .check small { color: var(--ss-text-muted); }
 
 .summary { border-collapse: collapse; font-size: 13px; }
-.summary th { text-align: left; color: var(--ss-text-muted); font-weight: 600; padding: 4px 16px 4px 0; vertical-align: top; white-space: nowrap; }
+.summary th { text-align: start; color: var(--ss-text-muted); font-weight: 600; padding-block: 4px; padding-inline: 0 16px; vertical-align: top; white-space: nowrap; }
 .summary td { padding: 4px 0; }
 
 .progress { height: 14px; background: var(--ss-panel); border-radius: 7px; overflow: hidden; }

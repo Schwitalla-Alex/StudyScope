@@ -1,37 +1,32 @@
 @inherits ViewModelComponent
 @inject SetupWizardViewModel Vm
 
-<h2>Willkommen</h2>
-<p class="lead">
-    Dieser Assistent installiert <strong>StudyScope @Vm.Version</strong> auf Ihrem Computer –
-    die Lernsoftware für Dokumenten-Chat und Lernkarteikarten mit KI-Unterstützung.
-    Aus Ihren Unterlagen erstellt StudyScope außerdem Mindmaps, Präsentationen, Quizze, Datentabellen, Berichte, Audio-Zusammenfassungen zum Anhören und vertonte Erklärvideos.
-</p>
+<h2>@SetupStrings.Welcome_Title</h2>
+<p class="lead">@LocHtml.Format(SetupStrings.Welcome_Lead, ("version", Vm.Version))</p>
 
 @if (!Vm.IsPayloadAvailable)
 {
     <div class="box box-warning" id="welcome-no-payload">
-        <strong>Kein Installationspaket enthalten.</strong><br />
-        Dieses Setup wurde ohne StudyScope-Programmdateien gebaut (Entwickler-Build). Bitte verwenden Sie das
-        Setup aus dem Build-Skript.
+        <strong>@SetupStrings.Welcome_NoPayloadTitle</strong><br />
+        @SetupStrings.Welcome_NoPayloadText
     </div>
 }
 else if (Vm.IsUpdate)
 {
     <div class="box box-info" id="welcome-update">
-        <strong>StudyScope @Vm.InstalledVersion ist bereits installiert.</strong><br />
-        Das Setup aktualisiert die Installation in <code>@Vm.InstallDirectory</code> auf Version @Vm.Version.
+        <strong>@Loc.Format(SetupStrings.Welcome_UpdateTitle, ("version", Vm.InstalledVersion))</strong><br />
+        @LocHtml.Format(SetupStrings.Welcome_UpdateText, ("folder", Vm.InstallDirectory), ("version", Vm.Version))
     </div>
 }
 
 <ul class="checklist">
-    <li>Installation nur für Ihr Benutzerkonto – keine Administratorrechte nötig</li>
-    <li>Ihre Profile und Einstellungen bleiben bei Updates erhalten</li>
-    <li>Deinstallation jederzeit über das Setup möglich</li>
-    <li>Optional: Mit dem kostenlosen Programm ffmpeg exportiert StudyScope Videos als MP4 und Audio als MP3 (wird nicht mitinstalliert)</li>
+    <li>@SetupStrings.Welcome_PerUser</li>
+    <li>@SetupStrings.Welcome_KeepsData</li>
+    <li>@SetupStrings.Welcome_Uninstall</li>
+    <li>@SetupStrings.Welcome_Ffmpeg</li>
 </ul>
 
-<p class="hint">Klicken Sie auf „Weiter“, um fortzufahren.</p>
+<p class="hint">@Loc.Format(SetupStrings.Hint_ClickToContinue, ("button", SetupStrings.Button_Next))</p>
 
 @code {
     protected override IEnumerable<INotifyPropertyChanged> ViewModels => new INotifyPropertyChanged[] { Vm };

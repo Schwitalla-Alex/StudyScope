@@ -4,6 +4,7 @@ using Microsoft.Win32;
 using StudyScope.Core.Common;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
+using StudyScope.Setup.Core.Resources;
 
 namespace StudyScope.Setup.Core.Services.Windows;
 
@@ -111,7 +112,7 @@ public sealed class WindowsShortcutService : IShortcutService
     }
 
     public bool IsMenuShortcutOptional => true;
-    public string MenuShortcutLabel => "Verknüpfung im Startmenü";
+    public string MenuShortcutLabel => SetupCoreStrings.Shortcut_MenuWindows;
 
     public IReadOnlyList<string> CreateShortcuts(ShortcutRequest request)
     {
@@ -137,7 +138,7 @@ public sealed class WindowsShortcutService : IShortcutService
         Directory.CreateDirectory(Path.GetDirectoryName(linkPath)!);
 
         var shellType = Type.GetTypeFromProgID("WScript.Shell")
-            ?? throw new InstallException("Verknüpfungen können auf diesem System nicht angelegt werden (WScript.Shell fehlt).");
+            ?? throw new InstallException(SetupCoreStrings.Shortcut_NoWScriptShell);
         dynamic shell = Activator.CreateInstance(shellType)!;
         try
         {
@@ -145,7 +146,7 @@ public sealed class WindowsShortcutService : IShortcutService
             link.TargetPath = request.AppExecutablePath;
             link.WorkingDirectory = request.InstallDirectory;
             link.IconLocation = request.AppExecutablePath + ",0";
-            link.Description = "StudyScope – Lernsoftware mit KI-Unterstützung";
+            link.Description = SetupCoreStrings.Shortcut_Description;
             link.Save();
         }
         finally
@@ -174,10 +175,7 @@ public sealed class WebView2Checker : IPrerequisiteChecker
 
         return installed
             ? PrerequisiteResult.Ok
-            : new PrerequisiteResult(false,
-                "Für StudyScope wird die Microsoft Edge WebView2-Runtime benötigt, die auf diesem PC nicht gefunden wurde.\n\n" +
-                "Bitte installieren Sie die Runtime von der Microsoft-Seite und starten Sie das Setup danach erneut.",
-                DownloadUrl);
+            : new PrerequisiteResult(false, SetupCoreStrings.Prerequisite_WebView2Missing, DownloadUrl);
     }
 
     private static bool HasVersion(RegistryKey hive, string path)

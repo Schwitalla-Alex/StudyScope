@@ -1,4 +1,5 @@
 @inject SetupContext Context
+@inject IJSRuntime JS
 
 <!-- Root-Komponente: Installationsassistent oder Deinstallation (Argument --uninstall) -->
 @if (Context.Mode == SetupMode.Uninstall)
@@ -8,4 +9,16 @@
 else
 {
     <SetupWizard />
+}
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // Sprache und Schreibrichtung der Seite (index.html ist eingebettet und kennt die Sprache nicht)
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("document.documentElement.setAttribute", "lang", Context.LanguageTag);
+            await JS.InvokeVoidAsync("document.documentElement.setAttribute", "dir", Context.Direction);
+        }
+    }
 }

@@ -1,10 +1,12 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Photino.NET;
+using StudyScope.Core.Localization;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Services;
 using StudyScope.Setup.Core.Services.Linux;
 using StudyScope.Setup.Core.Services.Windows;
+using StudyScope.Setup.Resources;
 
 namespace StudyScope.Setup.Services;
 
@@ -83,7 +85,7 @@ public sealed class PlatformServices
             return new PlatformServices { Paths = paths, Shortcuts = shortcuts, InstallService = install, Prerequisites = new LinuxPrerequisiteChecker() };
         }
 
-        throw new PlatformNotSupportedException("Das StudyScope-Setup unterstützt Windows und Linux.");
+        throw new PlatformNotSupportedException(SetupStrings.Platform_NotSupported);
     }
 
     /// <summary>Lenkt Standardordner und Benutzerdaten in den Sandbox-Ordner um (nur Debug, siehe <see cref="SandboxDirectory"/>).</summary>
@@ -121,7 +123,7 @@ public sealed class PhotinoFolderPicker : IFolderPicker
             ? initialDirectory
             : Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
 
-        var result = await Window.ShowOpenFolderAsync("Installationsordner wählen", start, multiSelect: false);
+        var result = await Window.ShowOpenFolderAsync(SetupStrings.Folder_PickerTitle, start, multiSelect: false);
         return result?.FirstOrDefault();
     }
 }
@@ -145,19 +147,19 @@ public static class NativeMessage
         {
             if (helpUrl != null)
             {
-                var answer = MessageBoxW(IntPtr.Zero, message + "\n\nDownload-Seite jetzt im Browser öffnen?\n" + helpUrl,
-                    "StudyScope Setup", MbYesNo | MbIconWarning);
+                var answer = MessageBoxW(IntPtr.Zero, Loc.Format(SetupStrings.Native_OpenDownloadPage, ("message", message), ("url", helpUrl)),
+                    SetupStrings.Window_SetupTitle, MbYesNo | MbIconWarning);
                 if (answer == IdYes)
                     Process.Start(new ProcessStartInfo(helpUrl) { UseShellExecute = true })?.Dispose();
             }
             else
             {
-                MessageBoxW(IntPtr.Zero, message, "StudyScope Setup", MbOk | MbIconError);
+                MessageBoxW(IntPtr.Zero, message, SetupStrings.Window_SetupTitle, MbOk | MbIconError);
             }
             return;
         }
 
-        Console.Error.WriteLine("StudyScope Setup: " + message);
+        Console.Error.WriteLine(SetupStrings.Window_SetupTitle + ": " + message);
         if (helpUrl != null)
             Console.Error.WriteLine(helpUrl);
     }
@@ -217,5 +219,14 @@ public static class WindowSizing
     }
 }
 
-/// <summary>Kontext des Setup-Laufs (Installation oder Deinstallation), per DI für App.razor.</summary>
-public sealed record SetupContext(Core.Models.SetupMode Mode, bool IsSandbox);
+/// <summary>
+/// Kontext des Setup-Laufs (Installation oder Deinstallation, Sprache für <c>lang</c>/<c>dir</c> der Seite), per DI für App.razor.
+/// </summary>
+public sealed record SetupContext(Core.Models.SetupMode Mode, bool IsSandbox, System.Globalization.CultureInfo Culture)
+{
+    /// <summary>Sprachkennung für das <c>lang</c>-Attribut (z. B. „de-DE“, „en“).</summary>
+    public string LanguageTag => Culture.Name;
+
+    /// <summary>Schreibrichtung für das <c>dir</c>-Attribut.</summary>
+    public string Direction => Culture.TextInfo.IsRightToLeft ? "rtl" : "ltr";
+}
