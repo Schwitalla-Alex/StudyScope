@@ -18,6 +18,9 @@ public sealed class TavilySearchService : IWebSearchProvider
     public const string Endpoint = "https://api.tavily.com/search";
     public const string ProviderName = "Tavily";
 
+    /// <summary>Verbrauch und Grenzen des Schlüssels (GET, Schlüssel im Header) – Prüfweg beim Speichern ohne Suche.</summary>
+    public const string UsageEndpoint = "https://api.tavily.com/usage";
+
     private readonly HttpClient _http;
 
     public TavilySearchService(HttpClient http) => _http = http;
@@ -29,7 +32,7 @@ public sealed class TavilySearchService : IWebSearchProvider
     {
         var key = settings.TavilyApiKey?.Trim() ?? string.Empty;
         if (key.Length == 0)
-            throw new WebSearchException(InfraStrings.WebSearch_TavilyNoKey, ProviderName);
+            throw new WebSearchException(InfraStrings.WebSearch_TavilyNoKey, ProviderName, kind: WebSearchErrorKind.NotConfigured);
 
         var body = BuildRequestBody(query, maxResults);
         var (status, responseBody) = await WebSearchHttp.SendAsync(_http, ProviderName, () =>
@@ -48,6 +51,70 @@ public sealed class TavilySearchService : IWebSearchProvider
 
         return WebSearchHttp.Clean(ParseResults(responseBody, status), maxResults);
     }
+
+    /// <summary>
+    /// Zugangsprüfung über GET /usage (keine Suche, laut Credit-Tabelle ohne Credit). Ist der Endpunkt nicht verfügbar
+    /// (404/405), prüft eine Suche nach „StudyScope“ mit einem Treffer (1 Credit, <see cref="WebSearchVerification.UsedCredit"/>).
+    /// 401/403 → abgelehnt, 429/432/433 → Grenze, 5xx/Netzwerk/Zeitüberschreitung → nicht erreichbar (als Ausnahme).
+    /// </summary>
+    public async Task<WebSearchVerification> VerifyAsync(WebSearchSettings settings, CancellationToken cancellationToken)
+    {
+        var key = settings.TavilyApiKey?.Trim() ?? string.Empty;
+        if (key.Length == 0)
+            throw new WebSearchException(InfraStrings.WebSearch_TavilyNoKey, ProviderName, kind: WebSearchErrorKind.NotConfigured);
+
+        var (status, body) = await WebSearchHttp.SendAsync(_http, ProviderName, () =>
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, UsageEndpoint);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", key);
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            return request;
+        }, cancellationToken);
+
+        if (status is 404 or 405)
+        {
+            await SearchAsync(settings, WebSearchQuery.ConnectionTest(), CultureInfo.InvariantCulture, 1, cancellationToken);
+            return WebSearchVerification.Ok(usedCredit: true);
+        }
+        if (status is < 200 or >= 300)
+            throw WebSearchException.FromHttpStatus(ProviderName, status, body);
+
+        return WebSearchVerification.Ok(ParseUsage(body));
+    }
+
+    /// <summary>
+    /// Verbrauch aus der Antwort von GET /usage: bevorzugt der Tarif (<c>account.plan_usage</c>/<c>plan_limit</c>),
+    /// sonst der Schlüssel (<c>key.usage</c>/<c>limit</c>, null = ohne Grenze). Unlesbare Antwort → null.
+    /// </summary>
+    public static WebSearchUsage? ParseUsage(string? responseBody)
+    {
+        if (string.IsNullOrWhiteSpace(responseBody)) return null;
+        try
+        {
+            using var document = JsonDocument.Parse(responseBody);
+            var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return null;
+
+            if (root.TryGetProperty("account", out var account) && account.ValueKind == JsonValueKind.Object &&
+                GetLong(account, "plan_usage") is { } planUsage && GetLong(account, "plan_limit") is { } planLimit)
+                return new WebSearchUsage(planUsage, planLimit);
+
+            if (root.TryGetProperty("key", out var keyInfo) && keyInfo.ValueKind == JsonValueKind.Object &&
+                GetLong(keyInfo, "usage") is { } keyUsage)
+                return new WebSearchUsage(keyUsage, GetLong(keyInfo, "limit"));
+
+            return null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
+    }
+
+    private static long? GetLong(JsonElement item, string name) =>
+        item.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt64(out var number) && number >= 0
+            ? number
+            : null;
 
     /// <summary>
     /// Anfrage an Tavily. Enthält ausschließlich die Suchanfrage und feste Optionen – keine Auszüge, keine Dateinamen.

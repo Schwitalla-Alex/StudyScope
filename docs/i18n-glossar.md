@@ -326,6 +326,14 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Keine Web-Treffer | No web results | Hinweis im Chat |
 | Websuche nicht verfügbar | Web search unavailable | Hinweis im Chat bei Fehler des Suchdienstes |
 | Quellen: | Sources: | Chat-Protokoll |
+| Zugang (prüfen) | access (check) | „Zugang zu Tavily wird geprüft …“ → “Checking access to Tavily …” |
+| Trotzdem speichern | Save anyway | nach nicht möglicher Prüfung |
+| Nicht gespeichert: … | Not saved: … | Zugang abgelehnt |
+| gespeichert, aber nicht geprüft | saved, but not checked | nach „Trotzdem speichern“ |
+| Tavily-Konto öffnen | Open Tavily account | Link nach abgelehntem Schlüssel |
+| Diesen Monat verbraucht laut Tavily: 3 von 1.000 Credits | Used this month according to Tavily: 3 of 1,000 credits | Verbrauch aus Tavily /usage (zählt neue Suchen verzögert); Mehrzahl über ICU |
+| Einstellungen der Websuche | Web search settings | ⚙ in der Seitenleiste |
+| ⚙ Einstellungen öffnen | ⚙ Open settings | Knopf am Hinweis „Websuche nicht verfügbar“ |
 
 ## Schlüssel in den `.resx`-Dateien
 

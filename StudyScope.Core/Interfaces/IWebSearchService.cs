@@ -21,6 +21,14 @@ public interface IWebSearchService
     /// </summary>
     Task<int> TestAsync(WebSearchSettings settings, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Prüft beim Speichern den Zugang mit den übergebenen (noch nicht gespeicherten) Einstellungen. Tavily: GET /usage
+    /// (Schlüssel im Header, laut Credit-Tabelle ohne Credit), nur falls nicht verfügbar eine Prüfsuche (1 Credit);
+    /// SearXNG: Suche nach „StudyScope“ in der eigenen Instanz. Fehler kommen als Ergebnis, nicht als Ausnahme;
+    /// nur ein Abbruch bleibt eine <see cref="OperationCanceledException"/>. „Kein Suchdienst“ ist immer <c>Ok</c>.
+    /// </summary>
+    Task<WebSearchVerification> VerifyAsync(WebSearchSettings settings, CancellationToken cancellationToken = default);
+
     /// <summary>Ein Suchdienst ist eingerichtet (bzw. die Fake-Suche für Prüfungen ist aktiv).</summary>
     Task<bool> IsConfiguredAsync();
 

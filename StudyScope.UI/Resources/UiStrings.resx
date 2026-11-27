@@ -698,4 +698,9 @@
   <data name="WebSearch_Test" xml:space="preserve"><value>🔌 Verbindung testen</value></data>
   <data name="WebSearch_Testing" xml:space="preserve"><value>Prüfe …</value></data>
   <data name="WebSearch_TestTitle" xml:space="preserve"><value>Sucht einmal nach „StudyScope“ mit den eingegebenen Werten (bei Tavily 1 Credit). Es wird keine Frage und kein Dokumentinhalt gesendet.</value></data>
+  <data name="WebSearch_SaveAnyway" xml:space="preserve"><value>Trotzdem speichern</value></data>
+  <data name="WebSearch_TavilyAccount" xml:space="preserve"><value>Tavily-Konto öffnen</value></data>
+  <data name="WebSearch_SaveTitle" xml:space="preserve"><value>Prüft vor dem Speichern, ob der Zugang funktioniert (bei Tavily ohne Suche).</value></data>
+  <data name="Sidebar_WebSearchSettings" xml:space="preserve"><value>Einstellungen der Websuche</value></data>
+  <data name="Chat_OpenWebSearchSettings" xml:space="preserve"><value>⚙ Einstellungen öffnen</value></data>
 </root>

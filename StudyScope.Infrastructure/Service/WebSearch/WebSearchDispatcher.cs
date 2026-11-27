@@ -59,6 +59,22 @@ public sealed class WebSearchDispatcher : IWebSearchService
         return results.Count;
     }
 
+    public async Task<WebSearchVerification> VerifyAsync(WebSearchSettings settings, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        if (settings.Provider == WebSearchProviderType.None)
+            return WebSearchVerification.Ok();
+        try
+        {
+            // Bewusst der echte Dienst, auch bei Fake-Suche: geprüft werden die eingegebenen Werte
+            return await ProviderFor(settings).VerifyAsync(settings, cancellationToken);
+        }
+        catch (WebSearchException ex)
+        {
+            return WebSearchVerification.FromException(ex);
+        }
+    }
+
     public async Task<bool> IsConfiguredAsync() =>
         IsFakeMode || (await _storage.LoadWebSearchSettingsAsync()).IsConfigured;
 

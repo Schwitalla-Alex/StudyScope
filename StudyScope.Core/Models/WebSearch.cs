@@ -173,3 +173,45 @@ public sealed class WebSearchQuery
         return text[..end].TrimEnd();
     }
 }
+
+/// <summary>Ergebnis der Zugangsprüfung beim Speichern der Einstellungen (<see cref="Interfaces.IWebSearchService.VerifyAsync"/>).</summary>
+public enum WebSearchVerificationStatus
+{
+    /// <summary>Zugang geprüft und gültig.</summary>
+    Ok,
+    /// <summary>Zugang abgelehnt bzw. falsch eingerichtet (Schlüssel, SearXNG ohne JSON, Adresse) – nicht speichern.</summary>
+    Rejected,
+    /// <summary>Nicht prüfbar: Netzwerk, Zeitüberschreitung, Serverfehler, unerwartete Antwort – nur auf Wunsch speichern.</summary>
+    Unreachable,
+    /// <summary>Kontingent bzw. Grenze erreicht – der Zugang gilt als gültig, speichern mit Warnung.</summary>
+    LimitReached
+}
+
+/// <summary>Verbrauch des Tavily-Zugangs im laufenden Abrechnungszeitraum (aus GET /usage); <see cref="Limit"/> null = ohne Grenze.</summary>
+public sealed record WebSearchUsage(long Used, long? Limit);
+
+/// <summary>
+/// Ergebnis der Zugangsprüfung: Status, Meldung des Dienstes (bei Misserfolg), Verbrauch (nur Tavily) und ob die
+/// Prüfung eine kostenpflichtige Suche gebraucht hat (Rückfall bei Tavily, 1 Credit).
+/// </summary>
+public sealed record WebSearchVerification(
+    WebSearchVerificationStatus Status,
+    string? Message = null,
+    WebSearchUsage? Usage = null,
+    bool UsedCredit = false,
+    Common.WebSearchErrorKind? ErrorKind = null)
+{
+    public static WebSearchVerification Ok(WebSearchUsage? usage = null, bool usedCredit = false) =>
+        new(WebSearchVerificationStatus.Ok, Usage: usage, UsedCredit: usedCredit);
+
+    /// <summary>Übersetzt einen Fehler der Websuche in das Prüfergebnis.</summary>
+    public static WebSearchVerification FromException(Common.WebSearchException exception) => new(
+        exception.Kind switch
+        {
+            Common.WebSearchErrorKind.Rejected or Common.WebSearchErrorKind.NotConfigured => WebSearchVerificationStatus.Rejected,
+            Common.WebSearchErrorKind.LimitReached => WebSearchVerificationStatus.LimitReached,
+            _ => WebSearchVerificationStatus.Unreachable
+        },
+        exception.UserMessage,
+        ErrorKind: exception.Kind);
+}

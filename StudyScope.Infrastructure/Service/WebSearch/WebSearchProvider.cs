@@ -14,6 +14,16 @@ public interface IWebSearchProvider
 
     Task<IReadOnlyList<WebSearchResult>> SearchAsync(WebSearchSettings settings, WebSearchQuery query, CultureInfo language,
         int maxResults, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Zugangsprüfung beim Speichern. Standard: eine Suche nach <see cref="WebSearchQuery.ConnectionTestText"/> mit einem
+    /// Treffer (SearXNG: eigene Instanz, kostenlos). Fehler kommen als <see cref="WebSearchException"/>.
+    /// </summary>
+    async Task<WebSearchVerification> VerifyAsync(WebSearchSettings settings, CancellationToken cancellationToken)
+    {
+        await SearchAsync(settings, WebSearchQuery.ConnectionTest(), CultureInfo.InvariantCulture, 1, cancellationToken);
+        return WebSearchVerification.Ok();
+    }
 }
 
 /// <summary>Gemeinsame Hilfen der Suchdienste: Senden mit Zeitlimit und Fehlerübersetzung, Bereinigen der Treffer.</summary>

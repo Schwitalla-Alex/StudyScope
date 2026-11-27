@@ -174,7 +174,7 @@ public class OutputLanguageTests
         var fake = new FakeLlmService();
         var line = OutputLanguage.PromptLine(C("en"));
         var chat = fake.AskQuestionAsync("What is photosynthesis?\n\n" + line, GermanChunks).GetAwaiter().GetResult();
-        Assert.That(chat, Does.StartWith("[Test mode] Answer based on 2 excerpt(s).").And.Contain("Question: What is photosynthesis?"));
+        Assert.That(chat, Does.StartWith("[Test mode] Answer based on 2 excerpts.").And.Contain("Question: What is photosynthesis?"));
         Assert.That(chat, Does.Not.Contain("Sprache der Antwort"), "Frage ohne Sprachzeile wiedergegeben");
 
         var cards = new FlashcardService(fake).GenerateFlashcardsAsync(GermanChunks, 5, "en").GetAwaiter().GetResult();
@@ -194,7 +194,7 @@ public class OutputLanguageTests
     {
         var fake = new FakeLlmService();
         var chat = fake.AskQuestionAsync("Was ist Photosynthese?", GermanChunks).GetAwaiter().GetResult();
-        Assert.That(chat, Does.StartWith("[Testmodus] Antwort basierend auf 2 Textstelle(n).\nFrage: Was ist Photosynthese?"));
+        Assert.That(chat, Does.StartWith("[Testmodus] Antwort basierend auf 2 Textstellen.\nFrage: Was ist Photosynthese?"));
         var quiz = new QuizService(fake).GenerateQuestionsAsync(new QuizTopic { Name = "Energie" }, GermanChunks, 3,
             Enum.GetValues<QuizQuestionType>(), 0).GetAwaiter().GetResult();
         Assert.That(quiz.Questions.Where(q => q.Type == QuizQuestionType.TrueFalse).SelectMany(q => q.Options), Is.SubsetOf(new[] { "Wahr", "Falsch" }));

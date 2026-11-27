@@ -64,6 +64,12 @@
                     <div style="font-weight: bold; font-size: 11px; margin-bottom: 3px; opacity: 0.8;">@RoleLabel(msg.Role):</div>
                     <div style="white-space: pre-wrap;">@msg.Content</div>
 
+                    <!-- Systemhinweis mit Knopf (z. B. Websuche: Schlüssel abgelehnt bzw. kein Suchdienst) -->
+                    @if (msg.Action == ChatMessageAction.OpenWebSearchSettings && OnOpenWebSearchSettings.HasDelegate)
+                    {
+                        <button type="button" class="ss-chat-action" @onclick="() => OnOpenWebSearchSettings.InvokeAsync()">@UiStrings.Chat_OpenWebSearchSettings</button>
+                    }
+
                     <!-- Quellen einer Antwort mit Websuche: Unterlagen und Internet getrennt; Web-Quellen öffnen im System-Browser -->
                     @if (msg.Sources.Count > 0)
                     {
@@ -197,6 +203,9 @@
 </style>
 
 @code {
+    /// <summary>Öffnet Einstellungen › Websuche (Knopf am Hinweis „Websuche nicht verfügbar“).</summary>
+    [Parameter] public EventCallback OnOpenWebSearchSettings { get; set; }
+
     private Guid? _copiedMessageId;
 
     private static string RoleLabel(MessageRole role) => role switch
