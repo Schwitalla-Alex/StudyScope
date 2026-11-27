@@ -42,7 +42,6 @@ public class ReportServiceTests
             Assert.That(prompt, Does.StartWith("Erstelle einen Bericht"));
             Assert.That(prompt, Does.Contain("JSON"));
             Assert.That(prompt, Does.Not.Contain("Mindmap"));
-            Assert.That(FakeReportResponse.IsReportPrompt(prompt), Is.True);
         }
     }
 
@@ -53,14 +52,6 @@ public class ReportServiceTests
         Assert.That(ReportService.BuildPrompt(ReportTemplate.Faq, ""), Does.Contain("FAQ"));
         Assert.That(ReportService.BuildPrompt(ReportTemplate.Briefing, ""), Does.Contain("Briefing"));
         Assert.That(ReportService.BuildPrompt(ReportTemplate.Custom, "Vergleiche die Steuerarten"), Does.Contain("Vergleiche die Steuerarten"));
-    }
-
-    [Test]
-    public void FakeReport_IsNotConfusedWithOtherPrompts()
-    {
-        Assert.That(FakeReportResponse.IsReportPrompt("Erstelle eine Mindmap als JSON"), Is.False);
-        Assert.That(FakeReportResponse.IsReportPrompt("Erstelle eine Präsentation als JSON"), Is.False);
-        Assert.That(FakeReportResponse.IsReportPrompt("Erstelle einen Bericht ohne Format"), Is.False);
     }
 
     // ---------- Auswertung ----------

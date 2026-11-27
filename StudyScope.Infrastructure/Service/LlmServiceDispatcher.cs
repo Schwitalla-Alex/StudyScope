@@ -122,20 +122,25 @@ public class LlmServiceDispatcher : ILlmService
         var config = await LoadActiveConfigAsync();
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
+        // Auftrag oder Chat nur an der Kennzeile (TaskPrompt) erkennen; die KI erhält den Prompt ohne Kennzeile
+        var system = SystemPromptFor(prompt);
+        var jsonMode = IsStructuredJsonPrompt(prompt);
+        var text = TaskPrompt.Body(prompt);
+
         try
         {
             return config.SelectedProvider switch
             {
                 AiProviderType.FakeAi => AskFakeAi(prompt, chunks),
-                AiProviderType.OllamaLocal => await AskOllamaAsync(config, prompt, chunks, cancellationToken),
-                AiProviderType.LmStudioLocal => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: true,
+                AiProviderType.OllamaLocal => await AskOllamaAsync(config, text, system, chunks, cancellationToken),
+                AiProviderType.LmStudioLocal => await AskOpenAiCompatibleAsync(config, text, system, chunks, isLmStudio: true,
                     providerName: "LM Studio", cancellationToken: cancellationToken),
-                AiProviderType.OpenAiGpt4 => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false,
-                    providerName: "OpenAI", useJsonMode: IsStructuredJsonPrompt(prompt), cancellationToken: cancellationToken),
-                AiProviderType.MistralAi => await AskMistralAsync(config, prompt, chunks, cancellationToken),
-                AiProviderType.CustomOpenAi => await AskOpenAiCompatibleAsync(config, prompt, chunks, isLmStudio: false,
+                AiProviderType.OpenAiGpt4 => await AskOpenAiCompatibleAsync(config, text, system, chunks, isLmStudio: false,
+                    providerName: "OpenAI", useJsonMode: jsonMode, cancellationToken: cancellationToken),
+                AiProviderType.MistralAi => await AskMistralAsync(config, text, system, jsonMode, chunks, cancellationToken),
+                AiProviderType.CustomOpenAi => await AskOpenAiCompatibleAsync(config, text, system, chunks, isLmStudio: false,
                     providerName: InfraStrings.Llm_ProviderCustom, cancellationToken: cancellationToken),
-                AiProviderType.GoogleGemini => await AskGeminiAsync(config, prompt, chunks, cancellationToken),
+                AiProviderType.GoogleGemini => await AskGeminiAsync(config, text, system, chunks, cancellationToken),
                 _ => InfraStrings.Llm_NoProvider
             };
         }
@@ -149,54 +154,14 @@ public class LlmServiceDispatcher : ILlmService
     /// <summary>Antwort bei Abbruch durch den Benutzer (die Dienste werten sie nicht als Inhalt aus).</summary>
     public const string CancelledResponse = "[Anfrage durch Benutzer abgebrochen]";
 
-    private static string AskFakeAi(string prompt, List<string> chunks)
-    {
-        // Chat mit Websuche zuerst: Die Markierung steht nur in der Frage; Inhalte der Auszüge (auch Web-Texte mit
-        // „Bericht“, „JSON-Array“ o. Ä.) werden für die Erkennung nie gelesen
-        if (WebContextPrompt.IsWebPrompt(prompt))
-            return FakeLanguage.WebChat(prompt, chunks);
+    /// <summary>Fake-KI: gemeinsame Weiche mit <see cref="FakeLlmService"/> (Auftrag nur an der Kennzeile).</summary>
+    private static string AskFakeAi(string prompt, List<string> chunks) => FakeAiRouter.Answer(prompt, chunks);
 
-        // Bericht vor allem anderen: eine eigene Vorgabe des Benutzers kann "Mindmap" o. Ä. enthalten
-        if (FakeReportResponse.IsReportPrompt(prompt))
-            return FakeReportResponse.Create(prompt, chunks);
-
-        // Datentabelle direkt danach: auch ihre eigene Vorgabe kann "Mindmap", "Quiz" o. Ä. enthalten
-        if (FakeDataTableResponse.IsDataTablePrompt(prompt))
-            return FakeDataTableResponse.Create(prompt, chunks);
-
-        // Audio-Skript nach Bericht und Datentabelle: ein Schwerpunkt kann "Mindmap", "Quiz" o. Ä. enthalten
-        if (FakeAudioScriptResponse.IsAudioScriptPrompt(prompt))
-            return FakeAudioScriptResponse.Create(prompt, chunks);
-
-        // Video-Skript nach dem Audio-Skript: Folientitel können "Mindmap", "Quiz" o. Ä. enthalten
-        if (FakeVideoScriptResponse.IsVideoScriptPrompt(prompt))
-            return FakeVideoScriptResponse.Create(prompt, chunks);
-
-        // Mindmap zuerst prüfen: Ihr Prompt enthält ebenfalls "JSON"
-        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
-            return FakeMindmapResponse.Create(chunks, FakeLanguage.IsEnglish(prompt));
-
-        if (FakePresentationResponse.IsPresentationPrompt(prompt))
-            return FakePresentationResponse.Create(chunks, FakeLanguage.IsEnglish(prompt));
-
-        if (FakeQuizResponse.IsTopicPrompt(prompt))
-            return FakeQuizResponse.CreateTopics(chunks, FakeLanguage.IsEnglish(prompt));
-
-        if (FakeQuizResponse.IsQuestionPrompt(prompt))
-            return FakeQuizResponse.CreateQuestions(prompt, chunks);
-
-        if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) || prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
-            return FakeLanguage.Flashcards(prompt, chunks);
-
-        return FakeLanguage.Chat(prompt, chunks);
-    }
-
-    private async Task<string> AskOllamaAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken)
+    private async Task<string> AskOllamaAsync(AiConfig config, string prompt, string systemPrompt, List<string> chunks, CancellationToken cancellationToken)
     {
         var url = $"{config.LocalEndpointUrl.TrimEnd('/')}/api/chat";
         var contextText = chunks.Any() ? string.Join("\n\n---\n\n", chunks) : string.Empty;
 
-        var systemPrompt = SystemPromptFor(prompt);
 
         var fullUserMessage = string.IsNullOrWhiteSpace(contextText)
             ? prompt
@@ -237,7 +202,7 @@ public class LlmServiceDispatcher : ILlmService
         throw UnexpectedResponse(providerName, (int)response.StatusCode, responseContent);
     }
 
-    private async Task<string> AskMistralAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken)
+    private async Task<string> AskMistralAsync(AiConfig config, string prompt, string systemPrompt, bool useJsonMode, List<string> chunks, CancellationToken cancellationToken)
     {
         var mistralConfig = new AiConfig
         {
@@ -246,8 +211,8 @@ public class LlmServiceDispatcher : ILlmService
             SelectedModelName = string.IsNullOrWhiteSpace(config.SelectedModelName) ? "mistral-small-latest" : config.SelectedModelName
         };
 
-        return await AskOpenAiCompatibleAsync(mistralConfig, prompt, chunks, isLmStudio: false, explicitBaseUrl: "https://api.mistral.ai/v1",
-            providerName: "Mistral AI", useJsonMode: IsStructuredJsonPrompt(prompt), cancellationToken: cancellationToken);
+        return await AskOpenAiCompatibleAsync(mistralConfig, prompt, systemPrompt, chunks, isLmStudio: false, explicitBaseUrl: "https://api.mistral.ai/v1",
+            providerName: "Mistral AI", useJsonMode: useJsonMode, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -313,19 +278,29 @@ public class LlmServiceDispatcher : ILlmService
         "Du bist ein präziser Studienassistent. Antworte AUSSCHLIESSLICH mit einem gültigen JSON-Objekt der Form {\"items\": [...]}. " +
         "\"items\" enthält genau das JSON-Array, das in der Aufgabe verlangt wird. Verwende nur Inhalte aus den bereitgestellten Auszügen.";
 
-    /// <summary>Strukturierte Aufträge der Dienste verlangen „als gültiges JSON-Array“ – Chatfragen mit dem Wort „JSON“ nicht.</summary>
+    /// <summary>
+    /// JSON-Modus (Mistral/OpenAI) nur für Aufträge der Dienste mit Kennzeile (<see cref="TaskPrompt"/>), deren Rumpf
+    /// „JSON-Array“ verlangt – nie für eine Chatfrage, auch wenn sie „JSON-Array“ enthält.
+    /// </summary>
     public static bool IsStructuredJsonPrompt(string prompt) =>
-        prompt.Contains("JSON-Array", StringComparison.OrdinalIgnoreCase) && !WebContextPrompt.IsWebPrompt(prompt);
+        TaskPrompt.TryParse(prompt, out _, out var body) && body.Contains("JSON-Array", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Systemanweisung je Auftrag: Chat mit Websuche → <see cref="RagWebSystemPromptFor"/> (nie JSON, auch wenn die Frage
-    /// „JSON“ enthält), strukturierte Aufträge → <see cref="JsonSystemPrompt"/>, sonst <see cref="RagSystemPromptFor"/>.
-    /// Gelesen wird nur die Frage, nie die Auszüge.
+    /// Systemanweisung je Auftrag: Auftrag mit Kennzeile (<see cref="TaskPrompt"/>) → <see cref="JsonSystemPrompt"/>;
+    /// Chatfrage mit Websuche → <see cref="RagWebSystemPromptFor"/>, sonst <see cref="RagSystemPromptFor"/> – eine Chatfrage
+    /// bekommt nie die JSON-Anweisung, auch wenn sie „JSON“ oder „Mindmap“ enthält. Gelesen wird nur der Prompt, nie die Auszüge.
     /// </summary>
-    public static string SystemPromptFor(string prompt) =>
-        WebContextPrompt.IsWebPrompt(prompt) ? RagWebSystemPromptFor(OutputLanguage.TryParse(prompt))
-        : WantsJson(prompt) ? JsonSystemPrompt
-        : RagSystemPromptFor(OutputLanguage.TryParse(prompt));
+    public static string SystemPromptFor(string prompt)
+    {
+        // Auftrag eines Dienstes (Kennzeile): JSON-Anweisung wie bisher aus dem Rumpf – nur hier wirkt „JSON“
+        if (TaskPrompt.TryParse(prompt, out _, out var body))
+            return WantsJson(body) ? JsonSystemPrompt : RagSystemPromptFor(OutputLanguage.TryParse(body));
+
+        // Chatfrage: nie JSON, auch wenn die Frage „JSON“, „Mindmap“ o. Ä. enthält
+        return WebContextPrompt.IsWebPrompt(prompt)
+            ? RagWebSystemPromptFor(OutputLanguage.TryParse(prompt))
+            : RagSystemPromptFor(OutputLanguage.TryParse(prompt));
+    }
 
     /// <summary>Überschrift des Kontexts: im Web-Chat <see cref="WebContextPrompt.ContextHeading"/>, sonst wie bisher.</summary>
     private static string ContextHeadingFor(string prompt, string standardHeading) =>
@@ -376,6 +351,7 @@ public class LlmServiceDispatcher : ILlmService
     private async Task<string> AskOpenAiCompatibleAsync(
         AiConfig config,
         string prompt,
+        string systemPrompt,
         List<string> chunks,
         bool isLmStudio,
         string? explicitBaseUrl = null,
@@ -415,7 +391,7 @@ public class LlmServiceDispatcher : ILlmService
             : (string.IsNullOrWhiteSpace(config?.SelectedModelName) ? "gpt-4o-mini" : config.SelectedModelName);
 
         // Dynamischer System-Prompt: JSON nur verlangen, wenn es explizit gefordert wurde!
-        var systemContent = useJsonMode ? JsonModeSystemPrompt : SystemPromptFor(prompt);
+        var systemContent = useJsonMode ? JsonModeSystemPrompt : systemPrompt;
 
         var requestBody = new Dictionary<string, object>
         {
@@ -497,7 +473,7 @@ public class LlmServiceDispatcher : ILlmService
         }
     }
 
-    private async Task<string> AskGeminiAsync(AiConfig config, string prompt, List<string> chunks, CancellationToken cancellationToken = default)
+    private async Task<string> AskGeminiAsync(AiConfig config, string prompt, string systemText, List<string> chunks, CancellationToken cancellationToken = default)
     {
         const string providerName = "Google Gemini";
         if (string.IsNullOrWhiteSpace(config.ApiKey))
@@ -517,7 +493,6 @@ public class LlmServiceDispatcher : ILlmService
             ? prompt
             : $"{ContextHeadingFor(prompt, "Kontext")}:\n{contextText}\n\nFrage: {prompt}";
 
-        var systemText = SystemPromptFor(prompt);
         var requestBody = new
         {
             system_instruction = new { parts = new[] { new { text = systemText } } },

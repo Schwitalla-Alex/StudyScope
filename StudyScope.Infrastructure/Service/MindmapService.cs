@@ -65,7 +65,7 @@ public class MindmapService : IMindmapService
         var language = ResultLanguage.Resolve(outputLanguage, chunks);
         prompt = ResultLanguage.ApplyToPrompt(prompt, language);
 
-        var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.Mindmap, prompt), chunks, cancellationToken);
         var fallback = string.IsNullOrWhiteSpace(rootTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_MindmapTitle) : rootTitle;
         var parsed = AnalyzeResponse(raw, fallback);
         return new MindmapGenerationResult

@@ -66,7 +66,7 @@ public class PresentationService : IPresentationService
         var language = ResultLanguage.Resolve(outputLanguage, chunks);
         prompt = ResultLanguage.ApplyToPrompt(prompt, language);
 
-        var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.Presentation, prompt), chunks, cancellationToken);
         var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_PresentationTitle) : fallbackTitle;
         var parsed = AnalyzeResponse(raw, fallback);
         if (parsed.Value != null)

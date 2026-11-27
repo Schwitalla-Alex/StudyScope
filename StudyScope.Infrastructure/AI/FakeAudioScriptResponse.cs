@@ -3,17 +3,12 @@ using System.Text.Json;
 namespace StudyScope.Infrastructure.AI;
 
 /// <summary>
-/// Beispiel-Sprechskript für den Testmodus (Fake-KI). Wird von <see cref="FakeLlmService"/> und dem Fake-Zweig des
-/// LlmServiceDispatcher nach Bericht und Datentabelle geprüft – vor Mindmap, Präsentation, Quiz und Karteikarten,
-/// weil ein Schwerpunkt des Benutzers Wörter wie „Mindmap“ oder „Quiz“ enthalten kann.
+/// Beispiel-Sprechskript für den Testmodus (Fake-KI) für Aufträge mit Kennzeile <c>AudioScript</c>
+/// (<see cref="FakeAiRouter"/>, gemeinsam für <see cref="FakeLlmService"/> und den Dispatcher).
 /// Beim Format „Podcast-Gespräch“ sprechen Moderatorin und Experte abwechselnd.
 /// </summary>
 public static class FakeAudioScriptResponse
 {
-    public static bool IsAudioScriptPrompt(string prompt) =>
-        prompt.StartsWith("Erstelle ein Audio-Skript", StringComparison.OrdinalIgnoreCase)
-        && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
         var isPodcast = prompt.Contains("Format: Podcast-Gespräch", StringComparison.OrdinalIgnoreCase);

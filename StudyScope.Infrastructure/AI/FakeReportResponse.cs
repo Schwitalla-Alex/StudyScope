@@ -3,16 +3,11 @@ using System.Text.Json;
 namespace StudyScope.Infrastructure.AI;
 
 /// <summary>
-/// Beispiel-Bericht für den Testmodus (Fake-KI). Wird von <see cref="FakeLlmService"/> und dem
-/// Fake-Zweig des LlmServiceDispatcher genutzt – und dort als Erstes geprüft, weil eine eigene
-/// Vorgabe des Benutzers auch Wörter wie „Mindmap“ oder „Präsentation“ enthalten kann.
+/// Beispiel-Bericht für den Testmodus (Fake-KI) für Aufträge mit Kennzeile <c>Report</c>
+/// (<see cref="FakeAiRouter"/>, gemeinsam für <see cref="FakeLlmService"/> und den Dispatcher).
 /// </summary>
 public static class FakeReportResponse
 {
-    public static bool IsReportPrompt(string prompt) =>
-        prompt.StartsWith("Erstelle einen Bericht", StringComparison.OrdinalIgnoreCase)
-        && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
         var en = FakeLanguage.IsEnglish(prompt);

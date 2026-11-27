@@ -5,16 +5,10 @@ namespace StudyScope.Infrastructure.AI;
 
 /// <summary>
 /// Beispiel-Video-Skript für den Testmodus (Fake-KI): je Folie aus den Auszügen („Folie N: Titel“ samt Stichpunkten)
-/// ein kurzer Sprechtext. Wird von <see cref="FakeLlmService"/> und dem Fake-Zweig des LlmServiceDispatcher nach Bericht,
-/// Datentabelle und Audio-Skript geprüft – vor Mindmap, Präsentation, Quiz und Karteikarten, weil Folientitel Wörter wie
-/// „Mindmap“ oder „Quiz“ enthalten können und der Prompt „JSON“ enthält.
+/// ein kurzer Sprechtext; für Aufträge mit Kennzeile <c>VideoScript</c> (<see cref="FakeAiRouter"/>).
 /// </summary>
 public static partial class FakeVideoScriptResponse
 {
-    public static bool IsVideoScriptPrompt(string prompt) =>
-        prompt.StartsWith("Erstelle ein Video-Skript", StringComparison.OrdinalIgnoreCase)
-        && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
         var en = FakeLanguage.IsEnglish(prompt);

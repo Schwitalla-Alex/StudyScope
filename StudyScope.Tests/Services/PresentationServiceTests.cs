@@ -158,13 +158,6 @@ public class PresentationServiceTests
         Assert.That(result.Presentation!.Slides.Last().Title, Is.EqualTo("Fazit"));
     }
 
-    [Test]
-    public void FakePresentationResponse_DetectsOnlyRealPresentationPrompts()
-    {
-        Assert.That(FakePresentationResponse.IsPresentationPrompt("Erstelle eine Präsentation mit genau 5 Inhaltsfolien ... JSON-Array"), Is.True);
-        Assert.That(FakePresentationResponse.IsPresentationPrompt("Was steht in der Präsentation über Zellen?"), Is.False);
-    }
-
     // ---------- Ableitung aus der Mindmap ----------
 
     private static MindmapDocument CreateMindmap(int branchChildren = 2) => new()
