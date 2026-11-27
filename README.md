@@ -134,7 +134,7 @@ API-Schlüssel (KI-Anbieter, Gemini TTS, Tavily) speichert StudyScope in Ihren B
 - **Linux:** Unter Linux werden Schlüssel derzeit nur verschleiert gespeichert; ein Schutz über den Schlüsselbund ist vorgesehen. Wer Ihre Benutzerdaten kopiert, kann sie lesen; die Einstellungen weisen darauf hin.
 - **Anderer Computer oder anderes Konto:** Kann StudyScope einen gespeicherten Schlüssel nicht lesen, steht in den Einstellungen „Bitte tragen Sie ihn neu ein“. Der alte Wert bleibt gespeichert, bis Sie einen neuen eintragen oder „Gespeicherten Schlüssel entfernen“ wählen – zurück auf dem alten Computer funktioniert er wieder.
 - **Update von 1.2.0:** Beim ersten Start schützt StudyScope vorhandene Schlüssel neu. Vorher legt es eine Sicherung `Backup\keys-1.2-<Datum>.zip` mit den bisherigen Dateien an; sie wird nach 30 Tagen automatisch gelöscht.
-- **Zurück auf 1.2.0:** Die ältere Version kann die neu geschützten Schlüssel nicht lesen – tragen Sie sie dort neu ein. Alternativ lassen sich innerhalb von 30 Tagen `config.json` und die Profile aus der Sicherung zurückkopieren; danach geänderte Einstellungen und Dokumentlisten gehen dabei verloren.
+- **Zurück auf 1.2.0:** Die ältere Version kann die neu geschützten Schlüssel nicht lesen – tragen Sie sie dort neu ein. Alternativ lassen sich innerhalb von 30 Tagen `config.json` und die Profile aus der Sicherung zurückkopieren (bei mehreren Sicherungen die älteste); danach geänderte Einstellungen und Dokumentlisten gehen dabei verloren.
 - **Deinstallation:** Benutzerdaten und damit die Schlüssel bleiben erhalten, außer Sie wählen „Profile und Einstellungen mitlöschen“.
 
 ---
