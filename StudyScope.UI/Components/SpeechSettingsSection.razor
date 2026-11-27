@@ -12,7 +12,12 @@
         <label class="ss-label">@UiStrings.Speech_KeyLabel</label>
         <input type="password" class="ss-input" placeholder="@(SpeechVm.ChatProvidesGeminiKey ? UiStrings.Speech_KeyNotNeeded : UiStrings.Speech_KeyPlaceholder)"
                @bind="SpeechVm.GeminiApiKey" @bind:event="oninput" />
-        <div class="ss-hint">@SpeechVm.KeySourceText</div>
+        @if (SpeechVm.ShowsKeySourceText)
+        {
+            <div class="ss-hint">@SpeechVm.KeySourceText</div>
+        }
+        <KeyProtectionNote NeedsReentry="SpeechVm.GeminiKeyNeedsReentry" ProtectionText="@SpeechVm.KeyProtectionText"
+                           IsFallback="SpeechVm.IsKeyProtectionFallback" OnDiscard="SpeechVm.DiscardUnreadableKeyAsync" />
     </div>
 
     <div>

@@ -4,10 +4,14 @@ using StudyScope.Core.Interfaces;
 
 namespace StudyScope.Infrastructure.Services;
 
+/// <summary>
+/// Bisheriges Verfahren bis 1.2.0 (AES-GCM mit fest abgeleitetem Schlüssel, Base64 ohne Präfix). Wird nur noch zum Lesen
+/// alter Werte und als Rückfall genutzt, wenn das Betriebssystem keinen Schutz bietet (siehe <see cref="SecretProtector"/>).
+/// Wer StudyScope und die Datei hat, kann solche Werte entschlüsseln – sie sind nur verschleiert.
+/// </summary>
 public class AesEncryptionService : IEncryptionService
 {
-    // Ein 256-Bit-Schlüssel (32 Bytes).
-    // Tipp: In Produktivumgebungen kann dieser maschinenspezifisch (z.B. aus Machine-GUID + App-Salt) generiert werden.
+    // Fest abgeleiteter 256-Bit-Schlüssel (muss gleich bleiben, sonst sind Werte aus 1.2.0 nicht mehr lesbar)
     private static readonly byte[] Key = SHA256.HashData(Encoding.UTF8.GetBytes("StudyScope-Secret-Storage-Key-v1-2026"));
 
     public string Encrypt(string plainText)
@@ -39,6 +43,17 @@ public class AesEncryptionService : IEncryptionService
         if (string.IsNullOrWhiteSpace(cipherText))
             return string.Empty;
 
+        // Altes Verhalten: nicht entschlüsselbarer Text kommt unverändert zurück (alter Klartext)
+        return TryDecrypt(cipherText, out var plain) ? plain : cipherText;
+    }
+
+    /// <summary>Entschlüsselt einen Wert im Format bis 1.2.0; false, wenn er kein solches Chiffrat ist.</summary>
+    public static bool TryDecrypt(string? cipherText, out string plainText)
+    {
+        plainText = string.Empty;
+        if (string.IsNullOrWhiteSpace(cipherText))
+            return false;
+
         try
         {
             var payload = Convert.FromBase64String(cipherText);
@@ -46,7 +61,7 @@ public class AesEncryptionService : IEncryptionService
             var tagSize = AesGcm.TagByteSizes.MaxSize;
 
             if (payload.Length < nonceSize + tagSize)
-                return string.Empty;
+                return false;
 
             var nonce = new byte[nonceSize];
             var tag = new byte[tagSize];
@@ -61,12 +76,13 @@ public class AesEncryptionService : IEncryptionService
             using var aesGcm = new AesGcm(Key, tagSize);
             aesGcm.Decrypt(nonce, cipherBytes, tag, plainBytes);
 
-            return Encoding.UTF8.GetString(plainBytes);
+            plainText = Encoding.UTF8.GetString(plainBytes);
+            return true;
         }
-        catch
+        catch (Exception ex) when (ex is FormatException or CryptographicException or ArgumentException)
         {
-            // Abfangen, falls es alter Klartext ist oder manipuliert wurde
-            return cipherText;
+            // Kein Chiffrat (alter Klartext) oder manipuliert
+            return false;
         }
     }
 }

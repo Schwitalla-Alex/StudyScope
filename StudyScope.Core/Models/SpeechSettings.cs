@@ -25,6 +25,14 @@ public class SpeechSettings
     /// <summary>Eigener Schlüssel für Gemini TTS (wenn das Profil keinen Gemini-Schlüssel hat).</summary>
     public string GeminiApiKey { get; set; } = string.Empty;
 
+    /// <summary>Nur im Speicher: gespeicherter Gemini-Schlüssel nicht lesbar (anderer Computer oder anderes Konto), siehe <see cref="AiConfig.ApiKeyUnreadable"/>.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool GeminiApiKeyUnreadable { get; set; }
+
+    /// <summary>Gemini-Schlüssel muss neu eingetragen werden.</summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public bool GeminiApiKeyNeedsReentry => GeminiApiKeyUnreadable && string.IsNullOrWhiteSpace(GeminiApiKey);
+
     /// <summary>Gemini-Modell für die Sprachausgabe (änderbar, weil Vorschau-Modelle umbenannt werden).</summary>
     public string GeminiModel { get; set; } = GeminiTtsInfo.DefaultModel;
 

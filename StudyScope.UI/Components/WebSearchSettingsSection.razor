@@ -35,6 +35,8 @@
             {
                 <div class="ws-key-warning" role="status">@WebVm.KeyFormatWarning</div>
             }
+            <KeyProtectionNote NeedsReentry="WebVm.TavilyKeyNeedsReentry" ProtectionText="@WebVm.KeyProtectionText"
+                               IsFallback="WebVm.IsKeyProtectionFallback" OnDiscard="WebVm.DiscardUnreadableKeyAsync" />
             <div class="ss-hint">@UiStrings.WebSearch_TavilyHint</div>
             <button type="button" class="ss-link-btn ws-link" @onclick="() => WebVm.OpenTavilySignup()">@UiStrings.WebSearch_TavilySignup</button>
             <div class="ss-hint">@UiStrings.WebSearch_TavilyPrivacy</div>

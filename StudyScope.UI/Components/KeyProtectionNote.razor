@@ -1,0 +1,45 @@
+@using StudyScope.ViewModels
+@* Hinweise unter einem Schlüsselfeld: nicht lesbarer gespeicherter Schlüssel (mit „entfernen“) und wie Schlüssel gespeichert werden *@
+
+@if (NeedsReentry)
+{
+    <div class="ss-keynote ss-keynote-warn" role="status">
+        <div>@KeyProtectionTexts.Unreadable</div>
+        <button type="button" class="ss-link-btn ss-keynote-discard" disabled="@discarding" @onclick="DiscardAsync">@VmStrings.KeyProtection_Discard</button>
+    </div>
+}
+@if (!string.IsNullOrEmpty(ProtectionText))
+{
+    <div class="@(IsFallback ? "ss-keynote ss-keynote-warn" : "ss-keynote ss-keynote-info")">@ProtectionText</div>
+}
+
+<style>
+    .ss-keynote { font-size: 11.5px; margin-block-start: 4px; line-height: 1.4; }
+    .ss-keynote-info { color: var(--ss-text-muted); }
+    .ss-keynote-warn { padding-block: 4px; padding-inline: 8px; border-radius: 4px; background: var(--ss-warning-bg); color: var(--ss-warning-text); border: 1px solid var(--ss-warning-border); }
+    .ss-keynote-discard { margin-block-start: 4px; font-size: 11.5px; }
+</style>
+
+@code {
+    /// <summary>Gespeicherter Schlüssel ist hier nicht lesbar und noch kein neuer eingetragen.</summary>
+    [Parameter] public bool NeedsReentry { get; set; }
+
+    /// <summary>Wie Schlüssel gespeichert werden; leer = keine Zeile.</summary>
+    [Parameter] public string? ProtectionText { get; set; }
+
+    /// <summary>Rückfall ohne Schutz des Betriebssystems: Zeile als Warnung.</summary>
+    [Parameter] public bool IsFallback { get; set; }
+
+    /// <summary>„Gespeicherten Schlüssel entfernen“.</summary>
+    [Parameter] public Func<Task>? OnDiscard { get; set; }
+
+    private bool discarding;
+
+    private async Task DiscardAsync()
+    {
+        if (OnDiscard == null) return;
+        discarding = true;
+        try { await OnDiscard(); }
+        finally { discarding = false; }
+    }
+}

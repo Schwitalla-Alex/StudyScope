@@ -447,4 +447,8 @@
   <data name="WebSearch_SavedLimit" xml:space="preserve"><value>Saved – the access is valid, but: {error}</value></data>
   <data name="WebSearch_SavedUnverified" xml:space="preserve"><value>Saved, but not checked. The next web search will show whether the access works.</value></data>
   <data name="WebSearch_KeyFormatWarning" xml:space="preserve"><value>Tavily keys usually start with “tvly-”. Check that the whole key was pasted.</value></data>
+  <data name="KeyProtection_WindowsAccount" xml:space="preserve"><value>🔒 The key is stored encrypted and bound to your Windows account.</value></data>
+  <data name="KeyProtection_Fallback" xml:space="preserve"><value>On this system, keys are only obscured, not protected by the operating system. Anyone who copies your user data can read them.</value></data>
+  <data name="KeyProtection_Unreadable" xml:space="preserve"><value>The saved key can't be read here because it was saved on another computer or under another user account. Please enter it again.</value></data>
+  <data name="KeyProtection_Discard" xml:space="preserve"><value>Remove saved key</value></data>
 </root>

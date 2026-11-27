@@ -1,4 +1,6 @@
-﻿namespace StudyScope.Core.Models;
+﻿using System.Text.Json.Serialization;
+
+namespace StudyScope.Core.Models;
 
 /// <summary>
 /// Hält die Konfiguration für die verschiedenen KI-Anbindungen (Fake-KI, Ollama, LM Studio, Gemini, OpenAI).
@@ -24,4 +26,16 @@ public class AiConfig
     public const string FakeModelName = "Fake-KI (Testmodus)";
 
     public string SelectedModelName { get; set; } = FakeModelName;
+
+    /// <summary>
+    /// Nur im Speicher: Der gespeicherte Schlüssel konnte nicht gelesen werden (anderer Computer oder anderes Konto).
+    /// <see cref="ApiKey"/> ist dann leer; der gespeicherte Wert bleibt auf der Platte unverändert, bis ein neuer
+    /// Schlüssel eingetragen oder er ausdrücklich entfernt wird.
+    /// </summary>
+    [JsonIgnore]
+    public bool ApiKeyUnreadable { get; set; }
+
+    /// <summary>Schlüssel muss neu eingetragen werden (nicht lesbar und kein neuer eingetragen).</summary>
+    [JsonIgnore]
+    public bool ApiKeyNeedsReentry => ApiKeyUnreadable && string.IsNullOrWhiteSpace(ApiKey);
 }

@@ -7,6 +7,7 @@ using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Core.Localization;
 using StudyScope.Infrastructure.Resources;
+using StudyScope.Core.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -38,9 +39,31 @@ public class LlmServiceDispatcher : ILlmService
         return await _storageService.LoadAiConfigAsync() ?? new AiConfig();
     }
 
+    /// <summary>
+    /// Ein gespeicherter Schlüssel, der hier nicht lesbar ist (anderer Computer oder anderes Konto), wird als klare
+    /// Meldung gemeldet – statt ohne Schlüssel anzufragen und eine Ablehnung des Dienstes zu zeigen.
+    /// </summary>
+    private static void EnsureKeyReadable(AiConfig config)
+    {
+        if (!config.ApiKeyNeedsReentry)
+            return;
+
+        var providerName = config.SelectedProvider switch
+        {
+            AiProviderType.GoogleGemini => "Google Gemini",
+            AiProviderType.OpenAiGpt4 => "OpenAI",
+            AiProviderType.MistralAi => "Mistral AI",
+            AiProviderType.CustomOpenAi => InfraStrings.Llm_ProviderCustom,
+            _ => null // Fake-KI und lokale Dienste brauchen keinen Schlüssel
+        };
+        if (providerName != null)
+            throw new LlmServiceException(Loc.Format(CoreStrings.Secret_KeyUnreadable, ("provider", providerName)), providerName);
+    }
+
     public async Task<bool> ValidateConnectionAsync(AiConfig? config = null)
     {
         config ??= await LoadActiveConfigAsync();
+        EnsureKeyReadable(config);
 
         return config.SelectedProvider switch
         {
@@ -120,6 +143,7 @@ public class LlmServiceDispatcher : ILlmService
     public async Task<string> AskQuestionAsync(string prompt, IEnumerable<string> contextChunks, CancellationToken cancellationToken = default)
     {
         var config = await LoadActiveConfigAsync();
+        EnsureKeyReadable(config);
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
         // Auftrag oder Chat nur an der Kennzeile (TaskPrompt) erkennen; die KI erhält den Prompt ohne Kennzeile

@@ -447,4 +447,8 @@
   <data name="WebSearch_SavedLimit" xml:space="preserve"><value>Gespeichert – der Zugang ist gültig, aber: {error}</value><comment>{error} = Meldung des Suchdienstes zum Kontingent</comment></data>
   <data name="WebSearch_SavedUnverified" xml:space="preserve"><value>Gespeichert, aber nicht geprüft. Bei der nächsten Websuche zeigt sich, ob der Zugang funktioniert.</value></data>
   <data name="WebSearch_KeyFormatWarning" xml:space="preserve"><value>Tavily-Schlüssel beginnen normalerweise mit „tvly-“. Bitte prüfen, ob der Schlüssel vollständig eingefügt wurde.</value></data>
+  <data name="KeyProtection_WindowsAccount" xml:space="preserve"><value>🔒 Der Schlüssel wird verschlüsselt und an Ihr Windows-Konto gebunden gespeichert.</value></data>
+  <data name="KeyProtection_Fallback" xml:space="preserve"><value>Auf diesem System werden Schlüssel nur verschleiert gespeichert, nicht durch das Betriebssystem geschützt. Wer Ihre Benutzerdaten kopiert, kann sie lesen.</value></data>
+  <data name="KeyProtection_Unreadable" xml:space="preserve"><value>Der gespeicherte Schlüssel kann hier nicht gelesen werden, weil er auf einem anderen Computer oder unter einem anderen Benutzerkonto gespeichert wurde. Bitte tragen Sie ihn neu ein.</value></data>
+  <data name="KeyProtection_Discard" xml:space="preserve"><value>Gespeicherten Schlüssel entfernen</value></data>
 </root>

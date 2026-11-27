@@ -46,4 +46,5 @@
   <data name="WebSearch_Timeout" xml:space="preserve"><value>{provider} hat nicht innerhalb von {seconds} Sekunden geantwortet. Bitte später erneut versuchen.</value></data>
   <data name="WebSearch_UnexpectedResponse" xml:space="preserve"><value>{provider} hat eine unerwartete Antwort geliefert.</value></data>
   <data name="WebSearch_NotConfigured" xml:space="preserve"><value>Es ist kein Suchdienst eingerichtet. Bitte unter Einstellungen › Websuche einen Dienst auswählen.</value></data>
+  <data name="Secret_KeyUnreadable" xml:space="preserve"><value>Der gespeicherte Schlüssel für {provider} kann hier nicht gelesen werden, weil er auf einem anderen Computer oder unter einem anderen Benutzerkonto gespeichert wurde. Bitte tragen Sie ihn unter ☰ › Einstellungen neu ein.</value></data>
 </root>

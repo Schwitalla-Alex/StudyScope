@@ -688,7 +688,7 @@
   <data name="WebSearch_NoneHint" xml:space="preserve"><value>Without a search provider, web search cannot be turned on in any profile.</value></data>
   <data name="WebSearch_TavilyKeyLabel" xml:space="preserve"><value>Tavily API key:</value></data>
   <data name="WebSearch_TavilyKeyPlaceholder" xml:space="preserve"><value>tvly-…</value></data>
-  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily is a cloud service with a free monthly quota; each search costs 1 credit. You get the key after signing up with Tavily. It applies to all profiles and is stored encrypted.</value></data>
+  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily is a cloud service with a free monthly quota; each search costs 1 credit. You get the key after signing up with Tavily. It applies to all profiles.</value></data>
   <data name="WebSearch_TavilySignup" xml:space="preserve"><value>Get a key from Tavily</value></data>
   <data name="WebSearch_TavilyPrivacy" xml:space="preserve"><value>Tavily stores search queries and, according to its privacy policy, may use them to improve its service and pass them on to third-party search indexes.</value></data>
   <data name="WebSearch_SearxngUrlLabel" xml:space="preserve"><value>Address of the SearXNG instance:</value></data>

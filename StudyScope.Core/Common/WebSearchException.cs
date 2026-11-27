@@ -106,6 +106,10 @@ public class WebSearchException : Exception
     /// <summary>Kein Suchdienst eingerichtet (bzw. Schlüssel oder Adresse fehlt).</summary>
     public static WebSearchException NotConfigured() => new(CoreStrings.WebSearch_NotConfigured, string.Empty, kind: WebSearchErrorKind.NotConfigured);
 
+    /// <summary>Gespeicherter Schlüssel hier nicht lesbar (anderer Computer oder anderes Konto): neu eintragen.</summary>
+    public static WebSearchException KeyUnreadable(string providerName) =>
+        new(Loc.Format(CoreStrings.Secret_KeyUnreadable, ("provider", providerName)), providerName, kind: WebSearchErrorKind.NotConfigured);
+
     private static string Shorten(string? text)
     {
         var value = text?.Trim() ?? string.Empty;

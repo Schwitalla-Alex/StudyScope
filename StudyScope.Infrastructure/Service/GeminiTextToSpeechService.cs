@@ -7,6 +7,7 @@ using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Core.Localization;
 using StudyScope.Infrastructure.Resources;
+using StudyScope.Core.Resources;
 
 namespace StudyScope.Infrastructure.Services;
 
@@ -89,6 +90,25 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         return (string.Empty, KeySource.None);
     }
 
+    /// <summary>
+    /// Meldung, wenn kein Schlüssel nutzbar ist, weil ein gespeicherter Schlüssel hier nicht lesbar ist (anderer
+    /// Computer oder anderes Konto); sonst null.
+    /// </summary>
+    public static string? UnreadableKeyMessage(SpeechContext context)
+    {
+        if (ResolveApiKey(context).Source != KeySource.None)
+            return null;
+
+        var chatUnreadable = context.ChatConfig is { SelectedProvider: AiProviderType.GoogleGemini, ApiKeyNeedsReentry: true };
+        return chatUnreadable || context.Settings.GeminiApiKeyNeedsReentry
+            ? Loc.Format(CoreStrings.Secret_KeyUnreadable, ("provider", ProviderName))
+            : null;
+    }
+
+    /// <summary>Kein Schlüssel: Ausnahme mit passender Meldung (nicht lesbar bzw. fehlt).</summary>
+    private static LlmServiceException MissingKey(SpeechContext context) =>
+        new(UnreadableKeyMessage(context) ?? Loc.Format(InfraStrings.Tts_NoKeyWithHint, ("hint", MissingKeyHint)), ProviderName);
+
     public static string KeySourceText(KeySource source) => source switch
     {
         KeySource.ChatSettings => InfraStrings.Tts_KeyFromChat,
@@ -107,7 +127,9 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
         {
             KeySource.ChatSettings => SpeechAvailability.Ready(InfraStrings.Tts_ReadyChatKey),
             KeySource.SpeechSettings => SpeechAvailability.Ready(InfraStrings.Tts_ReadyOwnKey),
-            _ => SpeechAvailability.Unavailable(InfraStrings.Tts_NoKey, MissingKeyHint)
+            _ => UnreadableKeyMessage(context) is { } unreadable
+                ? SpeechAvailability.Unavailable(unreadable, MissingKeyHint)
+                : SpeechAvailability.Unavailable(InfraStrings.Tts_NoKey, MissingKeyHint)
         };
         return Task.FromResult(availability);
     }
@@ -127,7 +149,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     {
         var (key, source) = ResolveApiKey(context);
         if (source == KeySource.None)
-            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_NoKeyWithHint, ("hint", MissingKeyHint)), ProviderName);
+            throw MissingKey(context);
 
         var model = ResolveModel(context.Settings);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
@@ -302,7 +324,7 @@ public class GeminiTextToSpeechService : IAudioFileSpeechService
     {
         var (key, source) = ResolveApiKey(context);
         if (source == KeySource.None)
-            throw new LlmServiceException(Loc.Format(InfraStrings.Tts_NoKeyWithHint, ("hint", MissingKeyHint)), ProviderName);
+            throw MissingKey(context);
 
         var parts = BuildParts(summary);
         if (parts.Count == 0)

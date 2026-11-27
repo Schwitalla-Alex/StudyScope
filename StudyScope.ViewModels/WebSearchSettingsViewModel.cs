@@ -32,12 +32,16 @@ public class WebSearchSettingsViewModel : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public WebSearchSettingsViewModel(IStorageService storage, IWebSearchService webSearch, IExternalLinkOpener? linkOpener = null)
+    public WebSearchSettingsViewModel(IStorageService storage, IWebSearchService webSearch, IExternalLinkOpener? linkOpener = null,
+        IKeyProtectionInfo? keyProtection = null)
     {
         _storage = storage;
         _webSearch = webSearch;
         _linkOpener = linkOpener;
+        _keyProtection = keyProtection;
     }
+
+    private readonly IKeyProtectionInfo? _keyProtection;
 
     private WebSearchProviderType _provider = WebSearchProviderType.None;
     public WebSearchProviderType Provider
@@ -81,7 +85,27 @@ public class WebSearchSettingsViewModel : INotifyPropertyChanged
             // Die Warnung verschwindet sofort, sobald der Schlüssel passt; neu gesetzt wird sie erst beim Verlassen des Feldes
             if (KeyFormatWarning != null && FormatWarningFor(newValue) == null) KeyFormatWarning = null;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(TavilyKeyNeedsReentry));
         }
+    }
+
+    private bool _tavilyKeyUnreadable;
+
+    /// <summary>Wie der Schlüssel gespeichert wird (Zeile unter dem Feld); null ohne Angabe.</summary>
+    public string? KeyProtectionText => KeyProtectionTexts.Line(_keyProtection);
+
+    /// <summary>Rückfall ohne Schutz des Betriebssystems: als Warnung zeigen.</summary>
+    public bool IsKeyProtectionFallback => KeyProtectionTexts.IsFallback(_keyProtection);
+
+    /// <summary>Der gespeicherte Tavily-Schlüssel ist hier nicht lesbar und es wurde noch kein neuer eingetragen.</summary>
+    public bool TavilyKeyNeedsReentry => _tavilyKeyUnreadable && string.IsNullOrWhiteSpace(TavilyApiKey);
+
+    /// <summary>Entfernt den nicht lesbaren gespeicherten Tavily-Schlüssel; ein lesbarer bleibt.</summary>
+    public async Task DiscardUnreadableKeyAsync()
+    {
+        await _storage.DiscardUnreadableKeyAsync(StoredKeyKind.TavilyKey, string.Empty);
+        _tavilyKeyUnreadable = false;
+        OnPropertyChanged(nameof(TavilyKeyNeedsReentry));
     }
 
     private string _searxngUrl = string.Empty;
@@ -157,7 +181,9 @@ public class WebSearchSettingsViewModel : INotifyPropertyChanged
         _saved = settings.Clone();
 
         Provider = settings.Provider;
+        _tavilyKeyUnreadable = settings.TavilyApiKeyUnreadable;
         TavilyApiKey = settings.TavilyApiKey;
+        OnPropertyChanged(nameof(TavilyKeyNeedsReentry));
         SearxngUrl = settings.SearxngUrl;
         MaxResults = settings.MaxResults;
         StatusMessage = null;
