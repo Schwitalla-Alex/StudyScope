@@ -66,7 +66,7 @@ public partial class VideoScriptService : IVideoScriptService
         var slideChunks = BuildSlideChunks(presentation);
         var language = ResultLanguage.FromCode(presentation.Language) ?? ResultLanguage.Resolve(outputLanguage, slideChunks);
         var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(presentation), language);
-        var raw = await _llmService.AskQuestionAsync(prompt, slideChunks, cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.VideoScript, prompt), slideChunks, cancellationToken);
         var analysis = AnalyzeResponse(raw, presentation.Slides.Count);
         if (analysis.Value == null)
             return new VideoScriptResult { RawResponse = raw ?? string.Empty, FailureReason = analysis.FailureReason };

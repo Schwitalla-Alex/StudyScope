@@ -4,17 +4,12 @@ using System.Text.RegularExpressions;
 namespace StudyScope.Infrastructure.AI;
 
 /// <summary>
-/// Beispiel-Datentabelle für den Testmodus (Fake-KI). Wird von <see cref="FakeLlmService"/> und dem Fake-Zweig des
-/// LlmServiceDispatcher direkt nach dem Bericht geprüft – vor Mindmap, Präsentation, Quiz und Karteikarten, weil eine
-/// eigene Vorgabe des Benutzers auch Wörter wie „Mindmap“ oder „JSON“ enthalten kann.
+/// Beispiel-Datentabelle für den Testmodus (Fake-KI) für Aufträge mit Kennzeile <c>DataTable</c>
+/// (<see cref="FakeAiRouter"/>, gemeinsam für <see cref="FakeLlmService"/> und den Dispatcher).
 /// Übernimmt die Spalten aus dem Prompt und die Quellen aus den Markierungen „[Quelle: …]“ der Textstellen.
 /// </summary>
 public static partial class FakeDataTableResponse
 {
-    public static bool IsDataTablePrompt(string prompt) =>
-        prompt.StartsWith("Erstelle eine Datentabelle", StringComparison.OrdinalIgnoreCase)
-        && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
         var en = FakeLanguage.IsEnglish(prompt);

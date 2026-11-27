@@ -270,9 +270,10 @@ public class AudioScriptServiceTests
         storage.Setup(s => s.LoadAiConfigForProfileAsync("Testprofil")).ReturnsAsync(new AiConfig { SelectedProvider = AiProviderType.FakeAi });
         var dispatcher = new LlmServiceDispatcher(storage.Object, new HttpClient());
 
-        // Schwerpunkt mit Wörtern anderer Bereiche: das Audio-Skript muss Vorrang haben
-        var prompt = AudioScriptService.BuildPrompt(AudioScriptFormat.Summary, AudioScriptLength.Short,
-            "Mindmap, Quiz-Themen, Erstelle eine Präsentation, Lernkarteikarten");
+        // Schwerpunkt mit Wörtern anderer Bereiche: entscheidend ist nur die Kennzeile
+        var prompt = StudyScope.Core.Common.TaskPrompt.Mark(StudyScope.Core.Common.TaskKind.AudioScript,
+            AudioScriptService.BuildPrompt(AudioScriptFormat.Summary, AudioScriptLength.Short,
+                "Mindmap, Quiz-Themen, Erstelle eine Präsentation, Lernkarteikarten"));
         var chunks = new List<string> { "Osmose bezeichnet die Diffusion von Wasser durch eine Membran." };
 
         foreach (var llm in new ILlmService[] { dispatcher, new FakeLlmService() })
@@ -285,16 +286,6 @@ public class AudioScriptServiceTests
             Assert.That(result.Summary!.Title, Does.Contain("Testmodus"));
             Assert.That(result.Summary.Segments.Any(s => s.Text.Contains("Osmose")), Is.True);
         }
-    }
-
-    [Test]
-    public void FakeAi_Order_ReportAndDataTableBeforeAudio_AudioBeforeOthers()
-    {
-        Assert.That(FakeAudioScriptResponse.IsAudioScriptPrompt(ReportService.BuildPrompt(ReportTemplate.Custom, "Erstelle ein Audio-Skript")), Is.False);
-        Assert.That(FakeAudioScriptResponse.IsAudioScriptPrompt(
-            DataTableService.BuildPrompt(DataTableTemplate.Custom, "Erstelle ein Audio-Skript", Array.Empty<string>(), null)), Is.False);
-        Assert.That(FakeAudioScriptResponse.IsAudioScriptPrompt("Erstelle eine Mindmap als JSON-Array"), Is.False);
-        Assert.That(FakeAudioScriptResponse.IsAudioScriptPrompt(AudioScriptService.BuildPrompt(AudioScriptFormat.Briefing, AudioScriptLength.Medium, null)), Is.True);
     }
 
     // ---------- Speicherung ----------

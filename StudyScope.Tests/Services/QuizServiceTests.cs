@@ -236,7 +236,7 @@ public class QuizServiceTests
 
         await service.GenerateQuestionsAsync(Topic(), new[] { "Text" }, 50, AllTypes, 0);
 
-        Assert.That(llm.LastPrompt, Does.StartWith("Erstelle 10 Quizfragen"));
+        Assert.That(llm.LastPrompt, Does.StartWith("[StudyScope-Auftrag: QuizQuestions]\nErstelle 10 Quizfragen"));
     }
 
     [Test]
@@ -267,15 +267,6 @@ public class QuizServiceTests
 
         Assert.That(result.Questions, Has.Count.EqualTo(9));
         Assert.That(result.Questions.Select(q => q.Type).Distinct().Count(), Is.EqualTo(3));
-    }
-
-    [Test]
-    public void FakeQuizResponse_DetectsOnlyQuizPrompts()
-    {
-        Assert.That(FakeQuizResponse.IsQuestionPrompt("Erstelle 5 Quizfragen ... JSON-Array"), Is.True);
-        Assert.That(FakeQuizResponse.IsTopicPrompt("Schlage Quiz-Themen vor ... JSON-Array"), Is.True);
-        Assert.That(FakeQuizResponse.IsQuestionPrompt("Was bedeutet Quizfragen in meinem Text?"), Is.False);
-        Assert.That(FakeMindmapResponse.IsMindmapPrompt(QuizService.BuildQuestionPrompt(Topic(), 5, AllTypes)), Is.False);
     }
 
     // ---------- Themenvorschläge ----------

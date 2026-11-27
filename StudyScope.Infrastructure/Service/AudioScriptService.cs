@@ -89,7 +89,7 @@ public partial class AudioScriptService : IAudioScriptService
 
         var language = ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
         var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(format, length, topic), language);
-        var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(c => c.Text), cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.AudioScript, prompt), selected.Select(c => c.Text), cancellationToken);
         var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_AudioTitle) : fallbackTitle;
         var result = AnalyzeResponse(raw, format, fallback, ResultLanguage.Code(language));
 

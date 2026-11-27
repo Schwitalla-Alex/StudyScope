@@ -14,66 +14,7 @@ public class FakeLlmService : ILlmService
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
-        // Chat mit Websuche vor allem anderen: erkannt nur an der Markierung in der Frage, nie an den Auszügen
-        if (StudyScope.Core.Common.WebContextPrompt.IsWebPrompt(prompt))
-        {
-            return Task.FromResult(FakeLanguage.WebChat(prompt, chunks));
-        }
-
-        // Bericht zuerst: eine eigene Vorgabe des Benutzers kann Wörter wie "Mindmap" enthalten
-        if (FakeReportResponse.IsReportPrompt(prompt))
-        {
-            return Task.FromResult(FakeReportResponse.Create(prompt, chunks));
-        }
-
-        // Datentabelle direkt danach: eine eigene Vorgabe kann ebenfalls "Mindmap", "Quiz" oder "JSON" enthalten
-        if (FakeDataTableResponse.IsDataTablePrompt(prompt))
-        {
-            return Task.FromResult(FakeDataTableResponse.Create(prompt, chunks));
-        }
-
-        // Audio-Skript nach Bericht und Datentabelle: ein Schwerpunkt kann ebenfalls "Mindmap" oder "Quiz" enthalten
-        if (FakeAudioScriptResponse.IsAudioScriptPrompt(prompt))
-        {
-            return Task.FromResult(FakeAudioScriptResponse.Create(prompt, chunks));
-        }
-
-        // Video-Skript nach dem Audio-Skript: Folientitel können "Mindmap" oder "Quiz" enthalten, der Prompt enthält "JSON"
-        if (FakeVideoScriptResponse.IsVideoScriptPrompt(prompt))
-        {
-            return Task.FromResult(FakeVideoScriptResponse.Create(prompt, chunks));
-        }
-
-        // Mindmap angefordert (vor dem Karteikarten-Fall prüfen, da der Prompt ebenfalls "JSON" enthält)
-        if (FakeMindmapResponse.IsMindmapPrompt(prompt))
-        {
-            return Task.FromResult(FakeMindmapResponse.Create(chunks, FakeLanguage.IsEnglish(prompt)));
-        }
-
-        // Präsentation angefordert (ebenfalls vor dem Karteikarten-Fall)
-        if (FakePresentationResponse.IsPresentationPrompt(prompt))
-        {
-            return Task.FromResult(FakePresentationResponse.Create(chunks, FakeLanguage.IsEnglish(prompt)));
-        }
-
-        // Quiz: Themenvorschläge bzw. Fragen (ebenfalls vor dem Karteikarten-Fall)
-        if (FakeQuizResponse.IsTopicPrompt(prompt))
-        {
-            return Task.FromResult(FakeQuizResponse.CreateTopics(chunks, FakeLanguage.IsEnglish(prompt)));
-        }
-
-        if (FakeQuizResponse.IsQuestionPrompt(prompt))
-        {
-            return Task.FromResult(FakeQuizResponse.CreateQuestions(prompt, chunks));
-        }
-
-        // 1. Fall: Karteikarten (Prompt mit „Lernkarteikarten“ bzw. „JSON“), 2. Fall: normaler Chat
-        if (prompt.Contains("Lernkarteikarten", StringComparison.OrdinalIgnoreCase) ||
-            prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase))
-        {
-            return Task.FromResult(FakeLanguage.Flashcards(prompt, chunks));
-        }
-
-        return Task.FromResult(FakeLanguage.Chat(prompt, chunks));
+        // Gleiche Weiche wie der Dispatcher: Aufträge nur an der Kennzeile, sonst Chat bzw. Web-Chat
+        return Task.FromResult(FakeAiRouter.Answer(prompt, chunks));
     }
 }

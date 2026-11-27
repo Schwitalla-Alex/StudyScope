@@ -8,14 +8,6 @@ namespace StudyScope.Infrastructure.AI;
 /// </summary>
 public static class FakePresentationResponse
 {
-    /// <summary>
-    /// Erkennt eine Präsentations-Anfrage am Prompt. Bewusst eng gefasst, damit eine Chat-Frage,
-    /// die nur das Wort „Präsentation“ enthält, im Testmodus nicht als Folien-JSON beantwortet wird.
-    /// </summary>
-    public static bool IsPresentationPrompt(string prompt) =>
-        prompt.Contains("Erstelle eine Präsentation", StringComparison.OrdinalIgnoreCase)
-        && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(IReadOnlyList<string> chunks, bool english = false)
     {
         var en = english;

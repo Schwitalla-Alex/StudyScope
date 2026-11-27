@@ -11,6 +11,9 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 - **Oberfläche vergrößern und verkleinern:** Mit Strg + Mausrad, Strg + Plus / Strg + Minus oder unter ☰ › Einstellungen › 🎨 Darstellung lässt sich die ganze Oberfläche in Stufen von 80 % bis 150 % zoomen; Strg + 0 stellt die Standardgröße wieder her. Die Stufe wirkt sofort und gilt auch nach einem Neustart. Weicht sie von 100 % ab, zeigt die Statusleiste sie an – ein Klick darauf stellt die Standardgröße wieder her. Druck/PDF und exportierte Dateien bleiben unverändert.
 - **Websuche im Chat (optional):** Mit dem Häkchen „🌐 Auch im Internet suchen“ in der Seitenleiste beantwortet der Chat Fragen zusätzlich mit Treffern aus dem Internet – je Profil, standardmäßig aus. Den Suchdienst richten Sie unter ☰ › Einstellungen › 🌐 Websuche ein: Tavily mit eigenem kostenlosem Schlüssel oder eine SearXNG-Instanz. Ins Internet geht nur Ihre selbst eingetippte Frage, nie Ihre Dokumente oder Dateinamen; Fragen aus der Mindmap suchen nie. Vor dem ersten Einschalten erklärt ein Hinweis, was an den Suchdienst geht. Die Antwort kennzeichnet Unterlagen mit [D1] und Web-Treffer mit [W1]; die Quellen stehen getrennt darunter, Web-Quellen öffnen sich im Browser. Ist der Suchdienst nicht erreichbar, sagt der Chat das und antwortet nur aus den Unterlagen.
 
+### Behoben
+- **Chatfragen mit Wörtern wie „JSON“ oder „Mindmap“:** Eine Frage wie „Was ist JSON?“ oder „Erkläre die Mindmap“ bekommt jetzt immer eine normale Antwort. Bisher bat StudyScope die KI bei solchen Fragen teils um eine reine JSON-Antwort (bei Mistral und OpenAI sogar im JSON-Modus), und im Testmodus kamen Karteikarten oder eine Mindmap statt einer Antwort.
+
 ## [1.2.0] – 2026-11-27
 
 StudyScope spricht jetzt Englisch, kann dunkel dargestellt werden und schreibt KI-Ergebnisse auf Wunsch in einer anderen Sprache als die Oberfläche. Das neue Menü ☰ schafft mehr Platz für Ihre Inhalte.

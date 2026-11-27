@@ -1,5 +1,6 @@
 using System.Globalization;
 using Moq;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
 using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
@@ -63,10 +64,12 @@ public class PromptCultureTests
         {
             Assert.That(prompts["Audio Podcast Medium"], Does.Contain("Format: Podcast-Gespräch"));
             Assert.That(prompts["Audio Briefing Short"], Does.Contain("Format: Kurz-Briefing"));
-            Assert.That(prompts.Where(p => p.Key.StartsWith("Datentabelle")).Select(p => p.Value), Has.All.StartWith("Erstelle eine Datentabelle"));
-            Assert.That(prompts.Where(p => p.Key.StartsWith("Bericht")).Select(p => p.Value), Has.All.StartWith("Erstelle einen Bericht"));
-            Assert.That(prompts["Video"], Does.StartWith("Erstelle ein Video-Skript"));
-            Assert.That(prompts["Quizfragen"], Does.StartWith("Erstelle 5 Quizfragen"));
+            Assert.That(prompts.Where(p => p.Key.StartsWith("Datentabelle")).Select(p => TaskPrompt.Body(p.Value)), Has.All.StartWith("Erstelle eine Datentabelle"));
+            Assert.That(prompts.Where(p => p.Key.StartsWith("Bericht")).Select(p => TaskPrompt.Body(p.Value)), Has.All.StartWith("Erstelle einen Bericht"));
+            Assert.That(TaskPrompt.Body(prompts["Video"]), Does.StartWith("Erstelle ein Video-Skript"));
+            Assert.That(TaskPrompt.Body(prompts["Quizfragen"]), Does.StartWith("Erstelle 5 Quizfragen"));
+            // Jeder Auftrag trägt seine Kennzeile (die Fake-KI und der Dispatcher erkennen ihn nur daran)
+            Assert.That(prompts.Where(p => !p.Key.StartsWith("Web-")).Select(p => TaskPrompt.IsTask(p.Value)), Has.All.True);
         });
     }
 
@@ -86,21 +89,21 @@ public class PromptCultureTests
         foreach (var format in Enum.GetValues<AudioScriptFormat>())
             foreach (var length in Enum.GetValues<AudioScriptLength>())
             {
-                prompts[$"Audio {format} {length}"] = AudioScriptService.BuildPrompt(format, length, null);
-                prompts[$"Audio {format} {length} Schwerpunkt"] = AudioScriptService.BuildPrompt(format, length, "Photosynthese");
+                prompts[$"Audio {format} {length}"] = Marked(TaskKind.AudioScript, AudioScriptService.BuildPrompt(format, length, null));
+                prompts[$"Audio {format} {length} Schwerpunkt"] = Marked(TaskKind.AudioScript, AudioScriptService.BuildPrompt(format, length, "Photosynthese"));
             }
 
         foreach (var template in Enum.GetValues<DataTableTemplate>())
-            prompts[$"Datentabelle {template}"] = DataTableService.BuildPrompt(template, string.Empty, Array.Empty<string>(), null);
-        prompts["Datentabelle eigene Spalten"] = DataTableService.BuildPrompt(DataTableTemplate.Custom, "Vergleiche die Prozesse", new[] { "Prozess", "Ort" }, "Energie");
+            prompts[$"Datentabelle {template}"] = Marked(TaskKind.DataTable, DataTableService.BuildPrompt(template, string.Empty, Array.Empty<string>(), null));
+        prompts["Datentabelle eigene Spalten"] = Marked(TaskKind.DataTable, DataTableService.BuildPrompt(DataTableTemplate.Custom, "Vergleiche die Prozesse", new[] { "Prozess", "Ort" }, "Energie"));
 
         foreach (var template in Enum.GetValues<ReportTemplate>())
-            prompts[$"Bericht {template}"] = ReportService.BuildPrompt(template, string.Empty);
+            prompts[$"Bericht {template}"] = Marked(TaskKind.Report, ReportService.BuildPrompt(template, string.Empty));
 
         var topic = new QuizTopic { Name = "Photosynthese", Description = "Licht und Energie" };
-        prompts["Quizfragen"] = QuizService.BuildQuestionPrompt(topic, 5, Enum.GetValues<QuizQuestionType>());
+        prompts["Quizfragen"] = Marked(TaskKind.QuizQuestions, QuizService.BuildQuestionPrompt(topic, 5, Enum.GetValues<QuizQuestionType>()));
 
-        prompts["Video"] = VideoScriptService.BuildPrompt(new PresentationDocument
+        prompts["Video"] = Marked(TaskKind.VideoScript, VideoScriptService.BuildPrompt(new PresentationDocument
         {
             Title = "Energie in Zellen",
             Slides =
@@ -108,7 +111,7 @@ public class PromptCultureTests
                 new PresentationSlide { Title = "Photosynthese", Bullets = { "Licht wird zu Energie" }, Notes = "Die Pflanze nutzt Licht." },
                 new PresentationSlide { Title = "Zellatmung", Bullets = { "Energie wird frei" } },
             }
-        });
+        }));
 
         // Dienste, deren Prompt nur beim Aufruf entsteht: über eine Attrappe abfangen
         prompts["Karteikarten"] = Capture(llm => new FlashcardService(llm).GenerateFlashcardsAsync(Chunks, 5, "de"));
@@ -123,6 +126,8 @@ public class PromptCultureTests
         prompts["Web-Systemanweisung en"] = LlmServiceDispatcher.RagWebSystemPromptFor(CultureInfo.GetCultureInfo("en"));
         return prompts;
     });
+
+    private static string Marked(TaskKind kind, string prompt) => TaskPrompt.Mark(kind, prompt);
 
     private static string Capture(Func<ILlmService, Task> run)
     {

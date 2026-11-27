@@ -44,8 +44,6 @@ public class DataTableServiceTests
             Assert.That(prompt, Does.Contain("[Quelle: Dateiname]"));
             Assert.That(prompt, Does.Contain("leer"));
             Assert.That(prompt, Does.Not.Contain("Mindmap").And.Not.Contain("Lernkarteikarten").And.Not.Contain("Quizfragen"));
-            Assert.That(FakeDataTableResponse.IsDataTablePrompt(prompt), Is.True);
-            Assert.That(FakeReportResponse.IsReportPrompt(prompt), Is.False);
         }
     }
 
@@ -337,8 +335,9 @@ public class DataTableServiceTests
         storage.Setup(s => s.LoadAiConfigForProfileAsync("Testprofil")).ReturnsAsync(new AiConfig { SelectedProvider = AiProviderType.FakeAi });
         var dispatcher = new LlmServiceDispatcher(storage.Object, new HttpClient());
 
-        // Eigene Vorgabe mit Wörtern anderer Bereiche: Datentabelle muss Vorrang haben
-        var prompt = DataTableService.BuildPrompt(DataTableTemplate.Custom, "Mindmap, Quiz-Themen, Erstelle eine Präsentation, Lernkarteikarten", new[] { "Begriff", "Erklärung" }, null);
+        // Eigene Vorgabe mit Wörtern anderer Bereiche: entscheidend ist nur die Kennzeile
+        var prompt = StudyScope.Core.Common.TaskPrompt.Mark(StudyScope.Core.Common.TaskKind.DataTable,
+            DataTableService.BuildPrompt(DataTableTemplate.Custom, "Mindmap, Quiz-Themen, Erstelle eine Präsentation, Lernkarteikarten", new[] { "Begriff", "Erklärung" }, null));
         var chunks = new List<string> { "[Quelle: a.txt]\nOsmose bezeichnet die Diffusion von Wasser durch eine Membran." };
 
         foreach (var llm in new ILlmService[] { dispatcher, new FakeLlmService() })
@@ -352,14 +351,6 @@ public class DataTableServiceTests
             Assert.That(table.Rows[0].Source, Is.EqualTo("a.txt"));
             Assert.That(MindmapService.ParseMindmap(raw, "x")?.Title, Is.Not.EqualTo("[Testmodus] Mindmap"));
         }
-    }
-
-    [Test]
-    public void FakeAi_OtherPrompts_AreNotDataTables()
-    {
-        Assert.That(FakeDataTableResponse.IsDataTablePrompt("Erstelle eine Mindmap als JSON-Array"), Is.False);
-        Assert.That(FakeDataTableResponse.IsDataTablePrompt(ReportService.BuildPrompt(ReportTemplate.Custom, "Erstelle eine Datentabelle")), Is.False);
-        Assert.That(FakeDataTableResponse.IsDataTablePrompt("Erstelle 5 Quizfragen … JSON-Array"), Is.False);
     }
 
     // ---------- Speicherung ----------

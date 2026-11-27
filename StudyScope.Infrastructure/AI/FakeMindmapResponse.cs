@@ -8,10 +8,6 @@ namespace StudyScope.Infrastructure.AI;
 /// </summary>
 public static class FakeMindmapResponse
 {
-    /// <summary>Erkennt eine Mindmap-Anfrage am Prompt.</summary>
-    public static bool IsMindmapPrompt(string prompt) =>
-        prompt.Contains("Mindmap", StringComparison.OrdinalIgnoreCase);
-
     public static string Create(IReadOnlyList<string> chunks, bool english = false)
     {
         var en = english;

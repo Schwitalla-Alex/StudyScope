@@ -39,7 +39,7 @@ public class FlashcardService : IFlashcardService
         var language = ResultLanguage.Resolve(outputLanguage, limitedChunks);
         instructionPrompt = ResultLanguage.ApplyToPrompt(instructionPrompt, language);
 
-        var rawResponse = await _llmService.AskQuestionAsync(instructionPrompt, limitedChunks);
+        var rawResponse = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.Flashcards, instructionPrompt), limitedChunks);
 
         var cards = ParseFlashcardsFromJson(rawResponse);
         foreach (var card in cards)

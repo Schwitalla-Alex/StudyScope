@@ -68,7 +68,7 @@ public class DataTableService : IDataTableService
         var language = ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
         var columns = NormalizeColumnNames(customColumns);
         var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(template, customInstruction, columns, topic), language);
-        var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(LabelChunk), cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.DataTable, prompt), selected.Select(LabelChunk), cancellationToken);
 
         var sources = all.Select(c => c.SourceDocument).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_DataTableTitle) : fallbackTitle;
@@ -110,7 +110,7 @@ public class DataTableService : IDataTableService
         // Neue Zeilen in der Sprache der vorhandenen Tabelle (ältere Tabellen ohne Angabe: Einstellung)
         var language = ResultLanguage.FromCode(table.Language) ?? ResultLanguage.Resolve(outputLanguage, selected.Select(c => c.Text));
         var prompt = ResultLanguage.ApplyToPrompt(BuildMoreRowsPrompt(table), language);
-        var raw = await _llmService.AskQuestionAsync(prompt, selected.Select(LabelChunk), cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.DataTable, prompt), selected.Select(LabelChunk), cancellationToken);
 
         var sources = all.Select(c => c.SourceDocument).Concat(table.SourceDocuments).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
         var parsed = AnalyzeResponse(raw, table.Title, sources, table.Columns);

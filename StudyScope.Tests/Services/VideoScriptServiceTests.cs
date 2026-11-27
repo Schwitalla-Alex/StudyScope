@@ -337,19 +337,6 @@ public class VideoScriptServiceTests
     // ---------- Fake-KI ----------
 
     [Test]
-    public void FakeAi_Order_AfterReportDataTableAudio_BeforeOthers()
-    {
-        var prompt = VideoScriptService.BuildPrompt(SamplePresentation());
-        Assert.That(FakeVideoScriptResponse.IsVideoScriptPrompt(prompt), Is.True);
-        Assert.That(FakeReportResponse.IsReportPrompt(prompt), Is.False);
-        Assert.That(FakeDataTableResponse.IsDataTablePrompt(prompt), Is.False);
-        Assert.That(FakeAudioScriptResponse.IsAudioScriptPrompt(prompt), Is.False);
-        Assert.That(FakeVideoScriptResponse.IsVideoScriptPrompt(ReportService.BuildPrompt(ReportTemplate.Custom, "Erstelle ein Video-Skript als JSON")), Is.False);
-        Assert.That(FakeVideoScriptResponse.IsVideoScriptPrompt(AudioScriptService.BuildPrompt(AudioScriptFormat.Summary, AudioScriptLength.Short, "Video-Skript")), Is.False);
-        Assert.That(FakeVideoScriptResponse.IsVideoScriptPrompt("Erstelle eine Mindmap als JSON-Array"), Is.False);
-    }
-
-    [Test]
     public async Task FakeAi_BothPaths_DeliverScenePerSlide_EvenWithMindmapInTitles()
     {
         var presentation = SamplePresentation();

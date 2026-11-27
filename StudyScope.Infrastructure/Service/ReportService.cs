@@ -60,7 +60,7 @@ public class ReportService : IReportService
 
         var language = ResultLanguage.Resolve(outputLanguage, chunks);
         var prompt = ResultLanguage.ApplyToPrompt(BuildPrompt(template, customInstruction), language);
-        var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.Report, prompt), chunks, cancellationToken);
         var fallback = string.IsNullOrWhiteSpace(fallbackTitle) ? ResultLanguage.Content(language, () => ContentStrings.Content_ReportTitle) : fallbackTitle;
         var parsed = AnalyzeResponse(raw, fallback);
 

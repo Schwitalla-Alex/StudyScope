@@ -11,12 +11,6 @@ public static class FakeQuizResponse
 {
     private static readonly Regex CountPattern = new(@"Erstelle (\d+) Quizfragen", RegexOptions.Compiled);
 
-    public static bool IsTopicPrompt(string prompt) =>
-        prompt.Contains("Quiz-Themen", StringComparison.OrdinalIgnoreCase) && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
-    public static bool IsQuestionPrompt(string prompt) =>
-        prompt.Contains("Quizfragen", StringComparison.OrdinalIgnoreCase) && prompt.Contains("JSON", StringComparison.OrdinalIgnoreCase);
-
     public static string CreateTopics(IReadOnlyList<string> chunks, bool english = false)
     {
         var en = english;

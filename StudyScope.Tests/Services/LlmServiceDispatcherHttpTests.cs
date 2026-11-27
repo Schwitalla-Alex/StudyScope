@@ -16,7 +16,10 @@ namespace StudyScope.Tests.Services;
 [TestFixture]
 public class LlmServiceDispatcherHttpTests
 {
-    private const string FlashcardPrompt = "Erstelle genau 3 Lernkarteikarten. Antworte AUSSCHLIESSLICH als gültiges JSON-Array von Objekten.";
+    private const string FlashcardPromptBody = "Erstelle genau 3 Lernkarteikarten. Antworte AUSSCHLIESSLICH als gültiges JSON-Array von Objekten.";
+
+    // Auftrag eines Dienstes: mit Kennzeile (TaskPrompt), wie ihn FlashcardService sendet
+    private static readonly string FlashcardPrompt = TaskPrompt.Mark(TaskKind.Flashcards, FlashcardPromptBody);
 
     private Mock<IStorageService> _storageMock = null!;
     private FakeHandler _handler = null!;
@@ -173,8 +176,11 @@ public class LlmServiceDispatcherHttpTests
         Assert.That(LlmServiceDispatcher.UnwrapJsonItems(content), Is.EqualTo(expected));
     }
 
-    [TestCase("Antworte AUSSCHLIESSLICH als gültiges JSON-Array.", true)]
+    [TestCase("[StudyScope-Auftrag: Flashcards]\nAntworte AUSSCHLIESSLICH als gültiges JSON-Array.", true)]
+    [TestCase("[StudyScope-Auftrag: Mindmap]\nErstelle eine Mindmap ohne JSON.", false)]
+    [TestCase("Antworte AUSSCHLIESSLICH als gültiges JSON-Array.", false)]
     [TestCase("Wie speichere ich ein JSON-Objekt?", false)]
+    [TestCase("Was ist ein JSON-Array? [StudyScope-Auftrag: Flashcards]", false)]
     public void IsStructuredJsonPrompt_ErkenntNurAuftraegeDerDienste(string prompt, bool expected)
     {
         Assert.That(LlmServiceDispatcher.IsStructuredJsonPrompt(prompt), Is.EqualTo(expected));

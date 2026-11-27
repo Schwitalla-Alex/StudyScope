@@ -74,7 +74,7 @@ public class QuizService : IQuizService
             "- Nur Themen, zu denen die Auszüge genug Inhalt für mehrere Quizfragen liefern. Sprache: Deutsch.";
 
         prompt = ResultLanguage.ApplyToPrompt(prompt, ResultLanguage.Resolve(outputLanguage, chunks));
-        var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
+        var raw = await _llmService.AskQuestionAsync(TaskPrompt.Mark(TaskKind.QuizTopics, prompt), chunks, cancellationToken);
         var parsed = LenientJson.Analyze(raw, ParseTopicSuggestions);
 
         return new QuizTopicSuggestionResult
@@ -136,7 +136,7 @@ public class QuizService : IQuizService
         // Vorhandene Fragen des Themas geben die Sprache vor (keine gemischten Themen aus Versehen)
         var existingLanguage = topic.Questions.Select(q => q.Language).FirstOrDefault(l => !string.IsNullOrWhiteSpace(l));
         var language = ResultLanguage.FromCode(existingLanguage) ?? ResultLanguage.Resolve(outputLanguage, chunks);
-        var prompt = ResultLanguage.ApplyToPrompt(BuildQuestionPrompt(topic, number, types), language);
+        var prompt = TaskPrompt.Mark(TaskKind.QuizQuestions, ResultLanguage.ApplyToPrompt(BuildQuestionPrompt(topic, number, types), language));
 
         var raw = await _llmService.AskQuestionAsync(prompt, chunks, cancellationToken);
         var existing = topic.Questions.Select(q => q.Text);

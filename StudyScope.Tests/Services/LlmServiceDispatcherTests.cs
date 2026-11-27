@@ -120,8 +120,9 @@ public class LlmServiceDispatcherTests
         var dispatcher = CreateFakeKiDispatcher();
         var chunks = new List<string> { "Photosynthese wandelt Lichtenergie in chemische Energie um.", "Chlorophyll absorbiert rotes und blaues Licht." };
 
-        // Der Prompt enthält bewusst auch "JSON" und "Lernkarteikarten": Mindmap muss Vorrang haben
-        var raw = await dispatcher.AskQuestionAsync("Erstelle eine Mindmap als JSON-Array, keine Lernkarteikarten.", chunks);
+        // Der Prompt enthält bewusst auch "JSON" und "Lernkarteikarten": entscheidend ist nur die Kennzeile
+        var raw = await dispatcher.AskQuestionAsync(
+            StudyScope.Core.Common.TaskPrompt.Mark(StudyScope.Core.Common.TaskKind.Mindmap, "Erstelle eine Mindmap als JSON-Array, keine Lernkarteikarten."), chunks);
         var root = MindmapService.ParseMindmap(raw, "Ersatztitel");
 
         Assert.That(root, Is.Not.Null, "Antwort muss als Mindmap parsebar sein: " + raw);
@@ -138,7 +139,8 @@ public class LlmServiceDispatcherTests
     {
         var dispatcher = CreateFakeKiDispatcher();
 
-        var raw = await dispatcher.AskQuestionAsync("Erstelle Lernkarteikarten als JSON.", new List<string> { "Testkontext" });
+        var raw = await dispatcher.AskQuestionAsync(
+            StudyScope.Core.Common.TaskPrompt.Mark(StudyScope.Core.Common.TaskKind.Flashcards, "Erstelle Lernkarteikarten als JSON."), new List<string> { "Testkontext" });
 
         Assert.That(raw, Does.Contain("\"question\""));
         Assert.That(MindmapService.ParseMindmap(raw, "Ersatztitel"), Is.Null);

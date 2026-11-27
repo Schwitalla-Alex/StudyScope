@@ -408,6 +408,10 @@ public class ChatViewModel : INotifyPropertyChanged
                 }
             }
 
+            // Eigene Kennungen, die der Benutzer selbst tippt („[StudyScope-Auftrag: …]“, „[StudyScope-Websuche]“), lösen
+            // weder einen Auftrag noch den Web-Modus aus; Fragen ohne diese Zeichenfolge bleiben unverändert
+            var questionForAi = TaskPrompt.Defuse(promptText);
+
             string prompt;
             List<string> chunksForAi;
             IReadOnlyList<ChatSource> sources = Array.Empty<ChatSource>();
@@ -416,7 +420,7 @@ public class ChatViewModel : INotifyPropertyChanged
                 // Unterlagen „[D1] Datei“ (gleiche Datei = gleiche Marke) und Treffer „[W1] Titel – Domain“, Frage mit Markierung
                 var labelled = LabelDocumentChunks(relevant, out var documentSources);
                 chunksForAi = labelled.Concat(WebContextPrompt.WebChunks(webResults)).ToList();
-                prompt = WithLanguageLine(WebContextPrompt.WithMarker(promptText), language);
+                prompt = WithLanguageLine(WebContextPrompt.WithMarker(questionForAi), language);
                 sources = documentSources
                     .Concat(webResults.Select((r, i) => new ChatSource(ChatSourceKind.Web, WebContextPrompt.WebLabel(i + 1), r.Title, r.Url, r.Domain)))
                     .ToList();
@@ -425,7 +429,7 @@ public class ChatViewModel : INotifyPropertyChanged
             {
                 // Ohne Websuche bzw. ohne Treffer: genau wie bisher
                 chunksForAi = relevantChunks;
-                prompt = WithLanguageLine(promptText, language);
+                prompt = WithLanguageLine(questionForAi, language);
             }
 
             var response = await _llmService.AskQuestionAsync(prompt, chunksForAi, token);
