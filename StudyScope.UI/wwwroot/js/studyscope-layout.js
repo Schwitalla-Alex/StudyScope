@@ -5,6 +5,8 @@ window.studyScopeLayout = (function () {
     var keyHandler = null;
     var resizeHandler = null;
     var resizeTimer = 0;
+    var zoomWindows = [];
+    var zoomFrameHandler = null;
 
     function focusInfo() {
         var el = document.activeElement;
@@ -55,6 +57,67 @@ window.studyScopeLayout = (function () {
             clearTimeout(resizeTimer);
             keyHandler = null;
             resizeHandler = null;
+        },
+
+        // Zoom der ganzen Oberfläche (App.razor, ZoomViewModel): Strg + Mausrad und Strg + Plus/Minus/0 selbst abfangen,
+        // damit der eingebaute Zoom von WebView2 nicht an der App vorbei zoomt (nicht gespeichert, unter Linux fehlt er
+        // ganz). Gezoomt wird in .NET über Photino. Dieselben Tasten wie ZoomViewModel.EvaluateShortcut (Test vergleicht).
+        // Gilt auch im Bericht (srcdoc-iframe, gleiche Herkunft): Listener in jedem geladenen iframe.
+        attachZoom: function (dotnetRef) {
+            this.detachZoom();
+            var ZOOM_KEYS = ['+', '=', '-', '0'];
+            var ZOOM_CODES = ['NumpadAdd', 'NumpadSubtract', 'Numpad0'];
+            var wheelSum = 0, wheelTimer = 0, lastStep = 0;
+            var onKey = function (e) {
+                if (!e.ctrlKey || e.altKey || e.metaKey) return;
+                if (ZOOM_KEYS.indexOf(e.key) < 0 && ZOOM_CODES.indexOf(e.code) < 0) return;
+                e.preventDefault();
+                dotnetRef.invokeMethodAsync('OnZoomKey', e.key, e.code, e.ctrlKey, e.altKey, e.metaKey);
+            };
+            // Mausrad: eine Raste ≈ 100 Einheiten (Windows), Touchpad-Gesten liefern viele kleine Schübe – höchstens eine
+            // Stufe je 40 Einheiten und je 120 ms, damit eine Geste nicht durch alle Stufen springt.
+            var onWheel = function (e) {
+                if (!e.ctrlKey) return;
+                e.preventDefault();
+                var dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+                if (wheelSum !== 0 && (dy < 0) !== (wheelSum < 0)) wheelSum = 0;
+                wheelSum += dy;
+                clearTimeout(wheelTimer);
+                wheelTimer = setTimeout(function () { wheelSum = 0; }, 250);
+                var now = Date.now();
+                if (Math.abs(wheelSum) < 40 || now - lastStep < 120) return;
+                lastStep = now;
+                var direction = wheelSum;
+                wheelSum = 0;
+                dotnetRef.invokeMethodAsync('OnZoomWheel', direction);
+            };
+            var attachTo = function (win) {
+                try {
+                    if (!win || win.__ssZoom) return;
+                    win.addEventListener('keydown', onKey, true);
+                    win.addEventListener('wheel', onWheel, { passive: false, capture: true });
+                    win.__ssZoom = function () {
+                        win.removeEventListener('keydown', onKey, true);
+                        win.removeEventListener('wheel', onWheel, { passive: false, capture: true });
+                        win.__ssZoom = null;
+                    };
+                    zoomWindows.push(win);
+                } catch (_) { /* fremde Herkunft: nicht erreichbar */ }
+            };
+            var onFrameLoad = function (e) {
+                if (e.target && e.target.tagName === 'IFRAME') attachTo(e.target.contentWindow);
+            };
+            attachTo(window);
+            var frames = document.querySelectorAll('iframe');
+            for (var i = 0; i < frames.length; i++) attachTo(frames[i].contentWindow);
+            document.addEventListener('load', onFrameLoad, true);
+            zoomFrameHandler = onFrameLoad;
+        },
+        detachZoom: function () {
+            zoomWindows.forEach(function (w) { try { if (w.__ssZoom) w.__ssZoom(); } catch (_) { } });
+            zoomWindows = [];
+            if (zoomFrameHandler) document.removeEventListener('load', zoomFrameHandler, true);
+            zoomFrameHandler = null;
         },
 
         // Ausklappmenüs (DropdownMenu.razor: ☰ und „» Mehr“). Die Logik liegt in MenuNavigator (.NET); hier nur:

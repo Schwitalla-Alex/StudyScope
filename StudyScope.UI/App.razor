@@ -10,6 +10,7 @@
 @inject PresentationViewModel PresVm
 @inject AppMenuViewModel MenuVm
 @inject AppearanceViewModel AppearanceVm
+@inject ZoomViewModel ZoomVm
 @inject IJSRuntime JS
 @using StudyScope.ViewModels.Menu
 @implements IDisposable
@@ -115,6 +116,7 @@
         // Zuerst den gemerkten Zustand der Seitenleiste, damit sie nicht sichtbar auf- und zuklappt
         await LayoutVm.LoadAsync();
         await AppearanceVm.LoadAsync();
+        await ZoomVm.LoadAsync();
         await DocVm.InitializeAsync();
         await SettingsVm.InitializeAsync();
     }
@@ -139,6 +141,27 @@
         {
             // Skript nicht geladen – Strg+B und automatisches Einklappen entfallen, der Knopf funktioniert weiter
         }
+        // Zoom: Startwert kam über Photino; jetzt (WebView existiert) abgleichen und die Kürzel abfangen
+        ZoomVm.ApplyToWindow();
+        try { await JS.InvokeVoidAsync("studyScopeLayout.attachZoom", selfRef); }
+        catch (JSException) { /* Skript fehlt: Zoom nur über Einstellungen › Darstellung */ }
+    }
+
+    /// <summary>Strg + Plus/Minus/0 aus <c>studyscope-layout.js</c>; ausgewertet in <see cref="ZoomViewModel"/>.</summary>
+    [JSInvokable]
+    public async Task OnZoomKey(string key, string code, bool ctrl, bool alt, bool meta)
+    {
+        if (ZoomViewModel.EvaluateShortcut(key, code, ctrl, alt, meta) == ZoomAction.None) return;
+        MenuVm.CloseAll();   // Menüs stünden nach dem Zoom an der falschen Stelle
+        await ZoomVm.HandleShortcutAsync(key, code, ctrl, alt, meta);
+    }
+
+    /// <summary>Strg + Mausrad aus <c>studyscope-layout.js</c> (gebündelt, eine Stufe je Aufruf).</summary>
+    [JSInvokable]
+    public async Task OnZoomWheel(double deltaY)
+    {
+        MenuVm.CloseAll();
+        await ZoomVm.HandleWheelAsync(deltaY);
     }
 
     /// <summary>Strg+B aus <c>studyscope-layout.js</c>; die Bedingungen prüft <see cref="LayoutViewModel"/>.</summary>
@@ -185,9 +208,14 @@
         await DocVm.RefreshCurrentAiModelAsync();
     });
 
-    /// <summary>Fensterbreite aus <c>studyscope-layout.js</c> (beim Ändern der Größe, entprellt).</summary>
+    /// <summary>Fensterbreite aus <c>studyscope-layout.js</c> (beim Ändern der Größe, entprellt).
+    /// Ändert sich die Breite, ohne dass die App gezoomt hat, kann auch der WebView selbst gezoomt haben → abgleichen.</summary>
     [JSInvokable]
-    public void OnWindowWidth(double width) => LayoutVm.SetWindowWidth(width);
+    public async Task OnWindowWidth(double width)
+    {
+        LayoutVm.SetWindowWidth(width);
+        await ZoomVm.SyncFromWindowAsync();
+    }
 
     public void Dispose()
     {
@@ -195,6 +223,7 @@
         VdVm.PropertyChanged -= OnPresentingChanged;
         AppearanceVm.LanguageChanged -= OnLanguageChanged;
         try { _ = JS.InvokeVoidAsync("studyScopeLayout.detach"); } catch { /* Fenster wird geschlossen */ }
+        try { _ = JS.InvokeVoidAsync("studyScopeLayout.detachZoom"); } catch { /* Fenster wird geschlossen */ }
         selfRef?.Dispose();
     }
 

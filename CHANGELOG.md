@@ -5,6 +5,11 @@ Hier steht, was sich in den einzelnen Versionen von StudyScope geändert hat. Di
 <!-- Der Abschnitt einer Version beginnt mit „## [x.y.z]“ und reicht bis zum nächsten „## [“.
      Der Release-Workflow übernimmt genau diesen Abschnitt als Text des GitHub-Releases. -->
 
+## [Unveröffentlicht]
+
+### Neu
+- **Oberfläche vergrößern und verkleinern:** Mit Strg + Mausrad, Strg + Plus / Strg + Minus oder unter ☰ › Einstellungen › 🎨 Darstellung lässt sich die ganze Oberfläche in Stufen von 80 % bis 150 % zoomen; Strg + 0 stellt die Standardgröße wieder her. Die Stufe wirkt sofort und gilt auch nach einem Neustart. Weicht sie von 100 % ab, zeigt die Statusleiste sie an – ein Klick darauf stellt die Standardgröße wieder her. Druck/PDF und exportierte Dateien bleiben unverändert.
+
 ## [1.2.0] – 2026-11-27
 
 StudyScope spricht jetzt Englisch, kann dunkel dargestellt werden und schreibt KI-Ergebnisse auf Wunsch in einer anderen Sprache als die Oberfläche. Das neue Menü ☰ schafft mehr Platz für Ihre Inhalte.

@@ -2,6 +2,7 @@
 @inject DocumentListViewModel DocVm
 @inject AudioViewModel AuVm
 @inject VideoViewModel VdVm
+@inject ZoomViewModel ZoomVm
 @implements IDisposable
 
 <div style="background: var(--ss-panel); border-top: 1px solid var(--ss-border); padding: 4px 15px; font-size: 12px; color: var(--ss-text-2); display: flex; justify-content: space-between; align-items: center; user-select: none;">
@@ -29,6 +30,11 @@
                 <button class="sb-audio-btn" title="@UiStrings.Common_Stop" @onclick="VdVm.StopAsync">⏹</button>
             </span>
         }
+        @if (!ZoomVm.IsDefault)
+        {
+            @* Zoom ungleich 100 %: Hinweis mit Rücksprung auf die Standardgröße *@
+            <button type="button" class="sb-zoom" title="@Loc.Format(UiStrings.Status_ZoomTitle, ("percent", ZoomVm.PercentText))" @onclick="ZoomVm.ResetAsync">🔍 @ZoomVm.PercentText</button>
+        }
         <span>@UiStrings.Status_Ai <b>@DocVm.CurrentAiModelDisplayName</b></span>
         <span>@UiStrings.Status_Profile <b>@DocVm.CurrentProfileDisplayName</b></span>
     </div>
@@ -39,6 +45,8 @@
     .sb-audio b { overflow: hidden; text-overflow: ellipsis; max-width: 220px; display: inline-block; vertical-align: bottom; }
     .sb-audio-btn { border: none; background: transparent; cursor: pointer; font-size: 12px; padding: 1px 4px; border-radius: 4px; }
     .sb-audio-btn:hover { background: var(--ss-panel); }
+    .sb-zoom { font-size: 12px; color: var(--ss-text-2); background: var(--ss-surface); border: 1px solid var(--ss-border); border-radius: 10px; padding-block: 0; padding-inline: 8px; cursor: pointer; white-space: nowrap; }
+    .sb-zoom:hover { background: var(--ss-hover); }
 </style>
 
 @code {
@@ -47,6 +55,12 @@
         DocVm.PropertyChanged += OnDocVmPropertyChanged;
         AuVm.PropertyChanged += OnAudioChanged;
         VdVm.PropertyChanged += OnVideoChanged;
+        ZoomVm.PropertyChanged += OnZoomChanged;
+    }
+
+    private void OnZoomChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(ZoomViewModel.Percent)) InvokeAsync(StateHasChanged);
     }
 
     private void OnDocVmPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -75,6 +89,7 @@
     public void Dispose()
     {
         VdVm.PropertyChanged -= OnVideoChanged;
+        ZoomVm.PropertyChanged -= OnZoomChanged;
         DocVm.PropertyChanged -= OnDocVmPropertyChanged;
         AuVm.PropertyChanged -= OnAudioChanged;
     }

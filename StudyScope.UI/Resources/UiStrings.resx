@@ -15,6 +15,7 @@
   <data name="Status_AudioPaused" xml:space="preserve"><value>ist pausiert</value></data>
   <data name="Status_AudioPlaying" xml:space="preserve"><value>wird vorgelesen</value></data>
   <data name="Status_VideoTitle" xml:space="preserve"><value>Video wird abgespielt (läuft in allen Reitern weiter)</value></data>
+  <data name="Status_ZoomTitle" xml:space="preserve"><value>Zoom der Oberfläche: {percent}. Klicken stellt die Standardgröße wieder her.</value><comment>{percent} = aktuelle Stufe, z. B. „125 %“</comment></data>
   <data name="Status_VideoPaused" xml:space="preserve"><value>ist pausiert</value></data>
   <data name="Status_VideoPlaying" xml:space="preserve"><value>läuft</value></data>
   <data name="Status_Ai" xml:space="preserve"><value>KI:</value></data>
@@ -657,6 +658,11 @@
   <data name="Video_SaveHtmlTitle" xml:space="preserve"><value>Video als HTML speichern unter …</value></data>
   <data name="Appearance_Language" xml:space="preserve"><value>Sprache</value><comment>Überschrift der Sprachauswahl</comment></data>
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Wird mit „{button}“ übernommen. Chat, Dokumente und eine laufende Wiedergabe bleiben erhalten; bereits angezeigte Meldungen bleiben in der bisherigen Sprache. Wird die Systemsprache nicht unterstützt, erscheint StudyScope auf Englisch.</value><comment>{button} = Common_Save</comment></data>
+  <data name="Appearance_Zoom" xml:space="preserve"><value>Zoom</value></data>
+  <data name="Appearance_ZoomIn" xml:space="preserve"><value>Vergrößern</value></data>
+  <data name="Appearance_ZoomOut" xml:space="preserve"><value>Verkleinern</value></data>
+  <data name="Appearance_ZoomReset" xml:space="preserve"><value>Standardgröße</value></data>
+  <data name="Appearance_ZoomHint" xml:space="preserve"><value>Vergrößert oder verkleinert die ganze Oberfläche und wirkt sofort. Auch mit Strg + Mausrad oder Strg + Plus / Strg + Minus; Strg + 0 stellt die Standardgröße wieder her.</value></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>Die Sprache ist zurzeit über die Umgebungsvariable {variable} auf „{culture}“ festgelegt. Ihre Auswahl wird gespeichert und gilt, sobald die Variable nicht mehr gesetzt ist.</value><comment>{variable} = STUDYSCOPE_UI_CULTURE</comment></data>
   <data name="Settings_OutputLanguage" xml:space="preserve"><value>Sprache der KI-Ergebnisse:</value></data>
   <data name="Settings_Tab_WebSearch" xml:space="preserve"><value>🌐 Websuche</value></data>

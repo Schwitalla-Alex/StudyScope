@@ -40,5 +40,11 @@ public class UiSettings
     /// </summary>
     public string? OutputLanguage { get; set; }
 
-    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme, Language = Language, OutputLanguage = OutputLanguage };
+    /// <summary>
+    /// Zoom der ganzen Oberfläche in Prozent (Stufen in <see cref="Common.UiZoom"/>); 0 bzw. fehlend in älteren
+    /// Dateien = 100.
+    /// </summary>
+    public int Zoom { get; set; }
+
+    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme, Language = Language, OutputLanguage = OutputLanguage, Zoom = Zoom };
 }

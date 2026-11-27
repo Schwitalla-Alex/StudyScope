@@ -1,6 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Photino.Blazor;
+using StudyScope.Core.Common;
 using StudyScope.Core.Interfaces;
+using StudyScope.Core.Models;
 using StudyScope.Infrastructure.AI;
 using StudyScope.Infrastructure.Services;
 using StudyScope.UI;
@@ -20,8 +22,9 @@ class Program
         // Oberflächensprache vor dem ersten Zugriff auf Texte setzen: STUDYSCOPE_UI_CULTURE (Prüfungen) → Einstellung
         // unter ☰ › Einstellungen › Darstellung (config.json) → Systemsprache → Englisch. Nur als Vorgabe, damit ein
         // späterer Wechsel zur Laufzeit überall wirkt (siehe UiLanguage.ApplyDefaults).
+        var startupUi = ReadUiSettings();
         var languageService = new UiLanguageService();
-        UiLanguage.ApplyDefaults(languageService.Resolve(ReadLanguageSetting()));
+        UiLanguage.ApplyDefaults(languageService.Resolve(startupUi?.Language));
 
         var appBuilder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
@@ -41,6 +44,11 @@ class Program
 
         appBuilder.Services.AddSingleton<IFileOpenerService, FileOpenerService>();
         appBuilder.Services.AddSingleton<IExternalLinkOpener, ExternalLinkOpener>();
+
+        // Zoom der ganzen Oberfläche über den Zoom des WebViews (☰ › Einstellungen › Darstellung, Strg + Mausrad)
+        appBuilder.Services.AddSingleton<IWindowZoom, PhotinoWindowZoom>();
+        appBuilder.Services.AddSingleton<ZoomViewModel>(sp => new ZoomViewModel(
+            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IWindowZoom>()));
 
         // Websuche (nur nach Einschalten je Profil): eigener HttpClient, Zeitlimit je Anfrage im Dienst (15 s)
         appBuilder.Services.AddSingleton<IWebSearchService>(sp =>
@@ -162,6 +170,10 @@ class Program
 
         app.MainWindow.Center(); // Zentriert das Fenster auf dem Bildschirm
 
+        // Gespeicherten Zoom als Startwert: Photino wendet ihn an, sobald der WebView geladen ist (kein Aufblitzen in 100 %)
+        var startupZoom = UiZoom.Normalize(startupUi?.Zoom ?? 0);
+        if (startupZoom != UiZoom.Default) app.MainWindow.Zoom = startupZoom;
+
         // Beim Schließen eine laufende Audio- bzw. Video-Wiedergabe beenden (nicht abwarten: der Aufruf ginge über die WebView)
         var audioViewModel = app.Services.GetRequiredService<AudioViewModel>();
         var videoViewModel = app.Services.GetRequiredService<VideoViewModel>();
@@ -181,14 +193,14 @@ class Program
     }
 
     /// <summary>
-    /// Gespeicherte Sprache aus <c>config.json</c> (<c>UiSettings.Language</c>), vor dem Aufbau der Dienste. Ein
-    /// defekter oder fehlender Eintrag gilt als „wie System“.
+    /// Gespeicherte Oberflächen-Einstellungen aus <c>config.json</c> (Sprache, Zoom), vor dem Aufbau der Dienste.
+    /// Eine fehlende oder nicht lesbare Datei ergibt null (= wie System, 100 %).
     /// </summary>
-    private static string? ReadLanguageSetting()
+    private static UiSettings? ReadUiSettings()
     {
         try
         {
-            return new JsonStorageService().LoadUiSettingsAsync().GetAwaiter().GetResult().Language;
+            return new JsonStorageService().LoadUiSettingsAsync().GetAwaiter().GetResult();
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
