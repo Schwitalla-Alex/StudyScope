@@ -126,6 +126,17 @@ Im Chat kann StudyScope zusätzlich im Internet suchen – nur wenn Sie es je Pr
 - **Benutzerdefiniert:**
   Geben Sie Ihre individuelle Base-URL (z. B. `https://api.groq.com/openai/v1`), den Modellnamen und optional Ihren Bearer-Token/API-Key ein.
 
+### 🔑 Wo liegen meine Schlüssel?
+
+API-Schlüssel (KI-Anbieter, Gemini TTS, Tavily) speichert StudyScope in Ihren Benutzerdaten: unter Windows in `%APPDATA%\StudyScope\`, unter Linux in `~/.config/StudyScope/` (Datei `config.json` und je Profil `Profiles\<Profil>.json`). Sie gehen nie an andere Stellen als an den jeweiligen Dienst.
+
+- **Windows:** Die Schlüssel werden verschlüsselt und an Ihr Windows-Konto gebunden gespeichert. Wer die Dateien auf einen anderen Computer oder in ein anderes Konto kopiert, kann sie dort nicht lesen. Vor Programmen, die unter Ihrem eigenen Konto laufen, schützt das nicht.
+- **Linux:** Unter Linux werden Schlüssel derzeit nur verschleiert gespeichert; ein Schutz über den Schlüsselbund ist vorgesehen. Wer Ihre Benutzerdaten kopiert, kann sie lesen; die Einstellungen weisen darauf hin.
+- **Anderer Computer oder anderes Konto:** Kann StudyScope einen gespeicherten Schlüssel nicht lesen, steht in den Einstellungen „Bitte tragen Sie ihn neu ein“. Der alte Wert bleibt gespeichert, bis Sie einen neuen eintragen oder „Gespeicherten Schlüssel entfernen“ wählen – zurück auf dem alten Computer funktioniert er wieder.
+- **Update von 1.2.0:** Beim ersten Start schützt StudyScope vorhandene Schlüssel neu. Vorher legt es eine Sicherung `Backup\keys-1.2-<Datum>.zip` mit den bisherigen Dateien an; sie wird nach 30 Tagen automatisch gelöscht.
+- **Zurück auf 1.2.0:** Die ältere Version kann die neu geschützten Schlüssel nicht lesen – tragen Sie sie dort neu ein. Alternativ lassen sich innerhalb von 30 Tagen `config.json` und die Profile aus der Sicherung zurückkopieren; danach geänderte Einstellungen und Dokumentlisten gehen dabei verloren.
+- **Deinstallation:** Benutzerdaten und damit die Schlüssel bleiben erhalten, außer Sie wählen „Profile und Einstellungen mitlöschen“.
+
 ---
 
 ## ❤️ StudyScope unterstützen
