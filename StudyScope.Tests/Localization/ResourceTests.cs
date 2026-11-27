@@ -16,7 +16,7 @@ namespace StudyScope.Tests.Localization;
 public class ResourceTests
 {
     /// <summary>Projekte, deren Code auf Ressourcen-Aufrufe geprüft wird.</summary>
-    private static readonly string[] CodeProjects = { "StudyScope.UI", "StudyScope.ViewModels", "StudyScope.Core", "StudyScope.Infrastructure" };
+    private static readonly string[] CodeProjects = { "StudyScope.UI", "StudyScope.ViewModels", "StudyScope.Core", "StudyScope.Infrastructure", "StudyScope.Setup", "StudyScope.Setup.Core" };
 
     private static readonly Regex ResourceRef = new(@"\b(\w+Strings)\.(\w+)\b", RegexOptions.Compiled);
     private static readonly Regex FormatCall = new(@"\b(?:Loc|LocHtml)\.Format\(", RegexOptions.Compiled);
@@ -84,7 +84,8 @@ public class ResourceTests
     public void ResourceSets_AreFound()
     {
         var names = Sets().Select(s => s.Name).ToList();
-        Assert.That(names, Does.Contain("UiStrings").And.Contain("VmStrings").And.Contain("CoreStrings").And.Contain("InfraStrings"));
+        Assert.That(names, Does.Contain("UiStrings").And.Contain("VmStrings").And.Contain("CoreStrings").And.Contain("InfraStrings")
+            .And.Contain("SetupCoreStrings").And.Contain("SetupStrings"));
     }
 
     [Test]

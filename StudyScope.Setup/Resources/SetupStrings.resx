@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Window_SetupTitle" xml:space="preserve"><value>StudyScope Setup</value><comment>Fenstertitel und Kopfzeile</comment></data>
+  <data name="Window_UninstallTitle" xml:space="preserve"><value>StudyScope deinstallieren</value><comment>Fenstertitel und Kopfzeile</comment></data>
+  <data name="Header_Version" xml:space="preserve"><value>Version {version}</value></data>
+  <data name="Header_Sandbox" xml:space="preserve"><value>Sandbox</value><comment>Kennzeichen im Testmodus (STUDYSCOPE_SETUP_SANDBOX)</comment></data>
+  <data name="Step_Welcome" xml:space="preserve"><value>Willkommen</value></data>
+  <data name="Step_Folder" xml:space="preserve"><value>Ordner</value></data>
+  <data name="Step_Options" xml:space="preserve"><value>Optionen</value></data>
+  <data name="Step_Installation" xml:space="preserve"><value>Installation</value></data>
+  <data name="Step_Finished" xml:space="preserve"><value>Fertig</value></data>
+  <data name="Step_Label" xml:space="preserve"><value>{number}. {label}</value><comment>Schrittanzeige in der Kopfzeile</comment></data>
+  <data name="Button_Cancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="Button_Back" xml:space="preserve"><value>Zurück</value></data>
+  <data name="Button_Next" xml:space="preserve"><value>Weiter</value></data>
+  <data name="Button_Install" xml:space="preserve"><value>Installieren</value></data>
+  <data name="Button_Update" xml:space="preserve"><value>Aktualisieren</value></data>
+  <data name="Button_Retry" xml:space="preserve"><value>Erneut versuchen</value></data>
+  <data name="Button_Finish" xml:space="preserve"><value>Fertig stellen</value></data>
+  <data name="Button_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="Button_Uninstall" xml:space="preserve"><value>Deinstallieren</value></data>
+  <data name="Button_Browse" xml:space="preserve"><value>Durchsuchen …</value></data>
+  <data name="Button_ConfirmDelete" xml:space="preserve"><value>Endgültig löschen</value></data>
+  <data name="Hint_ClickToContinue" xml:space="preserve"><value>Klicken Sie auf „{button}“, um fortzufahren.</value><comment>{button} = Button_Next</comment></data>
+  <data name="Hint_ClickToStart" xml:space="preserve"><value>Klicken Sie auf „{button}“, um zu beginnen.</value><comment>{button} = Button_Install bzw. Button_Update</comment></data>
+  <data name="Welcome_Title" xml:space="preserve"><value>Willkommen</value></data>
+  <data name="Welcome_Lead" xml:space="preserve"><value>Dieser Assistent installiert &lt;strong&gt;StudyScope {version}&lt;/strong&gt; auf Ihrem Computer – die Lernsoftware für Dokumenten-Chat und Lernkarteikarten mit KI-Unterstützung. Aus Ihren Unterlagen erstellt StudyScope außerdem Mindmaps, Präsentationen, Quizze, Datentabellen, Berichte, Audio-Zusammenfassungen zum Anhören und vertonte Erklärvideos.</value><comment>Enthält HTML</comment></data>
+  <data name="Welcome_NoPayloadTitle" xml:space="preserve"><value>Kein Installationspaket enthalten.</value></data>
+  <data name="Welcome_NoPayloadText" xml:space="preserve"><value>Dieses Setup wurde ohne StudyScope-Programmdateien gebaut (Entwickler-Build). Bitte verwenden Sie das Setup aus dem Build-Skript.</value></data>
+  <data name="Welcome_UpdateTitle" xml:space="preserve"><value>StudyScope {version} ist bereits installiert.</value></data>
+  <data name="Welcome_UpdateText" xml:space="preserve"><value>Das Setup aktualisiert die Installation in &lt;code&gt;{folder}&lt;/code&gt; auf Version {version}.</value><comment>Enthält HTML</comment></data>
+  <data name="Welcome_PerUser" xml:space="preserve"><value>Installation nur für Ihr Benutzerkonto – keine Administratorrechte nötig</value></data>
+  <data name="Welcome_KeepsData" xml:space="preserve"><value>Ihre Profile und Einstellungen bleiben bei Updates erhalten</value></data>
+  <data name="Welcome_Uninstall" xml:space="preserve"><value>Deinstallation jederzeit über das Setup möglich</value></data>
+  <data name="Welcome_Ffmpeg" xml:space="preserve"><value>Optional: Mit dem kostenlosen Programm ffmpeg exportiert StudyScope Videos als MP4 und Audio als MP3 (wird nicht mitinstalliert)</value></data>
+  <data name="Folder_Title" xml:space="preserve"><value>Installationsordner</value></data>
+  <data name="Folder_LeadUpdate" xml:space="preserve"><value>Das Update wird in den Ordner der vorhandenen Installation geschrieben.</value></data>
+  <data name="Folder_LeadNew" xml:space="preserve"><value>Wählen Sie, wohin StudyScope installiert werden soll.</value></data>
+  <data name="Folder_Label" xml:space="preserve"><value>Zielordner</value><comment>Feld und Zusammenfassung</comment></data>
+  <data name="Folder_UseDefault" xml:space="preserve"><value>Standardordner verwenden ({folder})</value></data>
+  <data name="Folder_DataSeparateTitle" xml:space="preserve"><value>Ihre Daten bleiben getrennt.</value></data>
+  <data name="Folder_DataSeparateText" xml:space="preserve"><value>Profile, Dokumentlisten und KI-Einstellungen liegen unter &lt;code&gt;{folder}&lt;/code&gt; und werden bei Installation und Update nicht verändert.</value><comment>Enthält HTML</comment></data>
+  <data name="Folder_PickerTitle" xml:space="preserve"><value>Installationsordner wählen</value><comment>Titel des Ordnerdialogs</comment></data>
+  <data name="Options_Title" xml:space="preserve"><value>Optionen</value></data>
+  <data name="Options_Lead" xml:space="preserve"><value>Wählen Sie, welche Verknüpfungen angelegt werden sollen.</value></data>
+  <data name="Options_DesktopShortcut" xml:space="preserve"><value>Verknüpfung auf dem Desktop</value></data>
+  <data name="Options_Summary" xml:space="preserve"><value>Zusammenfassung</value></data>
+  <data name="Options_Action" xml:space="preserve"><value>Aktion</value></data>
+  <data name="Options_ActionUpdate" xml:space="preserve"><value>Update von {from} auf {to}</value><comment>Versionsnummern</comment></data>
+  <data name="Options_ActionNew" xml:space="preserve"><value>Neuinstallation von Version {version}</value></data>
+  <data name="Options_UserData" xml:space="preserve"><value>Benutzerdaten</value></data>
+  <data name="Options_UserDataKept" xml:space="preserve"><value>&lt;code&gt;{folder}&lt;/code&gt; (bleiben erhalten)</value><comment>Enthält HTML</comment></data>
+  <data name="Progress_TitleInstall" xml:space="preserve"><value>StudyScope wird installiert</value></data>
+  <data name="Progress_TitleUpdate" xml:space="preserve"><value>StudyScope wird aktualisiert</value></data>
+  <data name="Progress_PleaseWait" xml:space="preserve"><value>Bitte warten Sie, bis alle Dateien kopiert sind.</value></data>
+  <data name="Progress_ErrorTitle" xml:space="preserve"><value>Die Installation konnte nicht abgeschlossen werden.</value></data>
+  <data name="Progress_Percent" xml:space="preserve"><value>{percent} %</value><comment>Fortschritt in Prozent (Schreibweise je Sprache)</comment></data>
+  <data name="Finish_TitleInstall" xml:space="preserve"><value>Installation abgeschlossen</value></data>
+  <data name="Finish_TitleUpdate" xml:space="preserve"><value>Update abgeschlossen</value></data>
+  <data name="Finish_LeadInstall" xml:space="preserve"><value>StudyScope {version} wurde erfolgreich installiert.</value></data>
+  <data name="Finish_LeadUpdate" xml:space="preserve"><value>StudyScope {version} wurde erfolgreich aktualisiert.</value></data>
+  <data name="Finish_InstalledIn" xml:space="preserve"><value>Installiert in</value><comment>Zusammenfassung (auch Deinstallation)</comment></data>
+  <data name="Finish_Uninstall" xml:space="preserve"><value>Deinstallation</value></data>
+  <data name="Finish_UninstallHintWindows" xml:space="preserve"><value>Über Einstellungen → Apps → Installierte Apps → StudyScope</value><comment>Menüpfad wie im Windows der jeweiligen Sprache</comment></data>
+  <data name="Finish_UninstallHintLinux" xml:space="preserve"><value>Über den Menüeintrag (Rechtsklick → „{action}“) oder „bash install.sh --uninstall“</value><comment>{action} = SetupCoreStrings.Desktop_UninstallAction</comment></data>
+  <data name="Finish_Launch" xml:space="preserve"><value>StudyScope jetzt starten</value></data>
+  <data name="Uninstall_HeaderVersion" xml:space="preserve"><value>Installierte Version {version}</value></data>
+  <data name="Uninstall_NotFoundTitle" xml:space="preserve"><value>Keine Installation gefunden</value><comment>Überschrift und Kopfzeile</comment></data>
+  <data name="Uninstall_NotFoundText" xml:space="preserve"><value>Auf diesem Computer wurde keine StudyScope-Installation für Ihr Benutzerkonto gefunden.</value></data>
+  <data name="Uninstall_ConfirmTitle" xml:space="preserve"><value>StudyScope entfernen?</value></data>
+  <data name="Uninstall_ConfirmLead" xml:space="preserve"><value>Die Programmdateien und Verknüpfungen von StudyScope werden entfernt.</value></data>
+  <data name="Uninstall_Version" xml:space="preserve"><value>Version</value></data>
+  <data name="Uninstall_DeleteUserData" xml:space="preserve"><value>Auch meine Profile und Einstellungen löschen</value></data>
+  <data name="Uninstall_KeepHint" xml:space="preserve"><value>Ohne Haken bleiben Ihre Daten erhalten und stehen nach einer erneuten Installation wieder zur Verfügung.</value></data>
+  <data name="Uninstall_ProgressTitle" xml:space="preserve"><value>StudyScope wird entfernt</value></data>
+  <data name="Uninstall_DoneTitle" xml:space="preserve"><value>StudyScope wurde entfernt</value></data>
+  <data name="Uninstall_DoneWithData" xml:space="preserve"><value>Programmdateien, Verknüpfungen sowie Ihre Profile und Einstellungen wurden gelöscht.</value></data>
+  <data name="Uninstall_DoneKeptData" xml:space="preserve"><value>Programmdateien und Verknüpfungen wurden entfernt. Ihre Profile und Einstellungen sind erhalten geblieben.</value></data>
+  <data name="Uninstall_ConfirmDeleteTitle" xml:space="preserve"><value>Profile und Einstellungen endgültig löschen?</value></data>
+  <data name="Uninstall_ConfirmDeleteText" xml:space="preserve"><value>Alle Profile, Dokumentlisten, KI-Einstellungen und gespeicherten API-Schlüssel unter &lt;code&gt;{folder}&lt;/code&gt; werden unwiderruflich gelöscht.</value><comment>Enthält HTML</comment></data>
+  <data name="Uninstall_OwnDocumentsKept" xml:space="preserve"><value>Ihre eigenen Dokumente (PDF, TXT, CSV) bleiben unberührt.</value></data>
+  <data name="Platform_NotSupported" xml:space="preserve"><value>Das StudyScope-Setup unterstützt Windows und Linux.</value></data>
+  <data name="Native_OpenDownloadPage" xml:space="preserve"><value>{message}
+
+Download-Seite jetzt im Browser öffnen?
+{url}</value><comment>Meldungsfenster vor dem Start, wenn WebView2 fehlt</comment></data>
+</root>

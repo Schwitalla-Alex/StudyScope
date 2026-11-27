@@ -34,6 +34,17 @@
 		<EmbeddedResource Include="..\StudyScope.UI\wwwroot\css\studyscope-base.css" Link="wwwroot\css\studyscope-base.css" />
 	</ItemGroup>
 
+	<!-- Texte des Assistenten: neutrale Sprache Deutsch, Übersetzungen in SetupStrings.<kultur>.resx -->
+	<ItemGroup>
+		<EmbeddedResource Update="Resources\SetupStrings.resx">
+			<StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+			<StronglyTypedNamespace>StudyScope.Setup.Resources</StronglyTypedNamespace>
+			<StronglyTypedClassName>SetupStrings</StronglyTypedClassName>
+			<StronglyTypedFileName>$(IntermediateOutputPath)SetupStrings.Designer.cs</StronglyTypedFileName>
+			<PublicClass>true</PublicClass>
+		</EmbeddedResource>
+	</ItemGroup>
+
 	<!-- Installationspaket: vom Build-Skript per -p:PayloadZip=<Pfad zum ZIP> eingebunden -->
 	<ItemGroup Condition="'$(PayloadZip)' != ''">
 		<EmbeddedResource Include="$(PayloadZip)" LogicalName="payload.zip" WithCulture="false" />

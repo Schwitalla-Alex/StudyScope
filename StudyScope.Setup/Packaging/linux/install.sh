@@ -7,17 +7,34 @@
 #
 # Das Skript installiert selbst nichts und ruft kein sudo auf: Es prüft die Systembibliotheken,
 # nennt bei Bedarf den passenden Installationsbefehl und startet dann den grafischen Setup-Assistenten.
+#
+# Sprache der Ausgaben: Deutsch, wenn die Spracheinstellung mit „de“ beginnt (LC_ALL, sonst LC_MESSAGES,
+# sonst LANG – dieselbe Reihenfolge wie bei anderen Programmen), sonst Englisch. Beide Fassungen stehen
+# hier im Skript (Funktion msg), es gibt keine zusätzlichen Dateien. Der Setup-Assistent wählt seine
+# Sprache selbst.
 set -euo pipefail
 
 cd "$(dirname "$(readlink -f "$0")")"
 SETUP="./StudyScope.Setup"
 
+case "${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}" in
+  de*) UI_LANG=de ;;
+  *)   UI_LANG=en ;;
+esac
+
+# msg "<Deutsch>" "<English>" – gibt den Text in der Sprache der Ausgabe aus (ohne Zeilenumbruch)
+msg() { if [ "$UI_LANG" = de ]; then printf '%s' "$1"; else printf '%s' "$2"; fi; }
+
 fail() { printf '\n%s\n' "$*" >&2; exit 1; }
 
-[ -f "$SETUP" ] || fail "StudyScope.Setup wurde neben install.sh nicht gefunden. Bitte das Archiv vollständig entpacken."
+[ -f "$SETUP" ] || fail "$(msg \
+  "StudyScope.Setup wurde neben install.sh nicht gefunden. Bitte das Archiv vollständig entpacken." \
+  "StudyScope.Setup was not found next to install.sh. Extract the complete archive first.")"
 
 ARCH="$(uname -m)"
-[ "$ARCH" = "x86_64" ] || fail "StudyScope gibt es derzeit nur für 64-Bit-x86-Systeme (gefunden: $ARCH)."
+[ "$ARCH" = "x86_64" ] || fail "$(msg \
+  "StudyScope gibt es derzeit nur für 64-Bit-x86-Systeme (gefunden: $ARCH)." \
+  "StudyScope is currently only available for 64-bit x86 systems (found: $ARCH).")"
 
 # ------------------------------------------------------------------ Bibliotheken prüfen
 LDCONFIG="$(command -v ldconfig || echo /sbin/ldconfig)"
@@ -73,16 +90,18 @@ if [ "${#MISSING[@]}" -gt 0 ]; then
 
   {
     echo
-    echo "Für StudyScope fehlen Systembibliotheken: ${LIST%, }"
+    echo "$(msg "Für StudyScope fehlen Systembibliotheken:" "StudyScope needs system libraries that are missing:") ${LIST%, }"
     if [ -n "$CMD" ]; then
-      echo "Bitte installieren Sie sie mit:"
+      msg "Bitte installieren Sie sie mit:" "Install them with:"; echo
       echo
       echo "    $CMD"
       echo
-      echo "und starten Sie danach erneut:  bash install.sh"
+      echo "$(msg "und starten Sie danach erneut:" "and then run again:")  bash install.sh"
     else
-      echo "Bitte installieren Sie über die Paketverwaltung Ihrer Distribution:"
-      echo "  WebKitGTK 4.1 (libwebkit2gtk-4.1.so.0), GTK 3, libnotify und ICU."
+      msg "Bitte installieren Sie über die Paketverwaltung Ihrer Distribution:" \
+          "Install the following with your distribution's package manager:"; echo
+      msg "  WebKitGTK 4.1 (libwebkit2gtk-4.1.so.0), GTK 3, libnotify und ICU." \
+          "  WebKitGTK 4.1 (libwebkit2gtk-4.1.so.0), GTK 3, libnotify and ICU."; echo
     fi
   } >&2
   exit 1
@@ -107,9 +126,11 @@ if ! has_emoji_font; then
   elif command -v zypper >/dev/null 2>&1; then EMOJI_CMD="sudo zypper install noto-coloremoji-fonts"
   fi
   echo
-  echo "Empfehlung (optional): Es wurde keine Farb-Emoji-Schrift gefunden. StudyScope funktioniert auch ohne,"
-  echo "zeigt dann aber einige Symbole (z. B. in den Reitern) als Kästchen an."
-  [ -n "$EMOJI_CMD" ] && echo "Zum Nachinstallieren:  $EMOJI_CMD"
+  msg "Empfehlung (optional): Es wurde keine Farb-Emoji-Schrift gefunden. StudyScope funktioniert auch ohne," \
+      "Recommendation (optional): No color emoji font was found. StudyScope works without one,"; echo
+  msg "zeigt dann aber einige Symbole (z. B. in den Reitern) als Kästchen an." \
+      "but then shows some symbols (for example in the tabs) as boxes."; echo
+  [ -n "$EMOJI_CMD" ] && echo "$(msg "Zum Nachinstallieren:" "To install it:")  $EMOJI_CMD"
   echo
 fi
 
@@ -123,19 +144,23 @@ if ! command -v ffmpeg >/dev/null 2>&1; then
   elif command -v zypper >/dev/null 2>&1; then FFMPEG_CMD="sudo zypper install ffmpeg"
   fi
   echo
-  echo "Hinweis (optional): ffmpeg wurde nicht gefunden. Ohne ffmpeg funktioniert StudyScope vollständig,"
-  echo "nur der Export von Videos als MP4 und von Audio als MP3 ist dann gesperrt."
-  [ -n "$FFMPEG_CMD" ] && echo "Zum Nachinstallieren:  $FFMPEG_CMD"
+  msg "Hinweis (optional): ffmpeg wurde nicht gefunden. Ohne ffmpeg funktioniert StudyScope vollständig," \
+      "Note (optional): ffmpeg was not found. StudyScope works fully without ffmpeg;"; echo
+  msg "nur der Export von Videos als MP4 und von Audio als MP3 ist dann gesperrt." \
+      "only exporting videos as MP4 and audio as MP3 is then unavailable."; echo
+  [ -n "$FFMPEG_CMD" ] && echo "$(msg "Zum Nachinstallieren:" "To install it:")  $FFMPEG_CMD"
   echo
 fi
 
 if [ "${1:-}" = "--check" ]; then
-  echo "Alle Voraussetzungen für StudyScope sind erfüllt."
+  msg "Alle Voraussetzungen für StudyScope sind erfüllt." "All requirements for StudyScope are met."; echo
   exit 0
 fi
 
 # ------------------------------------------------------------------ Grafische Sitzung prüfen und Setup starten
-[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] || fail "Keine grafische Sitzung gefunden. Bitte install.sh in einer Desktop-Sitzung starten."
+[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] || fail "$(msg \
+  "Keine grafische Sitzung gefunden. Bitte install.sh in einer Desktop-Sitzung starten." \
+  "No graphical session found. Run install.sh in a desktop session.")"
 
 chmod +x "$SETUP"
 exec "$SETUP" "$@"

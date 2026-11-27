@@ -44,6 +44,16 @@ public class LogicalCssTests
         // 3a-4 Audio und Video
         "Components/AudioView.razor",
         "Components/VideoView.razor",
+        // 3b-3 Installationsprogramm (Pfade relativ zu StudyScope.UI)
+        "../StudyScope.Setup/wwwroot/css/setup.css",
+        "../StudyScope.Setup/App.razor",
+        "../StudyScope.Setup/Components/SetupWizard.razor",
+        "../StudyScope.Setup/Components/UninstallWizard.razor",
+        "../StudyScope.Setup/Components/WelcomeStep.razor",
+        "../StudyScope.Setup/Components/FolderStep.razor",
+        "../StudyScope.Setup/Components/OptionsStep.razor",
+        "../StudyScope.Setup/Components/ProgressStep.razor",
+        "../StudyScope.Setup/Components/FinishStep.razor",
     };
 
     private static readonly Regex Physical = new(

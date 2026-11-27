@@ -45,6 +45,8 @@ Für reguläre Anwender ist keine Installation von .NET oder Programmier-Tools e
 
 Voraussetzung ist die Microsoft Edge WebView2-Runtime (unter Windows 11 vorinstalliert). Fehlt sie, weist das Setup darauf hin.
 
+Setup und `install.sh` erscheinen in der Sprache Ihres Systems: Deutsch auf deutschsprachigen Systemen, sonst Englisch.
+
 > **Hinweis zur SmartScreen-Warnung:** Die `setup.exe` ist (noch) nicht digital signiert. Windows zeigt deshalb beim ersten Start „Der Computer wurde durch Windows geschützt“ an. Klicken Sie auf **Weitere Informationen** und dann auf **Trotzdem ausführen**. Wer sichergehen will, prüft vorher die SHA-256-Prüfsumme (siehe [Download prüfen](#download-prüfen-sha-256)).
 
 ### Linux

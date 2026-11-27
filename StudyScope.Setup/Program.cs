@@ -7,6 +7,7 @@ using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
 using StudyScope.Setup.Core.Services;
 using StudyScope.Setup.Core.ViewModels;
+using StudyScope.Setup.Resources;
 using StudyScope.Setup.Services;
 
 /// <summary>
@@ -21,6 +22,10 @@ class Program
     [STAThread]
     static int Main(string[] args)
     {
+        // Sprache vor dem ersten Text festlegen: Systemsprache (Deutsch, sonst Englisch), STUDYSCOPE_UI_CULTURE für
+        // Prüfungen. Bewusst ohne Auswahl im Assistenten und ohne Eintrag in den Benutzerdaten.
+        var culture = SetupLanguage.Apply();
+
         var mode = args.Any(a => a.Equals("--uninstall", StringComparison.OrdinalIgnoreCase))
             ? SetupMode.Uninstall
             : SetupMode.Install;
@@ -44,7 +49,7 @@ class Program
         var folderPicker = new PhotinoFolderPicker();
 
         // Services registrieren
-        appBuilder.Services.AddSingleton(new SetupContext(mode, PlatformServices.SandboxDirectory != null));
+        appBuilder.Services.AddSingleton(new SetupContext(mode, PlatformServices.SandboxDirectory != null, culture));
         appBuilder.Services.AddSingleton<IPayloadProvider>(payload);
         appBuilder.Services.AddSingleton<IProcessService>(processes);
         appBuilder.Services.AddSingleton(platform.Paths);
@@ -68,7 +73,7 @@ class Program
         app.Services.GetRequiredService<SetupWizardViewModel>().CloseRequested += (_, _) => app.MainWindow.Close();
         app.Services.GetRequiredService<UninstallViewModel>().CloseRequested += (_, _) => app.MainWindow.Close();
 
-        app.MainWindow.SetTitle(mode == SetupMode.Uninstall ? "StudyScope deinstallieren" : "StudyScope Setup");
+        app.MainWindow.SetTitle(mode == SetupMode.Uninstall ? SetupStrings.Window_UninstallTitle : SetupStrings.Window_SetupTitle);
 
         // Photino erwartet für das Fenster-Icon eine echte Datei → eingebettetes Icon in den Temp-Ordner schreiben
         var iconPath = ExtractEmbeddedFile(webRoot, "favicon.ico");

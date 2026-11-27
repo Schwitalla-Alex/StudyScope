@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using StudyScope.Core.Common;
 using StudyScope.Setup.Core.Interfaces;
+using StudyScope.Setup.Core.Resources;
 
 namespace StudyScope.Setup.Core.Services;
 
@@ -25,7 +26,7 @@ public sealed class EmbeddedPayloadProvider : IPayloadProvider
 
     public Stream OpenPayload() =>
         _assembly.GetManifestResourceStream(ResourceName)
-        ?? throw new InvalidOperationException("Das Installationspaket ist nicht eingebettet.");
+        ?? throw new InvalidOperationException(SetupCoreStrings.Install_NoPayload);
 }
 
 /// <summary>Prozesse prüfen und starten (auf beiden Plattformen gleich).</summary>
@@ -78,7 +79,8 @@ public sealed class DirectProgress<T> : IProgress<T>
 
 /// <summary>
 /// Erzeugt den Inhalt der .desktop-Datei nach der freedesktop.org Desktop Entry Specification.
-/// Plattformneutral, damit er auch unter Windows getestet werden kann.
+/// Plattformneutral, damit er auch unter Windows getestet werden kann. Beschreibung, Suchbegriffe und die Aktion
+/// „Deinstallieren“ stehen in der Sprache des Setups (wie Startmenü-Verknüpfungen unter Windows).
 /// </summary>
 public static class DesktopEntryBuilder
 {
@@ -92,14 +94,14 @@ public static class DesktopEntryBuilder
         sb.Append("Type=Application\n");
         sb.Append("Version=1.5\n");
         sb.Append("Name=StudyScope\n");
-        sb.Append("GenericName=Lernsoftware\n");
-        sb.Append("Comment=Mit KI aus eigenen Unterlagen lernen: Chat, Karteikarten, Mindmap, Quiz und mehr\n");
+        sb.Append("GenericName=").Append(EscapeValue(SetupCoreStrings.Desktop_GenericName)).Append('\n');
+        sb.Append("Comment=").Append(EscapeValue(SetupCoreStrings.Desktop_Comment)).Append('\n');
         sb.Append("Exec=").Append(QuoteExecArgument(appExecutablePath)).Append('\n');
         sb.Append("Path=").Append(EscapeValue(installDirectory)).Append('\n');
         sb.Append("Icon=").Append(EscapeValue(icon)).Append('\n');
         sb.Append("Terminal=false\n");
         sb.Append("Categories=Education;Office;\n");
-        sb.Append("Keywords=Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;Tabelle;Audio;Podcast;Video;\n");
+        sb.Append("Keywords=").Append(EscapeValue(SetupCoreStrings.Desktop_Keywords)).Append('\n');
         sb.Append("StartupWMClass=StudyScope.UI\n");
 
         if (!string.IsNullOrEmpty(setupExecutablePath))
@@ -107,7 +109,7 @@ public static class DesktopEntryBuilder
             sb.Append("Actions=Uninstall;\n");
             sb.Append('\n');
             sb.Append("[Desktop Action Uninstall]\n");
-            sb.Append("Name=StudyScope deinstallieren\n");
+            sb.Append("Name=").Append(EscapeValue(SetupCoreStrings.Desktop_UninstallAction)).Append('\n');
             sb.Append("Exec=").Append(QuoteExecArgument(setupExecutablePath)).Append(" --uninstall\n");
         }
 

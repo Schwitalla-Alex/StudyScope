@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Folder_Empty" xml:space="preserve"><value>Bitte wählen Sie einen Installationsordner.</value></data>
+  <data name="Folder_InvalidChars" xml:space="preserve"><value>Der Pfad enthält unzulässige Zeichen.</value></data>
+  <data name="Folder_NotFullyQualified" xml:space="preserve"><value>Bitte geben Sie einen vollständigen Pfad an (z. B. {example}).</value><comment>{example} = Standardordner</comment></data>
+  <data name="Folder_Invalid" xml:space="preserve"><value>Der Pfad ist ungültig.</value></data>
+  <data name="Folder_DriveRoot" xml:space="preserve"><value>Bitte wählen Sie einen Unterordner statt eines ganzen Laufwerks.</value></data>
+  <data name="Folder_HomeDirectory" xml:space="preserve"><value>Bitte wählen Sie einen Unterordner statt Ihres Benutzerordners.</value></data>
+  <data name="Folder_OverlapsUserData" xml:space="preserve"><value>Der Installationsordner darf nicht mit dem Ordner für Ihre Profile und Einstellungen ({path}) zusammenfallen.</value></data>
+  <data name="Folder_IsFile" xml:space="preserve"><value>Unter diesem Pfad existiert bereits eine Datei.</value></data>
+  <data name="Folder_NotEmpty" xml:space="preserve"><value>Der Ordner ist nicht leer. Bitte wählen Sie einen leeren oder neuen Ordner.</value></data>
+  <data name="Install_NoPayload" xml:space="preserve"><value>Dieses Setup enthält kein Installationspaket (Entwickler-Build ohne Payload).</value></data>
+  <data name="Install_AppRunning" xml:space="preserve"><value>StudyScope läuft noch. Bitte schließen Sie StudyScope und versuchen Sie es erneut.</value></data>
+  <data name="Install_InvalidPackagePath" xml:space="preserve"><value>Das Installationspaket ist ungültig (unzulässiger Pfad: {path}).</value></data>
+  <data name="Install_Cancelled" xml:space="preserve"><value>Die Installation wurde abgebrochen.</value></data>
+  <data name="Install_Failed" xml:space="preserve"><value>Die Installation ist fehlgeschlagen.</value></data>
+  <data name="Progress_Preparing" xml:space="preserve"><value>Installation wird vorbereitet …</value></data>
+  <data name="Progress_Copying" xml:space="preserve"><value>Kopiere {file}</value><comment>{file} = Pfad im Installationspaket</comment></data>
+  <data name="Progress_RemovingObsolete" xml:space="preserve"><value>Entferne veraltete Dateien …</value></data>
+  <data name="Progress_SettingPermissions" xml:space="preserve"><value>Setze Dateiberechtigungen …</value></data>
+  <data name="Progress_CreatingShortcuts" xml:space="preserve"><value>Lege Verknüpfungen an …</value></data>
+  <data name="Progress_Registering" xml:space="preserve"><value>Registriere Installation …</value></data>
+  <data name="Progress_UpdateDone" xml:space="preserve"><value>Update abgeschlossen.</value></data>
+  <data name="Progress_InstallDone" xml:space="preserve"><value>Installation abgeschlossen.</value></data>
+  <data name="Error_NoWriteAccess" xml:space="preserve"><value>Keine Schreibrechte im Installationsordner. Bitte wählen Sie einen anderen Ordner.</value></data>
+  <data name="Error_FileInUse" xml:space="preserve"><value>Eine Datei wird gerade verwendet. Bitte schließen Sie StudyScope und versuchen Sie es erneut.</value></data>
+  <data name="Error_CopyFailed" xml:space="preserve"><value>Beim Kopieren ist ein Fehler aufgetreten: {error}</value><comment>{error} = Meldung des Systems</comment></data>
+  <data name="Error_CopyFailedUpdate" xml:space="preserve"><value>Beim Kopieren ist ein Fehler aufgetreten: {error} Bitte führen Sie das Setup erneut aus.</value><comment>{error} = Meldung des Systems</comment></data>
+  <data name="Error_PackageCorrupt" xml:space="preserve"><value>Das Installationspaket ist beschädigt.</value></data>
+  <data name="Error_Unexpected" xml:space="preserve"><value>Unerwarteter Fehler: {error}</value><comment>{error} = Meldung des Systems</comment></data>
+  <data name="Uninstall_NotFound" xml:space="preserve"><value>In diesem Ordner wurde keine StudyScope-Installation gefunden.</value></data>
+  <data name="Progress_RemovingShortcuts" xml:space="preserve"><value>Entferne Verknüpfungen …</value></data>
+  <data name="Progress_Removing" xml:space="preserve"><value>Entferne {file}</value><comment>{file} = Pfad im Installationsordner</comment></data>
+  <data name="Progress_RemovingCaches" xml:space="preserve"><value>Entferne zwischengespeicherte Daten …</value></data>
+  <data name="Progress_RemovingUserData" xml:space="preserve"><value>Entferne Profile und Einstellungen …</value></data>
+  <data name="Progress_Removed" xml:space="preserve"><value>StudyScope wurde entfernt.</value></data>
+  <data name="Shortcut_MenuWindows" xml:space="preserve"><value>Verknüpfung im Startmenü</value></data>
+  <data name="Shortcut_MenuLinux" xml:space="preserve"><value>Eintrag im Anwendungsmenü (mit „{action}“)</value><comment>{action} = Desktop_UninstallAction</comment></data>
+  <data name="Shortcut_Description" xml:space="preserve"><value>StudyScope – Lernsoftware mit KI-Unterstützung</value><comment>Beschreibung der Windows-Verknüpfung</comment></data>
+  <data name="Shortcut_NoWScriptShell" xml:space="preserve"><value>Verknüpfungen können auf diesem System nicht angelegt werden (WScript.Shell fehlt).</value></data>
+  <data name="Desktop_GenericName" xml:space="preserve"><value>Lernsoftware</value><comment>Linux-Menüeintrag (.desktop, GenericName)</comment></data>
+  <data name="Desktop_Comment" xml:space="preserve"><value>Mit KI aus eigenen Unterlagen lernen: Chat, Karteikarten, Mindmap, Quiz und mehr</value><comment>Linux-Menüeintrag (.desktop, Comment)</comment></data>
+  <data name="Desktop_Keywords" xml:space="preserve"><value>Lernen;Karteikarten;PDF;KI;Mindmap;Quiz;Präsentation;Bericht;Tabelle;Audio;Podcast;Video;</value><comment>Suchbegriffe im Linux-Menü, mit ; getrennt und abgeschlossen</comment></data>
+  <data name="Desktop_UninstallAction" xml:space="preserve"><value>StudyScope deinstallieren</value><comment>Aktion im Linux-Menüeintrag (Rechtsklick)</comment></data>
+  <data name="Prerequisite_WebView2Missing" xml:space="preserve"><value>Für StudyScope wird die Microsoft Edge WebView2-Runtime benötigt, die auf diesem PC nicht gefunden wurde.
+
+Bitte installieren Sie die Runtime von der Microsoft-Seite und starten Sie das Setup danach erneut.</value></data>
+  <data name="Prerequisite_WebKitMissing" xml:space="preserve"><value>WebKitGTK 4.1 wurde nicht gefunden. Bitte installieren Sie es, z. B. unter Ubuntu:
+  {command}
+und starten Sie das Setup danach erneut (am besten über install.sh).</value><comment>{command} = apt-Befehl</comment></data>
+</root>

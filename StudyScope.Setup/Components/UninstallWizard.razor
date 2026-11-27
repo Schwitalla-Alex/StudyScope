@@ -6,36 +6,40 @@
     <header class="wizard-header">
         <img src="favicon.ico" alt="" class="wizard-logo" />
         <div class="wizard-title">
-            <h1>StudyScope deinstallieren</h1>
-            <span>@(Vm.IsInstalled ? $"Installierte Version {Vm.InstalledVersion}" : "Keine Installation gefunden")@(Context.IsSandbox ? " · Sandbox" : "")</span>
+            <h1>@SetupStrings.Window_UninstallTitle</h1>
+            <span>@(Vm.IsInstalled ? Loc.Format(SetupStrings.Uninstall_HeaderVersion, ("version", Vm.InstalledVersion)) : SetupStrings.Uninstall_NotFoundTitle)</span>
+            @if (Context.IsSandbox)
+            {
+                <span class="sandbox-badge">@SetupStrings.Header_Sandbox</span>
+            }
         </div>
     </header>
 
     <main class="wizard-content">
         @if (!Vm.IsInstalled && Vm.CurrentStep != UninstallStep.Finished)
         {
-            <h2>Keine Installation gefunden</h2>
-            <p class="lead">Auf diesem Computer wurde keine StudyScope-Installation für Ihr Benutzerkonto gefunden.</p>
+            <h2>@SetupStrings.Uninstall_NotFoundTitle</h2>
+            <p class="lead">@SetupStrings.Uninstall_NotFoundText</p>
         }
         else if (Vm.CurrentStep == UninstallStep.Confirm)
         {
-            <h2>StudyScope entfernen?</h2>
-            <p class="lead">Die Programmdateien und Verknüpfungen von StudyScope werden entfernt.</p>
+            <h2>@SetupStrings.Uninstall_ConfirmTitle</h2>
+            <p class="lead">@SetupStrings.Uninstall_ConfirmLead</p>
 
             <table class="summary">
-                <tr><th>Version</th><td>@Vm.InstalledVersion</td></tr>
-                <tr><th>Installiert in</th><td><code>@Vm.InstallDirectory</code></td></tr>
+                <tr><th>@SetupStrings.Uninstall_Version</th><td>@Vm.InstalledVersion</td></tr>
+                <tr><th>@SetupStrings.Finish_InstalledIn</th><td><code>@Vm.InstallDirectory</code></td></tr>
             </table>
 
             <label class="check check-danger">
                 <input type="checkbox" id="opt-delete-userdata" checked="@Vm.DeleteUserData"
                        @onchange="e => Vm.DeleteUserData = (bool)(e.Value ?? false)" />
                 <span>
-                    Auch meine Profile und Einstellungen löschen<br />
+                    @SetupStrings.Uninstall_DeleteUserData<br />
                     <small><code>@Vm.UserDataDirectory</code></small>
                 </span>
             </label>
-            <p class="hint">Ohne Haken bleiben Ihre Daten erhalten und stehen nach einer erneuten Installation wieder zur Verfügung.</p>
+            <p class="hint">@SetupStrings.Uninstall_KeepHint</p>
 
             @if (Vm.HasError)
             {
@@ -44,18 +48,16 @@
         }
         else if (Vm.CurrentStep == UninstallStep.Progress)
         {
-            <h2>StudyScope wird entfernt</h2>
+            <h2>@SetupStrings.Uninstall_ProgressTitle</h2>
             <div class="progress"><div class="progress-bar" style="width: @(Vm.ProgressPercent)%"></div></div>
-            <div class="progress-text"><span id="progress-status">@Vm.StatusMessage</span><span>@Vm.ProgressPercent %</span></div>
+            <div class="progress-text"><span id="progress-status">@Vm.StatusMessage</span><span>@Loc.Format(SetupStrings.Progress_Percent, ("percent", Vm.ProgressPercent))</span></div>
         }
         else
         {
             <div class="done-icon">✓</div>
-            <h2>StudyScope wurde entfernt</h2>
+            <h2>@SetupStrings.Uninstall_DoneTitle</h2>
             <p class="lead" id="uninstall-done">
-                @(Vm.UserDataDeleted
-                    ? "Programmdateien, Verknüpfungen sowie Ihre Profile und Einstellungen wurden gelöscht."
-                    : "Programmdateien und Verknüpfungen wurden entfernt. Ihre Profile und Einstellungen sind erhalten geblieben.")
+                @(Vm.UserDataDeleted ? SetupStrings.Uninstall_DoneWithData : SetupStrings.Uninstall_DoneKeptData)
             </p>
         }
     </main>
@@ -63,14 +65,14 @@
     <footer class="wizard-footer">
         @if (Vm.CurrentStep == UninstallStep.Confirm && Vm.IsInstalled)
         {
-            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Close">Abbrechen</button>
+            <button class="btn btn-secondary" id="btn-cancel" @onclick="Vm.Close">@SetupStrings.Button_Cancel</button>
             <span class="spacer"></span>
-            <button class="btn btn-danger" id="btn-uninstall" @onclick="Vm.RequestUninstallAsync">Deinstallieren</button>
+            <button class="btn btn-danger" id="btn-uninstall" @onclick="Vm.RequestUninstallAsync">@SetupStrings.Button_Uninstall</button>
         }
         else if (Vm.CurrentStep != UninstallStep.Progress)
         {
             <span class="spacer"></span>
-            <button class="btn btn-primary" id="btn-close" @onclick="Vm.Close">Schließen</button>
+            <button class="btn btn-primary" id="btn-close" @onclick="Vm.Close">@SetupStrings.Button_Close</button>
         }
     </footer>
 </div>
@@ -79,15 +81,12 @@
 {
     <div class="modal-backdrop">
         <div class="modal" role="alertdialog" aria-labelledby="confirm-title">
-            <h3 id="confirm-title">Profile und Einstellungen endgültig löschen?</h3>
-            <p>
-                Alle Profile, Dokumentlisten, KI-Einstellungen und gespeicherten API-Schlüssel unter
-                <code>@Vm.UserDataDirectory</code> werden unwiderruflich gelöscht.
-            </p>
-            <p>Ihre eigenen Dokumente (PDF, TXT, CSV) bleiben unberührt.</p>
+            <h3 id="confirm-title">@SetupStrings.Uninstall_ConfirmDeleteTitle</h3>
+            <p>@LocHtml.Format(SetupStrings.Uninstall_ConfirmDeleteText, ("folder", Vm.UserDataDirectory))</p>
+            <p>@SetupStrings.Uninstall_OwnDocumentsKept</p>
             <div class="modal-buttons">
-                <button class="btn btn-secondary" id="btn-confirm-cancel" @onclick="Vm.CancelDeleteConfirmation">Abbrechen</button>
-                <button class="btn btn-danger" id="btn-confirm-delete" @onclick="Vm.ConfirmDeleteUserDataAsync">Endgültig löschen</button>
+                <button class="btn btn-secondary" id="btn-confirm-cancel" @onclick="Vm.CancelDeleteConfirmation">@SetupStrings.Button_Cancel</button>
+                <button class="btn btn-danger" id="btn-confirm-delete" @onclick="Vm.ConfirmDeleteUserDataAsync">@SetupStrings.Button_ConfirmDelete</button>
             </div>
         </div>
     </div>

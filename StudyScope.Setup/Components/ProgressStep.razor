@@ -1,21 +1,21 @@
 @inherits ViewModelComponent
 @inject SetupWizardViewModel Vm
 
-<h2>@(Vm.IsUpdate ? "StudyScope wird aktualisiert" : "StudyScope wird installiert")</h2>
-<p class="lead">@(Install.IsRunning ? "Bitte warten Sie, bis alle Dateien kopiert sind." : Install.StatusMessage)</p>
+<h2>@(Vm.IsUpdate ? SetupStrings.Progress_TitleUpdate : SetupStrings.Progress_TitleInstall)</h2>
+<p class="lead">@(Install.IsRunning ? SetupStrings.Progress_PleaseWait : Install.StatusMessage)</p>
 
 <div class="progress" role="progressbar" aria-valuenow="@Install.ProgressPercent" aria-valuemin="0" aria-valuemax="100">
     <div class="progress-bar @(Install.HasError ? "failed" : "")" style="width: @(Install.ProgressPercent)%"></div>
 </div>
 <div class="progress-text">
     <span id="progress-status">@Install.StatusMessage</span>
-    <span>@Install.ProgressPercent %</span>
+    <span>@Loc.Format(SetupStrings.Progress_Percent, ("percent", Install.ProgressPercent))</span>
 </div>
 
 @if (Install.HasError)
 {
     <div class="box box-error" id="install-error">
-        <strong>Die Installation konnte nicht abgeschlossen werden.</strong><br />
+        <strong>@SetupStrings.Progress_ErrorTitle</strong><br />
         @Install.ErrorMessage
     </div>
 }

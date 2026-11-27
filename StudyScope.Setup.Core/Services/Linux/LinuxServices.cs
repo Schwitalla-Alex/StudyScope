@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using StudyScope.Core.Common;
+using StudyScope.Core.Localization;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
+using StudyScope.Setup.Core.Resources;
 
 namespace StudyScope.Setup.Core.Services.Linux;
 
@@ -107,7 +109,7 @@ public sealed class LinuxShortcutService : IShortcutService
     }
 
     public bool IsMenuShortcutOptional => false;
-    public string MenuShortcutLabel => "Eintrag im Anwendungsmenü (mit „Deinstallieren“)";
+    public string MenuShortcutLabel => Loc.Format(SetupCoreStrings.Shortcut_MenuLinux, ("action", SetupCoreStrings.Desktop_UninstallAction));
 
     public IReadOnlyList<string> CreateShortcuts(ShortcutRequest request)
     {
@@ -181,9 +183,7 @@ public sealed class LinuxPrerequisiteChecker : IPrerequisiteChecker
             return PrerequisiteResult.Ok;
         }
 
-        return new PrerequisiteResult(false,
-            "WebKitGTK 4.1 wurde nicht gefunden. Bitte installieren Sie es, z. B. unter Ubuntu:\n" +
-            "  sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libnotify4\n" +
-            "und starten Sie das Setup danach erneut (am besten über install.sh).");
+        return new PrerequisiteResult(false, Loc.Format(SetupCoreStrings.Prerequisite_WebKitMissing,
+            ("command", "sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0t64 libnotify4")));
     }
 }

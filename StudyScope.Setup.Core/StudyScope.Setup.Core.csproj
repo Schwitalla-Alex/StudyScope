@@ -12,4 +12,16 @@
     <ProjectReference Include="..\StudyScope.Core\StudyScope.Core.csproj" />
   </ItemGroup>
 
+  <!-- Texte der Setup-Logik: neutrale Sprache Deutsch, Übersetzungen in SetupCoreStrings.<kultur>.resx.
+       Die Satellitenassemblies landen beim Veröffentlichen mit in der Einzeldatei setup.exe. -->
+  <ItemGroup>
+    <EmbeddedResource Update="Resources\SetupCoreStrings.resx">
+      <StronglyTypedLanguage>CSharp</StronglyTypedLanguage>
+      <StronglyTypedNamespace>StudyScope.Setup.Core.Resources</StronglyTypedNamespace>
+      <StronglyTypedClassName>SetupCoreStrings</StronglyTypedClassName>
+      <StronglyTypedFileName>$(IntermediateOutputPath)SetupCoreStrings.Designer.cs</StronglyTypedFileName>
+      <PublicClass>true</PublicClass>
+    </EmbeddedResource>
+  </ItemGroup>
+
 </Project>

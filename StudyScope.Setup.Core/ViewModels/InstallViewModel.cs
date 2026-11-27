@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
+using StudyScope.Core.Localization;
 using StudyScope.Setup.Core.Interfaces;
 using StudyScope.Setup.Core.Models;
+using StudyScope.Setup.Core.Resources;
 using StudyScope.Setup.Core.Services;
 
 namespace StudyScope.Setup.Core.ViewModels;
@@ -67,20 +69,20 @@ public sealed class InstallViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-            ErrorMessage = "Die Installation wurde abgebrochen.";
+            ErrorMessage = SetupCoreStrings.Install_Cancelled;
             StatusMessage = ErrorMessage;
             return false;
         }
         catch (InstallException ex)
         {
             ErrorMessage = ex.Message;
-            StatusMessage = "Die Installation ist fehlgeschlagen.";
+            StatusMessage = SetupCoreStrings.Install_Failed;
             return false;
         }
         catch (Exception ex)
         {
-            ErrorMessage = "Unerwarteter Fehler: " + ex.Message;
-            StatusMessage = "Die Installation ist fehlgeschlagen.";
+            ErrorMessage = Loc.Format(SetupCoreStrings.Error_Unexpected, ("error", ex.Message));
+            StatusMessage = SetupCoreStrings.Install_Failed;
             return false;
         }
         finally
