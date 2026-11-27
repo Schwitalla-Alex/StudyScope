@@ -367,13 +367,19 @@ public class ExportLocalizationTests
                      .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}")))
         {
             var lines = File.ReadAllLines(file);
+            // Eine Variable „culture“ zählt nur, wenn sie in derselben Datei aus ExportCulture.For gebildet wird
+            var hasCultureVariable = lines.Any(l => l.Contains("var culture = ExportCulture.For(", StringComparison.Ordinal));
             for (var i = 0; i < lines.Length; i++)
             {
+                if (lines[i].Contains("ExportCulture.Current", StringComparison.Ordinal))
+                    problems.Add($"{Path.GetFileName(file)}:{i + 1}: ExportCulture.Current gibt es seit 3c-2 nicht mehr");
                 foreach (Match m in call.Matches(lines[i]))
                 {
                     var rest = lines[i][m.Index..];
-                    if (!rest.Contains("ExportCulture.Current", StringComparison.Ordinal))
-                        problems.Add($"{Path.GetFileName(file)}:{i + 1}: {m.Groups[1].Value} ohne ExportCulture.Current");
+                    var ok = rest.Contains("ExportCulture.For(", StringComparison.Ordinal)
+                             || (hasCultureVariable && Regex.IsMatch(rest, @"\bculture\)"));
+                    if (!ok)
+                        problems.Add($"{Path.GetFileName(file)}:{i + 1}: {m.Groups[1].Value} ohne ExportCulture.For");
                 }
             }
         }

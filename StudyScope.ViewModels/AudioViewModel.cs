@@ -905,11 +905,12 @@ public partial class AudioViewModel : INotifyPropertyChanged
                     chunks.Add(new SourceChunk(doc.FileName, text));
             }
 
-            var fallbackTitle = selectedDocs.Count == 1
-                ? $"{AudioScriptFormats.DisplayName(Format)}: {Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)}"
-                : $"{AudioScriptFormats.DisplayName(Format)}: {_profileName}";
+            var outputLanguage = await OutputLanguageSettingAsync(_profileName);
+            var format = Format;
+            var fallbackTitle = FallbackTitles.Titled(FallbackTitles.Language(outputLanguage, chunks.Select(c => c.Text)),
+                () => MediaTexts.FormatName(format), selectedDocs, _profileName);
 
-            var result = await _audioService.GenerateAsync(chunks, Format, Length, Topic, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
+            var result = await _audioService.GenerateAsync(chunks, Format, Length, Topic, fallbackTitle, outputLanguage, token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.Audio_ScriptCancelled, isError: false);
@@ -1100,7 +1101,7 @@ public partial class AudioViewModel : INotifyPropertyChanged
     {
         var summary = SelectedSummary;
         if (summary == null) return string.Empty;
-        return format == AudioScriptExportFormat.Markdown ? _audioService.ExportToMarkdown(summary, ExportCulture.Current) : _audioService.ExportToText(summary, ExportCulture.Current);
+        return format == AudioScriptExportFormat.Markdown ? _audioService.ExportToMarkdown(summary, ExportCulture.For(summary.Language)) : _audioService.ExportToText(summary, ExportCulture.For(summary.Language));
     }
 
     public async Task<bool> ExportScriptAsync(AudioScriptExportFormat format, string filePath)

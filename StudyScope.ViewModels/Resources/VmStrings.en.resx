@@ -415,4 +415,14 @@
   <data name="Voice_NoMatchingGender" xml:space="preserve"><value>No {gender, select, male {male} other {female}} German voice installed for “{role}” – “{voice}” is used.</value></data>
   <data name="Appearance_LanguageSystem" xml:space="preserve"><value>Same as system</value></data>
   <data name="Profile_DefaultName" xml:space="preserve"><value>Default</value></data>
+  <data name="OutputLanguage_FollowUi" xml:space="preserve"><value>Same as interface</value></data>
+  <data name="OutputLanguage_FollowDocuments" xml:space="preserve"><value>Same as documents</value></data>
+  <data name="OutputLanguage_Hint" xml:space="preserve"><value>Applies to new results in this profile; in the chat from the next question on. Existing results keep their language, even when you add to them.</value></data>
+  <data name="OutputLanguage_DocumentsHint" xml:space="preserve"><value>Currently only these languages can be detected: {languages}. If the language of your documents is unclear, the interface language is used.</value></data>
+  <data name="OutputLanguage_BadgeTooltip" xml:space="preserve"><value>Content language: {language}</value></data>
+  <data name="Fallback_Titled" xml:space="preserve"><value>{kind}: {source}</value></data>
+  <data name="Fallback_Documents" xml:space="preserve"><value>Documents: {profile}</value></data>
+  <data name="Settings_NumberedLabel" xml:space="preserve"><value>{number}. {label}</value></data>
+  <data name="OutputLanguage_Saved" xml:space="preserve"><value>✓ Saved</value></data>
+  <data name="OutputLanguage_SaveFailed" xml:space="preserve"><value>The language could not be saved: {error}</value></data>
 </root>

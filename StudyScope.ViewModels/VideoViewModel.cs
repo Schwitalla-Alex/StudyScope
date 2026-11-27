@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using StudyScope.Core.Common;
@@ -490,9 +490,10 @@ public partial class VideoViewModel : INotifyPropertyChanged
                 var chunks = new List<string>();
                 foreach (var doc in selectedDocs)
                     chunks.AddRange(await _documentService.ExtractChunksAsync(doc.FilePath));
-                var fallback = selectedDocs.Count == 1 ? Path.GetFileNameWithoutExtension(selectedDocs[0].FileName) : $"Unterlagen: {_profileName}";
+                var outputLanguage = await OutputLanguageSettingAsync(_profileName);
+                var fallback = FallbackTitles.Documents(FallbackTitles.Language(outputLanguage, chunks), selectedDocs, _profileName);
 
-                var slides = await _presentationService.GenerateFromDocumentsAsync(chunks, fallback, SlideCount, await OutputLanguageSettingAsync(_profileName), token);
+                var slides = await _presentationService.GenerateFromDocumentsAsync(chunks, fallback, SlideCount, outputLanguage, token);
                 token.ThrowIfCancellationRequested();
                 if (!slides.IsSuccess)
                 {
@@ -512,7 +513,8 @@ public partial class VideoViewModel : INotifyPropertyChanged
 
             VideoDocument video;
             VideoScriptResult? result = null;
-            var fallbackTitle = string.IsNullOrWhiteSpace(presentation.Title) ? "Videoübersicht" : presentation.Title;
+            // Ohne Präsentationstitel setzt der Dienst „Videoübersicht“ in der Sprache des Videos ein
+            var fallbackTitle = presentation.Title ?? string.Empty;
             if (UseNotesDirectly && CanUseNotes)
             {
                 video = _videoService.CreateFromNotes(presentation, fallbackTitle);
@@ -674,7 +676,7 @@ public partial class VideoViewModel : INotifyPropertyChanged
         if (video == null) return false;
         try
         {
-            var text = format == VideoScriptExportFormat.Markdown ? _videoService.ExportToMarkdown(video, ExportCulture.Current) : _videoService.ExportToText(video, ExportCulture.Current);
+            var text = format == VideoScriptExportFormat.Markdown ? _videoService.ExportToMarkdown(video, ExportCulture.For(video.Language)) : _videoService.ExportToText(video, ExportCulture.For(video.Language));
             await File.WriteAllTextAsync(filePath, text, new System.Text.UTF8Encoding(true));
             ShowStatus(Loc.Format(VmStrings.Video_ScriptExported, ("file", Path.GetFileName(filePath))), isError: false);
             return true;

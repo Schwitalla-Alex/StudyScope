@@ -12,7 +12,7 @@
     <!-- Obere Steuerleiste -->
     <div class="mm-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Mindmap_Title, ("name", DocVm.CurrentProfileDisplayName))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);"><LanguageBadge Code="@MapVm.Mindmap?.Language" />@Loc.Format(UiStrings.Mindmap_Title, ("name", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @(MapVm.HasMindmap ? MapVm.SourceInfoText : UiStrings.Mindmap_NoneForProfile)
             </span>

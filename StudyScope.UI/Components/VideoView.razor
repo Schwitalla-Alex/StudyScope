@@ -109,7 +109,7 @@
                                 }
                                 else
                                 {
-                                    <div class="vd-item-title" title="@it.Title">@it.Title</div>
+                                    <div class="vd-item-title" title="@it.Title"><LanguageBadge Code="@it.Language" />@it.Title</div>
                                 }
                                 <div class="vd-meta">@Loc.Format(UiStrings.Video_ItemMeta, ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", it.Scenes.Count))), ("minutes", MediaTexts.Minutes(AudioScriptFormats.EstimateMinutes(it.WordCount))), ("date", it.CreatedAt.ToString("g")))@(it.HasAudioFile ? " · 🎵" : "")</div>
                                 <div class="vd-meta" title="@UiStrings.Video_SourcesTitle">📄 @(it.SourceDocuments.Count > 0 ? string.Join(", ", it.SourceDocuments) : UiStrings.Video_SourceUnknown)</div>
@@ -147,7 +147,7 @@
                 <div class="vd-card vd-head">
                     <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: flex-start;">
                         <div style="min-width: 0;">
-                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@video.Title</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);"><LanguageBadge Code="@video.Language" />@video.Title</div>
                             <div class="vd-meta">
                                 @Loc.Format(UiStrings.Video_HeadMeta, ("slides", Loc.Format(VmStrings.Video_SlideCount, ("count", total))), ("words", video.WordCount),
                                     ("minutes", MediaTexts.Minutes(AudioScriptFormats.EstimateMinutes(video.WordCount))))

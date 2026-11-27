@@ -189,11 +189,10 @@ public class MindmapViewModel : INotifyPropertyChanged
                 return;
             }
 
-            var rootTitle = selectedDocs.Count == 1
-                ? Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)
-                : $"Unterlagen: {profileName}";
+            var outputLanguage = await OutputLanguageSettingAsync(profileName);
+            var rootTitle = FallbackTitles.Documents(FallbackTitles.Language(outputLanguage, chunks), selectedDocs, profileName);
 
-            var result = await _mindmapService.GenerateMindmapAsync(chunks, rootTitle, await OutputLanguageSettingAsync(profileName), token);
+            var result = await _mindmapService.GenerateMindmapAsync(chunks, rootTitle, outputLanguage, token);
 
             if (token.IsCancellationRequested)
             {
@@ -247,7 +246,7 @@ public class MindmapViewModel : INotifyPropertyChanged
         ShowStatus(VmStrings.Mindmap_Deleted, isError: false);
     }
 
-    public string GetMarkdownExport() => Mindmap == null ? string.Empty : _mindmapService.ExportToMarkdown(Mindmap, ExportCulture.Current);
+    public string GetMarkdownExport() => Mindmap == null ? string.Empty : _mindmapService.ExportToMarkdown(Mindmap, ExportCulture.For(Mindmap.Language));
 
     // ---------------- Interaktion ----------------
 

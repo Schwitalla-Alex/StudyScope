@@ -96,22 +96,22 @@
   <data name="Settings_Tab_Speech" xml:space="preserve"><value>🔊 Text-to-speech</value></data>
   <data name="Settings_Tab_Export" xml:space="preserve"><value>🎞️ Export</value></data>
   <data name="Settings_Tab_Appearance" xml:space="preserve"><value>🎨 Appearance</value></data>
-  <data name="Settings_Provider" xml:space="preserve"><value>1. AI model / provider:</value></data>
+  <data name="Settings_Provider" xml:space="preserve"><value>AI model / provider:</value></data>
   <data name="Settings_Provider_FakeAi" xml:space="preserve"><value>Fake AI (test mode)</value></data>
   <data name="Settings_Provider_Ollama" xml:space="preserve"><value>Ollama (local)</value></data>
   <data name="Settings_Provider_LmStudio" xml:space="preserve"><value>LM Studio (local)</value></data>
   <data name="Settings_Provider_Mistral" xml:space="preserve"><value>Mistral AI (cloud)</value></data>
   <data name="Settings_Provider_Custom" xml:space="preserve"><value>Custom (OpenAI-compatible)</value></data>
-  <data name="Settings_ServerCustom" xml:space="preserve"><value>2. Server URL (base URL, OpenAI-compatible):</value></data>
-  <data name="Settings_Server" xml:space="preserve"><value>2. Server URL:</value></data>
+  <data name="Settings_ServerCustom" xml:space="preserve"><value>Server URL (base URL, OpenAI-compatible):</value></data>
+  <data name="Settings_Server" xml:space="preserve"><value>Server URL:</value></data>
   <data name="Settings_ServerCustomPlaceholder" xml:space="preserve"><value>e.g. https://api.groq.com/openai/v1</value></data>
   <data name="Settings_Checking" xml:space="preserve"><value>Checking…</value></data>
   <data name="Settings_FindModels" xml:space="preserve"><value>🔍 Find models</value></data>
   <data name="Settings_ApiKeyOptional" xml:space="preserve"><value>API key (optional, e.g. not needed for local servers):</value></data>
-  <data name="Settings_ApiKey" xml:space="preserve"><value>2. API key ({provider}):</value></data>
+  <data name="Settings_ApiKey" xml:space="preserve"><value>API key ({provider}):</value></data>
   <data name="Settings_ApiKeyPlaceholder" xml:space="preserve"><value>Enter API key here…</value></data>
   <data name="Settings_FetchModels" xml:space="preserve"><value>🔄 Fetch models online</value></data>
-  <data name="Settings_Model" xml:space="preserve"><value>3. Select model:</value></data>
+  <data name="Settings_Model" xml:space="preserve"><value>Select model:</value></data>
   <data name="Settings_ModelCustomPlaceholder" xml:space="preserve"><value>e.g. llama-3.3-70b-versatile, deepseek-chat…</value></data>
   <data name="Settings_LocalHint" xml:space="preserve"><value>ℹ️ Make sure {provider} is running, then click &lt;strong&gt;“Find models”&lt;/strong&gt; above.</value></data>
   <data name="Settings_CloudHint" xml:space="preserve"><value>⚠️ Enter the API key first, then click &lt;strong&gt;“Fetch models online”&lt;/strong&gt; above.</value></data>
@@ -658,4 +658,5 @@
   <data name="Appearance_Language" xml:space="preserve"><value>Language</value></data>
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Applied when you click “{button}”. Chat, documents and any playback in progress are kept; messages already shown stay in the previous language. If the system language is not supported, StudyScope appears in English.</value></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>The language is currently set to “{culture}” by the environment variable {variable}. Your choice is saved and applies once the variable is no longer set.</value></data>
+  <data name="Settings_OutputLanguage" xml:space="preserve"><value>Language of AI results:</value></data>
 </root>

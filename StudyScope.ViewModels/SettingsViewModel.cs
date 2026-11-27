@@ -9,6 +9,16 @@ using StudyScope.Core.Localization;
 
 namespace StudyScope.ViewModels;
 
+/// <summary>Felder im Dialog KI-Modell in ihrer Reihenfolge; nummeriert werden nur die sichtbaren (<see cref="SettingsViewModel.FieldNumber"/>).</summary>
+public enum SettingsField
+{
+    Provider,
+    Server,
+    ApiKey,
+    Model,
+    OutputLanguage
+}
+
 /// <summary>
 /// Das SettingsViewModel steuert die profilbezogene KI-Konfiguration
 /// (Auswahl zwischen Fake-KI, Ollama, LM Studio, Google Gemini, OpenAI GPT-4 und Custom).
@@ -18,6 +28,7 @@ public class SettingsViewModel : INotifyPropertyChanged
     private readonly IStorageService _storageService;
     private readonly ILlmService _llmService;
     private readonly ILocalLlmDiscoveryService _discoveryService;
+    private readonly IUiLanguageService? _uiLanguage;
 
     private string _apiKey = string.Empty;
     private AiProviderType _selectedProvider = AiProviderType.FakeAi;
@@ -33,11 +44,137 @@ public class SettingsViewModel : INotifyPropertyChanged
     public SettingsViewModel(
         IStorageService storageService,
         ILlmService llmService,
-        ILocalLlmDiscoveryService discoveryService)
+        ILocalLlmDiscoveryService discoveryService,
+        IUiLanguageService? uiLanguage = null)
     {
         _storageService = storageService;
         _llmService = llmService;
         _discoveryService = discoveryService;
+        _uiLanguage = uiLanguage;
+    }
+
+    // ---------- Nummerierung der Felder (lückenlos, nur sichtbare Felder) ----------
+
+    /// <summary>Server-Adresse: Ollama, LM Studio und benutzerdefinierter Dienst.</summary>
+    public bool ShowsServer => IsLocalProvider;
+
+    /// <summary>API-Schlüssel: Cloud-Dienste (Pflicht) und benutzerdefinierter Dienst (optional).</summary>
+    public bool ShowsApiKey => IsApiKeyRequired || IsCustomProvider;
+
+    /// <summary>Sichtbare Felder in ihrer Reihenfolge für den gewählten Anbieter.</summary>
+    public IReadOnlyList<SettingsField> VisibleFields
+    {
+        get
+        {
+            var fields = new List<SettingsField> { SettingsField.Provider };
+            if (ShowsServer) fields.Add(SettingsField.Server);
+            if (ShowsApiKey) fields.Add(SettingsField.ApiKey);
+            fields.Add(SettingsField.Model);
+            fields.Add(SettingsField.OutputLanguage);
+            return fields;
+        }
+    }
+
+    /// <summary>Fortlaufende Nummer eines Felds (ab 1) oder 0, wenn es für diesen Anbieter nicht angezeigt wird.</summary>
+    public int FieldNumber(SettingsField field)
+    {
+        var index = VisibleFields.ToList().IndexOf(field);
+        return index < 0 ? 0 : index + 1;
+    }
+
+    /// <summary>Beschriftung mit fortlaufender Nummer, z. B. „2. Modell auswählen:“.</summary>
+    public string NumberedLabel(SettingsField field, string label) =>
+        Loc.Format(VmStrings.Settings_NumberedLabel, ("number", FieldNumber(field)), ("label", label));
+
+    // ---------- Sprache der KI-Ergebnisse (je Profil, sofort gespeichert, unabhängig von der Verbindung) ----------
+
+    private string _outputLanguage = Core.Localization.OutputLanguage.FollowUi;
+    private string _outputLanguageStatus = string.Empty;
+    private bool _outputLanguageSaveFailed;
+
+    /// <summary>
+    /// Einstellung „Sprache der KI-Ergebnisse“: „ui“, „documents“ oder ein Kulturname (siehe <c>OutputLanguage</c>).
+    /// Der Setter speichert nicht (Laden); die Oberfläche ruft <see cref="ChangeOutputLanguageAsync"/>.
+    /// </summary>
+    public string OutputLanguage
+    {
+        get => _outputLanguage;
+        set
+        {
+            var v = Core.Localization.OutputLanguage.Normalize(value);
+            if (_outputLanguage == v) return;
+            _outputLanguage = v;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(OutputLanguageDocumentsHint));
+        }
+    }
+
+    /// <summary>Kurze Bestätigung „✓ Gespeichert“ bzw. Fehlermeldung nach dem Ändern; leer vor der ersten Änderung.</summary>
+    public string OutputLanguageStatus
+    {
+        get => _outputLanguageStatus;
+        private set { if (_outputLanguageStatus == value) return; _outputLanguageStatus = value; OnPropertyChanged(); }
+    }
+
+    public bool OutputLanguageSaveFailed
+    {
+        get => _outputLanguageSaveFailed;
+        private set { if (_outputLanguageSaveFailed == value) return; _outputLanguageSaveFailed = value; OnPropertyChanged(); }
+    }
+
+    /// <summary>
+    /// Übernimmt die Auswahl und speichert sie sofort für das aktive Profil (und global als Rückfall) – unabhängig
+    /// davon, ob der KI-Dienst erreichbar ist. „Speichern &amp; Verbinden“ prüft nur Anbieter, Schlüssel und Modell.
+    /// </summary>
+    public async Task<bool> ChangeOutputLanguageAsync(string? value)
+    {
+        OutputLanguage = value ?? string.Empty;
+        try
+        {
+            var activeProfile = await _storageService.GetLastActiveProfileNameAsync() ?? "Standard";
+            await _storageService.SaveOutputLanguageAsync(activeProfile, OutputLanguage);
+            OutputLanguageSaveFailed = false;
+            OutputLanguageStatus = VmStrings.OutputLanguage_Saved;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            OutputLanguageSaveFailed = true;
+            OutputLanguageStatus = Loc.Format(VmStrings.OutputLanguage_SaveFailed, ("error", ex.Message));
+            return false;
+        }
+    }
+
+    /// <summary>Wählbare Sprachen = Sprachen der Oberfläche (neutral, z. B. „de“, „en“).</summary>
+    private IReadOnlyList<string> AvailableOutputLanguages =>
+        (_uiLanguage?.AvailableCultures ?? [UiLanguage.NeutralLanguage])
+            .Select(c => System.Globalization.CultureInfo.GetCultureInfo(c).TwoLetterISOLanguageName)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>„Wie Oberfläche“, „Wie die Dokumente“ und jede Sprache der Oberfläche im eigenen Namen (Eigenschaft: neu gelesen nach Sprachwechsel).</summary>
+    public IReadOnlyList<(string Value, string Label)> OutputLanguageOptions =>
+        new[]
+        {
+            (Core.Localization.OutputLanguage.FollowUi, VmStrings.OutputLanguage_FollowUi),
+            (Core.Localization.OutputLanguage.FollowDocuments, VmStrings.OutputLanguage_FollowDocuments)
+        }
+        .Concat(AvailableOutputLanguages.Select(c => (c, UiLanguage.NativeName(c))))
+        .ToList();
+
+    /// <summary>Hinweis zu „Wie die Dokumente“: welche Sprachen erkannt werden (sonst gilt die Oberfläche); sonst leer.</summary>
+    public string OutputLanguageDocumentsHint
+    {
+        get
+        {
+            if (OutputLanguage != Core.Localization.OutputLanguage.FollowDocuments) return string.Empty;
+            var available = AvailableOutputLanguages;
+            var detectable = LanguageGuess.Languages
+                .Where(l => available.Contains(l, StringComparer.OrdinalIgnoreCase))
+                .OrderBy(l => available.ToList().FindIndex(a => string.Equals(a, l, StringComparison.OrdinalIgnoreCase)))
+                .Select(UiLanguage.NativeName);
+            return Loc.Format(VmStrings.OutputLanguage_DocumentsHint, ("languages", string.Join(", ", detectable)));
+        }
     }
 
     public string ApiKey
@@ -136,6 +273,9 @@ public class SettingsViewModel : INotifyPropertyChanged
                 OnPropertyChanged(nameof(IsLocalProvider));
                 OnPropertyChanged(nameof(IsCustomProvider));
                 OnPropertyChanged(nameof(IsGeminiProvider));
+                OnPropertyChanged(nameof(ShowsServer));
+                OnPropertyChanged(nameof(ShowsApiKey));
+                OnPropertyChanged(nameof(VisibleFields));
                 OnPropertyChanged(nameof(SelectedModelName));
                 OnPropertyChanged(nameof(LocalEndpointUrl));
                 OnPropertyChanged(nameof(CanSaveAndConnect));
@@ -272,6 +412,11 @@ public class SettingsViewModel : INotifyPropertyChanged
 
         // 2. Aktives Profil ermitteln
         var activeProfile = await _storageService.GetLastActiveProfileNameAsync() ?? "Standard";
+
+        // Sprache der KI-Ergebnisse (Profil → global → „wie Oberfläche“), unabhängig davon, ob ein Modell eingerichtet ist
+        OutputLanguage = await _storageService.LoadOutputLanguageAsync(activeProfile);
+        OutputLanguageStatus = string.Empty;
+        OutputLanguageSaveFailed = false;
 
         // 3. Profilspezifische Config laden
         var config = await _storageService.LoadAiConfigForProfileAsync(activeProfile);

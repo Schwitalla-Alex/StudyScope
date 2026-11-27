@@ -96,22 +96,22 @@
   <data name="Settings_Tab_Speech" xml:space="preserve"><value>🔊 Sprachausgabe</value></data>
   <data name="Settings_Tab_Export" xml:space="preserve"><value>🎞️ Export</value></data>
   <data name="Settings_Tab_Appearance" xml:space="preserve"><value>🎨 Darstellung</value></data>
-  <data name="Settings_Provider" xml:space="preserve"><value>1. KI-Modell / Provider:</value></data>
+  <data name="Settings_Provider" xml:space="preserve"><value>KI-Modell / Provider:</value></data>
   <data name="Settings_Provider_FakeAi" xml:space="preserve"><value>Fake-KI (Testmodus)</value></data>
   <data name="Settings_Provider_Ollama" xml:space="preserve"><value>Ollama (Lokal)</value></data>
   <data name="Settings_Provider_LmStudio" xml:space="preserve"><value>LM Studio (Lokal)</value></data>
   <data name="Settings_Provider_Mistral" xml:space="preserve"><value>Mistral AI (Cloud)</value></data>
   <data name="Settings_Provider_Custom" xml:space="preserve"><value>Benutzerdefiniert (OpenAI-kompatibel)</value></data>
-  <data name="Settings_ServerCustom" xml:space="preserve"><value>2. Server-Adresse (Basis-URL, OpenAI-kompatibel):</value></data>
-  <data name="Settings_Server" xml:space="preserve"><value>2. Server-Adresse (URL):</value></data>
+  <data name="Settings_ServerCustom" xml:space="preserve"><value>Server-Adresse (Basis-URL, OpenAI-kompatibel):</value></data>
+  <data name="Settings_Server" xml:space="preserve"><value>Server-Adresse (URL):</value></data>
   <data name="Settings_ServerCustomPlaceholder" xml:space="preserve"><value>z. B. https://api.groq.com/openai/v1</value></data>
   <data name="Settings_Checking" xml:space="preserve"><value>Prüfe...</value></data>
   <data name="Settings_FindModels" xml:space="preserve"><value>🔍 Modelle suchen</value></data>
   <data name="Settings_ApiKeyOptional" xml:space="preserve"><value>API-Schlüssel (optional, z. B. bei lokalen Servern nicht nötig):</value></data>
-  <data name="Settings_ApiKey" xml:space="preserve"><value>2. API-Schlüssel ({provider}):</value></data>
+  <data name="Settings_ApiKey" xml:space="preserve"><value>API-Schlüssel ({provider}):</value></data>
   <data name="Settings_ApiKeyPlaceholder" xml:space="preserve"><value>API-Schlüssel hier eingeben...</value></data>
   <data name="Settings_FetchModels" xml:space="preserve"><value>🔄 Modelle online abrufen</value></data>
-  <data name="Settings_Model" xml:space="preserve"><value>3. Modell auswählen:</value></data>
+  <data name="Settings_Model" xml:space="preserve"><value>Modell auswählen:</value></data>
   <data name="Settings_ModelCustomPlaceholder" xml:space="preserve"><value>z. B. llama-3.3-70b-versatile, deepseek-chat...</value></data>
   <data name="Settings_LocalHint" xml:space="preserve"><value>ℹ️ Bitte stellen Sie sicher, dass {provider} läuft, und klicken Sie oben auf &lt;strong&gt;„Modelle suchen“&lt;/strong&gt;.</value><comment>Enthält HTML (&lt;strong&gt;), wird als Markup ausgegeben</comment></data>
   <data name="Settings_CloudHint" xml:space="preserve"><value>⚠️ Bitte zuerst den API-Schlüssel eingeben und oben auf &lt;strong&gt;„Modelle online abrufen“&lt;/strong&gt; klicken.</value><comment>Enthält HTML (&lt;strong&gt;), wird als Markup ausgegeben</comment></data>
@@ -658,4 +658,5 @@
   <data name="Appearance_Language" xml:space="preserve"><value>Sprache</value><comment>Überschrift der Sprachauswahl</comment></data>
   <data name="Appearance_LanguageHint" xml:space="preserve"><value>Wird mit „{button}“ übernommen. Chat, Dokumente und eine laufende Wiedergabe bleiben erhalten; bereits angezeigte Meldungen bleiben in der bisherigen Sprache. Wird die Systemsprache nicht unterstützt, erscheint StudyScope auf Englisch.</value><comment>{button} = Common_Save</comment></data>
   <data name="Appearance_LanguageOverride" xml:space="preserve"><value>Die Sprache ist zurzeit über die Umgebungsvariable {variable} auf „{culture}“ festgelegt. Ihre Auswahl wird gespeichert und gilt, sobald die Variable nicht mehr gesetzt ist.</value><comment>{variable} = STUDYSCOPE_UI_CULTURE</comment></data>
+  <data name="Settings_OutputLanguage" xml:space="preserve"><value>Sprache der KI-Ergebnisse:</value></data>
 </root>

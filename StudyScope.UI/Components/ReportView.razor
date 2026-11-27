@@ -139,7 +139,7 @@
                                 }
                                 else
                                 {
-                                    <div class="rp-item-title" title="@r.Title">@r.Title</div>
+                                    <div class="rp-item-title" title="@r.Title"><LanguageBadge Code="@r.Language" />@r.Title</div>
                                 }
                                 <div class="rp-meta">@Loc.Format(UiStrings.Report_ItemMeta, ("template", TemplateTexts.Name(r.Template)), ("date", r.CreatedAt.ToString("g")))</div>
                             </div>

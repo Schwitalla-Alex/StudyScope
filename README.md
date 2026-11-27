@@ -103,7 +103,9 @@ StudyScope sucht ffmpeg automatisch (PATH, unter Windows auch im WinGet-Ordner).
 
 ## 🌐 Sprache
 
-StudyScope gibt es auf Deutsch und Englisch. Unter **☰ ➔ Einstellungen ➔ 🎨 Darstellung ➔ Sprache** wählen Sie „Wie System“ (Standard), „Deutsch“ oder „English“; die Oberfläche wechselt beim Speichern sofort. Bei „Wie System“ erscheint StudyScope auf deutschsprachigen Systemen auf Deutsch, sonst auf Englisch. Exporte folgen der gewählten Sprache, Texte der KI sind vorerst deutsch. Das Installationsprogramm richtet sich immer nach der Systemsprache.
+StudyScope gibt es auf Deutsch und Englisch. Unter **☰ ➔ Einstellungen ➔ 🎨 Darstellung ➔ Sprache** wählen Sie „Wie System“ (Standard), „Deutsch“ oder „English“; die Oberfläche wechselt beim Speichern sofort. Bei „Wie System“ erscheint StudyScope auf deutschsprachigen Systemen auf Deutsch, sonst auf Englisch. Das Installationsprogramm richtet sich immer nach der Systemsprache.
+
+**Sprache der KI-Ergebnisse:** Unabhängig von der Oberfläche legen Sie unter **☰ ➔ Einstellungen ➔ 🤖 KI-Modell ➔ Sprache der KI-Ergebnisse** je Profil fest, in welcher Sprache die KI schreibt: „Wie Oberfläche“ (Standard), „Wie die Dokumente“ (erkennt zurzeit Deutsch und Englisch, sonst gilt die Oberfläche) oder fest „Deutsch“ bzw. „English“. Neue Ergebnisse entstehen in dieser Sprache, vorhandene behalten ihre – auch wenn Sie sie ergänzen. Exporte erscheinen in der Sprache des jeweiligen Ergebnisses; weicht sie von der Oberfläche ab, zeigen Listen und Kopfzeilen ein Kennzeichen wie „EN“.
 
 ## ⚙️ KI-Einrichtung
 

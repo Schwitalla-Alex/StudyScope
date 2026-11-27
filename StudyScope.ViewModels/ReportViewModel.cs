@@ -355,11 +355,12 @@ public class ReportViewModel : INotifyPropertyChanged
             foreach (var doc in selectedDocs)
                 chunks.AddRange(await _documentService.ExtractChunksAsync(doc.FilePath));
 
-            var fallbackTitle = selectedDocs.Count == 1
-                ? $"{ReportTemplates.DisplayName(Template)}: {Path.GetFileNameWithoutExtension(selectedDocs[0].FileName)}"
-                : $"{ReportTemplates.DisplayName(Template)}: {_profileName}";
+            var outputLanguage = await OutputLanguageSettingAsync(_profileName);
+            var template = Template;
+            var fallbackTitle = FallbackTitles.Titled(FallbackTitles.Language(outputLanguage, chunks),
+                () => TemplateTexts.Name(template), selectedDocs, _profileName);
 
-            var result = await _reportService.GenerateReportAsync(chunks, Template, CustomInstruction, fallbackTitle, await OutputLanguageSettingAsync(_profileName), token);
+            var result = await _reportService.GenerateReportAsync(chunks, Template, CustomInstruction, fallbackTitle, outputLanguage, token);
             if (token.IsCancellationRequested)
             {
                 ShowStatus(VmStrings.Report_Cancelled, isError: false);
@@ -494,9 +495,15 @@ public class ReportViewModel : INotifyPropertyChanged
     {
         CurrentHtml = SelectedReport == null
             ? string.Empty
-            : _reportService.ExportToHtml(SelectedReport, GetStudioContent(SelectedReport), new ReportHtmlOptions { InApp = true }, ExportCulture.Current);
+            : BuildInAppHtml(SelectedReport);
         OnPropertyChanged(nameof(CanEmbedVideoPlayers));
         OnPropertyChanged(nameof(VideoPlayersEstimateText));
+    }
+
+    private string BuildInAppHtml(Report report)
+    {
+        var studio = GetStudioContent(report);
+        return _reportService.ExportToHtml(report, studio, new ReportHtmlOptions { InApp = true }, ExportCulture.For(report, studio.Filter(report.Embeds)));
     }
 
     // ---------------- Videos im HTML-Bericht ----------------
@@ -587,20 +594,21 @@ public class ReportViewModel : INotifyPropertyChanged
         try
         {
             var studio = GetStudioContent(SelectedReport);
+            var culture = ExportCulture.For(SelectedReport, studio.Filter(SelectedReport.Embeds));
             switch (format)
             {
                 case ReportExportFormat.Word:
-                    await _reportService.ExportToDocxAsync(SelectedReport, studio, filePath, ExportCulture.Current);
+                    await _reportService.ExportToDocxAsync(SelectedReport, studio, filePath, culture);
                     break;
                 case ReportExportFormat.Markdown:
-                    await File.WriteAllTextAsync(filePath, _reportService.ExportToMarkdown(SelectedReport, studio, ExportCulture.Current));
+                    await File.WriteAllTextAsync(filePath, _reportService.ExportToMarkdown(SelectedReport, studio, culture));
                     break;
                 case ReportExportFormat.Text:
-                    await File.WriteAllTextAsync(filePath, _reportService.ExportToPlainText(SelectedReport, studio, ExportCulture.Current));
+                    await File.WriteAllTextAsync(filePath, _reportService.ExportToPlainText(SelectedReport, studio, culture));
                     break;
                 default:
                     var options = await BuildHtmlExportOptionsAsync();
-                    var html = _reportService.ExportToHtml(SelectedReport, studio, options, ExportCulture.Current);
+                    var html = _reportService.ExportToHtml(SelectedReport, studio, options, culture);
                     if (options.VideoPlayers.Count == 0)
                     {
                         await File.WriteAllTextAsync(filePath, html);

@@ -146,7 +146,7 @@
                                 }
                                 else
                                 {
-                                    <div class="dt-item-title" title="@t.Title">@t.Title</div>
+                                    <div class="dt-item-title" title="@t.Title"><LanguageBadge Code="@t.Language" />@t.Title</div>
                                 }
                                 <div class="dt-meta">@Loc.Format(UiStrings.DataTable_ItemMeta, ("template", TemplateTexts.Name(t.Template)), ("rows", t.Rows.Count), ("date", t.CreatedAt.ToString("g")))</div>
                             </div>
@@ -184,7 +184,7 @@
                         <div style="min-width: 0; display: flex; gap: 8px; align-items: flex-start;">
                             <button class="ss-icon-btn" title="@(sideCollapsed ? UiStrings.DataTable_ShowList : UiStrings.DataTable_HideList)" aria-label="@(sideCollapsed ? UiStrings.DataTable_ShowList : UiStrings.DataTable_HideList)" @onclick="() => sideCollapsed = !sideCollapsed"><span class="ss-flip-rtl">@(sideCollapsed ? "▶" : "◀")</span></button>
                             <div style="min-width: 0;">
-                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);">@selected.Title</div>
+                            <div style="font-size: 15px; font-weight: 700; color: var(--ss-text);"><LanguageBadge Code="@selected.Language" />@selected.Title</div>
                             <div class="dt-meta">
                                 @TemplateTexts.Name(selected.Template)
                                 @if (!string.IsNullOrWhiteSpace(selected.Topic))
@@ -295,7 +295,7 @@
                                     }
                                     <th class="dt-source-col">
                                         <button class="dt-sort" title="@UiStrings.DataTable_SortBySource" @onclick="() => DtVm.ToggleSort(DataTableSorting.SourceColumn)">
-                                            @DataTableDocument.SourceColumnName <span class="dt-arrow">@SortArrow(DataTableSorting.SourceColumn)</span>
+                                            @DtVm.SourceColumnLabel <span class="dt-arrow">@SortArrow(DataTableSorting.SourceColumn)</span>
                                         </button>
                                     </th>
                                     <th class="dt-actions dt-noprint"></th>

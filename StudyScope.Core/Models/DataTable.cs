@@ -59,6 +59,12 @@ public class DataTableDocument
     /// </summary>
     public static string SourceColumnName => CoreStrings.DataTable_SourceColumn;
 
+    /// <summary>Name der Quellspalte in einer bestimmten Sprache (z. B. der Ergebnissprache der Tabelle).</summary>
+    public static string SourceColumnNameIn(CultureInfo culture) =>
+        CoreStrings.ResourceManager.GetString(nameof(CoreStrings.DataTable_SourceColumn), culture) is { Length: > 0 } name
+            ? name
+            : SourceColumnName;
+
     /// <summary>
     /// Der Name ist als Spaltenname reserviert: der Name der Quellspalte in irgendeiner verfügbaren Sprache (ohne
     /// Groß-/Kleinschreibung), damit nach einem Sprachwechsel keine zweite Spalte „Quelle“/„Source“ entsteht.

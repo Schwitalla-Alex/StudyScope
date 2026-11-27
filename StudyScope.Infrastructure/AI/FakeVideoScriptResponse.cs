@@ -17,6 +17,7 @@ public static partial class FakeVideoScriptResponse
 
     public static string Create(string prompt, IReadOnlyList<string> chunks)
     {
+        var en = FakeLanguage.IsEnglish(prompt);
         var scenes = new List<object>();
         foreach (var chunk in chunks)
         {
@@ -32,14 +33,15 @@ public static partial class FakeVideoScriptResponse
                 .ToList();
 
             var narration = index == 0 || chunk.Contains("(Titelfolie)")
-                ? $"Willkommen zu diesem Erklärvideo im Testmodus. Heute geht es um {title}."
+                ? FakeLanguage.T(en, $"Willkommen zu diesem Erklärvideo im Testmodus. Heute geht es um {title}.", $"Welcome to this explainer video in test mode. The topic is {title}.")
                 : bullets.Count == 0
-                    ? $"Auf dieser Folie geht es um {title}."
-                    : $"Auf dieser Folie geht es um {title}. Wichtig sind vor allem diese Punkte: {string.Join(". ", bullets)}.";
+                    ? FakeLanguage.T(en, $"Auf dieser Folie geht es um {title}.", $"This slide is about {title}.")
+                    : FakeLanguage.T(en, $"Auf dieser Folie geht es um {title}. Wichtig sind vor allem diese Punkte: {string.Join(". ", bullets)}.",
+                        $"This slide is about {title}. These points matter most: {string.Join(". ", bullets)}.");
             scenes.Add(new { slideIndex = index, narration });
         }
 
-        var script = new[] { new { title = "Testmodus: Videoübersicht", scenes } };
+        var script = new[] { new { title = FakeLanguage.T(en, "Testmodus: Videoübersicht", "Test mode: video overview"), scenes } };
         return JsonSerializer.Serialize(script, new JsonSerializerOptions { Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
     }
 

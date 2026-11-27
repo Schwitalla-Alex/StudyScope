@@ -18,6 +18,8 @@ public static class FakeAudioScriptResponse
     {
         var isPodcast = prompt.Contains("Format: Podcast-Gespräch", StringComparison.OrdinalIgnoreCase);
         var isBriefing = prompt.Contains("Format: Kurz-Briefing", StringComparison.OrdinalIgnoreCase);
+        // Texte englisch, wenn die Sprachzeile es verlangt; die Sprecherrollen bleiben die gespeicherten (deutschen) Rollen
+        var en = FakeLanguage.IsEnglish(prompt);
 
         var sentences = chunks
             .SelectMany(c => c.Replace('\n', ' ').Split(new[] { '.', '!', '?' }, StringSplitOptions.RemoveEmptyEntries))
@@ -27,33 +29,37 @@ public static class FakeAudioScriptResponse
             .Select(s => (s.Length > 220 ? s[..220].TrimEnd() : s) + ".")
             .ToList();
         if (sentences.Count == 0)
-            sentences.Add("Die Unterlagen enthalten nur sehr wenig Text.");
+            sentences.Add(FakeLanguage.T(en, "Die Unterlagen enthalten nur sehr wenig Text.", "The documents contain very little text."));
 
         var segments = new List<object>();
         if (isPodcast)
         {
-            segments.Add(new { speaker = "Moderatorin", text = "Herzlich willkommen! Heute schauen wir uns gemeinsam Ihre Unterlagen an. Worum geht es denn?" });
+            segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Herzlich willkommen! Heute schauen wir uns gemeinsam Ihre Unterlagen an. Worum geht es denn?", "Welcome! Today we are taking a look at your documents together. What are they about?") });
             for (var i = 0; i < sentences.Count; i++)
             {
-                segments.Add(new { speaker = "Experte", text = $"Ein wichtiger Punkt ist dieser: {sentences[i]}" });
+                segments.Add(new { speaker = "Experte", text = FakeLanguage.T(en, $"Ein wichtiger Punkt ist dieser: {sentences[i]}", $"One important point is this: {sentences[i]}") });
                 if (i < sentences.Count - 1)
-                    segments.Add(new { speaker = "Moderatorin", text = "Spannend. Und was gehört noch dazu?" });
+                    segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Spannend. Und was gehört noch dazu?", "Interesting. And what else is part of it?") });
             }
-            segments.Add(new { speaker = "Moderatorin", text = "Vielen Dank! Das war unser Überblick im Testmodus." });
+            segments.Add(new { speaker = "Moderatorin", text = FakeLanguage.T(en, "Vielen Dank! Das war unser Überblick im Testmodus.", "Thank you! That was our overview in test mode.") });
         }
         else
         {
             var speaker = "Sprecherin";
-            segments.Add(new { speaker, text = isBriefing ? "Hier das Wichtigste in Kürze." : "In dieser Zusammenfassung geht es um die wichtigsten Inhalte Ihrer Unterlagen." });
+            segments.Add(new { speaker, text = isBriefing
+                ? FakeLanguage.T(en, "Hier das Wichtigste in Kürze.", "Here are the key points in brief.")
+                : FakeLanguage.T(en, "In dieser Zusammenfassung geht es um die wichtigsten Inhalte Ihrer Unterlagen.", "This summary covers the most important content of your documents.") });
             segments.AddRange(sentences.Select(s => (object)new { speaker, text = s }));
-            segments.Add(new { speaker, text = "Das war die Zusammenfassung im Testmodus." });
+            segments.Add(new { speaker, text = FakeLanguage.T(en, "Das war die Zusammenfassung im Testmodus.", "That was the summary in test mode.") });
         }
 
         var script = new[]
         {
             new
             {
-                title = isPodcast ? "Testmodus: Podcast zu Ihren Unterlagen" : isBriefing ? "Testmodus: Kurz-Briefing" : "Testmodus: Audio-Zusammenfassung",
+                title = isPodcast ? FakeLanguage.T(en, "Testmodus: Podcast zu Ihren Unterlagen", "Test mode: podcast about your documents")
+                    : isBriefing ? FakeLanguage.T(en, "Testmodus: Kurz-Briefing", "Test mode: short briefing")
+                    : FakeLanguage.T(en, "Testmodus: Audio-Zusammenfassung", "Test mode: audio summary"),
                 segments
             }
         };
