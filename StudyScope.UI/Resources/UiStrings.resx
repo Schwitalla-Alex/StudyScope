@@ -20,6 +20,8 @@
   <data name="Status_VideoPlaying" xml:space="preserve"><value>läuft</value></data>
   <data name="Status_Ai" xml:space="preserve"><value>KI:</value></data>
   <data name="Status_Profile" xml:space="preserve"><value>Profil:</value></data>
+  <data name="Status_WebOn" xml:space="preserve"><value>🌐 Web an</value><comment>Statusleiste, wenn die Websuche des Profils an ist</comment></data>
+  <data name="Status_WebOnTitle" xml:space="preserve"><value>Websuche im Chat ist für dieses Profil eingeschaltet ({provider}).</value><comment>{provider} = Name des Suchdienstes</comment></data>
   <data name="Common_Resume" xml:space="preserve"><value>Weiter</value></data>
   <data name="Common_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Common_Stop" xml:space="preserve"><value>Stopp</value></data>
@@ -57,6 +59,17 @@
   <data name="Sidebar_DeleteProfile" xml:space="preserve"><value>Aktuelles Profil löschen</value></data>
   <data name="Sidebar_SearchPlaceholder" xml:space="preserve"><value>Dokumente durchsuchen...</value></data>
   <data name="Sidebar_SelectAllTitle" xml:space="preserve"><value>Alle Dokumente für Abfragen aktivieren</value></data>
+  <data name="Sidebar_WebSearch" xml:space="preserve"><value>🌐 Auch im Internet suchen</value></data>
+  <data name="Sidebar_WebSearchTitle" xml:space="preserve"><value>Beantwortet Chatfragen zusätzlich mit einer Websuche. Ins Internet geht nur Ihre selbst eingegebene Frage, nie Ihre Dokumente.</value></data>
+  <data name="Sidebar_WebSearchSetupTitle" xml:space="preserve"><value>Kein Suchdienst eingerichtet – ein Klick öffnet Einstellungen › Websuche.</value></data>
+  <data name="WebNotice_Title" xml:space="preserve"><value>Websuche einschalten?</value></data>
+  <data name="WebNotice_Question" xml:space="preserve"><value>Bei jeder Chatfrage geht &lt;b&gt;nur Ihre selbst eingegebene Frage&lt;/b&gt; an den Suchdienst &lt;b&gt;{provider}&lt;/b&gt;. Ihre Dokumente, Auszüge daraus und Dateinamen bleiben auf diesem Gerät.</value><comment>Enthält HTML; {provider} = Name des Suchdienstes</comment></data>
+  <data name="WebNotice_Storage" xml:space="preserve"><value>Der Suchdienst kann Ihre Anfragen speichern und auswerten.</value></data>
+  <data name="WebNotice_Tavily" xml:space="preserve"><value>Tavily nutzt Anfragen laut Datenschutzerklärung auch zur Verbesserung des Dienstes und kann sie an Suchindizes Dritter (z. B. Google) weitergeben.</value></data>
+  <data name="WebNotice_LocalAi" xml:space="preserve"><value>Ihre Chat-KI läuft lokal. Mit Websuche entsteht die Antwort nicht mehr vollständig offline.</value></data>
+  <data name="WebNotice_Mindmap" xml:space="preserve"><value>Fragen, die aus der Mindmap kommen, suchen nie im Internet.</value></data>
+  <data name="WebNotice_Profile" xml:space="preserve"><value>Die Einstellung gilt nur für das Profil &lt;b&gt;{profile}&lt;/b&gt; und lässt sich jederzeit wieder ausschalten.</value><comment>Enthält HTML; {profile} = Anzeigename des Profils</comment></data>
+  <data name="WebNotice_Accept" xml:space="preserve"><value>Verstanden, einschalten</value></data>
   <data name="Sidebar_SelectAll" xml:space="preserve"><value>✓ Alle an</value></data>
   <data name="Sidebar_DeselectAllTitle" xml:space="preserve"><value>Alle Dokumente deaktivieren</value></data>
   <data name="Sidebar_DeselectAll" xml:space="preserve"><value>✕ Alle aus</value></data>
@@ -81,6 +94,10 @@
   <data name="Chat_NotHelpful" xml:space="preserve"><value>Nicht hilfreich</value></data>
   <data name="Chat_RegenerateTitle" xml:space="preserve"><value>Neu generieren</value></data>
   <data name="Chat_Regenerate" xml:space="preserve"><value>↻ Neu generieren</value></data>
+  <data name="Chat_SourcesDocuments" xml:space="preserve"><value>📄 Unterlagen:</value><comment>Quellenliste unter einer Antwort mit Websuche</comment></data>
+  <data name="Chat_SourcesWeb" xml:space="preserve"><value>🌐 Web:</value><comment>Quellenliste unter einer Antwort mit Websuche</comment></data>
+  <data name="Chat_SourceOpenTitle" xml:space="preserve"><value>Im Browser öffnen: {url}</value></data>
+  <data name="Chat_SourceOpenFailed" xml:space="preserve"><value>Die Adresse konnte nicht geöffnet werden: {url}</value></data>
   <data name="Chat_Thinking" xml:space="preserve"><value>StudyScope denkt nach...</value></data>
   <data name="Chat_CancelTitle" xml:space="preserve"><value>Aktuelle Anfrage abbrechen</value></data>
   <data name="Chat_Cancel" xml:space="preserve"><value>✕ Abbrechen</value></data>

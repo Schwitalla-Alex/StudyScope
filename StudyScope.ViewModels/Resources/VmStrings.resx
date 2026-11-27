@@ -33,6 +33,7 @@
   <data name="Layout_Badge_Active" xml:space="preserve"><value>Aktiv ({active} von {total}):</value></data>
   <data name="Layout_Badge_More" xml:space="preserve"><value>… und {count} weitere</value></data>
   <data name="Layout_Badge_ClickToShow" xml:space="preserve"><value>Klicken zum Einblenden</value></data>
+  <data name="Layout_Badge_WebOn" xml:space="preserve"><value>🌐 Websuche im Chat an</value><comment>Tooltip der eingeklappten Seitenleiste</comment></data>
   <data name="Docs_LoadingModel" xml:space="preserve"><value>Lade Modell...</value></data>
   <data name="Docs_NoAiConfigured" xml:space="preserve"><value>Keine KI konfiguriert</value></data>
   <data name="Docs_ProfileExists" xml:space="preserve"><value>Ein Profil „{name}“ gibt es bereits. Bitte wählen Sie es oben in der Liste aus oder vergeben Sie einen anderen Namen.</value></data>
@@ -88,6 +89,10 @@
   <data name="Chat_Log_Disliked" xml:space="preserve"><value>👎 Nicht hilfreich / Verbesserungsbedürftig</value></data>
   <data name="Chat_Log_Unrated" xml:space="preserve"><value>— Unbewertet</value></data>
   <data name="Chat_Log_Rating" xml:space="preserve"><value>[Bewertung: {rating}]</value></data>
+  <data name="Chat_Log_Sources" xml:space="preserve"><value>Quellen:</value><comment>Chat-Protokoll: Überschrift der Quellen unter einer Antwort mit Websuche</comment></data>
+  <data name="Chat_Web_SkippedMindmap" xml:space="preserve"><value>Ohne Websuche, weil die Frage aus der Mindmap stammt. Zum Suchen im Internet die Frage selbst eingeben.</value></data>
+  <data name="Chat_Web_NoResults" xml:space="preserve"><value>Keine Web-Treffer – die Antwort stammt nur aus den Unterlagen.</value></data>
+  <data name="Chat_Web_Unavailable" xml:space="preserve"><value>Websuche nicht verfügbar: {error} Die Antwort stammt nur aus den Unterlagen.</value><comment>{error} = Meldung des Suchdienstes (ganzer Satz mit Punkt)</comment></data>
   <data name="Speech_PrivacyHint" xml:space="preserve"><value>Datenschutz: Bei Gemini TTS wird der Skripttext an Google gesendet. In der kostenlosen Stufe kann Google die Eingaben zur Verbesserung seiner Dienste verwenden.</value></data>
   <data name="Common_Regenerate" xml:space="preserve"><value>Neu erstellen</value></data>
   <data name="GenStatus_TipFewerDocuments" xml:space="preserve"><value>Aktivieren Sie weniger Dokumente gleichzeitig, damit die Antwort kürzer wird.</value></data>

@@ -115,6 +115,12 @@ public class PromptCultureTests
         prompts["Mindmap"] = Capture(llm => new MindmapService(llm).GenerateMindmapAsync(Chunks, "Energie", "de"));
         prompts["Präsentation"] = Capture(llm => new PresentationService(llm).GenerateFromDocumentsAsync(Chunks, "Energie", 6, "de"));
         prompts["Quiz-Themen"] = Capture(llm => new QuizService(llm).SuggestTopicsAsync(Chunks, "de"));
+
+        // Chat mit Websuche (4-2): Frage mit Markierung, beschriftete Auszüge, Systemanweisungen
+        prompts["Web-Chat"] = StudyScope.Core.Common.WebContextPrompt.WithMarker("Was ist ATP?");
+        prompts["Web-Auszug"] = StudyScope.Core.Common.WebContextPrompt.WebChunk("W1", new WebSearchResult("Titel", "https://example.org/a", "Ausschnitt"));
+        prompts["Web-Systemanweisung"] = LlmServiceDispatcher.RagWebSystemPromptFor(null);
+        prompts["Web-Systemanweisung en"] = LlmServiceDispatcher.RagWebSystemPromptFor(CultureInfo.GetCultureInfo("en"));
         return prompts;
     });
 

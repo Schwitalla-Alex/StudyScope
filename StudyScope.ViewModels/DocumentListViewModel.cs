@@ -16,15 +16,17 @@ public class DocumentListViewModel : INotifyPropertyChanged
 {
     private readonly IStorageService _storageService;
     private readonly IDocumentService _pdfService;
+    private readonly IWebSearchService? _webSearch;
     private string _searchText = string.Empty;
     private string _currentProfile = "Standard";
     private string _currentAiModelDisplayName = VmStrings.Docs_LoadingModel;
     private ObservableCollection<string> _availableProfiles = new();
 
-    public DocumentListViewModel(IStorageService storageService, IDocumentService pdfService)
+    public DocumentListViewModel(IStorageService storageService, IDocumentService pdfService, IWebSearchService? webSearch = null)
     {
         _storageService = storageService;
         _pdfService = pdfService;
+        _webSearch = webSearch;
         Documents = new ObservableCollection<DocumentItem>();
     }
 
@@ -148,9 +150,10 @@ public class DocumentListViewModel : INotifyPropertyChanged
             await _storageService.SetLastActiveProfileNameAsync(CurrentProfile);
         }
 
-        // 4. Dokumente und KI des aktiven Profils laden
+        // 4. Dokumente, KI und Websuche des aktiven Profils laden
         await LoadDocumentsAsync();
         await RefreshCurrentAiModelAsync();
+        await RefreshWebSearchStateAsync();
 
         // 5. Reiter, die vor dem Laden schon gezeichnet wurden, laden das Profil nach – auch wenn das zuletzt aktive
         //    Profil dem Anfangswert entspricht und der Setzer daher nichts gemeldet hat (nur beim Start)
@@ -170,6 +173,7 @@ public class DocumentListViewModel : INotifyPropertyChanged
         // Daten des Zielprofils laden
         await LoadDocumentsAsync();
         await RefreshCurrentAiModelAsync();
+        await RefreshWebSearchStateAsync();
     }
 
     /// <summary>
@@ -224,9 +228,10 @@ public class DocumentListViewModel : INotifyPropertyChanged
         await _storageService.SaveDocumentsAsync(trimmed, new List<DocumentItem>());
         await _storageService.SetLastActiveProfileNameAsync(trimmed);
 
-        // 3. Ansicht aktualisieren
+        // 3. Ansicht aktualisieren (ein neues Profil sucht nie im Internet – kein globaler Rückfall)
         await LoadDocumentsAsync();
         await RefreshCurrentAiModelAsync();
+        await RefreshWebSearchStateAsync();
         return true;
     }
 
@@ -340,9 +345,136 @@ public class DocumentListViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(FilteredDocuments));
     }
 
+    // ------------------------------------------------------------------ Websuche (je Profil, standardmäßig aus)
+
+    private bool _isWebSearchActive;
+
+    /// <summary>
+    /// Die Websuche ist für das aktive Profil wirklich an: eingeschaltet, ein Suchdienst eingerichtet und der Hinweis für
+    /// genau diesen Dienst bestätigt (<see cref="WebSearchProfileState.IsActiveFor"/>). Das Häkchen in der Seitenleiste
+    /// zeigt diesen Wert – nach einem Dienstwechsel ist es aus, bis der Hinweis erneut bestätigt wurde.
+    /// </summary>
+    public bool IsWebSearchActive
+    {
+        get => _isWebSearchActive;
+        private set
+        {
+            if (_isWebSearchActive == value) return;
+            _isWebSearchActive = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Name des Suchdienstes, an den eine Suche ginge (für den Hinweis); leer ohne Dienst.</summary>
+    public string WebSearchProviderName { get; private set; } = string.Empty;
+
+    /// <summary>Die Chat-KI des Profils läuft lokal (Ollama, LM Studio) – der Hinweis sagt dann, dass die Antwort nicht mehr vollständig offline entsteht.</summary>
+    public bool IsLocalChatAi { get; private set; }
+
+    /// <summary>
+    /// Liest den Zustand der Websuche des aktiven Profils neu (Start, Profilwechsel, nach den Einstellungen, vor jeder
+    /// Chatfrage). Liefert <see cref="IsWebSearchActive"/>.
+    /// </summary>
+    public async Task<bool> RefreshWebSearchStateAsync()
+    {
+        if (_webSearch == null)
+        {
+            IsWebSearchActive = false;
+            return false;
+        }
+
+        var profile = CurrentProfile;
+        WebSearchProfileState state;
+        string provider;
+        try
+        {
+            state = await _storageService.LoadWebSearchStateAsync(profile) ?? WebSearchProfileState.Off;
+            provider = await _webSearch.GetProviderNameAsync() ?? string.Empty;
+        }
+        catch
+        {
+            state = WebSearchProfileState.Off;
+            provider = string.Empty;
+        }
+
+        // Zwischendurch das Profil gewechselt: Der Wert gehört nicht mehr zum angezeigten Profil
+        if (!string.Equals(profile, CurrentProfile, StringComparison.Ordinal))
+            return IsWebSearchActive;
+
+        WebSearchProviderName = provider;
+        IsWebSearchActive = state.IsActiveFor(provider);
+        return IsWebSearchActive;
+    }
+
+    /// <summary>
+    /// Häkchen „Auch im Internet suchen“: Ausschalten speichert sofort. Einschalten nur mit eingerichtetem Dienst
+    /// (<see cref="WebSearchToggleResult.NotConfigured"/> → Einstellungen öffnen) und bestätigtem Hinweis für diesen
+    /// Dienst (<see cref="WebSearchToggleResult.NeedsNotice"/> → Hinweisdialog, danach <see cref="AcceptWebSearchNoticeAsync"/>).
+    /// </summary>
+    public async Task<WebSearchToggleResult> RequestWebSearchAsync(bool enable)
+    {
+        if (_webSearch == null)
+            return WebSearchToggleResult.NotConfigured;
+
+        var profile = CurrentProfile;
+        var state = await _storageService.LoadWebSearchStateAsync(profile) ?? WebSearchProfileState.Off;
+
+        if (!enable)
+        {
+            await _storageService.SaveWebSearchStateAsync(profile, state with { Enabled = false });
+            IsWebSearchActive = false;
+            return WebSearchToggleResult.Disabled;
+        }
+
+        var provider = await _webSearch.GetProviderNameAsync() ?? string.Empty;
+        WebSearchProviderName = provider;
+        if (string.IsNullOrEmpty(provider))
+        {
+            IsWebSearchActive = false;
+            return WebSearchToggleResult.NotConfigured;
+        }
+
+        if (state.NeedsNotice(provider))
+        {
+            var ai = await _storageService.LoadAiConfigForProfileAsync(profile);
+            IsLocalChatAi = ai?.SelectedProvider is AiProviderType.OllamaLocal or AiProviderType.LmStudioLocal;
+            IsWebSearchActive = false;
+            return WebSearchToggleResult.NeedsNotice;
+        }
+
+        await _storageService.SaveWebSearchStateAsync(profile, state with { Enabled = true });
+        IsWebSearchActive = true;
+        return WebSearchToggleResult.Enabled;
+    }
+
+    /// <summary>
+    /// „Verstanden, einschalten“ im Hinweisdialog: merkt den Hinweis für den angezeigten Dienst und schaltet ein
+    /// (nur für das aktive Profil).
+    /// </summary>
+    public async Task AcceptWebSearchNoticeAsync(string providerName)
+    {
+        if (_webSearch == null || string.IsNullOrEmpty(providerName))
+            return;
+
+        await _storageService.SaveWebSearchStateAsync(CurrentProfile, new WebSearchProfileState(true, providerName));
+        await RefreshWebSearchStateAsync();
+    }
+
     public event PropertyChangedEventHandler? PropertyChanged;
     protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
+}
+/// <summary>Ergebnis des Häkchens „Auch im Internet suchen“.</summary>
+public enum WebSearchToggleResult
+{
+    /// <summary>Ausgeschaltet und gespeichert.</summary>
+    Disabled,
+    /// <summary>Eingeschaltet und gespeichert.</summary>
+    Enabled,
+    /// <summary>Erst den Hinweis für diesen Dienst zeigen (Häkchen bleibt aus).</summary>
+    NeedsNotice,
+    /// <summary>Kein Suchdienst eingerichtet → Einstellungen › Websuche öffnen.</summary>
+    NotConfigured
 }

@@ -82,7 +82,9 @@ class Program
         // ViewModels registrieren
         // Audio und Video teilen sich Player und Systemstimme: es läuft immer nur eine Wiedergabe
         appBuilder.Services.AddSingleton<PlaybackCoordinator>();
-        appBuilder.Services.AddSingleton<DocumentListViewModel>();
+        // Websuche je Profil (Häkchen in der Seitenleiste): Zustand und Hinweis über das DocumentListViewModel
+        appBuilder.Services.AddSingleton<DocumentListViewModel>(sp => new DocumentListViewModel(
+            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IDocumentService>(), sp.GetRequiredService<IWebSearchService>()));
         appBuilder.Services.AddSingleton<LayoutViewModel>();
         appBuilder.Services.AddSingleton<StudyScope.ViewModels.Menu.AppMenuViewModel>();
         appBuilder.Services.AddSingleton<IUiLanguageService>(languageService);
@@ -95,7 +97,7 @@ class Program
             sp.GetRequiredService<ILlmService>(),
             sp.GetRequiredService<IDocumentService>(),
             sp.GetRequiredService<DocumentListViewModel>()
-        ) { OutputLanguageProvider = sp.GetRequiredService<IOutputLanguageProvider>() });
+        ) { OutputLanguageProvider = sp.GetRequiredService<IOutputLanguageProvider>(), WebSearch = sp.GetRequiredService<IWebSearchService>() });
 
         appBuilder.Services.AddSingleton<SettingsViewModel>();
         appBuilder.Services.AddSingleton<FlashcardViewModel>();

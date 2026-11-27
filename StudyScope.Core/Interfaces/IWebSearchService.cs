@@ -23,4 +23,10 @@ public interface IWebSearchService
 
     /// <summary>Ein Suchdienst ist eingerichtet (bzw. die Fake-Suche für Prüfungen ist aktiv).</summary>
     Task<bool> IsConfiguredAsync();
+
+    /// <summary>
+    /// Name des Dienstes, an den eine Suche jetzt ginge („Tavily“, „SearXNG“, bei der Fake-Suche „Fake“), leer ohne
+    /// eingerichteten Dienst. Für den Hinweis vor dem Einschalten (je Profil und Dienst bestätigt).
+    /// </summary>
+    Task<string> GetProviderNameAsync();
 }

@@ -171,6 +171,11 @@ body { height: 100vh; display: flex; flex-direction: column; overflow: hidden; b
 .ss-rail-docs { display: flex; flex-direction: column; align-items: center; gap: 1px; width: 38px; padding: 4px 0; background: none; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 11px; color: var(--ss-text-2); font-family: inherit; }
 .ss-rail-docs:hover { background: var(--ss-hover); border-color: var(--ss-border-light); }
 .ss-rail-docs .ss-rail-icon { font-size: 15px; }
+
+/* Häkchen „Auch im Internet suchen“ in der Seitenleiste (Websuche je Profil), abgesetzt von der Dokumentliste */
+.ss-websearch-toggle { display: flex; align-items: center; gap: 8px; padding-block: 6px; padding-inline: 8px; border: 1px dashed var(--ss-border); border-radius: 4px; background: var(--ss-panel-light); font-size: 13px; color: var(--ss-text-2); cursor: pointer; user-select: none; }
+.ss-websearch-toggle:hover { background: var(--ss-hover); }
+.ss-websearch-toggle input { margin: 0; }
 /* Ziehbare Trennlinie am rechten Rand (Breite per Maus/Tastatur, Doppelklick: Standardbreite) */
 .ss-sidebar-resizer { position: absolute; inset-block: 0; inset-inline-end: 0; width: 6px; z-index: 3; cursor: col-resize; background: transparent; transition: background-color .12s ease; touch-action: none; }
 .ss-sidebar-resizer:hover, .ss-sidebar.ss-resizing .ss-sidebar-resizer { background: rgba(0, 123, 255, .28); }

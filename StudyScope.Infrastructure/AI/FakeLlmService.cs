@@ -14,6 +14,12 @@ public class FakeLlmService : ILlmService
     {
         var chunks = contextChunks?.ToList() ?? new List<string>();
 
+        // Chat mit Websuche vor allem anderen: erkannt nur an der Markierung in der Frage, nie an den Auszügen
+        if (StudyScope.Core.Common.WebContextPrompt.IsWebPrompt(prompt))
+        {
+            return Task.FromResult(FakeLanguage.WebChat(prompt, chunks));
+        }
+
         // Bericht zuerst: eine eigene Vorgabe des Benutzers kann Wörter wie "Mindmap" enthalten
         if (FakeReportResponse.IsReportPrompt(prompt))
         {

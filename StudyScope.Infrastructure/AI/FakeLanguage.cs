@@ -1,3 +1,4 @@
+using StudyScope.Core.Common;
 using StudyScope.Core.Localization;
 
 namespace StudyScope.Infrastructure.AI;
@@ -30,6 +31,37 @@ public static class FakeLanguage
             new { question = q1, answer = a1 },
             new { question = q2, answer = a2 }
         });
+    }
+
+    /// <summary>
+    /// Chat-Antwort der Fake-KI mit Websuche (Frage mit <see cref="WebContextPrompt.MarkerLine"/>): nennt Unterlagen [D…]
+    /// und Web-Treffer [W…] getrennt mit Quellmarken, in der Ergebnissprache. Die Auszüge werden nur gezählt, nie als
+    /// Auftrag gelesen.
+    /// </summary>
+    public static string WebChat(string prompt, IReadOnlyList<string> chunks)
+    {
+        var en = IsEnglish(prompt);
+        var question = WebContextPrompt.WithoutMarker(OutputLanguage.WithoutLine(prompt));
+        var documents = chunks.Count(c => c.StartsWith("[D", StringComparison.Ordinal));
+        var web = chunks.Count(c => c.StartsWith("[W", StringComparison.Ordinal));
+        // Einzahl/Mehrzahl über ICU in der Sprache der Antwort (nicht der Oberfläche) – wie alle Fake-Texte ohne .resx
+        var documentPart = documents == 0
+            ? T(en, "Aus den Unterlagen: keine passenden Auszüge.", "From your materials: no matching excerpts.")
+            : Plural(en, "Aus den Unterlagen: Antwort basierend auf {count, plural, one {# Auszug} other {# Auszügen}} [D1].",
+                "From your materials: answer based on {count, plural, one {# excerpt} other {# excerpts}} [D1].", documents);
+        var webPart = web == 0
+            ? T(en, "Aus dem Internet: keine Treffer.", "From the web: no results.")
+            : Plural(en, "Aus dem Internet: ergänzt um {count, plural, one {# Web-Treffer} other {# Web-Treffer}} [W1].",
+                "From the web: supplemented by {count, plural, one {# web result} other {# web results}} [W1].", web);
+        return T(en, $"[Testmodus] {documentPart}\n{webPart}\nFrage: {question}",
+            $"[Test mode] {documentPart}\n{webPart}\nQuestion: {question}");
+    }
+
+    /// <summary>ICU-Mehrzahl mit den Regeln der Antwortsprache (Deutsch bzw. Englisch), unabhängig von der Oberfläche.</summary>
+    private static string Plural(bool english, string german, string englishText, int count)
+    {
+        using var scope = CultureScope.Use(System.Globalization.CultureInfo.GetCultureInfo(english ? "en" : "de"));
+        return Loc.Format(T(english, german, englishText), ("count", count));
     }
 
     /// <summary>Chat-Antwort der Fake-KI (Frage ohne Sprachzeile wiedergegeben).</summary>

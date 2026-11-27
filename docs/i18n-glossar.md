@@ -320,6 +320,12 @@ Verbindliche Begriffe und Regeln für die Übersetzung der Oberfläche. Die deut
 | Credit | credit | Abrechnungseinheit von Tavily, nicht übersetzen |
 | Schlüssel holen | Get a key | „Schlüssel bei Tavily holen“ → “Get a key from Tavily” |
 | Suchindizes Dritter | third-party search indexes | Datenschutzhinweis |
+| Websuche einschalten? / Verstanden, einschalten | Turn on web search? / Understood, turn on | Hinweisdialog vor dem ersten Einschalten |
+| Web an | Web on | Statusleiste |
+| Unterlagen: / Web: | Materials: / Web: | Quellenliste unter der Antwort |
+| Keine Web-Treffer | No web results | Hinweis im Chat |
+| Websuche nicht verfügbar | Web search unavailable | Hinweis im Chat bei Fehler des Suchdienstes |
+| Quellen: | Sources: | Chat-Protokoll |
 
 ## Schlüssel in den `.resx`-Dateien
 

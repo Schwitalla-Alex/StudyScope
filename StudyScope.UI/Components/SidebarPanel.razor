@@ -27,11 +27,15 @@
 <div class="ss-sidebar-rail" aria-hidden="@(LayoutVm.IsSidebarCollapsed ? "false" : "true")">
     <button type="button" class="ss-icon-btn ss-flip-rtl" title="@LayoutVm.ToggleTooltip" aria-label="@UiStrings.Sidebar_Show"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">▶</button>
-    <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfileDisplayName, DocVm.Documents)"
+    <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfileDisplayName, DocVm.Documents, DocVm.IsWebSearchActive)"
             aria-label="@UiStrings.Sidebar_ActiveDocsShow"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">
         <span class="ss-rail-icon">📄</span>
         <span>@LayoutViewModel.DocumentCount(DocVm.Documents)</span>
+        @if (DocVm.IsWebSearchActive)
+        {
+            <span class="ss-rail-icon">🌐</span>
+        }
     </button>
 </div>
 
@@ -76,6 +80,12 @@
             }
         </div>
     </div>
+
+    <!-- Websuche im Chat (je Profil, standardmäßig aus) – abgesetzt von den Dokumenten, unberührt von „Alle an/aus“ und Filter -->
+    <label class="ss-websearch-toggle" title="@(webSearchNotConfigured ? UiStrings.Sidebar_WebSearchSetupTitle : UiStrings.Sidebar_WebSearchTitle)">
+        <input type="checkbox" checked="@DocVm.IsWebSearchActive" @onclick="OnWebSearchToggledAsync" @onclick:preventDefault="true" />
+        <span>@UiStrings.Sidebar_WebSearch</span>
+    </label>
 
     <!-- 2. Bereich: Volltextsuche / Filter -->
     <div style="display: flex; align-items: center; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); padding: 4px 8px;">
@@ -148,6 +158,12 @@
 </div>
 </div>
 
+@if (showWebSearchNotice)
+{
+    <WebSearchNoticeDialog ProviderName="@DocVm.WebSearchProviderName" ProfileName="@DocVm.CurrentProfileDisplayName"
+                           IsLocalAi="DocVm.IsLocalChatAi" OnAccept="AcceptWebSearchNoticeAsync" OnCancel="CancelWebSearchNotice" />
+}
+
 <!-- Modal-Dialog: Neues Profil anlegen -->
 @if (showCreateModal)
 {
@@ -190,6 +206,40 @@
 
 @code {
     [Parameter] public EventCallback OnOpenSettings { get; set; }
+
+    /// <summary>Kein Suchdienst eingerichtet: Das Häkchen öffnet Einstellungen › Websuche statt einzuschalten.</summary>
+    [Parameter] public EventCallback OnOpenWebSearchSettings { get; set; }
+
+    private bool showWebSearchNotice;
+    private bool webSearchNotConfigured;
+
+    // Der Browser schaltet das Häkchen nicht selbst um (preventDefault): Es zeigt immer den gespeicherten Zustand –
+    // auch wenn der Hinweis abgebrochen wird (Blazor würde ein unverändertes „aus“ sonst nicht zurücksetzen)
+    private async Task OnWebSearchToggledAsync()
+    {
+        var result = await DocVm.RequestWebSearchAsync(!DocVm.IsWebSearchActive);
+        webSearchNotConfigured = result == WebSearchToggleResult.NotConfigured;
+        switch (result)
+        {
+            case WebSearchToggleResult.NeedsNotice:
+                showWebSearchNotice = true;
+                break;
+            case WebSearchToggleResult.NotConfigured:
+                if (OnOpenWebSearchSettings.HasDelegate)
+                    await OnOpenWebSearchSettings.InvokeAsync();
+                break;
+        }
+        // Das Häkchen zeigt immer den gespeicherten Zustand (bei Hinweis/Einstellungen bleibt es aus)
+        StateHasChanged();
+    }
+
+    private async Task AcceptWebSearchNoticeAsync()
+    {
+        showWebSearchNotice = false;
+        await DocVm.AcceptWebSearchNoticeAsync(DocVm.WebSearchProviderName);
+    }
+
+    private void CancelWebSearchNotice() => showWebSearchNotice = false;
 
     private ElementReference resizerRef;
     private DotNetObjectReference<SidebarPanel>? selfRef;

@@ -107,6 +107,14 @@ StudyScope gibt es auf Deutsch und Englisch. Unter **☰ ➔ Einstellungen ➔ �
 
 **Sprache der KI-Ergebnisse:** Unabhängig von der Oberfläche legen Sie unter **☰ ➔ Einstellungen ➔ 🤖 KI-Modell ➔ Sprache der KI-Ergebnisse** je Profil fest, in welcher Sprache die KI schreibt: „Wie Oberfläche“ (Standard), „Wie die Dokumente“ (erkennt zurzeit Deutsch und Englisch, sonst gilt die Oberfläche) oder fest „Deutsch“ bzw. „English“. Neue Ergebnisse entstehen in dieser Sprache, vorhandene behalten ihre – auch wenn Sie sie ergänzen. Exporte erscheinen in der Sprache des jeweiligen Ergebnisses; weicht sie von der Oberfläche ab, zeigen Listen und Kopfzeilen ein Kennzeichen wie „EN“. Audio-Beiträge und Videos werden in ihrer Sprache vorgelesen; die Systemstimme braucht dafür eine installierte Stimme der Sprache (StudyScope zeigt an, wenn sie fehlt), eine selbst gewählte Stimme gilt je Sprache.
 
+## 🔎 Websuche (optional)
+
+Im Chat kann StudyScope zusätzlich im Internet suchen – nur wenn Sie es je Profil ausdrücklich einschalten. Dafür richten Sie unter **☰ ➔ Einstellungen ➔ 🌐 Websuche** einen Suchdienst ein: **Tavily** (eigener kostenloser Schlüssel mit 1.000 Suchen pro Monat, ohne Kreditkarte) oder eine **SearXNG**-Instanz (eigene bzw. selbst gewählte Adresse, ohne Schlüssel). Danach setzen Sie in der Seitenleiste das Häkchen **„🌐 Auch im Internet suchen“**.
+
+- **Datenschutz:** Ins Internet geht nur die Frage, die Sie selbst eintippen – nie Ihre Dokumente, Auszüge daraus, Dateinamen oder Profilnamen. Fragen aus der Mindmap („Im Chat erklären lassen“) suchen nie im Internet. Der Suchdienst kann Anfragen speichern; Tavily nutzt sie laut Datenschutzerklärung auch zur Verbesserung des Dienstes und kann sie an Suchindizes Dritter weitergeben. Vor dem ersten Einschalten (und nach einem Wechsel des Dienstes) zeigt StudyScope dazu einen Hinweis. Mit lokaler KI (Ollama, LM Studio) entsteht die Antwort mit Websuche nicht mehr vollständig offline.
+- **Antwort:** Die KI kennzeichnet Aussagen mit Quellmarken – `[D1]` für Ihre Unterlagen, `[W1]` für Web-Treffer – und die Quellen stehen getrennt unter der Antwort; Web-Quellen öffnen sich per Klick im Browser. Ist der Suchdienst nicht erreichbar oder das Kontingent aufgebraucht, sagt der Chat das und antwortet nur aus den Unterlagen.
+- Web-Inhalte werden nicht gespeichert; das Chat-Protokoll nennt nur Titel und Adressen der Quellen.
+
 ## ⚙️ KI-Einrichtung
 
 Öffnen Sie in StudyScope oben links das Menü **☰ ➔ Einstellungen ➔ KI-Modell**:
