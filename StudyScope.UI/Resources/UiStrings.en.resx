@@ -20,6 +20,8 @@
   <data name="Status_VideoPlaying" xml:space="preserve"><value>is playing</value></data>
   <data name="Status_Ai" xml:space="preserve"><value>AI:</value></data>
   <data name="Status_Profile" xml:space="preserve"><value>Profile:</value></data>
+  <data name="Status_WebOn" xml:space="preserve"><value>🌐 Web on</value></data>
+  <data name="Status_WebOnTitle" xml:space="preserve"><value>Web search in chat is turned on for this profile ({provider}).</value></data>
   <data name="Common_Resume" xml:space="preserve"><value>Resume</value></data>
   <data name="Common_Pause" xml:space="preserve"><value>Pause</value></data>
   <data name="Common_Stop" xml:space="preserve"><value>Stop</value></data>
@@ -57,6 +59,17 @@
   <data name="Sidebar_DeleteProfile" xml:space="preserve"><value>Delete current profile</value></data>
   <data name="Sidebar_SearchPlaceholder" xml:space="preserve"><value>Search documents…</value></data>
   <data name="Sidebar_SelectAllTitle" xml:space="preserve"><value>Select all documents for queries</value></data>
+  <data name="Sidebar_WebSearch" xml:space="preserve"><value>🌐 Also search the web</value></data>
+  <data name="Sidebar_WebSearchTitle" xml:space="preserve"><value>Also answers chat questions with a web search. Only the question you type is sent to the internet, never your documents.</value></data>
+  <data name="Sidebar_WebSearchSetupTitle" xml:space="preserve"><value>No search provider set up – click to open Settings › Web search.</value></data>
+  <data name="WebNotice_Title" xml:space="preserve"><value>Turn on web search?</value></data>
+  <data name="WebNotice_Question" xml:space="preserve"><value>For every chat question, &lt;b&gt;only the question you type&lt;/b&gt; is sent to the search provider &lt;b&gt;{provider}&lt;/b&gt;. Your documents, excerpts from them and file names stay on this device.</value></data>
+  <data name="WebNotice_Storage" xml:space="preserve"><value>The search provider may store and analyse your queries.</value></data>
+  <data name="WebNotice_Tavily" xml:space="preserve"><value>According to its privacy policy, Tavily also uses queries to improve its service and may pass them on to third-party search indexes (e.g. Google).</value></data>
+  <data name="WebNotice_LocalAi" xml:space="preserve"><value>Your chat AI runs locally. With web search, answers are no longer created entirely offline.</value></data>
+  <data name="WebNotice_Mindmap" xml:space="preserve"><value>Questions that come from the mind map never search the web.</value></data>
+  <data name="WebNotice_Profile" xml:space="preserve"><value>The setting applies only to the profile &lt;b&gt;{profile}&lt;/b&gt; and can be turned off at any time.</value></data>
+  <data name="WebNotice_Accept" xml:space="preserve"><value>Understood, turn on</value></data>
   <data name="Sidebar_SelectAll" xml:space="preserve"><value>✓ Select all</value></data>
   <data name="Sidebar_DeselectAllTitle" xml:space="preserve"><value>Deselect all documents</value></data>
   <data name="Sidebar_DeselectAll" xml:space="preserve"><value>✕ Clear all</value></data>
@@ -81,6 +94,10 @@
   <data name="Chat_NotHelpful" xml:space="preserve"><value>Not helpful</value></data>
   <data name="Chat_RegenerateTitle" xml:space="preserve"><value>Regenerate</value></data>
   <data name="Chat_Regenerate" xml:space="preserve"><value>↻ Regenerate</value></data>
+  <data name="Chat_SourcesDocuments" xml:space="preserve"><value>📄 Materials:</value></data>
+  <data name="Chat_SourcesWeb" xml:space="preserve"><value>🌐 Web:</value></data>
+  <data name="Chat_SourceOpenTitle" xml:space="preserve"><value>Open in browser: {url}</value></data>
+  <data name="Chat_SourceOpenFailed" xml:space="preserve"><value>The address could not be opened: {url}</value></data>
   <data name="Chat_Thinking" xml:space="preserve"><value>StudyScope is thinking…</value></data>
   <data name="Chat_CancelTitle" xml:space="preserve"><value>Cancel the current request</value></data>
   <data name="Chat_Cancel" xml:space="preserve"><value>✕ Cancel</value></data>

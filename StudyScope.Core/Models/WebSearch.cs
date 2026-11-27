@@ -82,8 +82,17 @@ public sealed record WebSearchProfileState(bool Enabled = false, string? NoticeA
     public static WebSearchProfileState Off { get; } = new();
 
     /// <summary>Vor dem Einschalten ist der Hinweis für diesen Dienst (noch) zu zeigen.</summary>
-    public bool NeedsNotice(WebSearchProviderType provider) =>
-        !string.Equals(NoticeAcceptedFor, WebSearchSettings.NameOf(provider), StringComparison.Ordinal);
+    public bool NeedsNotice(WebSearchProviderType provider) => NeedsNotice(WebSearchSettings.NameOf(provider));
+
+    /// <summary>Vor dem Einschalten ist der Hinweis für den Dienst mit diesem Namen (noch) zu zeigen.</summary>
+    public bool NeedsNotice(string providerName) =>
+        string.IsNullOrEmpty(providerName) || !string.Equals(NoticeAcceptedFor, providerName, StringComparison.Ordinal);
+
+    /// <summary>
+    /// Die Websuche ist für dieses Profil wirklich an: eingeschaltet und der Hinweis für den jetzt eingerichteten Dienst
+    /// bestätigt. Nach einem Wechsel des Dienstes ist sie aus, bis der Hinweis erneut bestätigt wurde.
+    /// </summary>
+    public bool IsActiveFor(string providerName) => Enabled && !NeedsNotice(providerName);
 }
 
 /// <summary>Ein Treffer der Websuche. Wird nicht gespeichert – nur für die eine Anfrage im Speicher.</summary>

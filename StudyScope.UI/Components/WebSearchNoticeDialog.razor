@@ -1,0 +1,64 @@
+@using Microsoft.JSInterop
+@using StudyScope.UI.Services
+@inject IJSRuntime JS
+
+<!-- Hinweis vor dem ersten Einschalten der Websuche (je Profil und Suchdienst). Esc/Abbrechen lässt das Häkchen aus. -->
+<div class="ss-dialog-overlay" data-ss-dialog @onclick="CancelAsync">
+    <div class="ss-dialog" style="width: 480px; padding: 0; overflow: hidden;" role="dialog" aria-modal="true" aria-labelledby="ss-webnotice-title"
+         @onclick:stopPropagation="true">
+        <div style="padding: 14px 18px; border-bottom: 1px solid var(--ss-border-light); display: flex; justify-content: space-between; align-items: center; background: var(--ss-panel-light);">
+            <h4 id="ss-webnotice-title" style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.WebNotice_Title</h4>
+            <button type="button" aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
+                    @onclick="CancelAsync">✕</button>
+        </div>
+
+        <div style="padding: 18px 20px; font-size: 13px; color: var(--ss-text-2); line-height: 1.55; display: flex; flex-direction: column; gap: 10px;">
+            <p style="margin: 0;">@LocHtml.Format(UiStrings.WebNotice_Question, ("provider", ProviderName))</p>
+            <p style="margin: 0;">@UiStrings.WebNotice_Storage</p>
+            @if (ProviderName == "Tavily")
+            {
+                <p style="margin: 0;">@UiStrings.WebNotice_Tavily</p>
+            }
+            @if (IsLocalAi)
+            {
+                <div style="background: var(--ss-warning-bg); color: var(--ss-warning-text); border: 1px solid var(--ss-warning-border); border-radius: 4px; padding: 8px 10px; font-size: 12px;">
+                    @UiStrings.WebNotice_LocalAi
+                </div>
+            }
+            <p style="margin: 0; font-size: 12px; color: var(--ss-text-muted);">@UiStrings.WebNotice_Mindmap</p>
+            <p style="margin: 0; font-size: 12px; color: var(--ss-text-muted);">@LocHtml.Format(UiStrings.WebNotice_Profile, ("profile", ProfileName))</p>
+        </div>
+
+        <div style="padding: 10px 18px; border-top: 1px solid var(--ss-border-light); display: flex; justify-content: flex-end; gap: 8px; background: var(--ss-panel-light);">
+            <button type="button" data-ss-dialog-close style="padding: 6px 14px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; font-size: 13px; cursor: pointer;"
+                    @onclick="CancelAsync">@UiStrings.Common_Cancel</button>
+            <button id="ss-webnotice-accept" type="button"
+                    style="padding: 6px 16px; background: var(--ss-primary); color: var(--ss-on-accent); border: none; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer;"
+                    @onclick="AcceptAsync">@UiStrings.WebNotice_Accept</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    /// <summary>Suchdienst, an den die Fragen gehen (Eigenname).</summary>
+    [Parameter] public string ProviderName { get; set; } = string.Empty;
+
+    /// <summary>Anzeigename des Profils.</summary>
+    [Parameter] public string ProfileName { get; set; } = string.Empty;
+
+    /// <summary>Chat-KI läuft lokal (Ollama, LM Studio).</summary>
+    [Parameter] public bool IsLocalAi { get; set; }
+
+    [Parameter] public EventCallback OnAccept { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+        try { await JS.InvokeVoidAsync("studyScopeLayout.focusElementLater", "ss-webnotice-accept"); }
+        catch (JSException) { }
+    }
+
+    private Task AcceptAsync() => OnAccept.InvokeAsync();
+    private Task CancelAsync() => OnCancel.InvokeAsync();
+}

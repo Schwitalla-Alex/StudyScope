@@ -2,6 +2,7 @@
 @using StudyScope.Core.Models
 @using StudyScope.UI.Services
 @inject ChatViewModel ChatVm
+@inject StudyScope.Core.Interfaces.IExternalLinkOpener LinkOpener
 @inject IJSRuntime Js
 @implements IDisposable
 
@@ -62,6 +63,36 @@
 
                     <div style="font-weight: bold; font-size: 11px; margin-bottom: 3px; opacity: 0.8;">@RoleLabel(msg.Role):</div>
                     <div style="white-space: pre-wrap;">@msg.Content</div>
+
+                    <!-- Quellen einer Antwort mit Websuche: Unterlagen und Internet getrennt; Web-Quellen öffnen im System-Browser -->
+                    @if (msg.Sources.Count > 0)
+                    {
+                        var documentSources = msg.Sources.Where(s => s.Kind == ChatSourceKind.Document).ToList();
+                        var webSources = msg.Sources.Where(s => s.Kind == ChatSourceKind.Web).ToList();
+                        <div class="ss-chat-sources">
+                            @if (documentSources.Count > 0)
+                            {
+                                <div class="ss-chat-sources-group">
+                                    <div class="ss-chat-sources-head">@UiStrings.Chat_SourcesDocuments</div>
+                                    @foreach (var source in documentSources)
+                                    {
+                                        <div class="ss-chat-source">[@source.Label] @source.Name</div>
+                                    }
+                                </div>
+                            }
+                            @if (webSources.Count > 0)
+                            {
+                                <div class="ss-chat-sources-group">
+                                    <div class="ss-chat-sources-head">@UiStrings.Chat_SourcesWeb</div>
+                                    @foreach (var source in webSources)
+                                    {
+                                        <button type="button" class="ss-link-btn ss-chat-source" title="@Loc.Format(UiStrings.Chat_SourceOpenTitle, ("url", source.Url ?? string.Empty))"
+                                                @onclick="() => OpenSource(source)">[@source.Label] @source.Name (@source.Domain)</button>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
 
                     <!-- Aktionsleiste bei Assistenten-Nachrichten (Kopieren, Bewerten, Neu generieren) -->
                     @if (msg.Role == MessageRole.Assistant)
@@ -157,6 +188,14 @@
     </div>
 </div>
 
+<style>
+    .ss-chat-sources { margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--ss-border-faint); display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--ss-text-2); }
+    .ss-chat-sources-group { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+    .ss-chat-sources-head { font-weight: 600; }
+    /* Eine Quelle je Zeile (Unterlagen und Web), lange Titel brechen um */
+    .ss-chat-source { display: block; padding-inline-start: 18px; font-size: 12px; text-align: start; overflow-wrap: anywhere; }
+</style>
+
 @code {
     private Guid? _copiedMessageId;
 
@@ -199,6 +238,13 @@
         {
             ChatVm.ExportStatusMessage = Loc.Format(UiStrings.Chat_CopyFailed, ("error", ex.Message));
         }
+    }
+
+    /// <summary>Web-Quelle im System-Browser öffnen – nur Adressen aus den Suchtreffern, nie aus dem Antworttext.</summary>
+    private void OpenSource(ChatSource source)
+    {
+        if (string.IsNullOrEmpty(source.Url) || !LinkOpener.OpenUrl(source.Url))
+            ChatVm.ExportStatusMessage = Loc.Format(UiStrings.Chat_SourceOpenFailed, ("url", source.Url ?? string.Empty));
     }
 
     private async Task HandleExportAsync()

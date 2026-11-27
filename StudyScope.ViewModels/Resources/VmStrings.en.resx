@@ -33,6 +33,7 @@
   <data name="Layout_Badge_Active" xml:space="preserve"><value>Active ({active} of {total}):</value></data>
   <data name="Layout_Badge_More" xml:space="preserve"><value>… and {count} more</value></data>
   <data name="Layout_Badge_ClickToShow" xml:space="preserve"><value>Click to show</value></data>
+  <data name="Layout_Badge_WebOn" xml:space="preserve"><value>🌐 Web search in chat on</value></data>
   <data name="Docs_LoadingModel" xml:space="preserve"><value>Loading model…</value></data>
   <data name="Docs_NoAiConfigured" xml:space="preserve"><value>No AI configured</value></data>
   <data name="Docs_ProfileExists" xml:space="preserve"><value>A profile “{name}” already exists. Select it from the list above or choose a different name.</value></data>
@@ -88,6 +89,10 @@
   <data name="Chat_Log_Disliked" xml:space="preserve"><value>👎 Not helpful / needs improvement</value></data>
   <data name="Chat_Log_Unrated" xml:space="preserve"><value>— Not rated</value></data>
   <data name="Chat_Log_Rating" xml:space="preserve"><value>[Rating: {rating}]</value></data>
+  <data name="Chat_Log_Sources" xml:space="preserve"><value>Sources:</value></data>
+  <data name="Chat_Web_SkippedMindmap" xml:space="preserve"><value>Without web search, because the question comes from the mind map. To search the web, type the question yourself.</value></data>
+  <data name="Chat_Web_NoResults" xml:space="preserve"><value>No web results – the answer is based on your materials only.</value></data>
+  <data name="Chat_Web_Unavailable" xml:space="preserve"><value>Web search unavailable: {error} The answer is based on your materials only.</value></data>
   <data name="Speech_PrivacyHint" xml:space="preserve"><value>Privacy: with Gemini TTS, the script text is sent to Google. In the free tier, Google may use the input to improve its services.</value></data>
   <data name="Common_Regenerate" xml:space="preserve"><value>Regenerate</value></data>
   <data name="GenStatus_TipFewerDocuments" xml:space="preserve"><value>Select fewer documents at a time so the response is shorter.</value></data>

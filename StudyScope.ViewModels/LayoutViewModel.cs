@@ -239,15 +239,16 @@ public class LayoutViewModel : INotifyPropertyChanged
         return true;
     }
 
-    /// <summary>Hinweis in der eingeklappten Leiste, z. B. „📄 1/2“.</summary>
-    public static string DocumentBadge(IReadOnlyCollection<DocumentItem> documents) => "📄 " + DocumentCount(documents);
+    /// <summary>Hinweis in der eingeklappten Leiste, z. B. „📄 1/2“, mit eingeschalteter Websuche „📄 1/2 🌐“.</summary>
+    public static string DocumentBadge(IReadOnlyCollection<DocumentItem> documents, bool webSearchActive = false) =>
+        "📄 " + DocumentCount(documents) + (webSearchActive ? " 🌐" : string.Empty);
 
     /// <summary>Aktive/alle Dokumente, z. B. „1/2“ (aktiv = angehakt und vorhanden).</summary>
     public static string DocumentCount(IReadOnlyCollection<DocumentItem> documents) =>
         $"{ActiveDocuments(documents).Count()}/{documents.Count}";
 
     /// <summary>Tooltip des Hinweises: Profil und Namen der aktiven Dokumente.</summary>
-    public static string DocumentBadgeTooltip(string profile, IReadOnlyCollection<DocumentItem> documents)
+    public static string DocumentBadgeTooltip(string profile, IReadOnlyCollection<DocumentItem> documents, bool webSearchActive = false)
     {
         var active = ActiveDocuments(documents).Select(d => d.FileName).ToList();
         var lines = new List<string> { Loc.Format(VmStrings.Layout_Badge_Profile, ("profile", profile)) };
@@ -262,6 +263,8 @@ public class LayoutViewModel : INotifyPropertyChanged
             if (active.Count > MaxTooltipDocuments)
                 lines.Add(Loc.Format(VmStrings.Layout_Badge_More, ("count", active.Count - MaxTooltipDocuments)));
         }
+        if (webSearchActive)
+            lines.Add(VmStrings.Layout_Badge_WebOn);
         lines.Add(VmStrings.Layout_Badge_ClickToShow);
         return string.Join("\n", lines);
     }

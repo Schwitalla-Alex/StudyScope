@@ -28,6 +28,17 @@ public class ChatViewModel : INotifyPropertyChanged
     public IOutputLanguageProvider? OutputLanguageProvider { get; set; }
 
     /// <summary>
+    /// Websuche (nur, wenn das Häkchen des Profils an ist: <see cref="DocumentListViewModel.IsWebSearchActive"/>).
+    /// Fehlt sie (Tests), verhält sich der Chat wie ohne Websuche.
+    /// </summary>
+    public IWebSearchService? WebSearch { get; set; }
+
+    // Frage, die die App ins Eingabefeld gelegt hat (z. B. aus der Mindmap, während eine Antwort lief): Wird sie
+    // abgeschickt, behält sie ihre Herkunft und sucht nie im Internet
+    private string? _pendingPromptText;
+    private ChatQuestionOrigin _pendingPromptOrigin = ChatQuestionOrigin.User;
+
+    /// <summary>
     /// Frage samt Sprachzeile: Weicht die Ergebnissprache vom Deutschen ab, steht sie als eigene Zeile am Ende der Frage;
     /// der Dispatcher wählt danach die Systemanweisung (<c>RagSystemPromptFor</c>). Bei Deutsch bleibt die Frage unverändert.
     /// </summary>
@@ -173,8 +184,9 @@ public class ChatViewModel : INotifyPropertyChanged
         if (lastUserMsg == null)
             return;
 
-        // Falls die letzte Nachricht eine Assistenten-Nachricht war, diese entfernen
-        if (Messages.Last().Role == MessageRole.Assistant)
+        // Antwort und Hinweise nach der letzten Frage entfernen (z. B. „Websuche nicht verfügbar“ – er käme sonst doppelt)
+        var index = Messages.IndexOf(lastUserMsg);
+        while (Messages.Count > index + 1)
         {
             Messages.RemoveAt(Messages.Count - 1);
         }
@@ -185,7 +197,8 @@ public class ChatViewModel : INotifyPropertyChanged
         // Die doppelte User-Nachricht vermeiden wir, indem wir die alte entfernen vor dem Neuaufruf
         Messages.Remove(lastUserMsg);
 
-        await SendPromptAsync();
+        // Herkunft bleibt: eine Frage aus der Mindmap sucht auch beim Neu-Generieren nicht im Internet
+        await SendPromptAsync(lastUserMsg.Origin);
     }
 
     /// <summary>
@@ -209,11 +222,29 @@ public class ChatViewModel : INotifyPropertyChanged
         if (allChunks == null || !allChunks.Any())
             return new List<string>();
 
+        return RankChunkIndices(query, allChunks, maxChunks).Select(i => allChunks[i]).ToList();
+    }
+
+    /// <summary>
+    /// Wie <see cref="GetMostRelevantChunks(string, List{string}, int)"/>, aber mit Dokumentnamen (für die Quellmarken
+    /// „[D1] Datei“ im Chat mit Websuche). Auswahl und Reihenfolge sind identisch.
+    /// </summary>
+    public static List<SourceChunk> GetMostRelevantChunks(string query, IReadOnlyList<SourceChunk> allChunks, int maxChunks = 8)
+    {
+        if (allChunks == null || allChunks.Count == 0)
+            return new List<SourceChunk>();
+
+        var texts = allChunks.Select(c => c.Text).ToList();
+        return RankChunkIndices(query, texts, maxChunks).Select(i => allChunks[i]).ToList();
+    }
+
+    private static List<int> RankChunkIndices(string query, List<string> allChunks, int maxChunks)
+    {
         var queryWords = ExtractSearchWords(query);
 
         // Falls keine aussagekräftigen Suchbegriffe übrig bleiben, Standard-Auswahl nehmen
         if (!queryWords.Any())
-            return allChunks.Take(maxChunks).ToList();
+            return Enumerable.Range(0, Math.Min(maxChunks, allChunks.Count)).ToList();
 
         // Chunks anhand von Treffern bewerten
         var scoredChunks = allChunks
@@ -246,7 +277,7 @@ public class ChatViewModel : INotifyPropertyChanged
             .ThenBy(x => x.Index)
             .Concat(scoredChunks.Where(x => x.Score == 0).OrderBy(x => x.Index))
             .Take(maxChunks)
-            .Select(x => x.Chunk)
+            .Select(x => x.Index)
             .ToList();
     }
     /// <summary>
@@ -260,13 +291,37 @@ public class ChatViewModel : INotifyPropertyChanged
         }
     }
 
-    public async Task SendPromptAsync()
+    /// <summary>
+    /// Legt eine von der App gebildete Frage ins Eingabefeld (z. B. aus der Mindmap, während noch eine Antwort läuft).
+    /// Wird sie abgeschickt – auch ergänzt –, behält sie ihre Herkunft und löst keine Websuche aus.
+    /// </summary>
+    public void SetPendingPrompt(string text, ChatQuestionOrigin origin)
+    {
+        CurrentInputPrompt = text;
+        _pendingPromptText = origin == ChatQuestionOrigin.User ? null : text.Trim();
+        _pendingPromptOrigin = origin;
+    }
+
+    /// <summary>Schickt die Frage im Eingabefeld ab (selbst eingegeben, sofern sie nicht aus <see cref="SetPendingPrompt"/> stammt).</summary>
+    public Task SendPromptAsync() => SendPromptAsync(ChatQuestionOrigin.User);
+
+    /// <summary>
+    /// Schickt die Frage im Eingabefeld ab. <paramref name="origin"/> = Herkunft: Nur selbst eingegebene Fragen dürfen
+    /// bei eingeschaltetem Häkchen im Internet suchen; Fragen aus der Mindmap nie (Hinweis im Verlauf).
+    /// </summary>
+    public async Task SendPromptAsync(ChatQuestionOrigin origin)
     {
         if (string.IsNullOrWhiteSpace(CurrentInputPrompt) || IsBusy)
             return;
 
         var promptText = CurrentInputPrompt.Trim();
         CurrentInputPrompt = string.Empty;
+
+        // Liegt noch eine von der App gebildete Frage im Feld (auch ergänzt), gilt deren Herkunft
+        if (_pendingPromptText != null && promptText.Contains(_pendingPromptText, StringComparison.Ordinal))
+            origin = _pendingPromptOrigin;
+        _pendingPromptText = null;
+        _pendingPromptOrigin = ChatQuestionOrigin.User;
 
         // Profil merken: Die Antwort gehört in dessen Verlauf, auch wenn zwischendurch gewechselt wird
         var requestProfile = _activeProfile;
@@ -275,7 +330,8 @@ public class ChatViewModel : INotifyPropertyChanged
         Messages.Add(new ChatMessage
         {
             Role = MessageRole.User,
-            Content = promptText
+            Content = promptText,
+            Origin = origin
         });
 
         IsBusy = true;
@@ -289,33 +345,90 @@ public class ChatViewModel : INotifyPropertyChanged
             if (_llmService == null)
                 throw new InvalidOperationException("ILlmService ist nicht initialisiert (null). Prüfen Sie die Registrierung in Program.cs.");
 
+            var token = _cancellationTokenSource.Token;
+
+            // Websuche nur bei eingeschaltetem Häkchen des fragenden Profils (Zustand frisch gelesen)
+            var webSearchOn = WebSearch != null && _documentListViewModel != null
+                && string.Equals(_documentListViewModel.CurrentProfile, requestProfile, StringComparison.OrdinalIgnoreCase)
+                && await _documentListViewModel.RefreshWebSearchStateAsync();
+
+            // Frage aus der Mindmap: nie im Internet suchen (Knotentitel stammen aus den Unterlagen), sichtbar vermerken
+            if (webSearchOn && origin != ChatQuestionOrigin.User)
+            {
+                AddMessage(requestProfile, new ChatMessage { Role = MessageRole.System, Content = VmStrings.Chat_Web_SkippedMindmap });
+                webSearchOn = false;
+            }
+
             // 2. Nur aktivierte Dokumente berücksichtigen
             var activeDocs = _documentListViewModel?.Documents?
                 .Where(d => d.IsSelected && !d.IsMissing && !string.IsNullOrWhiteSpace(d.FilePath) && File.Exists(d.FilePath))
                 .ToList() ?? new List<DocumentItem>();
 
-            var contextChunks = new List<string>();
+            var contextChunks = new List<SourceChunk>();
 
             foreach (var doc in activeDocs)
             {
                 // Prüfen, ob vor/während des Dokument-Einlesens abgebrochen wurde
-                _cancellationTokenSource.Token.ThrowIfCancellationRequested();
+                token.ThrowIfCancellationRequested();
 
                 var docChunks = await _pdfService.ExtractChunksAsync(doc.FilePath);
                 if (docChunks != null)
                 {
-                    contextChunks.AddRange(docChunks);
+                    contextChunks.AddRange(docChunks.Select(text => new SourceChunk(doc.FileName, text)));
                 }
             }
 
             // Treffsicherste Passagen ermitteln
-            var relevantChunks = GetMostRelevantChunks(promptText, contextChunks, maxChunks: 8);
+            var relevant = GetMostRelevantChunks(promptText, contextChunks, maxChunks: 8);
+            var relevantChunks = relevant.Select(c => c.Text).ToList();
 
             // 3. Antwort vom KI-Service abrufen
             // Antwortsprache: Einstellung des fragenden Profils, bei „Wie die Dokumente“ erkannt an den Auszügen
             var setting = OutputLanguageProvider == null ? null : await OutputLanguageProvider.GetSettingAsync(requestProfile);
             var language = StudyScope.Core.Localization.OutputLanguage.Resolve(setting, relevantChunks);
-            var response = await _llmService.AskQuestionAsync(WithLanguageLine(promptText, language), relevantChunks, _cancellationTokenSource.Token);
+
+            // Websuche: Ins Netz geht nur die selbst eingegebene Frage (ohne Sprachzeile, Auszüge, Dateinamen)
+            IReadOnlyList<WebSearchResult> webResults = Array.Empty<WebSearchResult>();
+            if (webSearchOn)
+            {
+                try
+                {
+                    webResults = await WebSearch!.SearchAsync(WebSearchQuery.FromUserQuestion(promptText), language, token);
+                    if (webResults.Count == 0)
+                        AddMessage(requestProfile, new ChatMessage { Role = MessageRole.System, Content = VmStrings.Chat_Web_NoResults });
+                }
+                catch (WebSearchException ex)
+                {
+                    // Nie still auf die Unterlagen zurückfallen: Grund sichtbar im Verlauf
+                    AddMessage(requestProfile, new ChatMessage
+                    {
+                        Role = MessageRole.System,
+                        Content = Loc.Format(VmStrings.Chat_Web_Unavailable, ("error", ex.Message))
+                    });
+                }
+            }
+
+            string prompt;
+            List<string> chunksForAi;
+            IReadOnlyList<ChatSource> sources = Array.Empty<ChatSource>();
+            if (webResults.Count > 0)
+            {
+                // Unterlagen „[D1] Datei“ (gleiche Datei = gleiche Marke) und Treffer „[W1] Titel – Domain“, Frage mit Markierung
+                var labelled = LabelDocumentChunks(relevant, out var documentSources);
+                chunksForAi = labelled.Concat(WebContextPrompt.WebChunks(webResults)).ToList();
+                prompt = WithLanguageLine(WebContextPrompt.WithMarker(promptText), language);
+                sources = documentSources
+                    .Concat(webResults.Select((r, i) => new ChatSource(ChatSourceKind.Web, WebContextPrompt.WebLabel(i + 1), r.Title, r.Url, r.Domain)))
+                    .ToList();
+            }
+            else
+            {
+                // Ohne Websuche bzw. ohne Treffer: genau wie bisher
+                chunksForAi = relevantChunks;
+                prompt = WithLanguageLine(promptText, language);
+            }
+
+            var response = await _llmService.AskQuestionAsync(prompt, chunksForAi, token);
 
             // Der Dienst meldet einen Abbruch teils als Text statt als Ausnahme – wie einen Abbruch behandeln
             _cancellationTokenSource.Token.ThrowIfCancellationRequested();
@@ -325,11 +438,12 @@ public class ChatViewModel : INotifyPropertyChanged
                 response = VmStrings.Chat_NoResponse;
             }
 
-            // 4. KI-Antwort genau einmal anfügen
+            // 4. KI-Antwort genau einmal anfügen (mit Quellen, wenn im Internet gesucht wurde)
             AddMessage(requestProfile, new ChatMessage
             {
                 Role = MessageRole.Assistant,
-                Content = response
+                Content = response,
+                Sources = sources
             });
         }
         catch (OperationCanceledException)
@@ -362,6 +476,28 @@ public class ChatViewModel : INotifyPropertyChanged
             _cancellationTokenSource = null;
             IsBusy = false;
         }
+    }
+
+    /// <summary>
+    /// Beschriftet die Auszüge für den Chat mit Websuche: „[D1] Unterlage: datei.pdf“ – Marken in der Reihenfolge des
+    /// ersten Auftretens, gleiche Datei = gleiche Marke. Liefert die Quellen für die Anzeige unter der Antwort.
+    /// </summary>
+    public static List<string> LabelDocumentChunks(IReadOnlyList<SourceChunk> chunks, out List<ChatSource> sources)
+    {
+        var labels = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        sources = new List<ChatSource>();
+        var result = new List<string>(chunks.Count);
+        foreach (var chunk in chunks)
+        {
+            if (!labels.TryGetValue(chunk.SourceDocument, out var label))
+            {
+                label = WebContextPrompt.DocumentLabel(labels.Count + 1);
+                labels[chunk.SourceDocument] = label;
+                sources.Add(new ChatSource(ChatSourceKind.Document, label, chunk.SourceDocument));
+            }
+            result.Add(WebContextPrompt.DocumentChunk(label, chunk.SourceDocument, chunk.Text));
+        }
+        return result;
     }
 
     public async Task<bool> ExportConversationToFileAsync()
@@ -444,6 +580,18 @@ public class ChatViewModel : INotifyPropertyChanged
 
             sb.AppendLine($"[{msg.Timestamp.ToString("T", CultureInfo.CurrentCulture)}] {sender}:");
             sb.AppendLine(msg.Content);
+
+            // Quellen nur mit Marke, Name bzw. Titel und Adresse – nie Ausschnitte der Webseiten
+            if (msg.Sources.Count > 0)
+            {
+                sb.AppendLine(VmStrings.Chat_Log_Sources);
+                foreach (var source in msg.Sources)
+                {
+                    sb.AppendLine(source.Kind == ChatSourceKind.Web
+                        ? $"  [{source.Label}] {source.Name} – {source.Url}"
+                        : $"  [{source.Label}] {source.Name}");
+                }
+            }
 
             // Bewertung nur bei Assistenten-Nachrichten ausgeben
             if (msg.Role == MessageRole.Assistant)

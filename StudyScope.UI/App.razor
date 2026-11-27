@@ -32,7 +32,7 @@
     <!-- 2. Hauptbereich (nimmt dynamisch den gesamten mittleren Platz ein) -->
     <div style="display: flex; flex: 1; min-height: 0; overflow: hidden;">
         <!-- Linke Leiste: Dokumentenliste, Profilauswahl & Verknüpfung zum Öffnen der Einstellungen -->
-        <SidebarPanel OnOpenSettings="OpenSettingsModal" />
+        <SidebarPanel OnOpenSettings="OpenSettingsModal" OnOpenWebSearchSettings='() => OpenSettings("websearch")' />
 
         <!-- Rechter Bereich: Inhalt des aktiven Reiters -->
         <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden;">
@@ -250,6 +250,8 @@
         await AuVm.RefreshMp3AvailabilityAsync();
         await VdVm.RefreshExportAvailabilityAsync(refresh: true);
         await RepVm.RefreshMp3AvailabilityAsync();
+        // Suchdienst kann eingerichtet, gewechselt oder entfernt worden sein: Häkchen der Websuche neu prüfen
+        await DocVm.RefreshWebSearchStateAsync();
     }
 
     /// <summary>
@@ -258,16 +260,17 @@
     private async Task AskFromMindmapAsync(string question)
     {
         activeTab = "chat";
+        // Die Frage bildet die App aus Knotentiteln – sie löst nie eine Websuche aus (Herkunft Mindmap)
         if (ChatVm.IsBusy)
         {
-            // Läuft gerade eine Antwort, die Frage nur ins Eingabefeld übernehmen
-            ChatVm.CurrentInputPrompt = question;
+            // Läuft gerade eine Antwort, die Frage nur ins Eingabefeld übernehmen (behält ihre Herkunft)
+            ChatVm.SetPendingPrompt(question, ChatQuestionOrigin.Mindmap);
             return;
         }
 
         ChatVm.CurrentInputPrompt = question;
         StateHasChanged();
-        await ChatVm.SendPromptAsync();
+        await ChatVm.SendPromptAsync(ChatQuestionOrigin.Mindmap);
     }
 
     /// <summary>

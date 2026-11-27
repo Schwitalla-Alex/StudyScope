@@ -392,6 +392,16 @@ public class LayoutViewModelTests
     }
 
     [Test]
+    public void Badge_ShowsWebSearch_WhenActive()
+    {
+        var docs = new[] { Doc("zellbiologie.pdf"), Doc("genetik.txt", selected: false) };
+
+        Assert.That(LayoutViewModel.DocumentBadge(docs, webSearchActive: true), Is.EqualTo("📄 1/2 🌐"));
+        Assert.That(LayoutViewModel.DocumentBadgeTooltip("Testprofil", docs, webSearchActive: true), Does.Contain("🌐 Websuche im Chat an"));
+        Assert.That(LayoutViewModel.DocumentBadgeTooltip("Testprofil", docs), Does.Not.Contain("🌐"));
+    }
+
+    [Test]
     public void Badge_NoDocuments_AndNoneActive()
     {
         Assert.That(LayoutViewModel.DocumentBadge(Array.Empty<DocumentItem>()), Is.EqualTo("📄 0/0"));

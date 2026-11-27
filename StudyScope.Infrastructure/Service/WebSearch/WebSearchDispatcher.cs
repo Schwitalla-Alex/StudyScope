@@ -62,6 +62,13 @@ public sealed class WebSearchDispatcher : IWebSearchService
     public async Task<bool> IsConfiguredAsync() =>
         IsFakeMode || (await _storage.LoadWebSearchSettingsAsync()).IsConfigured;
 
+    public async Task<string> GetProviderNameAsync()
+    {
+        if (IsFakeMode) return FakeWebSearchService.ProviderName;
+        var settings = await _storage.LoadWebSearchSettingsAsync();
+        return settings.IsConfigured ? settings.ProviderName : string.Empty;
+    }
+
     private IWebSearchProvider ProviderFor(WebSearchSettings settings)
     {
         if (!settings.IsConfigured)
