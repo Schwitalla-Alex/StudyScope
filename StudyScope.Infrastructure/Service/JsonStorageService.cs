@@ -10,7 +10,7 @@ namespace StudyScope.Infrastructure.Services;
 public class JsonStorageService : IStorageService
 {
     private readonly string _baseDirectory;
-    private readonly IEncryptionService _encryptionService;
+    private readonly ISecretProtector _protector;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -18,16 +18,18 @@ public class JsonStorageService : IStorageService
         PropertyNameCaseInsensitive = true
     };
 
-    // Standard-Konstruktor für die laufende Anwendung (nutzt AppData und Standard-AesEncryptionService)
-    public JsonStorageService(): this(null, null)
+    /// <summary>Laufende Anwendung: Benutzerdaten-Ordner und Schutz des Betriebssystems (Windows DPAPI, sonst Rückfall).</summary>
+    public JsonStorageService(): this(null, SecretProtector.ForCurrentPlatform())
     {
     }
 
-    // Konstruktor für Unit-Tests & Dependency Injection
-    // Unterstützt sowohl new JsonStorageService(tempDir) als auch die Übergabe eines IEncryptionService
-    public JsonStorageService(string? baseDirectory, IEncryptionService? encryptionService = null)
+    /// <summary>
+    /// Eigener Ordner (Tests) bzw. Komposition in <c>Program.cs</c>. Ohne <paramref name="protector"/> gilt bewusst das
+    /// Rückfall-Verfahren – Tests berühren so nie einen Schutz oder Speicher des Betriebssystems.
+    /// </summary>
+    public JsonStorageService(string? baseDirectory, ISecretProtector? protector = null)
     {
-        _encryptionService = encryptionService ?? new AesEncryptionService();
+        _protector = protector ?? SecretProtector.Fallback();
 
         _baseDirectory = string.IsNullOrWhiteSpace(baseDirectory)
             ? AppPaths.UserDataDirectory
@@ -35,12 +37,6 @@ public class JsonStorageService : IStorageService
 
         Directory.CreateDirectory(_baseDirectory);
         Directory.CreateDirectory(GetProfilesDirectory());
-    }
-
-    // Optionaler Bequemlichkeits-Überladungs-Konstruktor, falls Tests nur den Service übergeben wollen
-    public JsonStorageService(IEncryptionService encryptionService)
-        : this(null, encryptionService)
-    {
     }
 
     private string GetProfilesDirectory()
@@ -138,15 +134,17 @@ public class JsonStorageService : IStorageService
                 profile.Name = profileName;
                 profile.Documents ??= new List<DocumentItem>();
 
-                // ApiKey für die UI/ViewModels transparent entschlüsseln (im Speicher immer Klartext)
+                // Schlüssel für die UI/ViewModels transparent lesen (im Speicher immer Klartext; nicht lesbar → leer + Kennzeichen)
                 if (profile.AiSettings != null)
                 {
-                    profile.AiSettings.ApiKey = DecryptApiKey(profile.AiSettings.ApiKey);
+                    profile.AiSettings.ApiKey = ReadSecret(profile.AiSettings.ApiKey, out var unreadable);
+                    profile.AiSettings.ApiKeyUnreadable = unreadable;
                 }
 
                 if (profile.SpeechSettings != null)
                 {
-                    profile.SpeechSettings.GeminiApiKey = DecryptApiKey(profile.SpeechSettings.GeminiApiKey);
+                    profile.SpeechSettings.GeminiApiKey = ReadSecret(profile.SpeechSettings.GeminiApiKey, out var unreadable);
+                    profile.SpeechSettings.GeminiApiKeyUnreadable = unreadable;
                 }
 
                 return profile;
@@ -161,65 +159,157 @@ public class JsonStorageService : IStorageService
     }
 
     /// <summary>
-    /// Schreibt ein Profil auf die Platte. Der ApiKey wird dabei immer verschlüsselt;
-    /// das übergebene Objekt (im Speicher mit Klartext-Key) bleibt unverändert.
+    /// Schreibt ein Profil auf die Platte. Die Schlüssel werden dabei immer geschützt;
+    /// das übergebene Objekt (im Speicher mit Klartext-Key) bleibt unverändert. Ein gespeicherter, hier nicht lesbarer
+    /// Schlüssel bleibt erhalten, solange kein neuer eingetragen ist.
     /// </summary>
     private async Task WriteProfileFileAsync(string profileName, UserProfile profile)
     {
+        var filePath = GetProfileFilePath(profileName);
+        var existing = await ReadJsonObjectAsync(filePath);
+
         var toWrite = new UserProfile
         {
             Name = profile.Name,
             CreatedAt = profile.CreatedAt,
             Documents = profile.Documents ?? new List<DocumentItem>(),
-            AiSettings = EncryptedCopy(profile.AiSettings ?? new AiConfig()),
-            SpeechSettings = profile.SpeechSettings == null ? null : EncryptedCopy(profile.SpeechSettings),
+            AiSettings = ProtectedCopy(profile.AiSettings ?? new AiConfig(), StoredSecret(existing, ProfileAiKeyPath)),
+            SpeechSettings = profile.SpeechSettings == null ? null : ProtectedCopy(profile.SpeechSettings, StoredSecret(existing, ProfileGeminiKeyPath)),
             // Neue Profilfelder hier ergänzen – sonst gehen sie beim nächsten Speichern (z. B. der Dokumente) verloren
             OutputLanguage = profile.OutputLanguage,
             WebSearchEnabled = profile.WebSearchEnabled,
             WebSearchNoticeAcceptedFor = profile.WebSearchNoticeAcceptedFor
         };
 
-        var filePath = GetProfileFilePath(profileName);
         var json = JsonSerializer.Serialize(toWrite, JsonOptions);
         await File.WriteAllTextAsync(filePath, json);
     }
 
-    /// <summary>Kopie der Konfiguration mit verschlüsseltem ApiKey (das Original bleibt Klartext).</summary>
-    private AiConfig EncryptedCopy(AiConfig config) => new()
+    /// <summary>Kopie der Konfiguration mit geschütztem ApiKey (das Original bleibt Klartext).</summary>
+    private AiConfig ProtectedCopy(AiConfig config, string? existingStored) => new()
     {
         SelectedProvider = config.SelectedProvider,
-        ApiKey = _encryptionService.Encrypt(DecryptApiKey(config.ApiKey)),
+        ApiKey = StoreSecret(config.ApiKey, existingStored),
         ModelName = config.ModelName,
         LocalEndpointUrl = config.LocalEndpointUrl,
         SelectedModelName = config.SelectedModelName
     };
 
-    /// <summary>Kopie der Sprachausgabe mit verschlüsseltem Gemini-Schlüssel (das Original bleibt Klartext).</summary>
-    private SpeechSettings EncryptedCopy(SpeechSettings settings)
+    /// <summary>Kopie der Sprachausgabe mit geschütztem Gemini-Schlüssel (das Original bleibt Klartext).</summary>
+    private SpeechSettings ProtectedCopy(SpeechSettings settings, string? existingStored)
     {
         var copy = settings.Clone();
-        copy.GeminiApiKey = string.IsNullOrWhiteSpace(settings.GeminiApiKey)
-            ? string.Empty
-            : _encryptionService.Encrypt(DecryptApiKey(settings.GeminiApiKey));
+        copy.GeminiApiKey = StoreSecret(settings.GeminiApiKey, existingStored);
         return copy;
     }
 
+    // ---------------- Schutz der Schlüssel ----------------
+
+    /// <summary>Wie Schlüssel geschützt werden (für Hinweise in den Einstellungen).</summary>
+    public IKeyProtectionInfo KeyProtection => _protector;
+
+    // Orte der Schlüssel in den Dateien (Eigenschaftsnamen ohne Groß-/Kleinschreibung, wie beim Einlesen)
+    internal static readonly string[] ProfileAiKeyPath = { "AiSettings", "ApiKey" };
+    internal static readonly string[] ProfileGeminiKeyPath = { SpeechSettingsProperty, "GeminiApiKey" };
+    internal static readonly string[] ConfigAiKeyPath = { "ApiKey" };
+    internal static readonly string[] ConfigGeminiKeyPath = { SpeechSettingsProperty, "GeminiApiKey" };
+    internal static readonly string[] ConfigTavilyKeyPath = { WebSearchSettingsProperty, "TavilyApiKey" };
+
     /// <summary>
-    /// Entschlüsselt einen gespeicherten ApiKey. Wird so lange wiederholt, bis sich der Wert nicht mehr ändert:
-    /// Frühere Versionen haben bereits verschlüsselte Keys beim erneuten Speichern noch einmal verschlüsselt.
-    /// Alter Klartext bleibt unverändert (Decrypt liefert ihn bei ungültigem Chiffrat zurück).
+    /// Liest einen gespeicherten Schlüssel (alle Formate seit 1.0). Nicht lesbar → leer und <paramref name="unreadable"/>;
+    /// der gespeicherte Wert wird nie als Klartext weitergegeben.
     /// </summary>
-    private string DecryptApiKey(string? storedKey)
+    private string ReadSecret(string? stored, out bool unreadable)
     {
-        var value = storedKey ?? string.Empty;
-        for (var i = 0; i < 10 && !string.IsNullOrWhiteSpace(value); i++)
+        var result = _protector.Unprotect(stored);
+        unreadable = result.Status == SecretReadStatus.Unreadable;
+        return result.Value;
+    }
+
+    /// <summary>
+    /// Wert zum Speichern: ein eingetragener Schlüssel wird geschützt. Ohne Schlüssel bleibt ein gespeicherter, hier
+    /// nicht lesbarer Wert byte-gleich erhalten (z. B. vom alten Computer) – entfernt wird er nur über
+    /// <see cref="DiscardUnreadableKeyAsync"/>.
+    /// </summary>
+    private string StoreSecret(string? plainText, string? existingStored)
+    {
+        if (!string.IsNullOrWhiteSpace(plainText))
+            return _protector.Protect(plainText);
+
+        return !string.IsNullOrWhiteSpace(existingStored) && _protector.Unprotect(existingStored).Status == SecretReadStatus.Unreadable
+            ? existingStored
+            : string.Empty;
+    }
+
+    private static async Task<JsonObject?> ReadJsonObjectAsync(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return null;
+
+        try
         {
-            var decrypted = _encryptionService.Decrypt(value);
-            if (decrypted is null || decrypted == value)
-                break;
-            value = decrypted;
+            return JsonNode.Parse(await File.ReadAllTextAsync(filePath)) as JsonObject;
         }
-        return value;
+        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Gespeicherter Text an einem Ort (Eigenschaften ohne Groß-/Kleinschreibung); null, wenn er fehlt.</summary>
+    internal static string? StoredSecret(JsonNode? root, IReadOnlyList<string> path)
+    {
+        var (parent, name) = FindProperty(root, path);
+        return parent != null && name != null && parent[name] is JsonValue value && value.TryGetValue<string>(out var text) ? text : null;
+    }
+
+    /// <summary>Elternobjekt und tatsächlicher Eigenschaftsname des letzten Pfadteils (ohne Groß-/Kleinschreibung).</summary>
+    internal static (JsonObject? Parent, string? Name) FindProperty(JsonNode? root, IReadOnlyList<string> path)
+    {
+        var node = root;
+        for (var i = 0; i < path.Count; i++)
+        {
+            if (node is not JsonObject obj)
+                return (null, null);
+
+            var match = obj.FirstOrDefault(p => string.Equals(p.Key, path[i], StringComparison.OrdinalIgnoreCase));
+            if (match.Key == null)
+                return (null, null);
+            if (i == path.Count - 1)
+                return (obj, match.Key);
+            node = match.Value;
+        }
+        return (null, null);
+    }
+
+    public async Task DiscardUnreadableKeyAsync(StoredKeyKind kind, string profileName)
+    {
+        var (profilePath, configPath) = kind switch
+        {
+            StoredKeyKind.AiApiKey => (ProfileAiKeyPath, ConfigAiKeyPath),
+            StoredKeyKind.GeminiTtsKey => (ProfileGeminiKeyPath, ConfigGeminiKeyPath),
+            StoredKeyKind.TavilyKey => ((string[]?)null, ConfigTavilyKeyPath),
+            _ => throw new ArgumentOutOfRangeException(nameof(kind))
+        };
+
+        if (profilePath != null)
+            await ClearUnreadableAsync(GetProfileFilePath(profileName), profilePath);
+        await ClearUnreadableAsync(GetConfigFilePath(), configPath);
+    }
+
+    /// <summary>Leert einen gespeicherten Schlüssel nur, wenn er hier nicht lesbar ist; alles andere bleibt unverändert.</summary>
+    private async Task ClearUnreadableAsync(string filePath, IReadOnlyList<string> path)
+    {
+        var root = await ReadJsonObjectAsync(filePath);
+        var (parent, name) = FindProperty(root, path);
+        if (root == null || parent == null || name == null)
+            return;
+
+        if (_protector.Unprotect(StoredSecret(root, path)).Status != SecretReadStatus.Unreadable)
+            return;
+
+        parent[name] = string.Empty;
+        await File.WriteAllTextAsync(filePath, root.ToJsonString(JsonOptions));
     }
 
     public async Task<List<DocumentItem>> LoadDocumentsAsync(string profileName)
@@ -357,9 +447,10 @@ public class JsonStorageService : IStorageService
             var json = await File.ReadAllTextAsync(filePath);
             var config = JsonSerializer.Deserialize<AiConfig>(json, JsonOptions) ?? new AiConfig();
 
-            // Gespeichert wird verschlüsselt; ältere Versionen schrieben Klartext, der weiter funktioniert
-            // und beim nächsten Speichern verschlüsselt wird.
-            config.ApiKey = DecryptApiKey(config.ApiKey);
+            // Gespeichert wird geschützt; ältere Formate (auch Klartext) bleiben lesbar und werden beim nächsten Speichern
+            // bzw. beim Start (SecretMigration) neu geschützt.
+            config.ApiKey = ReadSecret(config.ApiKey, out var unreadable);
+            config.ApiKeyUnreadable = unreadable;
             return config;
         }
         catch
@@ -370,10 +461,10 @@ public class JsonStorageService : IStorageService
 
     public async Task SaveAiConfigAsync(AiConfig config)
     {
-        var node = JsonSerializer.SerializeToNode(EncryptedCopy(config), JsonOptions)!.AsObject();
+        var existing = await ReadConfigNodeAsync();
+        var node = JsonSerializer.SerializeToNode(ProtectedCopy(config, StoredSecret(existing, ConfigAiKeyPath)), JsonOptions)!.AsObject();
 
         // Sprachausgabe, Export-, Oberflächen- und Websuche-Einstellungen stehen in derselben Datei und bleiben erhalten
-        var existing = await ReadConfigNodeAsync();
         foreach (var property in new[] { SpeechSettingsProperty, ExportSettingsProperty, UiSettingsProperty, WebSearchSettingsProperty })
         {
             if (existing?[property] is JsonNode kept)
@@ -424,7 +515,8 @@ public class JsonStorageService : IStorageService
             if ((await ReadConfigNodeAsync())?[WebSearchSettingsProperty] is JsonObject node &&
                 node.Deserialize<WebSearchSettings>(JsonOptions) is { } settings)
             {
-                settings.TavilyApiKey = DecryptApiKey(settings.TavilyApiKey);
+                settings.TavilyApiKey = ReadSecret(settings.TavilyApiKey, out var unreadable);
+                settings.TavilyApiKeyUnreadable = unreadable;
                 settings.SearxngUrl ??= string.Empty;
                 settings.MaxResults = WebSearchSettings.ClampMaxResults(settings.MaxResults);
                 if (!Enum.IsDefined(settings.Provider))
@@ -443,17 +535,15 @@ public class JsonStorageService : IStorageService
     {
         Directory.CreateDirectory(_baseDirectory);
         var node = await ReadConfigNodeAsync() ?? new JsonObject();
-        node[WebSearchSettingsProperty] = JsonSerializer.SerializeToNode(EncryptedCopy(settings), JsonOptions);
+        node[WebSearchSettingsProperty] = JsonSerializer.SerializeToNode(ProtectedCopy(settings, StoredSecret(node, ConfigTavilyKeyPath)), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
     }
 
-    /// <summary>Kopie der Websuche-Einstellungen mit verschlüsseltem Tavily-Schlüssel (das Original bleibt Klartext).</summary>
-    private WebSearchSettings EncryptedCopy(WebSearchSettings settings)
+    /// <summary>Kopie der Websuche-Einstellungen mit geschütztem Tavily-Schlüssel (das Original bleibt Klartext).</summary>
+    private WebSearchSettings ProtectedCopy(WebSearchSettings settings, string? existingStored)
     {
         var copy = settings.Clone();
-        copy.TavilyApiKey = string.IsNullOrWhiteSpace(settings.TavilyApiKey)
-            ? string.Empty
-            : _encryptionService.Encrypt(DecryptApiKey(settings.TavilyApiKey.Trim()));
+        copy.TavilyApiKey = StoreSecret(settings.TavilyApiKey?.Trim(), existingStored);
         copy.SearxngUrl = (settings.SearxngUrl ?? string.Empty).Trim();
         copy.MaxResults = WebSearchSettings.ClampMaxResults(settings.MaxResults);
         return copy;
@@ -534,7 +624,8 @@ public class JsonStorageService : IStorageService
             if ((await ReadConfigNodeAsync())?[SpeechSettingsProperty] is JsonObject node &&
                 node.Deserialize<SpeechSettings>(JsonOptions) is { } global)
             {
-                global.GeminiApiKey = DecryptApiKey(global.GeminiApiKey);
+                global.GeminiApiKey = ReadSecret(global.GeminiApiKey, out var unreadable);
+                global.GeminiApiKeyUnreadable = unreadable;
                 return Normalize(global);
             }
         }
@@ -554,8 +645,8 @@ public class JsonStorageService : IStorageService
         await WriteProfileFileAsync(profileName, profile);
 
         // 2. Global als Rückfall, ohne die KI-Konfiguration in config.json zu verändern
-        var node = await ReadConfigNodeAsync() ?? JsonSerializer.SerializeToNode(EncryptedCopy(new AiConfig()), JsonOptions)!.AsObject();
-        node[SpeechSettingsProperty] = JsonSerializer.SerializeToNode(EncryptedCopy(settings), JsonOptions);
+        var node = await ReadConfigNodeAsync() ?? JsonSerializer.SerializeToNode(ProtectedCopy(new AiConfig(), null), JsonOptions)!.AsObject();
+        node[SpeechSettingsProperty] = JsonSerializer.SerializeToNode(ProtectedCopy(settings, StoredSecret(node, ConfigGeminiKeyPath)), JsonOptions);
         await File.WriteAllTextAsync(GetConfigFilePath(), node.ToJsonString(JsonOptions));
     }
 

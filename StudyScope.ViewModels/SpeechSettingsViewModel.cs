@@ -24,10 +24,38 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
     /// <summary>Wird nach erfolgreichem Speichern ausgelöst (z. B. damit der Audio-Reiter neu prüft).</summary>
     public event Action? Saved;
 
-    public SpeechSettingsViewModel(IStorageService storage, IEnumerable<ITextToSpeechService> speechServices)
+    public SpeechSettingsViewModel(IStorageService storage, IEnumerable<ITextToSpeechService> speechServices, IKeyProtectionInfo? keyProtection = null)
     {
         _storage = storage;
         _gemini = speechServices.OfType<IAudioFileSpeechService>().FirstOrDefault(s => s.Provider == SpeechProviderType.GeminiTts);
+        _keyProtection = keyProtection;
+    }
+
+    private readonly IKeyProtectionInfo? _keyProtection;
+    private bool _geminiKeyUnreadable;
+
+    /// <summary>Wie der Schlüssel gespeichert wird (Zeile unter dem Feld); null ohne Angabe.</summary>
+    public string? KeyProtectionText => KeyProtectionTexts.Line(_keyProtection);
+
+    /// <summary>Rückfall ohne Schutz des Betriebssystems: als Warnung zeigen.</summary>
+    public bool IsKeyProtectionFallback => KeyProtectionTexts.IsFallback(_keyProtection);
+
+    /// <summary>Der gespeicherte eigene Gemini-Schlüssel ist hier nicht lesbar und es wurde noch kein neuer eingetragen.</summary>
+    public bool GeminiKeyNeedsReentry => _geminiKeyUnreadable && string.IsNullOrWhiteSpace(GeminiApiKey);
+
+    /// <summary>
+    /// Zeile „welcher Schlüssel gilt“ zeigen – nicht, wenn der eigene Schlüssel nicht lesbar ist und die Chat-KI keinen
+    /// liefert: dann sagt der Hinweis „neu eintragen“ alles („Noch kein Schlüssel …“ wäre doppelt und irreführend).
+    /// </summary>
+    public bool ShowsKeySourceText => ChatProvidesGeminiKey || !GeminiKeyNeedsReentry;
+
+    /// <summary>Entfernt den nicht lesbaren gespeicherten Gemini-Schlüssel (Profil und global); lesbare bleiben.</summary>
+    public async Task DiscardUnreadableKeyAsync()
+    {
+        await _storage.DiscardUnreadableKeyAsync(StoredKeyKind.GeminiTtsKey, ProfileName);
+        _geminiKeyUnreadable = false;
+        OnPropertyChanged(nameof(GeminiKeyNeedsReentry));
+        OnPropertyChanged(nameof(ShowsKeySourceText));
     }
 
     private string _profileName = "Standard";
@@ -35,7 +63,7 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
 
     private string _geminiApiKey = string.Empty;
     /// <summary>Eigener Schlüssel der Sprachausgabe (nur nötig, wenn die Chat-KI nicht Gemini mit Schlüssel ist).</summary>
-    public string GeminiApiKey { get => _geminiApiKey; set { _geminiApiKey = value ?? string.Empty; ClearStatus(); OnPropertyChanged(); OnPropertyChanged(nameof(KeySourceText)); } }
+    public string GeminiApiKey { get => _geminiApiKey; set { _geminiApiKey = value ?? string.Empty; ClearStatus(); OnPropertyChanged(); OnPropertyChanged(nameof(KeySourceText)); OnPropertyChanged(nameof(GeminiKeyNeedsReentry)); OnPropertyChanged(nameof(ShowsKeySourceText)); } }
 
     private string _geminiModel = GeminiTtsInfo.DefaultModel;
     public string GeminiModel { get => _geminiModel; set { _geminiModel = value ?? string.Empty; ClearStatus(); OnPropertyChanged(); } }
@@ -88,6 +116,7 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
         _chatConfig = await _storage.LoadAiConfigForProfileAsync(ProfileName) ?? await _storage.LoadAiConfigAsync();
 
         _geminiApiKey = settings.GeminiApiKey ?? string.Empty;
+        _geminiKeyUnreadable = settings.GeminiApiKeyUnreadable;
         _geminiModel = string.IsNullOrWhiteSpace(settings.GeminiModel) ? GeminiTtsInfo.DefaultModel : settings.GeminiModel;
         _voicePrimary = settings.GeminiVoicePrimary;
         _voiceSecondary = settings.GeminiVoiceSecondary;

@@ -87,6 +87,8 @@ public sealed class WebSearchDispatcher : IWebSearchService
 
     private IWebSearchProvider ProviderFor(WebSearchSettings settings)
     {
+        if (settings is { Provider: WebSearchProviderType.Tavily, TavilyApiKeyNeedsReentry: true })
+            throw WebSearchException.KeyUnreadable(settings.ProviderName);
         if (!settings.IsConfigured)
             throw WebSearchException.NotConfigured();
 

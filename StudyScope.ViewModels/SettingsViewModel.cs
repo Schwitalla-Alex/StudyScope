@@ -29,8 +29,10 @@ public class SettingsViewModel : INotifyPropertyChanged
     private readonly ILlmService _llmService;
     private readonly ILocalLlmDiscoveryService _discoveryService;
     private readonly IUiLanguageService? _uiLanguage;
+    private readonly IKeyProtectionInfo? _keyProtection;
 
     private string _apiKey = string.Empty;
+    private bool _apiKeyUnreadable;
     private AiProviderType _selectedProvider = AiProviderType.FakeAi;
     private string _localEndpointUrl = "http://localhost:11434";
     private string _selectedModelName = string.Empty;
@@ -45,12 +47,34 @@ public class SettingsViewModel : INotifyPropertyChanged
         IStorageService storageService,
         ILlmService llmService,
         ILocalLlmDiscoveryService discoveryService,
-        IUiLanguageService? uiLanguage = null)
+        IUiLanguageService? uiLanguage = null,
+        IKeyProtectionInfo? keyProtection = null)
     {
         _storageService = storageService;
         _llmService = llmService;
         _discoveryService = discoveryService;
         _uiLanguage = uiLanguage;
+        _keyProtection = keyProtection;
+    }
+
+    // ---------- Schutz des Schlüssels ----------
+
+    /// <summary>Wie der Schlüssel gespeichert wird (Zeile unter dem Feld); null ohne Angabe.</summary>
+    public string? KeyProtectionText => KeyProtectionTexts.Line(_keyProtection);
+
+    /// <summary>Rückfall ohne Schutz des Betriebssystems: als Warnung zeigen.</summary>
+    public bool IsKeyProtectionFallback => KeyProtectionTexts.IsFallback(_keyProtection);
+
+    /// <summary>Der gespeicherte Schlüssel ist hier nicht lesbar und es wurde noch kein neuer eingetragen.</summary>
+    public bool ApiKeyNeedsReentry => _apiKeyUnreadable && string.IsNullOrWhiteSpace(ApiKey);
+
+    /// <summary>Entfernt den nicht lesbaren gespeicherten Schlüssel (Profil und global); lesbare bleiben.</summary>
+    public async Task DiscardUnreadableApiKeyAsync()
+    {
+        var activeProfile = await _storageService.GetLastActiveProfileNameAsync() ?? "Standard";
+        await _storageService.DiscardUnreadableKeyAsync(StoredKeyKind.AiApiKey, activeProfile);
+        _apiKeyUnreadable = false;
+        OnPropertyChanged(nameof(ApiKeyNeedsReentry));
     }
 
     // ---------- Nummerierung der Felder (lückenlos, nur sichtbare Felder) ----------
@@ -187,6 +211,7 @@ public class SettingsViewModel : INotifyPropertyChanged
                 _apiKey = value;
                 OnPropertyChanged();
                 OnPropertyChanged(nameof(CanSaveAndConnect));
+                OnPropertyChanged(nameof(ApiKeyNeedsReentry));
             }
         }
     }
@@ -289,6 +314,7 @@ public class SettingsViewModel : INotifyPropertyChanged
     public void ResetForm()
     {
         ApiKey = string.Empty;
+        _apiKeyUnreadable = false;
         LocalEndpointUrl = string.Empty;
         SelectedModelName = string.Empty;
         AvailableModels.Clear();
@@ -420,6 +446,8 @@ public class SettingsViewModel : INotifyPropertyChanged
 
         // 3. Profilspezifische Config laden
         var config = await _storageService.LoadAiConfigForProfileAsync(activeProfile);
+        _apiKeyUnreadable = config?.ApiKeyUnreadable == true;
+        OnPropertyChanged(nameof(ApiKeyNeedsReentry));
 
         // 4. Wenn keine Konfiguration existiert oder kein Modell/Key hinterlegt ist: Maske bleibt leer
         if (config == null || (string.IsNullOrWhiteSpace(config.SelectedModelName) && string.IsNullOrWhiteSpace(config.ModelName) && string.IsNullOrWhiteSpace(config.ApiKey)))

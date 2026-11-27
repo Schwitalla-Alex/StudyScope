@@ -31,6 +31,14 @@ public class WebSearchSettings
     /// <summary>Tavily-Schlüssel; im Speicher Klartext, in <c>config.json</c> verschlüsselt.</summary>
     public string TavilyApiKey { get; set; } = string.Empty;
 
+    /// <summary>Nur im Speicher: gespeicherter Tavily-Schlüssel nicht lesbar (anderer Computer oder anderes Konto), siehe <see cref="AiConfig.ApiKeyUnreadable"/>.</summary>
+    [JsonIgnore]
+    public bool TavilyApiKeyUnreadable { get; set; }
+
+    /// <summary>Tavily-Schlüssel muss neu eingetragen werden.</summary>
+    [JsonIgnore]
+    public bool TavilyApiKeyNeedsReentry => TavilyApiKeyUnreadable && string.IsNullOrWhiteSpace(TavilyApiKey);
+
     /// <summary>Basisadresse der SearXNG-Instanz (http/https), z. B. „http://localhost:8888“.</summary>
     public string SearxngUrl { get; set; } = string.Empty;
 
@@ -68,6 +76,7 @@ public class WebSearchSettings
     {
         Provider = Provider,
         TavilyApiKey = TavilyApiKey,
+        TavilyApiKeyUnreadable = TavilyApiKeyUnreadable,
         SearxngUrl = SearxngUrl,
         MaxResults = MaxResults
     };

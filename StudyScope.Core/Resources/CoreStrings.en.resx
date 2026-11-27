@@ -46,4 +46,5 @@
   <data name="WebSearch_Timeout" xml:space="preserve"><value>{provider} did not respond within {seconds} seconds. Try again later.</value></data>
   <data name="WebSearch_UnexpectedResponse" xml:space="preserve"><value>{provider} returned an unexpected response.</value></data>
   <data name="WebSearch_NotConfigured" xml:space="preserve"><value>No search provider is set up. Choose a provider under Settings › Web search.</value></data>
+  <data name="Secret_KeyUnreadable" xml:space="preserve"><value>The saved key for {provider} can't be read here because it was saved on another computer or under another user account. Please enter it again under ☰ › Settings.</value></data>
 </root>

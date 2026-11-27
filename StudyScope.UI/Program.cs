@@ -26,10 +26,17 @@ class Program
         var languageService = new UiLanguageService();
         UiLanguage.ApplyDefaults(languageService.Resolve(startupUi?.Language));
 
+        // API-Schlüssel: Schutz des Betriebssystems (Windows DPAPI, sonst Rückfall wie 1.2.0). Ältere Formate werden vor
+        // dem ersten Zugriff neu geschützt (mit Sicherung Backup/keys-1.2-*.zip, die nach 30 Tagen gelöscht wird).
+        var secretProtector = SecretProtector.ForCurrentPlatform();
+        MigrateStoredKeys(secretProtector);
+
         var appBuilder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
         // Services registrieren
-        appBuilder.Services.AddSingleton<IStorageService, JsonStorageService>();
+        appBuilder.Services.AddSingleton<ISecretProtector>(secretProtector);
+        appBuilder.Services.AddSingleton<IKeyProtectionInfo>(secretProtector);
+        appBuilder.Services.AddSingleton<IStorageService>(_ => new JsonStorageService(null, secretProtector));
         appBuilder.Services.AddSingleton<IDocumentService, DocumentService>();
 
         // Nur diese EINE Registrierung für ILlmService verwenden:
@@ -54,7 +61,8 @@ class Program
         appBuilder.Services.AddSingleton<IWebSearchService>(sp =>
             new WebSearchDispatcher(sp.GetRequiredService<IStorageService>(), new HttpClient { Timeout = TimeSpan.FromSeconds(60) }));
         appBuilder.Services.AddSingleton<WebSearchSettingsViewModel>(sp => new WebSearchSettingsViewModel(
-            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IWebSearchService>(), sp.GetRequiredService<IExternalLinkOpener>()));
+            sp.GetRequiredService<IStorageService>(), sp.GetRequiredService<IWebSearchService>(), sp.GetRequiredService<IExternalLinkOpener>(),
+            sp.GetRequiredService<IKeyProtectionInfo>()));
         appBuilder.Services.AddSingleton<IFlashcardService, FlashcardService>();
         appBuilder.Services.AddSingleton<IMindmapService>(sp => new MindmapService(sp.GetRequiredService<ILlmService>()));
         appBuilder.Services.AddSingleton<IPresentationService>(sp => new PresentationService(sp.GetRequiredService<ILlmService>()));
@@ -129,7 +137,8 @@ class Program
             outputLanguage: sp.GetRequiredService<IOutputLanguageProvider>()));
         appBuilder.Services.AddSingleton<SpeechSettingsViewModel>(sp => new SpeechSettingsViewModel(
             sp.GetRequiredService<IStorageService>(),
-            sp.GetServices<ITextToSpeechService>()));
+            sp.GetServices<ITextToSpeechService>(),
+            sp.GetRequiredService<IKeyProtectionInfo>()));
         appBuilder.Services.AddSingleton<ReportViewModel>(sp => new ReportViewModel(
             sp.GetRequiredService<IReportService>(),
             sp.GetRequiredService<IDocumentService>(),
@@ -192,6 +201,21 @@ class Program
         };
 
         app.Run();
+    }
+
+    /// <summary>Schützt API-Schlüssel in älteren Formaten neu (siehe <see cref="SecretMigration"/>); Fehler brechen den Start nie ab.</summary>
+    private static void MigrateStoredKeys(ISecretProtector protector)
+    {
+        try
+        {
+            var result = SecretMigration.Run(AppPaths.UserDataDirectory, protector);
+            foreach (var error in result.Errors)
+                System.Diagnostics.Debug.WriteLine($"Schlüssel-Migration: {error}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Schlüssel-Migration fehlgeschlagen: {ex.Message}");
+        }
     }
 
     /// <summary>

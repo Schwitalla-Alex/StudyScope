@@ -119,6 +119,8 @@
                             </button>
                         }
                     </div>
+                    <KeyProtectionNote NeedsReentry="SettingsVm.ApiKeyNeedsReentry" ProtectionText="@SettingsVm.KeyProtectionText"
+                                       IsFallback="SettingsVm.IsKeyProtectionFallback" OnDiscard="SettingsVm.DiscardUnreadableApiKeyAsync" />
                 </div>
             }
 

@@ -22,7 +22,7 @@ public class JsonStorageServiceApiKeyTests
     public void SetUp()
     {
         _tempDirectory = Path.Combine(Path.GetTempPath(), "StudyScope_ApiKeyTests_" + Guid.NewGuid());
-        _storage = new JsonStorageService(_tempDirectory, _aes);
+        _storage = new JsonStorageService(_tempDirectory, SecretProtector.Fallback());
     }
 
     [TearDown]

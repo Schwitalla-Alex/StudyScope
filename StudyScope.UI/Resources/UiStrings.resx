@@ -688,7 +688,7 @@
   <data name="WebSearch_NoneHint" xml:space="preserve"><value>Ohne Suchdienst lässt sich die Websuche in keinem Profil einschalten.</value></data>
   <data name="WebSearch_TavilyKeyLabel" xml:space="preserve"><value>API-Schlüssel von Tavily:</value></data>
   <data name="WebSearch_TavilyKeyPlaceholder" xml:space="preserve"><value>tvly-…</value><comment>Beispielanfang eines Tavily-Schlüssels, nicht übersetzen</comment></data>
-  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily ist ein Cloud-Dienst mit monatlichem Gratis-Kontingent; jede Suche kostet 1 Credit. Den Schlüssel erhalten Sie nach der Anmeldung bei Tavily. Er gilt für alle Profile und wird verschlüsselt gespeichert.</value></data>
+  <data name="WebSearch_TavilyHint" xml:space="preserve"><value>Tavily ist ein Cloud-Dienst mit monatlichem Gratis-Kontingent; jede Suche kostet 1 Credit. Den Schlüssel erhalten Sie nach der Anmeldung bei Tavily. Er gilt für alle Profile.</value></data>
   <data name="WebSearch_TavilySignup" xml:space="preserve"><value>Schlüssel bei Tavily holen</value></data>
   <data name="WebSearch_TavilyPrivacy" xml:space="preserve"><value>Tavily speichert Suchanfragen und kann sie laut eigener Datenschutzerklärung zur Verbesserung des Dienstes nutzen und an Suchindizes Dritter weitergeben.</value></data>
   <data name="WebSearch_SearxngUrlLabel" xml:space="preserve"><value>Adresse der SearXNG-Instanz:</value></data>

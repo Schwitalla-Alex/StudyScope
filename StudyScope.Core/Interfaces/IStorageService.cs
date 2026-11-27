@@ -67,4 +67,24 @@ public interface IStorageService
 
     /// <summary>Speichert die Websuche des Profils sofort (nur im Profil).</summary>
     Task SaveWebSearchStateAsync(string profileName, WebSearchProfileState state);
+
+    /// <summary>
+    /// Entfernt einen gespeicherten Schlüssel, der hier nicht lesbar ist (anderer Computer oder anderes Konto), im
+    /// Profil und global. Lesbare Schlüssel bleiben unverändert. Ohne diesen Aufruf bleibt ein nicht lesbarer Wert
+    /// erhalten, bis ein neuer Schlüssel eingetragen wird.
+    /// </summary>
+    Task DiscardUnreadableKeyAsync(StoredKeyKind kind, string profileName);
+}
+
+/// <summary>Gespeicherte API-Schlüssel.</summary>
+public enum StoredKeyKind
+{
+    /// <summary>Schlüssel der Chat-KI (Profil und global).</summary>
+    AiApiKey,
+
+    /// <summary>Eigener Gemini-Schlüssel der Sprachausgabe (Profil und global).</summary>
+    GeminiTtsKey,
+
+    /// <summary>Tavily-Schlüssel der Websuche (nur global).</summary>
+    TavilyKey
 }
