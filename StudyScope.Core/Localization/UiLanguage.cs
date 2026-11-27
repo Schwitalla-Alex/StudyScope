@@ -64,10 +64,33 @@ public static class UiLanguage
     /// <summary>Setzt Oberflächen- und Formatkultur für den aktuellen und alle künftigen Threads.</summary>
     public static void Apply(CultureInfo culture)
     {
-        CultureInfo.DefaultThreadCurrentUICulture = culture;
-        CultureInfo.DefaultThreadCurrentCulture = culture;
+        ApplyDefaults(culture);
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.CurrentCulture = culture;
+    }
+
+    /// <summary>
+    /// Setzt nur die Vorgabe für alle Threads, nicht die Kultur des aktuellen Ablaufs. So beim Start der App: Eine
+    /// ausdrücklich gesetzte Kultur bliebe im Ausführungskontext des Hauptthreads hängen, alle Ereignisse der
+    /// Oberfläche übernähmen ihn, und ein späterer Sprachwechsel (<see cref="Apply"/>) wirkte nur bis zum Ende des
+    /// jeweiligen Ereignisses. Ohne ausdrückliche Kultur lesen alle Abläufe die Vorgabe.
+    /// </summary>
+    public static void ApplyDefaults(CultureInfo culture)
+    {
+        CultureInfo.DefaultThreadCurrentUICulture = culture;
+        CultureInfo.DefaultThreadCurrentCulture = culture;
+    }
+
+    /// <summary>
+    /// Anzeigename einer Sprache in ihr selbst, mit großem Anfangsbuchstaben („Deutsch“, „English“, „Français“) –
+    /// so findet jeder seine Sprache, auch wenn er die aktuelle Oberfläche nicht lesen kann.
+    /// </summary>
+    public static string NativeName(string cultureName)
+    {
+        var culture = TryGetCulture(cultureName);
+        if (culture == null) return cultureName;
+        var name = culture.NativeName;
+        return name.Length == 0 ? cultureName : culture.TextInfo.ToUpper(name[0]) + name[1..];
     }
 
     /// <summary>

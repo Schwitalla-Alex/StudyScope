@@ -16,7 +16,7 @@
     <!-- Obere Steuerleiste: Profil, Fortschritt und zentrale Aktionsbuttons -->
     <div style="display: flex; justify-content: space-between; align-items: center; background: var(--ss-surface); padding: 12px 18px; border-radius: 8px; border: 1px solid var(--ss-border-light); flex-wrap: wrap; gap: 12px;">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @Loc.Format(UiStrings.Flashcards_Summary, ("count", FlashVm.Flashcards.Count), ("progress", FlashVm.ProgressText))
             </span>
@@ -82,7 +82,7 @@
     <!-- Auswahl beim Erstellen, wenn schon Karten vorhanden sind: hinzufügen (Standard) oder ersetzen -->
     @if (showModeDialog)
     {
-        <div class="flash-mode-backdrop" @onclick="CancelModeDialog">
+        <div class="flash-mode-backdrop" data-ss-dialog @onclick="CancelModeDialog">
             <div class="flash-mode-dialog" role="dialog" aria-modal="true" aria-labelledby="flash-mode-title" @onclick:stopPropagation="true">
                 <h4 id="flash-mode-title" style="margin: 0 0 6px 0; font-size: 15px; color: var(--ss-text);">@UiStrings.Flashcards_Mode_Title</h4>
                 <p style="margin: 0 0 14px 0; font-size: 13px; color: var(--ss-text-2);">
@@ -117,7 +117,7 @@
                 }
 
                 <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-                    <button type="button" id="flash-mode-cancel"
+                    <button type="button" id="flash-mode-cancel" data-ss-dialog-close
                             style="padding: 7px 14px; background: var(--ss-surface); color: var(--ss-text-2); border: 1px solid var(--ss-border); border-radius: 4px; cursor: pointer; font-size: 13px;"
                             @onclick="CancelModeDialog">
                         @UiStrings.Common_Cancel
@@ -288,7 +288,7 @@
 
     <!-- Versteckter Druckbereich für DIN-A4 -->
     <div class="print-only-container">
-        <h2 style="margin-bottom: 20px;">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfile))</h2>
+        <h2 style="margin-bottom: 20px;">@Loc.Format(UiStrings.Flashcards_Title, ("profile", DocVm.CurrentProfileDisplayName))</h2>
         <div class="print-grid">
             @foreach (var card in FlashVm.FilteredFlashcards)
             {
@@ -624,13 +624,9 @@
 
     private async Task HandleKeyDownAsync(KeyboardEventArgs e)
     {
-        // Offener Auswahldialog: keine Lerntasten auf die Karte dahinter; Esc schließt
+        // Offener Auswahldialog: keine Lerntasten auf die Karte dahinter (Esc schließt über studyscope-layout.js)
         if (showModeDialog)
-        {
-            if (e.Key == "Escape")
-                await CancelModeDialog();
             return;
-        }
 
         if (FlashVm.CurrentCard == null || FlashVm.IsGenerating)
             return;
@@ -676,7 +672,7 @@
     {
         try
         {
-            var defaultName = Loc.Format(UiStrings.Flashcards_ExportFileName, ("profile", DocVm.CurrentProfile), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm")));
+            var defaultName = Loc.Format(UiStrings.Flashcards_ExportFileName, ("profile", DocVm.CurrentProfileDisplayName), ("stamp", DateTime.Now.ToString("yyyyMMdd_HHmm")));
 
             var selectedPath = await DesktopDialogs.SaveFileAsync(
                 defaultName,

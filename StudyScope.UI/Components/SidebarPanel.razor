@@ -27,7 +27,7 @@
 <div class="ss-sidebar-rail" aria-hidden="@(LayoutVm.IsSidebarCollapsed ? "false" : "true")">
     <button type="button" class="ss-icon-btn ss-flip-rtl" title="@LayoutVm.ToggleTooltip" aria-label="@UiStrings.Sidebar_Show"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">▶</button>
-    <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfile, DocVm.Documents)"
+    <button type="button" class="ss-rail-docs" title="@LayoutViewModel.DocumentBadgeTooltip(DocVm.CurrentProfileDisplayName, DocVm.Documents)"
             aria-label="@UiStrings.Sidebar_ActiveDocsShow"
             tabindex="@(LayoutVm.IsSidebarCollapsed ? "0" : "-1")" @onclick="LayoutVm.ToggleAsync">
         <span class="ss-rail-icon">📄</span>
@@ -52,7 +52,7 @@
                     style="flex: 1; height: 32px; padding: 0 8px; border-radius: 4px; border: 1px solid var(--ss-border); font-size: 13px; font-weight: bold; background: var(--ss-surface); outline: none; box-sizing: border-box;">
                 @foreach (var profile in DocVm.AvailableProfiles)
                 {
-                    <option value="@profile">@profile</option>
+                    <option value="@profile">@DocVm.DisplayName(profile)</option>
                 }
             </select>
 
@@ -65,7 +65,7 @@
             </button>
 
             <!-- Button: Aktuelles Profil löschen (deaktiviert bei 'Standard') -->
-            @if (!DocVm.CurrentProfile.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+            @if (!ProfileDisplay.IsDefault(DocVm.CurrentProfile))
             {
                 <button type="button"
                         style="width: 32px; height: 32px; padding: 0; background: var(--ss-danger); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: inline-flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0;"
@@ -151,7 +151,7 @@
 <!-- Modal-Dialog: Neues Profil anlegen -->
 @if (showCreateModal)
 {
-    <div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000;">
+    <div data-ss-dialog style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 2000;">
         <div style="background: var(--ss-surface); border-radius: 8px; width: 340px; padding: 20px; box-shadow: var(--ss-dialog-shadow); display: flex; flex-direction: column; gap: 12px; font-family: Segoe UI, sans-serif;">
 
             <h4 style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.NewProfile_Title</h4>
@@ -172,7 +172,7 @@
             }
 
             <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px;">
-                <button type="button"
+                <button type="button" data-ss-dialog-close
                         style="padding: 6px 14px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
                         @onclick="CancelCreateProfile">
                     @UiStrings.Common_Cancel
@@ -286,13 +286,10 @@
 
     private async Task HandleKeyDownAsync(KeyboardEventArgs e)
     {
+        // Esc schließt über studyscope-layout.js (data-ss-dialog), wie bei allen Dialogen
         if (e.Key == "Enter" && CanCreateProfile)
         {
             await ConfirmCreateProfileAsync();
-        }
-        else if (e.Key == "Escape")
-        {
-            CancelCreateProfile();
         }
     }
 
@@ -309,7 +306,7 @@
     private async Task DeleteCurrentProfileAsync()
     {
         var profileToDelete = DocVm.CurrentProfile;
-        if (profileToDelete.Equals("Standard", StringComparison.OrdinalIgnoreCase))
+        if (ProfileDisplay.IsDefault(profileToDelete))
             return;
 
         await DocVm.DeleteProfileAsync(profileToDelete);

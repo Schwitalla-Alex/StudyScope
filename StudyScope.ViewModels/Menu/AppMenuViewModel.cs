@@ -42,7 +42,10 @@ public class AppMenuViewModel
         OverflowNavigator.Close();
     }
 
-    public AppMenuViewModel() =>
+    public AppMenuViewModel() => RefreshTexts();
+
+    /// <summary>Einträge (neu) aufbauen – beim Start und nach einem Sprachwechsel, damit die Beschriftungen passen.</summary>
+    public void RefreshTexts() =>
         Navigator.SetItems(BuildItems(AppInfo.IsValidDonationUrl(AppInfo.DonationUrl), AppearanceSettingsAvailable));
 
     /// <summary>Menü nur außerhalb von Vortrag und Vollbild.</summary>

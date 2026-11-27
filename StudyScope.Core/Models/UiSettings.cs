@@ -28,5 +28,11 @@ public class UiSettings
     [JsonConverter(typeof(JsonStringEnumConverter<ThemeMode>))]
     public ThemeMode Theme { get; set; } = ThemeMode.System;
 
-    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme };
+    /// <summary>
+    /// Sprache der Oberfläche: <c>system</c> (wie das Betriebssystem) oder ein Kulturname wie <c>de</c>/<c>en</c>.
+    /// Fehlt in älteren Dateien → <c>system</c>.
+    /// </summary>
+    public string Language { get; set; } = Localization.UiLanguage.SystemSetting;
+
+    public UiSettings Clone() => new() { SidebarCollapsed = SidebarCollapsed, SidebarWidth = SidebarWidth, Theme = Theme, Language = Language };
 }

@@ -5,12 +5,12 @@
 @inject IJSRuntime JS
 
 @* Hilfe › „StudyScope unterstützen ❤“: kurzer Spendenaufruf; die Spendenseite öffnet sich im System-Browser. *@
-<div class="ss-dialog-overlay" @onclick="CloseAsync">
+<div class="ss-dialog-overlay" data-ss-dialog @onclick="CloseAsync">
     <div class="ss-dialog" style="width: 460px; padding: 0; overflow: hidden;" role="dialog" aria-modal="true" aria-labelledby="ss-support-title"
-         @onclick:stopPropagation="true" @onkeydown="KeyAsync">
+         @onclick:stopPropagation="true">
         <div style="padding: 14px 18px; border-bottom: 1px solid var(--ss-border-light); display: flex; justify-content: space-between; align-items: center; background: var(--ss-panel-light);">
             <h4 id="ss-support-title" style="margin: 0; font-size: 15px; color: var(--ss-text);">@UiStrings.Support_Title</h4>
-            <button type="button" aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
+            <button type="button" data-ss-dialog-close aria-label="@UiStrings.Common_Close" style="background: none; border: none; font-size: 16px; cursor: pointer; color: var(--ss-text-muted); font-weight: bold;"
                     @onclick="CloseAsync">✕</button>
         </div>
 
@@ -54,11 +54,6 @@
     {
         // Der Spendenknopf nimmt nur https (strenger als IExternalLinkOpener, der auch http erlaubt)
         openFailed = !canDonate || !LinkOpener.OpenUrl(AppInfo.DonationUrl);
-    }
-
-    private async Task KeyAsync(KeyboardEventArgs e)
-    {
-        if (e.Key == "Escape") await CloseAsync();
     }
 
     private Task CloseAsync() => OnClose.InvokeAsync();

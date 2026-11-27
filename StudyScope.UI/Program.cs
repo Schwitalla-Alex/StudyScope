@@ -17,12 +17,11 @@ class Program
     [STAThread]
     static void Main(string[] args)
     {
-        // Oberflächensprache vor dem ersten Zugriff auf Texte setzen. Bis Englisch in „Darstellung“ wählbar ist
-        // (Phase 3b), gilt Deutsch; STUDYSCOPE_UI_CULTURE (z. B. „en“) erzwingt eine Sprache für Prüfungen.
-        UiLanguage.Apply(UiLanguage.Resolve(
-            Environment.GetEnvironmentVariable(UiLanguage.OverrideVariable) ?? "de-DE",
-            CultureInfo.InstalledUICulture,
-            UiLanguage.AvailableCultures(AppContext.BaseDirectory, typeof(Program).Assembly.GetName().Name!)));
+        // Oberflächensprache vor dem ersten Zugriff auf Texte setzen: STUDYSCOPE_UI_CULTURE (Prüfungen) → Einstellung
+        // unter ☰ › Einstellungen › Darstellung (config.json) → Systemsprache → Englisch. Nur als Vorgabe, damit ein
+        // späterer Wechsel zur Laufzeit überall wirkt (siehe UiLanguage.ApplyDefaults).
+        var languageService = new UiLanguageService();
+        UiLanguage.ApplyDefaults(languageService.Resolve(ReadLanguageSetting()));
 
         var appBuilder = PhotinoBlazorAppBuilder.CreateDefault(args);
 
@@ -72,6 +71,7 @@ class Program
         appBuilder.Services.AddSingleton<DocumentListViewModel>();
         appBuilder.Services.AddSingleton<LayoutViewModel>();
         appBuilder.Services.AddSingleton<StudyScope.ViewModels.Menu.AppMenuViewModel>();
+        appBuilder.Services.AddSingleton<IUiLanguageService>(languageService);
         appBuilder.Services.AddSingleton<AppearanceViewModel>();
         //appBuilder.Services.AddSingleton<ChatViewModel>();
         appBuilder.Services.AddSingleton<ChatViewModel>(sp =>
@@ -165,5 +165,21 @@ class Program
         };
 
         app.Run();
+    }
+
+    /// <summary>
+    /// Gespeicherte Sprache aus <c>config.json</c> (<c>UiSettings.Language</c>), vor dem Aufbau der Dienste. Ein
+    /// defekter oder fehlender Eintrag gilt als „wie System“.
+    /// </summary>
+    private static string? ReadLanguageSetting()
+    {
+        try
+        {
+            return new JsonStorageService().LoadUiSettingsAsync().GetAwaiter().GetResult().Language;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 }

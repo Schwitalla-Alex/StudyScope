@@ -10,7 +10,7 @@
 
     <div class="dt-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.DataTable_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.DataTable_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @Loc.Format(UiStrings.Common_BasedOn,
                     ("items", DtVm.Tables.Count == 0 ? UiStrings.DataTable_NoTables : Loc.Format(UiStrings.DataTable_TableCount, ("count", DtVm.Tables.Count))),

@@ -4,7 +4,7 @@
 @inject IJSRuntime JS
 
 @* „Neues Profil…“ aus dem Hamburger-Menü (früher in MenuBar.razor). Prüfung des Namens: DocumentListViewModel. *@
-<div class="ss-dialog-overlay" @onclick="CloseAsync">
+<div class="ss-dialog-overlay" data-ss-dialog @onclick="CloseAsync">
     <div class="ss-dialog" style="width: 340px;" role="dialog" aria-modal="true" aria-labelledby="ss-newprofile-title"
          @onclick:stopPropagation="true" @onkeydown="KeyAsync">
         <h4 id="ss-newprofile-title" style="margin: 0 0 10px 0; font-size: 14px; color: var(--ss-text);">@UiStrings.NewProfile_Title</h4>
@@ -15,7 +15,7 @@
                @bind="name" @bind:event="oninput" />
 
         <div style="display: flex; justify-content: flex-end; gap: 8px;">
-            <button type="button" style="padding: 5px 12px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
+            <button type="button" data-ss-dialog-close style="padding: 5px 12px; background: var(--ss-secondary); color: var(--ss-on-accent); border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
                     @onclick="CloseAsync">
                 @UiStrings.Common_Cancel
             </button>
@@ -41,8 +41,8 @@
 
     private async Task KeyAsync(KeyboardEventArgs e)
     {
+        // Esc schließt über studyscope-layout.js (data-ss-dialog), wie bei allen Dialogen
         if (e.Key == "Enter") await ConfirmAsync();
-        else if (e.Key == "Escape") await CloseAsync();
     }
 
     private async Task ConfirmAsync()

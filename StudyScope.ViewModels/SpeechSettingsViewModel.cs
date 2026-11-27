@@ -117,7 +117,7 @@ public class SpeechSettingsViewModel : INotifyPropertyChanged
             await _storage.SaveSpeechSettingsAsync(ProfileName, updated);
             GeminiModel = updated.GeminiModel;
             IsSuccess = true;
-            StatusMessage = Loc.Format(VmStrings.Speech_Saved, ("profile", ProfileName));
+            StatusMessage = Loc.Format(VmStrings.Speech_Saved, ("profile", ProfileDisplay.Name(ProfileName)));
             Saved?.Invoke();
             return true;
         }

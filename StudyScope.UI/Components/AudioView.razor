@@ -13,7 +13,7 @@
 
     <div class="au-toolbar">
         <div>
-            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Audio_Title, ("profile", DocVm.CurrentProfile))</h3>
+            <h3 style="margin: 0; font-size: 16px; color: var(--ss-text);">@Loc.Format(UiStrings.Audio_Title, ("profile", DocVm.CurrentProfileDisplayName))</h3>
             <span style="font-size: 12px; color: var(--ss-text-muted);">
                 @Loc.Format(UiStrings.Common_BasedOn,
                     ("items", AuVm.Items.Count == 0 ? UiStrings.Audio_NoItems : Loc.Format(UiStrings.Audio_ItemCount, ("count", AuVm.Items.Count))),

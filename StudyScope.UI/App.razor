@@ -14,6 +14,9 @@
 @using StudyScope.ViewModels.Menu
 @implements IDisposable
 
+<!-- Sprachwechsel (☰ › Einstellungen › Darstellung): Der Schlüssel baut alle Komponenten neu auf, damit jeder Text
+     in der neuen Sprache gelesen wird. Zustand in den ViewModels (Chat, Dokumente, Wiedergabe) bleibt erhalten. -->
+<div style="display: contents;" @key="languageKey">
 <!-- root-Komponente: Füllt 100vh aus -->
 <div style="display: flex; flex-direction: column; height: 100vh; overflow: hidden; background: var(--ss-surface); color: var(--ss-text);">
     <!-- 1. Kopfzeile: ☰ ganz links (Datei, Einstellungen, Hilfe), daneben die einzeilige Reiterleiste -->
@@ -88,6 +91,7 @@
 {
     <AboutModal OnClose="CloseAboutModal" />
 }
+</div>
 
 @code {
     private bool showSettings = false;
@@ -95,6 +99,9 @@
     private string activeTab = "chat";
 
     private DotNetObjectReference<App>? selfRef;
+
+    /// <summary>Zähler für den Neuaufbau nach einem Sprachwechsel (siehe <c>@key</c> oben).</summary>
+    private int languageKey;
 
     /// <summary>Vortrag (Präsentation) oder Vollbild-Wiedergabe (Video): kein Menü, kein Strg+B.</summary>
     private bool IsPresenting => PresVm.IsPresenting || VdVm.IsPresenting;
@@ -104,6 +111,7 @@
     {
         PresVm.PropertyChanged += OnPresentingChanged;
         VdVm.PropertyChanged += OnPresentingChanged;
+        AppearanceVm.LanguageChanged += OnLanguageChanged;
         // Zuerst den gemerkten Zustand der Seitenleiste, damit sie nicht sichtbar auf- und zuklappt
         await LayoutVm.LoadAsync();
         await AppearanceVm.LoadAsync();
@@ -115,13 +123,7 @@
     {
         if (!firstRender) return;
         selfRef = DotNetObjectReference.Create(this);
-        try
-        {
-            // Sprache und Schreibrichtung der Oberfläche (Vorlesen, Silbentrennung, dir="rtl")
-            var culture = System.Globalization.CultureInfo.CurrentUICulture;
-            await JS.InvokeVoidAsync("studyScopeLayout.setLanguage", culture.TwoLetterISOLanguageName, culture.TextInfo.IsRightToLeft);
-        }
-        catch (JSException) { /* Skript fehlt: lang aus index.html */ }
+        await SetPageLanguageAsync();
         try
         {
             // Farbschema aus config.json anwenden und den Startspiegel (localStorage) angleichen
@@ -156,6 +158,33 @@
         InvokeAsync(StateHasChanged);
     }
 
+    /// <summary>Sprache und Schreibrichtung der Oberfläche auf &lt;html&gt; (Vorlesen, Silbentrennung, dir="rtl").</summary>
+    private async Task SetPageLanguageAsync()
+    {
+        try
+        {
+            var culture = System.Globalization.CultureInfo.CurrentUICulture;
+            await JS.InvokeVoidAsync("studyScopeLayout.setLanguage", culture.TwoLetterISOLanguageName, culture.TextInfo.IsRightToLeft);
+        }
+        catch (JSException) { /* Skript fehlt: lang aus index.html */ }
+    }
+
+    /// <summary>
+    /// Sprache gewechselt (nach „Speichern“ in der Darstellung, Kultur ist bereits umgestellt): Menüs schließen,
+    /// lang/dir setzen und alles neu aufbauen. Der Einstellungsdialog bleibt offen, im Abschnitt „Darstellung“.
+    /// </summary>
+    private void OnLanguageChanged(object? sender, EventArgs e) => _ = InvokeAsync(async () =>
+    {
+        MenuVm.CloseAll();
+        MenuVm.RefreshTexts();
+        if (showSettings) settingsSection = "appearance";
+        languageKey++;
+        StateHasChanged();
+        await SetPageLanguageAsync();
+        // Modellname in der Statusleiste (z. B. „Fake-KI (Testmodus)“) in der neuen Sprache
+        await DocVm.RefreshCurrentAiModelAsync(announceProfile: false);
+    });
+
     /// <summary>Fensterbreite aus <c>studyscope-layout.js</c> (beim Ändern der Größe, entprellt).</summary>
     [JSInvokable]
     public void OnWindowWidth(double width) => LayoutVm.SetWindowWidth(width);
@@ -164,6 +193,7 @@
     {
         PresVm.PropertyChanged -= OnPresentingChanged;
         VdVm.PropertyChanged -= OnPresentingChanged;
+        AppearanceVm.LanguageChanged -= OnLanguageChanged;
         try { _ = JS.InvokeVoidAsync("studyScopeLayout.detach"); } catch { /* Fenster wird geschlossen */ }
         selfRef?.Dispose();
     }

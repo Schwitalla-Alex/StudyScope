@@ -4,16 +4,16 @@
 @inject DocumentListViewModel DocVm
 @implements IDisposable
 
-<div style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+<div data-ss-dialog style="position: fixed; inset: 0; width: 100vw; height: 100vh; background: var(--ss-overlay); display: flex; align-items: center; justify-content: center; z-index: 1000;">
     <div style="background: var(--ss-surface); border-radius: 8px; width: 500px; padding: 22px; box-shadow: var(--ss-dialog-shadow); display: flex; flex-direction: column; font-family: Segoe UI, sans-serif;">
 
         <!-- Header mit Anzeige des Zielprofils -->
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--ss-border-light); padding-bottom: 10px; margin-bottom: 15px;">
             <div>
                 <h3 style="margin: 0; font-size: 17px; color: var(--ss-text);">@UiStrings.Settings_Title</h3>
-                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Settings_Profile <strong>@DocVm.CurrentProfile</strong></span>
+                <span style="font-size: 11px; color: var(--ss-text-muted);">@UiStrings.Settings_Profile <strong>@DocVm.CurrentProfileDisplayName</strong></span>
             </div>
-            <button type="button"
+            <button type="button" data-ss-dialog-close
                     style="border: none; background: transparent; font-size: 16px; cursor: pointer; color: var(--ss-text-muted);"
                     aria-label="@UiStrings.Common_Close" title="@UiStrings.Common_Close"
                     @onclick="() => OnClose.InvokeAsync()">
