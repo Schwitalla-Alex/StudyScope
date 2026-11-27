@@ -24,6 +24,14 @@ namespace StudyScope.Core.Models
         Mindmap
     }
 
+    /// <summary>Knopf an einem Systemhinweis im Chat (nur im Speicher, nicht im Chat-Protokoll).</summary>
+    public enum ChatMessageAction
+    {
+        None,
+        /// <summary>„⚙ Einstellungen öffnen“ → Einstellungen › Websuche (nur, wenn die Einstellungen helfen können).</summary>
+        OpenWebSearchSettings
+    }
+
     /// <summary>Art einer Quelle unter einer Chat-Antwort.</summary>
     public enum ChatSourceKind
     {
@@ -55,5 +63,8 @@ namespace StudyScope.Core.Models
 
         /// <summary>Quellen einer Antwort mit Websuche (Unterlagen und Internet getrennt); sonst leer.</summary>
         public IReadOnlyList<ChatSource> Sources { get; set; } = Array.Empty<ChatSource>();
+
+        /// <summary>Knopf am Systemhinweis (z. B. Einstellungen der Websuche öffnen); sonst <see cref="ChatMessageAction.None"/>.</summary>
+        public ChatMessageAction Action { get; set; } = ChatMessageAction.None;
     }
 }

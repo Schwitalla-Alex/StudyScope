@@ -29,8 +29,8 @@ public static class FakeMindmapResponse
             new
             {
                 title = FakeLanguage.T(en, "[Testmodus] Mindmap", "[Test mode] Mind map"),
-                summary = FakeLanguage.T(en, $"Beispiel-Mindmap aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
-                    $"Sample mind map from {chunks.Count} excerpt(s). Choose an AI in the settings for real content."),
+                summary = FakeLanguage.Plural(en, "Beispiel-Mindmap aus {count, plural, one {# Textstelle} other {# Textstellen}}. Für echte Inhalte in den Einstellungen eine KI wählen.",
+                    "Sample mind map from {count, plural, one {# excerpt} other {# excerpts}}. Choose an AI in the settings for real content.", chunks.Count),
                 children = branches
             }
         };

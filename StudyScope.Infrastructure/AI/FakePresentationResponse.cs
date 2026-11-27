@@ -22,7 +22,7 @@ public static class FakePresentationResponse
             .Append(new
             {
                 title = FakeLanguage.T(en, "Fazit", "Conclusion"),
-                bullets = new[] { FakeLanguage.T(en, $"{chunks.Count} Textstelle(n) ausgewertet", $"{chunks.Count} excerpt(s) analysed"), FakeLanguage.T(en, "Für echte Inhalte in den Einstellungen eine KI wählen", "Choose an AI in the settings for real content") },
+                bullets = new[] { FakeLanguage.Plural(en, "{count, plural, one {# Textstelle} other {# Textstellen}} ausgewertet", "{count, plural, one {# excerpt} other {# excerpts}} analysed", chunks.Count), FakeLanguage.T(en, "Für echte Inhalte in den Einstellungen eine KI wählen", "Choose an AI in the settings for real content") },
                 notes = FakeLanguage.T(en, "Dies ist eine Beispiel-Präsentation der Fake-KI.", "This is a sample presentation from the fake AI.")
             })
             .ToArray();

@@ -25,7 +25,8 @@ public static class FakeLanguage
         var q1 = T(en, "Was besagt der Textauszug?", "What does the excerpt say?");
         var a1 = T(en, $"Der Auszug lautet auszugsweise: '{preview}...'", $"The excerpt begins: '{preview}...'");
         var q2 = T(en, "Wie viele Textstellen wurden analysiert?", "How many excerpts were analysed?");
-        var a2 = T(en, $"Es wurden genau {chunks.Count} Textstelle(n) analysiert.", $"Exactly {chunks.Count} excerpt(s) were analysed.");
+        var a2 = Plural(en, "Es {count, plural, one {wurde genau # Textstelle} other {wurden genau # Textstellen}} analysiert.",
+            "Exactly {count, plural, one {# excerpt was} other {# excerpts were}} analysed.", chunks.Count);
         return System.Text.Json.JsonSerializer.Serialize(new[]
         {
             new { question = q1, answer = a1 },
@@ -58,7 +59,7 @@ public static class FakeLanguage
     }
 
     /// <summary>ICU-Mehrzahl mit den Regeln der Antwortsprache (Deutsch bzw. Englisch), unabhängig von der Oberfläche.</summary>
-    private static string Plural(bool english, string german, string englishText, int count)
+    public static string Plural(bool english, string german, string englishText, int count)
     {
         using var scope = CultureScope.Use(System.Globalization.CultureInfo.GetCultureInfo(english ? "en" : "de"));
         return Loc.Format(T(english, german, englishText), ("count", count));
@@ -74,7 +75,9 @@ public static class FakeLanguage
                 $"[Test mode] No document content is active. Your question was: '{question}'");
 
         var firstPreview = chunks[0].Substring(0, Math.Min(50, chunks[0].Length));
-        return T(en, $"[Testmodus] Antwort basierend auf {chunks.Count} Textstelle(n).\nFrage: {question}\nAuszug: {firstPreview}...",
-            $"[Test mode] Answer based on {chunks.Count} excerpt(s).\nQuestion: {question}\nExcerpt: {firstPreview}...");
+        var basis = Plural(en, "[Testmodus] Antwort basierend auf {count, plural, one {# Textstelle} other {# Textstellen}}.",
+            "[Test mode] Answer based on {count, plural, one {# excerpt} other {# excerpts}}.", chunks.Count);
+        return T(en, $"{basis}\nFrage: {question}\nAuszug: {firstPreview}...",
+            $"{basis}\nQuestion: {question}\nExcerpt: {firstPreview}...");
     }
 }

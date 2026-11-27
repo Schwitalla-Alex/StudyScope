@@ -425,4 +425,64 @@ public class ChatWebSearchTests
         await _docVm.CreateNewProfileAsync("Testprofil C");
         Assert.That(_docVm.IsWebSearchActive, Is.False, "ein neues Profil sucht nie im Internet");
     }
+
+    // ------------------------------------------------------------------ Knopf „Einstellungen öffnen“ am Hinweis (PR 2, Entscheidung H)
+
+    private static IEnumerable<TestCaseData> SearchErrors()
+    {
+        yield return new TestCaseData("401", true);
+        yield return new TestCaseData("403", true);
+        yield return new TestCaseData("NotConfigured", true);
+        yield return new TestCaseData("SearxngJson", true);
+        yield return new TestCaseData("Network", false);
+        yield return new TestCaseData("Timeout", false);
+        yield return new TestCaseData("503", false);
+        yield return new TestCaseData("432", false);
+        yield return new TestCaseData("Unexpected", false);
+    }
+
+    private static WebSearchException ErrorFor(string name) => name switch
+    {
+        "401" => WebSearchException.FromHttpStatus("Tavily", 401, "x"),
+        "403" => WebSearchException.FromHttpStatus("Tavily", 403, "x"),
+        "NotConfigured" => WebSearchException.NotConfigured(),
+        "SearxngJson" => new WebSearchException("JSON nicht freigeschaltet.", "SearXNG", 403, kind: WebSearchErrorKind.Rejected),
+        "Network" => WebSearchException.FromNetworkError("Tavily", new HttpRequestException("kein Netz")),
+        "Timeout" => WebSearchException.Timeout("Tavily", 15),
+        "503" => WebSearchException.FromHttpStatus("Tavily", 503, "x"),
+        "432" => WebSearchException.FromHttpStatus("Tavily", 432, "x"),
+        _ => WebSearchException.UnexpectedResponse("Tavily", 200, "x")
+    };
+
+    [TestCaseSource(nameof(SearchErrors))]
+    public async Task On_SearchFails_SettingsButton_OnlyWhenSettingsCanHelp(string error, bool expectButton)
+    {
+        WebSearchState(enabled: true);
+        _web.Setup(w => w.SearchAsync(It.IsAny<WebSearchQuery>(), It.IsAny<CultureInfo>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(ErrorFor(error));
+        var vm = Chat("de");
+
+        await Ask(vm, "Wo findet die Photosynthese statt?");
+
+        Assert.That(vm.Messages[1].Role, Is.EqualTo(MessageRole.System));
+        Assert.That(vm.Messages[1].Action,
+            Is.EqualTo(expectButton ? ChatMessageAction.OpenWebSearchSettings : ChatMessageAction.None));
+        Assert.That(vm.Messages[2].Action, Is.EqualTo(ChatMessageAction.None));
+    }
+
+    [Test]
+    public async Task NoResults_And_MindmapNotice_HaveNoSettingsButton()
+    {
+        WebSearchState(enabled: true);
+        _web.Setup(w => w.SearchAsync(It.IsAny<WebSearchQuery>(), It.IsAny<CultureInfo>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(Array.Empty<WebSearchResult>());
+        var vm = Chat("de");
+
+        await Ask(vm, "Wo findet die Photosynthese statt?");
+        await Ask(vm, "Erkläre mir „Photosynthese“.", ChatQuestionOrigin.Mindmap);
+
+        var notices = vm.Messages.Where(m => m.Role == MessageRole.System).ToList();
+        Assert.That(notices, Has.Count.EqualTo(2));
+        Assert.That(notices.Select(n => n.Action), Is.All.EqualTo(ChatMessageAction.None));
+    }
 }

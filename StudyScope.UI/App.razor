@@ -41,7 +41,7 @@
             <div style="flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column;">
                 @if (activeTab == "chat")
                 {
-                    <ChatArea />
+                    <ChatArea OnOpenWebSearchSettings='() => OpenSettings("websearch")' />
                 }
                 else if (activeTab == "cards")
                 {

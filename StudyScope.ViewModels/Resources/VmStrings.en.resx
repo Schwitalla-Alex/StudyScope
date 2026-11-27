@@ -437,4 +437,14 @@
   <data name="WebSearch_Saved" xml:space="preserve"><value>✓ Web search settings saved.</value></data>
   <data name="WebSearch_KeyMissing" xml:space="preserve"><value>Enter the Tavily API key.</value></data>
   <data name="WebSearch_UrlInvalid" xml:space="preserve"><value>Enter a valid address of the SearXNG instance (http or https, for example http://localhost:8888).</value></data>
+  <data name="WebSearch_Verifying" xml:space="preserve"><value>Checking access to {provider} …</value></data>
+  <data name="WebSearch_SavedVerified" xml:space="preserve"><value>✓ Access to {provider} verified, settings saved.</value></data>
+  <data name="WebSearch_Usage" xml:space="preserve"><value>Used this month according to Tavily: {used} of {limitCount, plural, one {{limit} credit} other {{limit} credits}}. Tavily may count new searches only later.</value></data>
+  <data name="WebSearch_UsageNoLimit" xml:space="preserve"><value>Used this month according to Tavily: {usedCount, plural, one {{used} credit} other {{used} credits}}. Tavily may count new searches only later.</value></data>
+  <data name="WebSearch_CheckUsedCredit" xml:space="preserve"><value>The check without a search was not available – the check needed one search (1 credit).</value></data>
+  <data name="WebSearch_VerifyRejected" xml:space="preserve"><value>Not saved: {error}</value></data>
+  <data name="WebSearch_VerifyUnreachable" xml:space="preserve"><value>The access could not be checked: {error} You can still save the settings.</value></data>
+  <data name="WebSearch_SavedLimit" xml:space="preserve"><value>Saved – the access is valid, but: {error}</value></data>
+  <data name="WebSearch_SavedUnverified" xml:space="preserve"><value>Saved, but not checked. The next web search will show whether the access works.</value></data>
+  <data name="WebSearch_KeyFormatWarning" xml:space="preserve"><value>Tavily keys usually start with “tvly-”. Check that the whole key was pasted.</value></data>
 </root>

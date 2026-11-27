@@ -403,7 +403,9 @@ public class ChatViewModel : INotifyPropertyChanged
                     AddMessage(requestProfile, new ChatMessage
                     {
                         Role = MessageRole.System,
-                        Content = Loc.Format(VmStrings.Chat_Web_Unavailable, ("error", ex.Message))
+                        Content = Loc.Format(VmStrings.Chat_Web_Unavailable, ("error", ex.Message)),
+                        // Knopf nur, wenn die Einstellungen helfen (Schlüssel abgelehnt, kein Dienst, SearXNG falsch eingerichtet)
+                        Action = ex.SettingsCanHelp ? ChatMessageAction.OpenWebSearchSettings : ChatMessageAction.None
                     });
                 }
             }

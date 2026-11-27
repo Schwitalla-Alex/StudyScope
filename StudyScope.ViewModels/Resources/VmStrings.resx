@@ -437,4 +437,14 @@
   <data name="WebSearch_Saved" xml:space="preserve"><value>✓ Einstellungen der Websuche gespeichert.</value></data>
   <data name="WebSearch_KeyMissing" xml:space="preserve"><value>Bitte den API-Schlüssel von Tavily eintragen.</value></data>
   <data name="WebSearch_UrlInvalid" xml:space="preserve"><value>Bitte eine gültige Adresse der SearXNG-Instanz eintragen (http oder https, z. B. http://localhost:8888).</value></data>
+  <data name="WebSearch_Verifying" xml:space="preserve"><value>Zugang zu {provider} wird geprüft …</value><comment>{provider} = Tavily bzw. SearXNG</comment></data>
+  <data name="WebSearch_SavedVerified" xml:space="preserve"><value>✓ Zugang zu {provider} geprüft, Einstellungen gespeichert.</value></data>
+  <data name="WebSearch_Usage" xml:space="preserve"><value>Diesen Monat verbraucht laut Tavily: {used} von {limitCount, plural, one {{limit} Credit} other {{limit} Credits}}. Neue Suchen zählt Tavily teils erst später mit.</value><comment>{used}/{limit} = formatierte Zahlen, {limitCount} = Zahl für die Mehrzahl</comment></data>
+  <data name="WebSearch_UsageNoLimit" xml:space="preserve"><value>Diesen Monat verbraucht laut Tavily: {usedCount, plural, one {{used} Credit} other {{used} Credits}}. Neue Suchen zählt Tavily teils erst später mit.</value><comment>{used} = formatierte Zahl, {usedCount} = Zahl für die Mehrzahl</comment></data>
+  <data name="WebSearch_CheckUsedCredit" xml:space="preserve"><value>Der Prüfweg ohne Suche war nicht verfügbar – für die Prüfung war eine Suche nötig (1 Credit).</value></data>
+  <data name="WebSearch_VerifyRejected" xml:space="preserve"><value>Nicht gespeichert: {error}</value><comment>{error} = Meldung des Suchdienstes (ganzer Satz)</comment></data>
+  <data name="WebSearch_VerifyUnreachable" xml:space="preserve"><value>Der Zugang konnte nicht geprüft werden: {error} Sie können die Einstellungen trotzdem speichern.</value><comment>{error} = Meldung des Suchdienstes (ganzer Satz mit Punkt)</comment></data>
+  <data name="WebSearch_SavedLimit" xml:space="preserve"><value>Gespeichert – der Zugang ist gültig, aber: {error}</value><comment>{error} = Meldung des Suchdienstes zum Kontingent</comment></data>
+  <data name="WebSearch_SavedUnverified" xml:space="preserve"><value>Gespeichert, aber nicht geprüft. Bei der nächsten Websuche zeigt sich, ob der Zugang funktioniert.</value></data>
+  <data name="WebSearch_KeyFormatWarning" xml:space="preserve"><value>Tavily-Schlüssel beginnen normalerweise mit „tvly-“. Bitte prüfen, ob der Schlüssel vollständig eingefügt wurde.</value></data>
 </root>

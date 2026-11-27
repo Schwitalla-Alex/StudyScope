@@ -53,8 +53,8 @@ public static class FakeReportResponse
             new
             {
                 title = FakeLanguage.T(en, $"[Testmodus] {kind}", $"[Test mode] {kind}"),
-                summary = FakeLanguage.T(en, $"Beispiel-{kind} der Fake-KI aus {chunks.Count} Textstelle(n). Für echte Inhalte in den Einstellungen eine KI wählen.",
-                    $"Sample {kind.ToLowerInvariant()} by the fake AI from {chunks.Count} excerpt(s). Choose an AI in the settings for real content."),
+                summary = FakeLanguage.Plural(en, $"Beispiel-{kind} der Fake-KI aus {{count, plural, one {{# Textstelle}} other {{# Textstellen}}}}. Für echte Inhalte in den Einstellungen eine KI wählen.",
+                    $"Sample {kind.ToLowerInvariant()} by the fake AI from {{count, plural, one {{# excerpt}} other {{# excerpts}}}}. Choose an AI in the settings for real content.", chunks.Count),
                 sections
             }
         };

@@ -148,7 +148,7 @@ public class TaskRecognitionTests
             foreach (var llm in new ILlmService[] { dispatcher, new FakeLlmService() })
             {
                 var answer = await llm.AskQuestionAsync(question, Chunks);
-                Assert.That(answer, Does.StartWith("[Testmodus] Antwort basierend auf 2 Textstelle(n)."), question);
+                Assert.That(answer, Does.StartWith("[Testmodus] Antwort basierend auf 2 Textstellen."), question);
                 Assert.That(answer, Does.Contain("Frage: " + question));
             }
         }

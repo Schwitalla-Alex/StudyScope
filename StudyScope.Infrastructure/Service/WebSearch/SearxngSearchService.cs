@@ -26,7 +26,7 @@ public sealed class SearxngSearchService : IWebSearchProvider
         int maxResults, CancellationToken cancellationToken)
     {
         if (!TryBuildSearchUri(settings.SearxngUrl, query, language, out var uri))
-            throw new WebSearchException(InfraStrings.WebSearch_SearxngInvalidUrl, ProviderName);
+            throw new WebSearchException(InfraStrings.WebSearch_SearxngInvalidUrl, ProviderName, kind: WebSearchErrorKind.Rejected);
 
         var (status, body) = await WebSearchHttp.SendAsync(_http, ProviderName, () =>
         {
@@ -36,7 +36,7 @@ public sealed class SearxngSearchService : IWebSearchProvider
         }, cancellationToken);
 
         if (status == 403)
-            throw new WebSearchException(InfraStrings.WebSearch_SearxngJsonDisabled, ProviderName, status, body);
+            throw new WebSearchException(InfraStrings.WebSearch_SearxngJsonDisabled, ProviderName, status, body, kind: WebSearchErrorKind.Rejected);
         if (status is < 200 or >= 300)
             throw WebSearchException.FromHttpStatus(ProviderName, status, body);
 
@@ -98,7 +98,7 @@ public sealed class SearxngSearchService : IWebSearchProvider
         catch (JsonException)
         {
             // Häufig eine HTML-Seite statt JSON (falsche Adresse oder Format nicht freigeschaltet)
-            throw new WebSearchException(InfraStrings.WebSearch_SearxngNoJson, ProviderName, status, responseBody);
+            throw new WebSearchException(InfraStrings.WebSearch_SearxngNoJson, ProviderName, status, responseBody, kind: WebSearchErrorKind.Rejected);
         }
     }
 

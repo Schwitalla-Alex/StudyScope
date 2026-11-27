@@ -82,10 +82,15 @@
     </div>
 
     <!-- Websuche im Chat (je Profil, standardmäßig aus) – abgesetzt von den Dokumenten, unberührt von „Alle an/aus“ und Filter -->
-    <label class="ss-websearch-toggle" title="@(webSearchNotConfigured ? UiStrings.Sidebar_WebSearchSetupTitle : UiStrings.Sidebar_WebSearchTitle)">
-        <input type="checkbox" checked="@DocVm.IsWebSearchActive" @onclick="OnWebSearchToggledAsync" @onclick:preventDefault="true" />
-        <span>@UiStrings.Sidebar_WebSearch</span>
-    </label>
+    <div class="ss-websearch-row">
+        <label class="ss-websearch-toggle" title="@(webSearchNotConfigured ? UiStrings.Sidebar_WebSearchSetupTitle : UiStrings.Sidebar_WebSearchTitle)">
+            <input type="checkbox" checked="@DocVm.IsWebSearchActive" @onclick="OnWebSearchToggledAsync" @onclick:preventDefault="true" />
+            <span>@UiStrings.Sidebar_WebSearch</span>
+        </label>
+        <!-- Außerhalb des label: ein Klick auf ⚙ schaltet das Häkchen nicht um -->
+        <button type="button" class="ss-icon-btn ss-websearch-settings" title="@UiStrings.Sidebar_WebSearchSettings" aria-label="@UiStrings.Sidebar_WebSearchSettings"
+                @onclick="() => OnOpenWebSearchSettings.InvokeAsync()">⚙</button>
+    </div>
 
     <!-- 2. Bereich: Volltextsuche / Filter -->
     <div style="display: flex; align-items: center; border: 1px solid var(--ss-border); border-radius: 4px; background: var(--ss-surface); padding: 4px 8px;">

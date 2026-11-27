@@ -1,6 +1,8 @@
 @using StudyScope.Core.Models
 @using StudyScope.ViewModels
 @inject WebSearchSettingsViewModel WebVm
+@using Microsoft.JSInterop
+@inject IJSRuntime Js
 @implements IDisposable
 
 @* Einstellungen › „🌐 Websuche“: Suchdienst, Schlüssel bzw. Adresse, Trefferzahl (global für alle Profile) *@
@@ -28,7 +30,11 @@
             <label class="ss-label" for="ws-key">@UiStrings.WebSearch_TavilyKeyLabel</label>
             <input id="ws-key" type="password" class="ss-input" autocomplete="off" spellcheck="false"
                    placeholder="@UiStrings.WebSearch_TavilyKeyPlaceholder"
-                   @bind="WebVm.TavilyApiKey" @bind:event="oninput" />
+                   @bind="WebVm.TavilyApiKey" @bind:event="oninput" @onblur="WebVm.CheckKeyFormat" />
+            @if (!string.IsNullOrEmpty(WebVm.KeyFormatWarning))
+            {
+                <div class="ws-key-warning" role="status">@WebVm.KeyFormatWarning</div>
+            }
             <div class="ss-hint">@UiStrings.WebSearch_TavilyHint</div>
             <button type="button" class="ss-link-btn ws-link" @onclick="() => WebVm.OpenTavilySignup()">@UiStrings.WebSearch_TavilySignup</button>
             <div class="ss-hint">@UiStrings.WebSearch_TavilyPrivacy</div>
@@ -61,7 +67,11 @@
 
     @if (!string.IsNullOrEmpty(WebVm.StatusMessage))
     {
-        <div role="status" class="ws-status @(WebVm.IsSuccess ? "ws-ok" : "ws-error")">@WebVm.StatusMessage</div>
+        <div id="ws-status" role="status" class="ws-status @StatusClass">@WebVm.StatusMessage</div>
+    }
+    @if (WebVm.ShowTavilyAccountLink)
+    {
+        <button type="button" class="ss-link-btn ws-link" @onclick="() => WebVm.OpenTavilyAccount()">@UiStrings.WebSearch_TavilyAccount</button>
     }
 </div>
 
@@ -73,7 +83,14 @@
     </button>
     <div style="display: flex; gap: 8px;">
         <button type="button" class="ss-btn" style="background: var(--ss-secondary); font-weight: normal;" @onclick="() => OnClose.InvokeAsync()">@UiStrings.Common_Close</button>
-        <button type="button" class="ss-btn" style="background: var(--ss-primary);" @onclick="SaveAsync">@UiStrings.Common_Save</button>
+        @if (WebVm.CanSaveAnyway)
+        {
+            <button type="button" class="ss-btn" style="background: var(--ss-orange);" @onclick="SaveAnywayAsync">@UiStrings.WebSearch_SaveAnyway</button>
+        }
+        <button type="button" class="ss-btn" style="background: var(--ss-primary);" disabled="@(!WebVm.CanSave)"
+                title="@UiStrings.WebSearch_SaveTitle" @onclick="SaveAsync">
+            @(WebVm.IsVerifying ? UiStrings.WebSearch_Testing : UiStrings.Common_Save)
+        </button>
     </div>
 </div>
 
@@ -89,6 +106,10 @@
     .ws-status { font-size: 12px; padding: 7px 10px; border-radius: 4px; word-break: break-word; }
     .ws-ok { background: var(--ss-success-bg); color: var(--ss-success-text); border: 1px solid var(--ss-success-border); }
     .ws-error { background: var(--ss-danger-bg); color: var(--ss-danger-text); border: 1px solid var(--ss-danger-border); }
+    .ws-warn { background: var(--ss-warning-bg); color: var(--ss-warning-text); border: 1px solid var(--ss-warning-border); }
+    .ws-progress { background: var(--ss-info-bg); color: var(--ss-info-text); border: 1px solid var(--ss-info-border); }
+    .ws-status { white-space: pre-line; scroll-margin-block-end: 90px; }
+    .ws-key-warning { font-size: 11.5px; margin-top: 4px; line-height: 1.4; padding-block: 4px; padding-inline: 8px; border-radius: 4px; background: var(--ss-warning-bg); color: var(--ss-warning-text); border: 1px solid var(--ss-warning-border); }
 </style>
 
 @code {
@@ -102,11 +123,41 @@
 
     private void OnChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => InvokeAsync(StateHasChanged);
 
+    private string? shownStatus;
+
+    // Neue Meldung (Prüfung, Ergebnis) ins Bild holen – sie steht unter dem Formular, der Bereich scrollt
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (WebVm.StatusMessage == shownStatus) return;
+        shownStatus = WebVm.StatusMessage;
+        if (string.IsNullOrEmpty(shownStatus)) return;
+        try
+        {
+            await Js.InvokeVoidAsync("eval", "(function(){var e=document.getElementById('ws-status'); if(e){e.scrollIntoView({block:'nearest'});}})()");
+        }
+        catch (JSDisconnectedException) { }
+        catch (TaskCanceledException) { }
+    }
+
+    private string StatusClass => WebVm.IsProgress ? "ws-progress" : WebVm.IsSuccess ? "ws-ok" : WebVm.IsWarning ? "ws-warn" : "ws-error";
+
+    // Gespeichert und nichts weiter zu lesen → schließen; Verbrauch oder Warnung → Dialog bleibt offen
     private async Task SaveAsync()
     {
-        if (await WebVm.SaveAsync())
+        if (await WebVm.SaveAsync() && !WebVm.KeepOpenAfterSave)
             await OnClose.InvokeAsync();
     }
 
-    public void Dispose() => WebVm.PropertyChanged -= OnChanged;
+    private async Task SaveAnywayAsync()
+    {
+        if (await WebVm.SaveAnywayAsync() && !WebVm.KeepOpenAfterSave)
+            await OnClose.InvokeAsync();
+    }
+
+    public void Dispose()
+    {
+        // Schließen während der Prüfung bricht sie ab – es wird nichts gespeichert
+        WebVm.CancelVerification();
+        WebVm.PropertyChanged -= OnChanged;
+    }
 }
